@@ -50,6 +50,7 @@ export function TimelineChart({
   isMultiLine = false 
 }: TimelineChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set(['all', ...(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])]));
 
   const filteredData = useMemo(() => {
     if (timeframe === "all") return [...data].reverse();
@@ -141,37 +142,48 @@ export function TimelineChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#1F2937",
-              border: "none",
-              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.5)",
-              borderRadius: "0.5rem",
-              padding: "1rem",
-              color: "#E5E7EB",
+              backgroundColor: 'rgba(0, 0, 0, 0.95)',
+              border: '1px solid rgba(75, 85, 99, 0.4)',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            }}
+            labelStyle={{ 
+              color: '#F3F4F6',
+              fontSize: '16px',
+              fontWeight: 500,
+              marginBottom: '8px',
+            }}
+            itemStyle={{ 
+              color: '#D1D5DB',
+              fontSize: '14px',
+              padding: '4px 0',
             }}
             labelFormatter={(label: string) => {
               const [day, month, year] = label.split('-');
               const date = new Date(`${year}-${month}-${day}`);
-              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
             }}
-            formatter={(value: any) => [
-              typeof value === 'number' ? new Intl.NumberFormat("en-US", {
-                notation: "compact",
-                maximumFractionDigits: 2,
-              }).format(value) : value,
+            formatter={(value: any, name: string) => [
+              new Intl.NumberFormat('en-US', {
+                notation: 'standard',
+                maximumFractionDigits: 0,
+              }).format(value),
+              name
             ]}
+            separator="  "
           />
           {isMultiLine && multipleDataKeys ? (
             // Render multiple lines for different protocols
-            Object.entries(multipleDataKeys).map(([name, key]) => (
+            Object.entries(multipleDataKeys).map(([name, key]: [string, string]) => (
               <Area
                 key={key}
                 type="monotone"
-                dataKey={key}
+                dataKey={activeKeys.has('all') || activeKeys.has(key) ? key : ''}
                 name={name}
-                stroke={PROTOCOL_COLORS[name as keyof typeof PROTOCOL_COLORS]}
-                fill={`url(#${name.toLowerCase().replace(' ', '')}Gradient)`}
-                strokeWidth={2}
-                fillOpacity={0.5}
+                stroke={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
+                fill={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
+                fillOpacity={0.1}
               />
             ))
           ) : (
@@ -187,13 +199,56 @@ export function TimelineChart({
           {isMultiLine && (
             <Legend 
               wrapperStyle={{ 
-                paddingTop: '24px',
+                paddingTop: '16px',
                 color: '#E5E7EB',
                 fontSize: '14px',
+                cursor: 'pointer'
               }}
               iconType="square"
               iconSize={10}
-              verticalAlign="top"
+              verticalAlign="bottom"
+              onClick={(e: any) => {
+                const dataKey = e.dataKey as string;
+                setActiveKeys(prev => {
+                  const newKeys = new Set(prev);
+                  if (dataKey === 'all') {
+                    if (newKeys.has('all')) {
+                      // If 'all' is being deselected, keep it and clear others
+                      newKeys.clear();
+                      newKeys.add('all');
+                    } else {
+                      // If 'all' is being selected, add everything
+                      newKeys.clear();
+                      newKeys.add('all');
+                      Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
+                    }
+                  } else {
+                    // Remove 'all' when selecting individual items
+                    newKeys.delete('all');
+                    if (newKeys.has(dataKey)) {
+                      newKeys.delete(dataKey);
+                      // If nothing is selected, select 'all'
+                      if (newKeys.size === 0) {
+                        newKeys.add('all');
+                        Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
+                      }
+                    } else {
+                      newKeys.add(dataKey);
+                    }
+                  }
+                  return newKeys;
+                });
+              }}
+              payload={[
+                { value: 'All', type: 'line' as const, color: '#9CA3AF', dataKey: 'all', inactive: !activeKeys.has('all') },
+                ...Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => ({
+                  value: name,
+                  type: 'line' as const,
+                  color: key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0',
+                  dataKey: key,
+                  inactive: !activeKeys.has(key)
+                }))
+              ]}
             />
           )}
         </AreaChart>

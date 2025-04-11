@@ -71,12 +71,20 @@ function App() {
 
             // Format dates and add protocol identifier
             const formattedData = validData.map(row => {
-              const [day, month, year] = row.formattedDay.split("/");
+              if (!row.formattedDay) return null;
+              // Ensure date parts are valid strings
+              const dateParts = (row.formattedDay || '').split("/");
+              if (dateParts.length !== 3) return null;
+              const [day, month, year] = dateParts;
+              if (!day || !month || !year) return null;
+              
               const date = new Date(`${year}-${month}-${day}`);
+              if (isNaN(date.getTime())) return null;
+              
               return {
                 ...row,
                 protocol,
-                formattedDay: date.getDate() + " " + date.toLocaleString('en', { month: 'short' }),
+                formattedDay: `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`,
                 // Add protocol-specific keys for the chart
                 [`${protocol}_total_volume_usd`]: row.total_volume_usd,
                 [`${protocol}_daily_users`]: row.daily_users,
@@ -85,7 +93,9 @@ function App() {
               };
             });
 
-            allData.push(...formattedData);
+            // Filter out null values and cast to the correct type
+        const validFormattedData = formattedData.filter((item): item is DailyData & { protocol: string } => item !== null);
+        allData.push(...validFormattedData);
           }
 
           if (allData.length === 0) {
@@ -137,10 +147,18 @@ function App() {
           
           // Convert map to array and sort by date
           const combinedData = Array.from(dateMap.values()).sort((a, b) => {
-            const [dayA, monthA] = a.formattedDay.split(" ");
-            const [dayB, monthB] = b.formattedDay.split(" ");
-            const dateA = new Date(`2025-${monthA}-${dayA}`);
-            const dateB = new Date(`2025-${monthB}-${dayB}`);
+            // Safely parse dates for comparison
+            const partsA = (a.formattedDay || '').split("-");
+            const partsB = (b.formattedDay || '').split("-");
+            if (partsA.length !== 3 || partsB.length !== 3) return 0;
+            
+            const [dayA, monthA, yearA] = partsA;
+            const [dayB, monthB, yearB] = partsB;
+            if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
+            
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
             return dateB.getTime() - dateA.getTime();
           });
           
@@ -174,21 +192,39 @@ function App() {
 
           // Format dates and sort data by date in descending order
           const sortedData = validData.map(row => {
-            const [day, month, year] = row.formattedDay.split("/");
+            if (!row.formattedDay) return null;
+            // Ensure date parts are valid strings
+            const dateParts = (row.formattedDay || '').split("/");
+            if (dateParts.length !== 3) return null;
+            const [day, month, year] = dateParts;
+            if (!day || !month || !year) return null;
+            
             const date = new Date(`${year}-${month}-${day}`);
+            if (isNaN(date.getTime())) return null;
+            
             return {
               ...row,
-              formattedDay: date.getDate() + " " + date.toLocaleString('en', { month: 'short' })
+              formattedDay: `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`,
             };
-          }).sort((a, b) => {
-            const [dayA, monthA] = a.formattedDay.split(" ");
-            const [dayB, monthB] = b.formattedDay.split(" ");
-            const dateA = new Date(`2025-${monthA}-${dayA}`);
-            const dateB = new Date(`2025-${monthB}-${dayB}`);
+          }).filter((item): item is DailyData => item !== null).sort((a, b) => {
+            // Safely parse dates for comparison
+            const partsA = (a.formattedDay || '').split("-");
+            const partsB = (b.formattedDay || '').split("-");
+            if (partsA.length !== 3 || partsB.length !== 3) return 0;
+            
+            const [dayA, monthA, yearA] = partsA;
+            const [dayB, monthB, yearB] = partsB;
+            if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
+            
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
             return dateB.getTime() - dateA.getTime();
           });
 
-          setData(sortedData);
+          // Filter out null values before setting state
+          const validSortedData = sortedData.filter((item): item is DailyData => item !== null);
+          setData(validSortedData);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");

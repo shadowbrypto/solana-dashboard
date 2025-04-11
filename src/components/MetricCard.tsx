@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { Card, CardHeader } from "@/components/ui/card";
 
 interface MetricCardProps {
   title: string;
@@ -18,25 +19,25 @@ export function MetricCard({
   const isNegative = percentageChange && percentageChange < 0;
 
   return (
-    <div className="bg-black rounded-lg p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {icon && <div className="text-gray-400">{icon}</div>}
-          <div className="text-gray-400 text-sm font-medium">{title}</div>
+    <Card className="bg-card">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon && <div className="text-muted-foreground">{icon}</div>}
+            <div className="text-muted-foreground text-sm font-medium">{title}</div>
+          </div>
+          {duration && <div className="text-muted-foreground text-xs">{duration}</div>}
         </div>
-        {duration && <div className="text-gray-500 text-xs">{duration}</div>}
-      </div>
-      <div className="text-white text-2xl font-medium mt-1">{value}</div>
-      {percentageChange && (
-        <div
-          className={`text-sm mt-1 ${
-            isNegative ? "text-red-500" : "text-green-500"
-          }`}
-        >
-          {isNegative ? "" : "+"}
-          {percentageChange.toFixed(2)}%
-        </div>
-      )}
-    </div>
+        <div className="text-foreground text-2xl font-medium">{value}</div>
+        {percentageChange && (
+          <div
+            className={`text-sm ${isNegative ? "text-destructive" : "text-green-500"}`}
+          >
+            {isNegative ? "" : "+"}
+            {percentageChange.toFixed(2)}%
+          </div>
+        )}
+      </CardHeader>
+    </Card>
   );
 }

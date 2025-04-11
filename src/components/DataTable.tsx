@@ -47,10 +47,10 @@ export function DataTable({ data }: DataTableProps) {
             <TableHeader>
               <TableRow className="hover:bg-muted border-border">
                 <TableHead className="text-muted-foreground">Date</TableHead>
-                <TableHead className="text-right text-muted-foreground">Volume (USD)</TableHead>
+                <TableHead className="text-right text-muted-foreground">Volume</TableHead>
                 <TableHead className="text-right text-muted-foreground">Users</TableHead>
                 <TableHead className="text-right text-muted-foreground">Trades</TableHead>
-                <TableHead className="text-right text-muted-foreground">Fees (USD)</TableHead>
+                <TableHead className="text-right text-muted-foreground">Fees</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

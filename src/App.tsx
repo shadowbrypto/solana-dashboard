@@ -14,6 +14,7 @@ import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
 import { ProtocolSelector } from "./components/ProtocolSelector";
+import { CombinedChart } from "./components/CombinedChart";
 
 const App = (): JSX.Element => {
   // Apply dark theme by default
@@ -383,27 +384,21 @@ const App = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === 'all' ? (
             <>
-              <TimelineChart
-                title="Volume"
+              <CombinedChart
+                title="Volume & Fees"
                 data={data}
-                dataKey="total_volume_usd"
-                multipleDataKeys={{
-                  'Bull X': 'bullx_total_volume_usd',
-                  'Photon': 'photon_total_volume_usd',
-                  'Trojan': 'trojan_total_volume_usd'
-                }}
-                isMultiLine={true}
+                volumeKey="total_volume_usd"
+                feesKey="total_fees_usd"
               />
-              <TimelineChart
-                title="Users"
+              <CombinedChart
+                title="User Activity"
                 data={data}
-                dataKey="daily_users"
-                multipleDataKeys={{
-                  'Bull X': 'bullx_daily_users',
-                  'Photon': 'photon_daily_users',
-                  'Trojan': 'trojan_daily_users'
-                }}
-                isMultiLine={true}
+                volumeKey="daily_users"
+                feesKey="numberOfNewUsers"
+                barChartLabel="Daily Active Users"
+                lineChartLabel="New Users"
+                leftAxisFormatter={(value) => `${(value).toFixed(0)}`}
+                rightAxisFormatter={(value) => `${(value).toFixed(0)}`}
               />
               <TimelineChart
                 title="Trades"
@@ -414,41 +409,30 @@ const App = (): JSX.Element => {
                   'Photon': 'photon_daily_trades',
                   'Trojan': 'trojan_daily_trades'
                 }}
-                isMultiLine={true}
               />
-            <TimelineChart
-              title="Fees"
-              data={data}
-              dataKey="total_fees_usd"
-              multipleDataKeys={{
-                'Bull X': 'bullx_total_fees_usd',
-                'Photon': 'photon_total_fees_usd',
-                'Trojan': 'trojan_total_fees_usd'
-              }}
-              isMultiLine={true}
-            />
           </>
         ) : (
           <>
-            <TimelineChart
-              title="Volume"
-              data={data.filter(d => d.total_volume_usd !== undefined)}
-              dataKey="total_volume_usd"
+            <CombinedChart
+              title="Volume & Fees"
+              data={data.filter(d => d.total_volume_usd !== undefined && d.total_fees_usd !== undefined)}
+              volumeKey="total_volume_usd"
+              feesKey="total_fees_usd"
             />
-            <TimelineChart
-              title="Daily Active Users"
-              data={data.filter(d => d.daily_users !== undefined)}
-              dataKey="daily_users"
+            <CombinedChart
+              title="User Activity"
+              data={data.filter(d => d.daily_users !== undefined && d.numberOfNewUsers !== undefined)}
+              volumeKey="daily_users"
+              feesKey="numberOfNewUsers"
+              barChartLabel="Daily Active Users"
+              lineChartLabel="New Users"
+              leftAxisFormatter={(value) => `${(value).toFixed(0)}`}
+              rightAxisFormatter={(value) => `${(value).toFixed(0)}`}
             />
             <TimelineChart
               title="Trades"
               data={data.filter(d => d.daily_trades !== undefined)}
               dataKey="daily_trades"
-            />
-            <TimelineChart
-              title="Fees"
-              data={data.filter(d => d.total_fees_usd !== undefined)}
-              dataKey="total_fees_usd"
             />
           </>
         )}

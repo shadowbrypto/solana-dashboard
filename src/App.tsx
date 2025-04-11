@@ -94,8 +94,15 @@ function App() {
             });
 
             // Filter out null values and cast to the correct type
-        const validFormattedData = formattedData.filter((item): item is DailyData & { protocol: string } => item !== null);
-        allData.push(...validFormattedData);
+            const validFormattedData = formattedData.filter((item): item is DailyData & { protocol: string } => item !== null)
+              .sort((a, b) => {
+                const [dayA, monthA, yearA] = a.formattedDay.split('-');
+                const [dayB, monthB, yearB] = b.formattedDay.split('-');
+                const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+                const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+                return dateB.getTime() - dateA.getTime();
+              });
+            allData.push(...validFormattedData);
           }
 
           if (allData.length === 0) {
@@ -175,7 +182,7 @@ function App() {
             delimiter: ",",
           });
 
-          // Filter out empty rows and rows with missing fields
+          // Filter out empty rows and rows with missing fields and sort by date
           const validData = result.data.filter(
             (row) =>
               row &&
@@ -184,7 +191,13 @@ function App() {
               typeof row.daily_trades === "number" &&
               typeof row.total_fees_usd === "number" &&
               row.formattedDay
-          );
+          ).sort((a, b) => {
+            const [dayA, monthA, yearA] = a.formattedDay.split('/');
+            const [dayB, monthB, yearB] = b.formattedDay.split('/');
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+            return dateB.getTime() - dateA.getTime();
+          });
 
           if (validData.length === 0) {
             throw new Error("No valid data found");

@@ -7,6 +7,7 @@ import {
   Legend,
   ResponsiveContainer,
   Tooltip,
+  TooltipProps,
   XAxis,
   YAxis,
 } from "recharts";
@@ -89,7 +90,6 @@ export function TimelineChart({
       <CardHeader className="flex flex-row items-center justify-between pb-0">
         <div>
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-          <p className="text-sm text-muted-foreground">Total for the {timeframe === '7d' ? 'last 7 days' : timeframe === '30d' ? 'last 30 days' : timeframe === '3m' ? 'last 3 months' : 'all time'}</p>
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
           <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted transition-colors">
@@ -124,15 +124,16 @@ export function TimelineChart({
           </defs>
           <XAxis
             dataKey="formattedDay"
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            interval={Math.ceil(filteredData.length / 8) - 1}
             tickFormatter={(value: string) => {
               const [day, month, year] = value.split('-');
               const date = new Date(`${year}-${month}-${day}`);
               return new Intl.DateTimeFormat('en-US', {
                 month: 'short',
-                day: 'numeric',
+                day: 'numeric'
               }).format(date);
             }}
             dy={10}
@@ -150,28 +151,26 @@ export function TimelineChart({
             dx={-10}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-              border: '1px solid rgba(75, 85, 99, 0.4)',
-              borderRadius: '8px',
-              padding: '12px 16px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            }}
-            labelStyle={{ 
-              color: '#F3F4F6',
-              fontSize: '16px',
-              fontWeight: 500,
-              marginBottom: '8px',
-            }}
-            itemStyle={{ 
-              color: '#D1D5DB',
-              fontSize: '14px',
-              padding: '4px 0',
+            content={({ active, payload, label }: TooltipProps<number, string>) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="rounded-lg border border-border bg-popover p-2 shadow-md">
+                    <div className="text-sm text-muted-foreground mb-1">{label}</div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#4C4C4C] rounded-sm" />
+                        <span className="text-sm text-foreground">{payload[0].value}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
             }}
             labelFormatter={(label: string) => {
               const [day, month, year] = label.split('-');
               const date = new Date(`${year}-${month}-${day}`);
-              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+              return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(date);
             }}
             formatter={(value: any, name: string) => [
               new Intl.NumberFormat('en-US', {

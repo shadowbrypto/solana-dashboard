@@ -101,13 +101,59 @@ export function DataTable({ data }: DataTableProps) {
         <div className="text-sm text-muted-foreground">
           Page {currentPage} of {totalPages}
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="p-1 rounded-md transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </button>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(pageNum => {
+                // Show first page, last page, current page and one page before and after current
+                return pageNum === 1 || 
+                       pageNum === totalPages || 
+                       Math.abs(pageNum - currentPage) <= 1;
+              })
+              .map((pageNum, idx, arr) => {
+                // If there's a gap in the sequence, show ellipsis
+                if (idx > 0 && pageNum - arr[idx - 1] > 1) {
+                  return [
+                    <span key={`ellipsis-${pageNum}`} className="px-2 text-muted-foreground">...</span>,
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-[32px] h-8 flex items-center justify-center rounded-md text-sm transition-colors
+                        ${currentPage === pageNum 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-muted text-muted-foreground'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  ];
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`min-w-[32px] h-8 flex items-center justify-center rounded-md text-sm transition-colors
+                      ${currentPage === pageNum 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'hover:bg-muted text-muted-foreground'}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+          </div>
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 text-sm rounded-md transition-colors bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50"
+            className="p-1 rounded-md transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            <ChevronRightIcon className="h-4 w-4" />
           </button>
         </div>
       </div>

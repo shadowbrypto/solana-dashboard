@@ -384,7 +384,7 @@ const App = (): JSX.Element => {
           {protocol === 'all' ? (
             <>
               <TimelineChart
-                title="Volume (Daily)"
+                title="Volume"
                 data={data}
                 dataKey="total_volume_usd"
                 multipleDataKeys={{
@@ -395,7 +395,7 @@ const App = (): JSX.Element => {
                 isMultiLine={true}
               />
               <TimelineChart
-                title="Users (Daily)"
+                title="Users"
                 data={data}
                 dataKey="daily_users"
                 multipleDataKeys={{
@@ -406,7 +406,7 @@ const App = (): JSX.Element => {
                 isMultiLine={true}
               />
               <TimelineChart
-                title="Trades (Daily)"
+                title="Trades"
                 data={data}
                 dataKey="daily_trades"
                 multipleDataKeys={{
@@ -417,7 +417,7 @@ const App = (): JSX.Element => {
                 isMultiLine={true}
               />
             <TimelineChart
-              title="Fees (Daily)"
+              title="Fees"
               data={data}
               dataKey="total_fees_usd"
               multipleDataKeys={{
@@ -431,22 +431,22 @@ const App = (): JSX.Element => {
         ) : (
           <>
             <TimelineChart
-              title="Volume (Daily)"
+              title="Volume"
               data={data.filter(d => d.total_volume_usd !== undefined)}
               dataKey="total_volume_usd"
             />
             <TimelineChart
-              title="Users (Daily)"
+              title="Users"
               data={data.filter(d => d.daily_users !== undefined)}
               dataKey="daily_users"
             />
             <TimelineChart
-              title="Trades (Daily)"
+              title="Trades"
               data={data.filter(d => d.daily_trades !== undefined)}
               dataKey="daily_trades"
             />
             <TimelineChart
-              title="Fees (Daily)"
+              title="Fees"
               data={data.filter(d => d.total_fees_usd !== undefined)}
               dataKey="total_fees_usd"
             />

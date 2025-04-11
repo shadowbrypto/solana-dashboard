@@ -131,7 +131,13 @@ export function CombinedChart({
             <YAxis
               yAxisId="left"
               orientation="left"
-              tickFormatter={leftAxisFormatter}
+              tickFormatter={(value) => {
+                const absValue = Math.abs(value);
+                if (absValue >= 1e9) return `${Math.round(value / 1e9)}B`;
+                if (absValue >= 1e6) return `${Math.round(value / 1e6)}M`;
+                if (absValue >= 1e3) return `${Math.round(value / 1e3)}K`;
+                return `${Math.round(value)}`;
+              }}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
@@ -139,7 +145,13 @@ export function CombinedChart({
             <YAxis
               yAxisId="right"
               orientation="right"
-              tickFormatter={rightAxisFormatter}
+              tickFormatter={(value) => {
+                const absValue = Math.abs(value);
+                if (absValue >= 1e9) return `${Math.round(value / 1e9)}B`;
+                if (absValue >= 1e6) return `${Math.round(value / 1e6)}M`;
+                if (absValue >= 1e3) return `${Math.round(value / 1e3)}K`;
+                return `${Math.round(value)}`;
+              }}
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}

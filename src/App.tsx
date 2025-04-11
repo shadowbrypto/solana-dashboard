@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { useSearchParams, Navigate } from "react-router-dom";
+import { Routes, Route, useSearchParams, Navigate } from "react-router-dom";
 
 import { MetricCard } from "./components/MetricCard";
 import {
@@ -16,7 +16,9 @@ import { DailyData } from "./types";
 import { ProtocolSelector } from "./components/ProtocolSelector";
 import { CombinedChart } from "./components/CombinedChart";
 
-const App = (): JSX.Element => {
+import Reports from "./pages/Reports";
+
+const MainContent = (): JSX.Element => {
   // Apply dark theme by default
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -447,6 +449,15 @@ const App = (): JSX.Element => {
       )
     )}
     </div>
+  );
+};
+
+const App = (): JSX.Element => {
+  return (
+    <Routes>
+      <Route path="/" element={<MainContent />} />
+      <Route path="/reports" element={<Reports />} />
+    </Routes>
   );
 };
 

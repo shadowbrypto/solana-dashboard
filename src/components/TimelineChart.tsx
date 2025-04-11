@@ -1,4 +1,17 @@
-import { Card, Title } from "@tremor/react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState, useMemo } from "react";
 import {
   ResponsiveContainer,
   Tooltip,
@@ -9,9 +22,14 @@ import {
   Legend,
 } from "recharts";
 
+type TimeFrame = "7d" | "30d" | "3m" | "all";
+
 interface TimelineChartProps {
   title: string;
-  data: any[];
+  data: Array<{
+    formattedDay: string;
+    [key: string]: string | number;
+  }>;
   dataKey: string;
   multipleDataKeys?: Record<string, string>;
   isMultiLine?: boolean;
@@ -31,11 +49,57 @@ export function TimelineChart({
   multipleDataKeys, 
   isMultiLine = false 
 }: TimelineChartProps) {
+  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+
+  const filteredData = useMemo(() => {
+    if (timeframe === "all") return [...data].reverse();
+
+    const now = new Date();
+    let daysToSubtract: number;
+
+    switch (timeframe) {
+      case "7d":
+        daysToSubtract = 7;
+        break;
+      case "30d":
+        daysToSubtract = 30;
+        break;
+      case "3m":
+        daysToSubtract = 90;
+        break;
+      default:
+        daysToSubtract = 90;
+    }
+
+    const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+
+    return [...data]
+      .filter(item => {
+        const [day, month, year] = item.formattedDay.split("-");
+        const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return itemDate >= cutoffDate;
+      })
+      .reverse();
+  }, [data, timeframe]);
   return (
-    <Card className="bg-black rounded-lg p-4 border-0 hover:bg-black/80 transition-colors duration-200">
-      <Title className="text-lg font-medium mb-6 text-white/90">{title}</Title>
-      <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={[...data].reverse()}>
+    <Card className="bg-black/95 border-gray-800 hover:bg-black/90 transition-colors duration-200">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium text-white/90">{title}</CardTitle>
+        <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
+          <SelectTrigger className="w-[140px] bg-black/50 text-white border-gray-700">
+            <SelectValue placeholder="Select timeframe" />
+          </SelectTrigger>
+          <SelectContent className="bg-black/90 border-gray-700 text-white">
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="3m">Last 3 months</SelectItem>
+            <SelectItem value="all">All time</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={400}>
+        <AreaChart data={filteredData}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="25%" stopColor="#BC2AF8" stopOpacity={0.7} />
@@ -59,6 +123,11 @@ export function TimelineChart({
             dataKey="formattedDay"
             tick={{ fill: "#9CA3AF" }}
             axisLine={{ stroke: "#374151" }}
+            tickFormatter={(value: string) => {
+              const [day, month, year] = value.split('-');
+              const date = new Date(`${year}-${month}-${day}`);
+              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+            }}
           />
           <YAxis
             tick={{ fill: "#9CA3AF" }}
@@ -79,11 +148,16 @@ export function TimelineChart({
               padding: "1rem",
               color: "#E5E7EB",
             }}
-            formatter={(value: number) => [
-              new Intl.NumberFormat("en-US", {
+            labelFormatter={(label: string) => {
+              const [day, month, year] = label.split('-');
+              const date = new Date(`${year}-${month}-${day}`);
+              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+            }}
+            formatter={(value: any) => [
+              typeof value === 'number' ? new Intl.NumberFormat("en-US", {
                 notation: "compact",
                 maximumFractionDigits: 2,
-              }).format(value),
+              }).format(value) : value,
             ]}
           />
           {isMultiLine && multipleDataKeys ? (
@@ -110,9 +184,21 @@ export function TimelineChart({
               fill="url(#colorValue)"
             />
           )}
-          {isMultiLine && <Legend wrapperStyle={{ color: '#E5E7EB' }} />}
+          {isMultiLine && (
+            <Legend 
+              wrapperStyle={{ 
+                paddingTop: '24px',
+                color: '#E5E7EB',
+                fontSize: '14px',
+              }}
+              iconType="square"
+              iconSize={10}
+              verticalAlign="top"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
+      </CardContent>
     </Card>
   );
 }

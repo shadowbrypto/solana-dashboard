@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 interface MetricCardProps {
   title: string;
@@ -20,7 +20,7 @@ export function MetricCard({
 
   return (
     <Card className="bg-card">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon && <div className="text-muted-foreground">{icon}</div>}
@@ -28,16 +28,18 @@ export function MetricCard({
           </div>
           {duration && <div className="text-muted-foreground text-xs">{duration}</div>}
         </div>
+      </CardHeader>
+      <CardContent className="pt-4">
         <div className="text-foreground text-2xl font-medium">{value}</div>
         {percentageChange && (
           <div
-            className={`text-sm ${isNegative ? "text-destructive" : "text-green-500"}`}
+            className={`text-sm mt-1 ${isNegative ? "text-destructive" : "text-green-500"}`}
           >
             {isNegative ? "" : "+"}
             {percentageChange.toFixed(2)}%
           </div>
         )}
-      </CardHeader>
+      </CardContent>
     </Card>
   );
 }

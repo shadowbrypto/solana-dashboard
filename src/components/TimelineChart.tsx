@@ -1,3 +1,15 @@
+import { DailyData } from "@/types";
+import { useState, useMemo } from "react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -11,16 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useMemo } from "react";
-import {
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Area,
-  AreaChart,
-  Legend,
-} from "recharts";
 
 type TimeFrame = "7d" | "30d" | "3m" | "all";
 
@@ -83,62 +85,69 @@ export function TimelineChart({
       .reverse();
   }, [data, timeframe]);
   return (
-    <Card className="bg-black/95 border-gray-800 hover:bg-black/90 transition-colors duration-200">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium text-white/90">{title}</CardTitle>
+    <Card className="bg-card border-border">
+      <CardHeader className="flex flex-row items-center justify-between pb-0">
+        <div>
+          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <p className="text-sm text-muted-foreground">Total for the {timeframe === '7d' ? 'last 7 days' : timeframe === '30d' ? 'last 30 days' : timeframe === '3m' ? 'last 3 months' : 'all time'}</p>
+        </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-[140px] bg-black/50 text-white border-gray-700">
+          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted transition-colors">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
-          <SelectContent className="bg-black/90 border-gray-700 text-white">
-            <SelectItem value="7d">Last 7 days</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="3m">Last 3 months</SelectItem>
-            <SelectItem value="all">All time</SelectItem>
+          <SelectContent className="bg-popover border-border text-popover-foreground">
+            <SelectItem value="7d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 7 days</SelectItem>
+            <SelectItem value="30d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 30 days</SelectItem>
+            <SelectItem value="3m" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 3 months</SelectItem>
+            <SelectItem value="all" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">All time</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={filteredData}>
+        <AreaChart data={filteredData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
           <defs>
+            <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="8" />
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="25%" stopColor="#BC2AF8" stopOpacity={0.7} />
-              <stop offset="100%" stopColor="#BC2AF8" stopOpacity={0} />
+              <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
             </linearGradient>
             {/* Add gradients for each protocol */}
             <linearGradient id="bullxGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="25%" stopColor={PROTOCOL_COLORS['Bull X']} stopOpacity={0.7} />
-              <stop offset="100%" stopColor={PROTOCOL_COLORS['Bull X']} stopOpacity={0} />
+              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.05} />
             </linearGradient>
             <linearGradient id="photonGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="25%" stopColor={PROTOCOL_COLORS['Photon']} stopOpacity={0.7} />
-              <stop offset="100%" stopColor={PROTOCOL_COLORS['Photon']} stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="trojanGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="25%" stopColor={PROTOCOL_COLORS['Trojan']} stopOpacity={0.7} />
-              <stop offset="100%" stopColor={PROTOCOL_COLORS['Trojan']} stopOpacity={0} />
+              <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.05} />
             </linearGradient>
           </defs>
           <XAxis
             dataKey="formattedDay"
-            tick={{ fill: "#9CA3AF" }}
-            axisLine={{ stroke: "#374151" }}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
             tickFormatter={(value: string) => {
               const [day, month, year] = value.split('-');
               const date = new Date(`${year}-${month}-${day}`);
-              return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+              return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: 'numeric',
+              }).format(date);
             }}
+            dy={10}
           />
           <YAxis
-            tick={{ fill: "#9CA3AF" }}
-            axisLine={{ stroke: "#374151" }}
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
             tickFormatter={(value) =>
               new Intl.NumberFormat("en-US", {
                 notation: "compact",
                 compactDisplay: "short",
               }).format(value)
             }
+            dx={-10}
           />
           <Tooltip
             contentStyle={{
@@ -191,43 +200,43 @@ export function TimelineChart({
             <Area
               type="monotone"
               dataKey={dataKey}
-              stroke="#BC2AF8"
-              strokeWidth={2}
+              stroke="hsl(var(--chart-1))"
+              strokeWidth={1.5}
+              dot={false}
               fill="url(#colorValue)"
             />
           )}
           {isMultiLine && (
             <Legend 
               wrapperStyle={{ 
-                paddingTop: '16px',
+                paddingTop: 20,
                 color: '#E5E7EB',
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
               iconType="square"
-              iconSize={10}
+              iconSize={16}
               verticalAlign="bottom"
+              formatter={(value: string) => (
+                <span className="text-foreground ml-2">{value}</span>
+              )}
               onClick={(e: any) => {
                 const dataKey = e.dataKey as string;
                 setActiveKeys(prev => {
                   const newKeys = new Set(prev);
                   if (dataKey === 'all') {
                     if (newKeys.has('all')) {
-                      // If 'all' is being deselected, keep it and clear others
                       newKeys.clear();
                       newKeys.add('all');
                     } else {
-                      // If 'all' is being selected, add everything
                       newKeys.clear();
                       newKeys.add('all');
                       Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
                     }
                   } else {
-                    // Remove 'all' when selecting individual items
                     newKeys.delete('all');
                     if (newKeys.has(dataKey)) {
                       newKeys.delete(dataKey);
-                      // If nothing is selected, select 'all'
                       if (newKeys.size === 0) {
                         newKeys.add('all');
                         Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
@@ -240,15 +249,42 @@ export function TimelineChart({
                 });
               }}
               payload={[
-                { value: 'All', type: 'line' as const, color: '#9CA3AF', dataKey: 'all', inactive: !activeKeys.has('all') },
                 ...Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => ({
                   value: name,
-                  type: 'line' as const,
+                  type: 'rect' as const,
                   color: key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0',
                   dataKey: key,
                   inactive: !activeKeys.has(key)
                 }))
               ]}
+              content={({ payload }) => {
+                if (!payload) return null;
+                return (
+                  <div className="flex gap-4">
+                    {payload.map((entry: any) => (
+                      <div 
+                        key={entry.dataKey}
+                        className="flex items-center cursor-pointer select-none"
+                        onClick={() => {
+                          const e = { dataKey: entry.dataKey };
+                          if (typeof entry.onClick === 'function') {
+                            entry.onClick(e);
+                          }
+                        }}
+                      >
+                        <div 
+                          className={`w-4 h-4 rounded border-2 transition-colors ${entry.inactive ? 'bg-transparent' : 'bg-current'}`}
+                          style={{ 
+                            borderColor: entry.color,
+                            color: entry.color
+                          }}
+                        />
+                        <span className="ml-2 text-sm text-muted-foreground">{entry.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
             />
           )}
         </AreaChart>

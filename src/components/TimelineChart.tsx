@@ -35,7 +35,7 @@ export function TimelineChart({
     <Card className="bg-black rounded-lg p-4 border-0 hover:bg-black/80 transition-colors duration-200">
       <Title className="text-lg font-medium mb-6 text-white/90">{title}</Title>
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={data}>
+        <AreaChart data={[...data].reverse()}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="25%" stopColor="#BC2AF8" stopOpacity={0.7} />

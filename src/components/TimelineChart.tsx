@@ -155,12 +155,45 @@ export function TimelineChart({
               if (active && payload && payload.length) {
                 return (
                   <div className="rounded-lg border border-border bg-popover p-2 shadow-md">
-                    <div className="text-sm text-muted-foreground mb-1">{label}</div>
+                    <div className="text-sm text-muted-foreground mb-1">
+                      {(() => {
+                        const [rawDay, rawMonth, rawYear] = label.split('-');
+                        const date = new Date(`${rawYear}-${rawMonth}-${rawDay}`);
+                        return new Intl.DateTimeFormat('en-US', { 
+                          day: 'numeric', 
+                          month: 'short',
+                          year: 'numeric'
+                        }).format(date);
+                      })()}
+                    </div>
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-[#4C4C4C] rounded-sm" />
-                        <span className="text-sm text-foreground">{payload[0].value}</span>
-                      </div>
+                      {payload.map((entry: any, index: number) => {
+                        const color = isMultiLine
+                          ? (typeof entry.dataKey === 'string' && entry.dataKey.includes('bullx')
+                            ? '#BC2AF8'
+                            : typeof entry.dataKey === 'string' && entry.dataKey.includes('photon')
+                            ? '#FF4444'
+                            : '#00E0B0')
+                          : 'hsl(var(--chart-1))';
+                        
+                        return (
+                          <div key={index} className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-sm" 
+                              style={{ backgroundColor: color }}
+                            />
+                            <span className="text-sm text-foreground">
+                              {title}: {typeof entry.value === 'number'
+                                ? new Intl.NumberFormat('en-US', {
+                                    notation: 'compact',
+                                    maximumFractionDigits: 0,
+                                    compactDisplay: 'short'
+                                  }).format(entry.value)
+                                : '-'}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -172,14 +205,7 @@ export function TimelineChart({
               const date = new Date(`${year}-${month}-${day}`);
               return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(date);
             }}
-            formatter={(value: any, name: string) => [
-              new Intl.NumberFormat('en-US', {
-                notation: 'standard',
-                maximumFractionDigits: 0,
-              }).format(value),
-              name
-            ]}
-            separator="  "
+
           />
           {isMultiLine && multipleDataKeys ? (
             // Render multiple lines for different protocols

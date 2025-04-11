@@ -436,7 +436,7 @@ const App = (): JSX.Element => {
               dataKey="total_volume_usd"
             />
             <TimelineChart
-              title="Users"
+              title="Daily Active Users"
               data={data.filter(d => d.daily_users !== undefined)}
               dataKey="daily_users"
             />

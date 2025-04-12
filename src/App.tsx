@@ -340,43 +340,39 @@ const MainContent = (): JSX.Element => {
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Volume"
-          icon={<DollarSignIcon size={14} />}
+          type="volume"
           value={new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
             notation: "compact",
             maximumFractionDigits: 1,
           }).format(latestData.total_volume_usd)}
-          duration="Lifetime"
         />
         <MetricCard
           title="Users"
-          icon={<UsersIcon size={14} />}
+          type="users"
           value={new Intl.NumberFormat("en-US", {
             notation: "compact",
             maximumFractionDigits: 1,
           }).format(latestData.daily_users)}
-          duration="Lifetime"
         />
         <MetricCard
           title="Trades"
-          icon={<BarChart2Icon size={14} />}
+          type="trades"
           value={new Intl.NumberFormat("en-US", {
             notation: "compact",
             maximumFractionDigits: 1,
           }).format(latestData.daily_trades)}
-          duration="Lifetime"
         />
         <MetricCard
           title="Fees"
-          icon={<CoinsIcon size={14} />}
+          type="fees"
           value={new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
             notation: "compact",
             maximumFractionDigits: 1,
           }).format(latestData.total_fees_usd)}
-          duration="Lifetime"
         />
       </div>
 

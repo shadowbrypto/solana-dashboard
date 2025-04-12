@@ -119,23 +119,30 @@ export function TimelineChart({
           <defs>
             {isMultiLine ? (
               Object.entries(multipleDataKeys || {}).map(([name, key], index) => (
-                <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  key={key}
+                  id={`gradient-${key}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop
-                    offset="0%"
+                    offset="5%"
                     stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
-                    stopOpacity={0.2}
+                    stopOpacity={0.1}
                   />
                   <stop
-                    offset="100%"
+                    offset="95%"
                     stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
-                    stopOpacity={0.05}
+                    stopOpacity={0}
                   />
                 </linearGradient>
               ))
             ) : (
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.05} />
+                <stop offset="5%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.1} />
+                <stop offset="95%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0} />
               </linearGradient>
             )}
           </defs>
@@ -249,9 +256,10 @@ export function TimelineChart({
               type="monotone"
               dataKey={dataKey}
               stroke={MIDNIGHT_THEME.stroke}
-              strokeWidth={1.5}
+              strokeWidth={2}
               dot={false}
               fill="url(#colorValue)"
+              fillOpacity={0.1}
             />
           )}
           {isMultiLine && (

@@ -49,8 +49,8 @@ const PALETTE_COLORS = [
 ];
 
 const MIDNIGHT_THEME = {
-  stroke: 'hsl(217.2 91.2% 59.8%)',  // blue-400
-  fill: 'hsl(217.2 91.2% 59.8% / 0.1)',
+  stroke: 'hsl(var(--primary))',
+  fill: 'hsl(var(--primary))',
 };
 
 export function TimelineChart({ 
@@ -128,21 +128,21 @@ export function TimelineChart({
                   y2="1"
                 >
                   <stop
-                    offset="5%"
+                    offset="0%"
                     stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
-                    stopOpacity={0.1}
+                    stopOpacity={0.5}
                   />
                   <stop
-                    offset="95%"
+                    offset="100%"
                     stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
-                    stopOpacity={0}
+                    stopOpacity={0.01}
                   />
                 </linearGradient>
               ))
             ) : (
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.1} />
-                <stop offset="95%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0} />
+                <stop offset="0%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.5} />
+                <stop offset="100%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.01} />
               </linearGradient>
             )}
           </defs>
@@ -184,53 +184,50 @@ export function TimelineChart({
           <Tooltip
             content={({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
               if (!active || !payload || payload.length === 0) return null;
-              
-              // Get protocol name from the data key
-              const getProtocolName = (key: string) => {
-                if (isMultiLine && multipleDataKeys) {
-                  // Find the protocol name by looking up the data key in multipleDataKeys
-                  const protocolEntry = Object.entries(multipleDataKeys).find(([_, value]) => value === key);
-                  return protocolEntry ? protocolEntry[0] : key;
-                }
-                return title;
-              };
 
               return (
                 <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {(() => {
-                      const [day, month, year] = label.split('-');
-                      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                      return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(date);
-                    })()}
-                  </p>
-                  {payload.map((entry: any, index: number) => {
-                    const displayName = getProtocolName(entry.dataKey);
-                    return (
-                      <div key={index} className="flex items-center justify-between gap-8">
-                        <div className="flex items-center gap-2">
-                          {isMultiLine && (
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: entry.color }}
+                  <div className="grid gap-2">
+                    <div className="text-[10px] text-muted-foreground">
+                      {(() => {
+                        const [day, month, year] = label.split('-');
+                        return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        });
+                      })()}
+                    </div>
+                    <div className="space-y-1">
+                      {payload.map((entry) => {
+                        const dataKey = entry.dataKey as string;
+                        const name = isMultiLine
+                          ? Object.entries(multipleDataKeys || {}).find(([_, key]) => key === dataKey)?.[0] || dataKey
+                          : title;
+                        const color = isMultiLine
+                          ? PALETTE_COLORS[Object.values(multipleDataKeys || {}).indexOf(dataKey) % PALETTE_COLORS.length].stroke
+                          : MIDNIGHT_THEME.stroke;
+
+                        return (
+                          <div key={dataKey} className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-lg" 
+                              style={{ backgroundColor: color }}
                             />
-                          )}
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: entry.color }}
-                          >
-                            {displayName}
-                          </p>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {new Intl.NumberFormat("en-US", {
-                            notation: "compact",
-                            compactDisplay: "short",
-                          }).format(entry.value)}
-                        </p>
-                      </div>
-                    );
-                  })}
+                            <span className="text-sm text-foreground">
+                              {name}: {typeof entry.value === 'number'
+                                ? new Intl.NumberFormat('en-US', {
+                                    notation: 'compact',
+                                    compactDisplay: 'short'
+                                  }).format(entry.value)
+                                : entry.value
+                              }
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               );
             }}
@@ -246,7 +243,7 @@ export function TimelineChart({
                 strokeWidth={1.5}
                 dot={false}
                 fill={`url(#gradient-${key})`}
-                fillOpacity={0.1}
+                fillOpacity={1}
                 hide={!activeKeys.has(key)}
               />
             ))
@@ -259,7 +256,7 @@ export function TimelineChart({
               strokeWidth={2}
               dot={false}
               fill="url(#colorValue)"
-              fillOpacity={0.1}
+              fillOpacity={1}
             />
           )}
           {isMultiLine && (

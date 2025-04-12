@@ -1,12 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './index.css';
+import './globals.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Layout } from './components/Layout';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
+
+// Set dark mode as default
+document.documentElement.classList.add('dark');
 
 // Create a router with our routes
 const router = createBrowserRouter([

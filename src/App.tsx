@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
-import { useSearchParams, Navigate } from "react-router-dom";
+import { Routes, Route, useSearchParams, Navigate } from "react-router-dom";
 
 import { MetricCard } from "./components/MetricCard";
 import {
@@ -14,37 +14,49 @@ import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
 import { ProtocolSelector } from "./components/ProtocolSelector";
+import { CombinedChart } from "./components/CombinedChart";
+import { ProtocolDataTable } from "./components/ProtocolDataTable";
+import { Protocol } from "./types/protocols";
+import { ProtocolMetrics } from "./types";
 
-function App() {
-  const [data, setData] = useState<DailyData[]>([]);
-  const [activeView, setActiveView] = useState<"charts" | "data">("charts");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [protocol, setProtocol] = useState('bullx');
-  const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
+import Reports from "./pages/Reports";
+
+const MainContent = (): JSX.Element => {
+  // Apply dark theme by default
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark:bg-background');
+  }, []);
 
   // Use React Router's useSearchParams hook instead of directly accessing window.location
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [data, setData] = useState<DailyData[]>([]);
+  const [activeView, setActiveView] = useState<"charts" | "data">(searchParams.get("view") === "data" ? "data" : "charts");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [protocol, setProtocol] = useState(searchParams.get("protocol")?.toLowerCase() || "bullx");
+  const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
   
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Get the protocol from URL params or default to 'bullx'
-        const protocolParam = searchParams.get("protocol")?.toLowerCase() || "bullx";
-        setProtocol(protocolParam);
+  // Load data for the selected protocol
+  const loadData = async (selectedProtocol: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setInvalidProtocol(false);
 
         // Validate protocol
         const validProtocols = ["bullx", "photon", "trojan", "all"];
-        if (!validProtocols.includes(protocolParam)) {
+        if (!validProtocols.includes(selectedProtocol)) {
           // Instead of throwing an error, set the invalidProtocol flag to true
           setInvalidProtocol(true);
           setLoading(false);
           return; // Exit early
         }
 
-        if (protocolParam === "all") {
+        if (selectedProtocol === "all") {
           // Load data from all protocols
-          const protocols = ["bullx", "photon", "trojan"];
+          const protocols: Protocol[] = ['bullx', 'photon', 'trojan'];
           const allData: Array<DailyData & { protocol: string }> = [];
 
           for (const protocol of protocols) {
@@ -66,26 +78,56 @@ function App() {
                 typeof row.daily_users === "number" &&
                 typeof row.daily_trades === "number" &&
                 typeof row.total_fees_usd === "number" &&
+                typeof row.numberOfNewUsers === "number" &&
                 row.formattedDay
             );
 
             // Format dates and add protocol identifier
             const formattedData = validData.map(row => {
-              const [day, month, year] = row.formattedDay.split("/");
+              if (!row.formattedDay) return null;
+              // Ensure date parts are valid strings
+              const dateParts = (row.formattedDay || '').split("/");
+              if (dateParts.length !== 3) return null;
+              const [day, month, year] = dateParts;
+              if (!day || !month || !year) return null;
+              
               const date = new Date(`${year}-${month}-${day}`);
+              if (isNaN(date.getTime())) return null;
+              
+              // Convert protocol name to proper Protocol type
+              let protocolName: Protocol;
+              switch (protocol) {
+                case 'bullx': protocolName = 'bullx'; break;
+                case 'photon': protocolName = 'photon'; break;
+                case 'trojan': protocolName = 'trojan'; break;
+                default: return null; // Skip invalid protocols
+              }
+              
               return {
                 ...row,
-                protocol,
-                formattedDay: date.getDate() + " " + date.toLocaleString('en', { month: 'short' }),
+                protocol: protocolName,
+                formattedDay: `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`,
                 // Add protocol-specific keys for the chart
                 [`${protocol}_total_volume_usd`]: row.total_volume_usd,
                 [`${protocol}_daily_users`]: row.daily_users,
+                [`${protocol}_numberOfNewUsers`]: row.numberOfNewUsers,
                 [`${protocol}_daily_trades`]: row.daily_trades,
                 [`${protocol}_total_fees_usd`]: row.total_fees_usd,
               };
             });
 
-            allData.push(...formattedData);
+            // Filter out null values and sort by date
+            const sortedData = formattedData
+                .filter((d): d is DailyData & { protocol: Protocol } => d !== null)
+                .sort((a, b) => {
+                  const [dayA, monthA, yearA] = a.formattedDay.split('-');
+                  const [dayB, monthB, yearB] = b.formattedDay.split('-');
+                  const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+                  const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+                  return dateA.getTime() - dateB.getTime();
+                });
+
+            allData.push(...sortedData);
           }
 
           if (allData.length === 0) {
@@ -93,7 +135,7 @@ function App() {
           }
 
           // Combine data by date
-          const dateMap = new Map<string, any>();
+          const dateMap = new Map<string, DailyData>();
           
           allData.forEach(item => {
             if (!dateMap.has(item.formattedDay)) {
@@ -103,51 +145,63 @@ function App() {
                 daily_users: 0,
                 daily_trades: 0,
                 total_fees_usd: 0,
+                numberOfNewUsers: 0,
                 bullx_total_volume_usd: 0,
                 bullx_daily_users: 0,
                 bullx_daily_trades: 0,
                 bullx_total_fees_usd: 0,
+                bullx_numberOfNewUsers: 0,
                 photon_total_volume_usd: 0,
                 photon_daily_users: 0,
                 photon_daily_trades: 0,
                 photon_total_fees_usd: 0,
+                photon_numberOfNewUsers: 0,
                 trojan_total_volume_usd: 0,
                 trojan_daily_users: 0,
                 trojan_daily_trades: 0,
                 trojan_total_fees_usd: 0,
+                trojan_numberOfNewUsers: 0
               });
             }
-            
-            const existingEntry = dateMap.get(item.formattedDay);
+
+            const dailyData = dateMap.get(item.formattedDay)!;
+            const prefix = item.protocol;
             
             // Update protocol-specific metrics
-            existingEntry[`${item.protocol}_total_volume_usd`] = item.total_volume_usd;
-            existingEntry[`${item.protocol}_daily_users`] = item.daily_users;
-            existingEntry[`${item.protocol}_daily_trades`] = item.daily_trades;
-            existingEntry[`${item.protocol}_total_fees_usd`] = item.total_fees_usd;
-            
-            // Update combined metrics
-            existingEntry.total_volume_usd += item.total_volume_usd;
-            existingEntry.daily_users += item.daily_users;
-            existingEntry.daily_trades += item.daily_trades;
-            existingEntry.total_fees_usd += item.total_fees_usd;
-            
-            dateMap.set(item.formattedDay, existingEntry);
+            dailyData[`${prefix}_total_volume_usd`] = item.total_volume_usd;
+            dailyData[`${prefix}_daily_users`] = item.daily_users;
+            dailyData[`${prefix}_daily_trades`] = item.daily_trades;
+            dailyData[`${prefix}_total_fees_usd`] = item.total_fees_usd;
+            dailyData[`${prefix}_numberOfNewUsers`] = item.numberOfNewUsers;
+
+            // Update total metrics
+            dailyData.total_volume_usd += item.total_volume_usd;
+            dailyData.daily_users += item.daily_users;
+            dailyData.daily_trades += item.daily_trades;
+            dailyData.total_fees_usd += item.total_fees_usd;
+            dailyData.numberOfNewUsers += item.numberOfNewUsers;
+
+            dateMap.set(item.formattedDay, dailyData);
           });
-          
-          // Convert map to array and sort by date
-          const combinedData = Array.from(dateMap.values()).sort((a, b) => {
-            const [dayA, monthA] = a.formattedDay.split(" ");
-            const [dayB, monthB] = b.formattedDay.split(" ");
-            const dateA = new Date(`2025-${monthA}-${dayA}`);
-            const dateB = new Date(`2025-${monthB}-${dayB}`);
-            return dateB.getTime() - dateA.getTime();
-          });
-          
-          setData(combinedData);
+
+          // Convert Map to array and sort by date
+          const sortedData = Array.from(dateMap.values())
+            .sort((a, b) => {
+              const [dayA, monthA, yearA] = (a.formattedDay || '').split('-');
+              const [dayB, monthB, yearB] = (b.formattedDay || '').split('-');
+              if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
+              
+              const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+              const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+              if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
+              return dateA.getTime() - dateB.getTime();
+            });
+
+          setData(sortedData);
+          setLoading(false);
         } else {
           // Load data for a single protocol
-          const response = await fetch(`/data/${protocolParam}.csv`);
+          const response = await fetch(`/data/${selectedProtocol}.csv`);
           if (!response.ok) throw new Error("Failed to fetch data");
 
           const csvText = await response.text();
@@ -157,7 +211,7 @@ function App() {
             delimiter: ",",
           });
 
-          // Filter out empty rows and rows with missing fields
+          // Filter out empty rows and rows with missing fields and sort by date
           const validData = result.data.filter(
             (row) =>
               row &&
@@ -166,7 +220,13 @@ function App() {
               typeof row.daily_trades === "number" &&
               typeof row.total_fees_usd === "number" &&
               row.formattedDay
-          );
+          ).sort((a, b) => {
+            const [dayA, monthA, yearA] = a.formattedDay.split('/');
+            const [dayB, monthB, yearB] = b.formattedDay.split('/');
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+            return dateB.getTime() - dateA.getTime();
+          });
 
           if (validData.length === 0) {
             throw new Error("No valid data found");
@@ -174,21 +234,39 @@ function App() {
 
           // Format dates and sort data by date in descending order
           const sortedData = validData.map(row => {
-            const [day, month, year] = row.formattedDay.split("/");
+            if (!row.formattedDay) return null;
+            // Ensure date parts are valid strings
+            const dateParts = (row.formattedDay || '').split("/");
+            if (dateParts.length !== 3) return null;
+            const [day, month, year] = dateParts;
+            if (!day || !month || !year) return null;
+            
             const date = new Date(`${year}-${month}-${day}`);
+            if (isNaN(date.getTime())) return null;
+            
             return {
               ...row,
-              formattedDay: date.getDate() + " " + date.toLocaleString('en', { month: 'short' })
+              formattedDay: `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`,
             };
-          }).sort((a, b) => {
-            const [dayA, monthA] = a.formattedDay.split(" ");
-            const [dayB, monthB] = b.formattedDay.split(" ");
-            const dateA = new Date(`2025-${monthA}-${dayA}`);
-            const dateB = new Date(`2025-${monthB}-${dayB}`);
+          }).filter((item): item is DailyData => item !== null).sort((a, b) => {
+            // Safely parse dates for comparison
+            const partsA = (a.formattedDay || '').split("-");
+            const partsB = (b.formattedDay || '').split("-");
+            if (partsA.length !== 3 || partsB.length !== 3) return 0;
+            
+            const [dayA, monthA, yearA] = partsA;
+            const [dayB, monthB, yearB] = partsB;
+            if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
+            
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
             return dateB.getTime() - dateA.getTime();
           });
 
-          setData(sortedData);
+          // Filter out null values before setting state
+          const validSortedData = sortedData.filter((item): item is DailyData => item !== null);
+          setData(validSortedData);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -196,12 +274,15 @@ function App() {
         setLoading(false);
       }
     };
-    loadData();
-  }, [searchParams]);
+  // Load data when protocol changes
+  useEffect(() => {
+    loadData(protocol);
+  }, [protocol]);
 
   const latestData = data.reduce(
     (acc, curr) => {
       acc.total_volume_usd += curr.total_volume_usd;
+      acc.numberOfNewUsers += curr.numberOfNewUsers;
       acc.daily_users += curr.daily_users;
       acc.daily_trades += curr.daily_trades;
       acc.total_fees_usd += curr.total_fees_usd;
@@ -209,6 +290,7 @@ function App() {
     },
     {
       total_volume_usd: 0,
+      numberOfNewUsers: 0,
       daily_users: 0,
       daily_trades: 0,
       total_fees_usd: 0,
@@ -239,158 +321,221 @@ function App() {
   // Calculate percentage changes comparing current with 30-day average
   const calculatePercentageChange = (
     metric: keyof Omit<DailyData, "formattedDay">
-  ) => {
-    if (data.length < 30) return 0;
+  ): number => {
+    if (!data || data.length === 0) return 0;
 
-    const current = data[0][metric] as number;
-    const last30Days = data.slice(0, 30);
-    const average =
-      last30Days.reduce((acc, curr) => acc + (curr[metric] as number), 0) / 30;
+    // Get the latest value
+    const latestValue = data[data.length - 1][metric];
 
-    if (average === 0) return 0;
-    return ((current - average) / average) * 100;
+    // Calculate the average of the last 30 days
+    const thirtyDayAverage =
+      data
+        .slice(-30)
+        .reduce((acc: number, curr) => acc + (curr[metric] as number), 0) / 30;
+
+    // Calculate the percentage change
+    if (thirtyDayAverage === 0) return 0;
+    return ((latestValue as number) - thirtyDayAverage) / thirtyDayAverage * 100;
   };
 
   return (
-    <>
+    <div className="p-4">
       <h1 className="text-3xl font-bold mb-8 text-white/90 text-center">
         {protocol === 'all' ? 'Combined Protocols' : protocol.charAt(0).toUpperCase() + protocol.slice(1)} Dashboard
       </h1>
-      
-      <ProtocolSelector />
 
-        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Volume"
-            icon={<DollarSignIcon size={14} />}
-            value={new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(latestData.total_volume_usd)}
-            duration="Lifetime"
-          />
-          <MetricCard
-            title="Users"
-            icon={<UsersIcon size={14} />}
-            value={new Intl.NumberFormat("en-US", {
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(latestData.daily_users)}
-            duration="Lifetime"
-          />
-          <MetricCard
-            title="Trades"
-            icon={<BarChart2Icon size={14} />}
-            value={new Intl.NumberFormat("en-US", {
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(latestData.daily_trades)}
-            duration="Lifetime"
-          />
-          <MetricCard
-            title="Fees"
-            icon={<CoinsIcon size={14} />}
-            value={new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(latestData.total_fees_usd)}
-            duration="Lifetime"
-          />
-        </div>
+      <div className="mb-8">
+        <ProtocolSelector 
+          currentProtocol={protocol} 
+          onProtocolChange={(newProtocol) => {
+            setProtocol(newProtocol);
+            setSearchParams(params => {
+              params.set("protocol", newProtocol);
+              return params;
+            });
+          }} 
+        />
+      </div>
 
-        <div className="mt-8 mb-4">
-          <TabSwitcher activeTab={activeView} onTabChange={setActiveView} />
-        </div>
+      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Volume"
+          type="volume"
+          value={new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(latestData.total_volume_usd)}
+        />
+        <MetricCard
+          title="Users"
+          type="users"
+          value={new Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(latestData.numberOfNewUsers)}
+        />
+        <MetricCard
+          title="Trades"
+          type="trades"
+          value={new Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(latestData.daily_trades)}
+        />
+        <MetricCard
+          title="Fees"
+          type="fees"
+          value={new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(latestData.total_fees_usd)}
+        />
+      </div>
 
-        {activeView === "charts" ? (
-          <div className="space-y-6">
+      <div className="mt-8 mb-4">
+        <TabSwitcher activeTab={activeView} onTabChange={(view) => {
+          setActiveView(view);
+          setSearchParams(params => {
+            params.set("view", view);
+            return params;
+          });
+        }} />
+      </div>
+
+      {activeView === "charts" ? (
+        <div className="space-y-6">
           {protocol === 'all' ? (
             <>
               <TimelineChart
-                title="Volume (Daily)"
+                title="Trading Volume by Protocol"
                 data={data}
                 dataKey="total_volume_usd"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_total_volume_usd',
+                  'BullX': 'bullx_total_volume_usd',
                   'Photon': 'photon_total_volume_usd',
                   'Trojan': 'trojan_total_volume_usd'
                 }}
-                isMultiLine={true}
               />
               <TimelineChart
-                title="Users (Daily)"
-                data={data}
-                dataKey="daily_users"
-                multipleDataKeys={{
-                  'Bull X': 'bullx_daily_users',
-                  'Photon': 'photon_daily_users',
-                  'Trojan': 'trojan_daily_users'
-                }}
-                isMultiLine={true}
-              />
-              <TimelineChart
-                title="Trades (Daily)"
-                data={data}
-                dataKey="daily_trades"
-                multipleDataKeys={{
-                  'Bull X': 'bullx_daily_trades',
-                  'Photon': 'photon_daily_trades',
-                  'Trojan': 'trojan_daily_trades'
-                }}
-                isMultiLine={true}
-              />
-              <TimelineChart
-                title="Fees (Daily)"
+                title="Trading Fees by Protocol"
                 data={data}
                 dataKey="total_fees_usd"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_total_fees_usd',
+                  'BullX': 'bullx_total_fees_usd',
                   'Photon': 'photon_total_fees_usd',
                   'Trojan': 'trojan_total_fees_usd'
                 }}
-                isMultiLine={true}
-              />
-            </>
-          ) : (
-            <>
-              <TimelineChart
-                title="Volume (Daily)"
-                data={data}
-                dataKey="total_volume_usd"
               />
               <TimelineChart
-                title="Users (Daily)"
+                title="Daily Active Users by Protocol"
                 data={data}
                 dataKey="daily_users"
+                isMultiLine={true}
+                multipleDataKeys={{
+                  'BullX': 'bullx_daily_users',
+                  'Photon': 'photon_daily_users',
+                  'Trojan': 'trojan_daily_users'
+                }}
               />
               <TimelineChart
-                title="Trades (Daily)"
+                title="New Users by Protocol"
+                data={data}
+                dataKey="numberOfNewUsers"
+                isMultiLine={true}
+                multipleDataKeys={{
+                  'BullX': 'bullx_numberOfNewUsers',
+                  'Photon': 'photon_numberOfNewUsers',
+                  'Trojan': 'trojan_numberOfNewUsers'
+                }}
+              />
+              <TimelineChart
+                title="Daily Trades by Protocol"
                 data={data}
                 dataKey="daily_trades"
-              />
-              <TimelineChart
-                title="Fees (Daily)"
-                data={data}
-                dataKey="total_fees_usd"
+                isMultiLine={true}
+                multipleDataKeys={{
+                  'BullX': 'bullx_daily_trades',
+                  'Photon': 'photon_daily_trades',
+                  'Trojan': 'trojan_daily_trades'
+                }}
               />
             </>
-          )}
-          </div>
-        ) : (
-          protocol === 'all' ? (
-            <div className="p-4 text-white text-center">
-              <p>Table view is not available for combined protocols.</p>
-            </div>
           ) : (
-            <DataTable data={data} />
-          )
+          <>
+            <CombinedChart
+              title="Volume & Fees"
+              data={data.filter(d => d.total_volume_usd !== undefined && d.total_fees_usd !== undefined)}
+              volumeKey="total_volume_usd"
+              feesKey="total_fees_usd"
+            />
+            <CombinedChart
+              title="User Activity"
+              data={data.filter(d => d.daily_users !== undefined && d.numberOfNewUsers !== undefined)}
+              volumeKey="daily_users"
+              feesKey="numberOfNewUsers"
+              barChartLabel="Daily Active Users"
+              lineChartLabel="New Users"
+              leftAxisFormatter={(value) => `${(value).toFixed(0)}`}
+              rightAxisFormatter={(value) => `${(value).toFixed(0)}`}
+            />
+            <TimelineChart
+              title="Trades"
+              data={data.filter(d => d.daily_trades !== undefined)}
+              dataKey="daily_trades"
+            />
+          </>
         )}
-    </>
+      </div>
+    ) : (
+      protocol === 'all' ? (
+        <div className="min-h-screen bg-background text-foreground dark:bg-background dark:text-foreground">
+          <ProtocolDataTable 
+            data={data.reduce((acc: Record<string, Record<Protocol, ProtocolMetrics>>, item) => {
+              const date = item.formattedDay;
+              if (!acc[date]) {
+                acc[date] = {
+                  bullx: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 },
+                  photon: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 },
+                  trojan: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 }
+                };
+              }
+              
+              ['bullx', 'photon', 'trojan'].forEach(protocol => {
+                acc[date][protocol as Protocol] = {
+                  total_volume_usd: item[`${protocol}_total_volume_usd`] as number || 0,
+                  daily_users: item[`${protocol}_daily_users`] as number || 0,
+                  numberOfNewUsers: item[`${protocol}_numberOfNewUsers`] as number || 0,
+                  daily_trades: item[`${protocol}_daily_trades`] as number || 0,
+                  total_fees_usd: item[`${protocol}_total_fees_usd`] as number || 0,
+                };
+              });
+              
+              return acc;
+            }, {} as Record<string, Record<Protocol, ProtocolMetrics>>)}
+            protocols={['bullx', 'photon', 'trojan'] as Protocol[]}
+          />
+        </div>
+      ) : (
+        <DataTable data={data} />
+      )
+    )}
+    </div>
   );
-}
+};
+
+const App = (): JSX.Element => {
+  return (
+    <Routes>
+      <Route path="/" element={<MainContent />} />
+      <Route path="/reports" element={<Reports />} />
+    </Routes>
+  );
+};
 
 export default App;

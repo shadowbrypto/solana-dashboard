@@ -1,10 +1,11 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-export function ProtocolSelector() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const currentProtocol = searchParams.get('protocol') || 'bullx';
+interface ProtocolSelectorProps {
+  currentProtocol: string;
+  onProtocolChange: (protocol: string) => void;
+}
 
+export function ProtocolSelector({ currentProtocol, onProtocolChange }: ProtocolSelectorProps) {
   const protocols = [
     { id: 'bullx', name: 'Bull X' },
     { id: 'photon', name: 'Photon' },
@@ -13,7 +14,7 @@ export function ProtocolSelector() {
   ];
 
   const handleProtocolChange = (protocolId: string) => {
-    navigate(`/?protocol=${protocolId}`);
+    onProtocolChange(protocolId);
   };
 
   return (
@@ -23,10 +24,10 @@ export function ProtocolSelector() {
           <button
             key={protocol.id}
             onClick={() => handleProtocolChange(protocol.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               currentProtocol === protocol.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-[#1E1E2A] text-white/70 hover:bg-[#2A2A3A] hover:text-white'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >
             {protocol.name}

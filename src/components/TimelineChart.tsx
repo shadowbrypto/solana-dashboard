@@ -54,7 +54,9 @@ export function TimelineChart({
   isMultiLine = false 
 }: TimelineChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
-  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set(['all', ...(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])]));
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(
+    new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
+  );
 
   const filteredData = useMemo(() => {
     if (timeframe === "all") return [...data].reverse();
@@ -161,8 +163,15 @@ export function TimelineChart({
             content={({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
               if (!active || !payload || payload.length === 0) return null;
               
-              // Map data keys to display names
-              const displayNames: Record<string, string> = isMultiLine && multipleDataKeys ? multipleDataKeys : { [dataKey]: title };
+              // Get protocol name from the data key
+              const getProtocolName = (key: string) => {
+                if (isMultiLine && multipleDataKeys) {
+                  // Find the protocol name by looking up the data key in multipleDataKeys
+                  const protocolEntry = Object.entries(multipleDataKeys).find(([_, value]) => value === key);
+                  return protocolEntry ? protocolEntry[0] : key;
+                }
+                return title;
+              };
 
               return (
                 <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
@@ -174,15 +183,23 @@ export function TimelineChart({
                     })()}
                   </p>
                   {payload.map((entry: any, index: number) => {
-                    const displayName = displayNames[entry.dataKey] || entry.dataKey;
+                    const displayName = getProtocolName(entry.dataKey);
                     return (
                       <div key={index} className="flex items-center justify-between gap-8">
-                        <p
-                          className="text-sm font-medium"
-                          style={{ color: entry.color }}
-                        >
-                          {displayName}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          {isMultiLine && (
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: entry.color }}
+                            />
+                          )}
+                          <p
+                            className="text-sm font-medium"
+                            style={{ color: entry.color }}
+                          >
+                            {displayName}
+                          </p>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {new Intl.NumberFormat("en-US", {
                             notation: "compact",
@@ -196,18 +213,21 @@ export function TimelineChart({
               );
             }}
           />
-          {isMultiLine && multipleDataKeys ? (
+          {isMultiLine ? (
             // Render multiple lines for different protocols
-            Object.entries(multipleDataKeys).map(([name, key]: [string, string]) => (
-              <Area
-                key={key}
-                type="monotone"
-                dataKey={activeKeys.has(key) ? key : ''}
-                name={name}
-                stroke={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
-                fill={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
-                fillOpacity={0.1}
-              />
+            Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => (
+              activeKeys.has(key) && (
+                <Area
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
+                  strokeWidth={1.5}
+                  dot={false}
+                  fill={`url(#${key.includes('bullx') ? 'bullxGradient' : key.includes('photon') ? 'photonGradient' : 'trojGradient'})`}
+                  fillOpacity={0.1}
+                />
+              )
             ))
           ) : (
             // Render single line for specific protocol
@@ -228,76 +248,63 @@ export function TimelineChart({
                 fontSize: '14px',
                 cursor: 'pointer'
               }}
-              iconType="square"
-              iconSize={16}
               verticalAlign="bottom"
-              onClick={(e: any) => {
-                const dataKey = e.dataKey as string;
-                if (dataKey === 'all') {
-                  // Toggle all keys
-                  setActiveKeys(prev => {
-                    const newKeys = new Set<string>();
-                    if (prev.size === (multipleDataKeys ? Object.keys(multipleDataKeys).length : 1)) {
-                      // If all keys are active, clear them
-                      return newKeys;
-                    } else {
-                      // If not all keys are active, add all keys
-                      Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
-                      return newKeys;
-                    }
-                  });
-                } else {
-                  // Toggle individual key
-                  setActiveKeys(prev => {
-                    const newKeys = new Set(prev);
-                    if (newKeys.has(dataKey)) {
-                      newKeys.delete(dataKey);
-                    } else {
-                      newKeys.add(dataKey);
-                    }
-                    return newKeys;
-                  });
-                }
-              }}
-              payload={[
-                {
-                  value: 'All',
-                  type: 'rect' as const,
-                  color: 'hsl(var(--muted-foreground))',
-                  dataKey: 'all',
-                  inactive: activeKeys.size !== (multipleDataKeys ? Object.keys(multipleDataKeys).length : 1)
-                },
-                ...Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => ({
-                  value: name,
-                  type: 'rect' as const,
-                  color: key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan'],
-                  dataKey: key,
-                  inactive: !activeKeys.has(key)
-                }))
-              ]}
-              content={({ payload }) => {
-                if (!payload) return null;
+              content={() => {
+                const legendItems = Object.entries(multipleDataKeys || {}).map(([name, key]) => ({
+                  name,
+                  key,
+                  color: key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
+                         key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
+                         PROTOCOL_COLORS['Trojan'],
+                  active: activeKeys.has(key)
+                }));
+
                 return (
-                  <div className="flex gap-4">
-                    {payload.map((entry: any) => (
+                  <div className="flex gap-4 justify-center">
+                    <div 
+                      className="flex items-center cursor-pointer select-none"
+                      onClick={() => {
+                        setActiveKeys(prev => {
+                          const allKeys = Object.values(multipleDataKeys || {});
+                          return prev.size === allKeys.length ? new Set() : new Set(allKeys);
+                        });
+                      }}
+                    >
                       <div 
-                        key={entry.dataKey}
+                        className={`w-4 h-4 rounded-xl border-2 transition-colors ${
+                          activeKeys.size === Object.keys(multipleDataKeys || {}).length ? 'bg-current' : 'bg-transparent'
+                        }`}
+                        style={{ 
+                          borderColor: 'hsl(var(--muted-foreground))',
+                          color: 'hsl(var(--muted-foreground))'
+                        }}
+                      />
+                      <span className="ml-2 text-sm text-muted-foreground">All</span>
+                    </div>
+                    {legendItems.map(item => (
+                      <div 
+                        key={item.key}
                         className="flex items-center cursor-pointer select-none"
                         onClick={() => {
-                          const e = { dataKey: entry.dataKey };
-                          if (typeof entry.onClick === 'function') {
-                            entry.onClick(e);
-                          }
+                          setActiveKeys(prev => {
+                            const newKeys = new Set(prev);
+                            if (newKeys.has(item.key)) {
+                              newKeys.delete(item.key);
+                            } else {
+                              newKeys.add(item.key);
+                            }
+                            return newKeys;
+                          });
                         }}
                       >
                         <div 
-                          className={`w-4 h-4 rounded-xl border-2 transition-colors ${entry.inactive ? 'bg-transparent' : 'bg-current'}`}
+                          className={`w-4 h-4 rounded-xl border-2 transition-colors ${item.active ? 'bg-current' : 'bg-transparent'}`}
                           style={{ 
-                            borderColor: entry.color,
-                            color: entry.color
+                            borderColor: item.color,
+                            color: item.color
                           }}
                         />
-                        <span className="ml-2 text-sm text-muted-foreground">{entry.value}</span>
+                        <span className="ml-2 text-sm text-muted-foreground">{item.name}</span>
                       </div>
                     ))}
                   </div>

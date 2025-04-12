@@ -41,9 +41,9 @@ interface TimelineChartProps {
 
 // Color palette for different protocols
 const PROTOCOL_COLORS = {
-  'Bull X': '#BC2AF8',  // Purple
-  'Photon': '#FF6B6B',  // Red
-  'Trojan': '#4ECDC4',  // Teal
+  'Bull X': 'hsl(var(--chart-1))',  // Blue
+  'Photon': 'hsl(var(--chart-2))',  // Green
+  'Trojan': 'hsl(var(--chart-3))',  // Orange
 };
 
 export function TimelineChart({ 
@@ -87,26 +87,26 @@ export function TimelineChart({
       .reverse();
   }, [data, timeframe]);
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="flex flex-row items-center justify-between pb-0">
+    <Card className="bg-card border-border rounded-xl">
+      <CardHeader className="flex flex-row items-center justify-between border-b">
         <div>
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted transition-colors">
+          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-popover-foreground">
-            <SelectItem value="7d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 7 days</SelectItem>
-            <SelectItem value="30d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 30 days</SelectItem>
-            <SelectItem value="3m" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 3 months</SelectItem>
-            <SelectItem value="all" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">All time</SelectItem>
+          <SelectContent className="bg-background border-border text-foreground rounded-xl">
+            <SelectItem value="7d" className="text-foreground hover:bg-muted/50 focus:bg-muted/50 rounded-xl">Last 7 days</SelectItem>
+            <SelectItem value="30d" className="text-foreground hover:bg-muted/50 focus:bg-muted/50 rounded-xl">Last 30 days</SelectItem>
+            <SelectItem value="3m" className="text-foreground hover:bg-muted/50 focus:bg-muted/50 rounded-xl">Last 3 months</SelectItem>
+            <SelectItem value="all" className="text-foreground hover:bg-muted/50 focus:bg-muted/50 rounded-xl">All time</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={filteredData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+        <AreaChart data={filteredData} margin={{ top: 20, right: 0, left: 0, bottom:  0 }}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -124,6 +124,7 @@ export function TimelineChart({
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
+            className="stroke-border"
             stroke="hsl(var(--border))"
             strokeOpacity={0.2}
             vertical={false}
@@ -133,7 +134,7 @@ export function TimelineChart({
             axisLine={false}
             tickLine={false}
             tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-            interval={Math.ceil(filteredData.length / 8) - 1}
+            interval={Math.ceil(filteredData.length / 10) - 1}
             tickFormatter={(value: string) => {
               const [day, month, year] = value.split('-');
               const date = new Date(`${year}-${month}-${day}`);
@@ -159,10 +160,13 @@ export function TimelineChart({
           <Tooltip
             content={({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
               if (!active || !payload || payload.length === 0) return null;
+              
+              // Map data keys to display names
+              const displayNames: Record<string, string> = isMultiLine && multipleDataKeys ? multipleDataKeys : { [dataKey]: title };
 
               return (
-                <div className="rounded-lg bg-background p-4 shadow-md border border-border">
-                  <p className="text-sm font-medium text-foreground mb-2">
+                <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
+                  <p className="text-sm text-muted-foreground mb-2">
                     {(() => {
                       const [day, month, year] = label.split('-');
                       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -170,30 +174,21 @@ export function TimelineChart({
                     })()}
                   </p>
                   {payload.map((entry: any, index: number) => {
-                    // Find protocol name from multipleDataKeys if available
-                    let protocolName = entry.name;
-                    if (multipleDataKeys) {
-                      const foundProtocol = Object.entries(multipleDataKeys).find(([_, value]) => value === entry.dataKey);
-                      if (foundProtocol) {
-                        protocolName = foundProtocol[0];
-                      }
-                    }
-
+                    const displayName = displayNames[entry.dataKey] || entry.dataKey;
                     return (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-3 h-3 rounded"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-muted-foreground">{protocolName}:</span>
-                        <span className="font-medium text-foreground">
-                          {typeof entry.value === 'number'
-                            ? new Intl.NumberFormat('en-US', {
-                                notation: 'compact',
-                                maximumFractionDigits: 2
-                              }).format(entry.value)
-                            : entry.value}
-                        </span>
+                      <div key={index} className="flex items-center justify-between gap-8">
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: entry.color }}
+                        >
+                          {displayName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Intl.NumberFormat("en-US", {
+                            notation: "compact",
+                            compactDisplay: "short",
+                          }).format(entry.value)}
+                        </p>
                       </div>
                     );
                   })}
@@ -209,8 +204,8 @@ export function TimelineChart({
                 type="monotone"
                 dataKey={activeKeys.has(key) ? key : ''}
                 name={name}
-                stroke={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
-                fill={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
+                stroke={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
+                fill={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
                 fillOpacity={0.1}
               />
             ))
@@ -268,14 +263,14 @@ export function TimelineChart({
                 {
                   value: 'All',
                   type: 'rect' as const,
-                  color: '#666',
+                  color: 'hsl(var(--muted-foreground))',
                   dataKey: 'all',
                   inactive: activeKeys.size !== (multipleDataKeys ? Object.keys(multipleDataKeys).length : 1)
                 },
                 ...Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => ({
                   value: name,
                   type: 'rect' as const,
-                  color: key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0',
+                  color: key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan'],
                   dataKey: key,
                   inactive: !activeKeys.has(key)
                 }))
@@ -296,7 +291,7 @@ export function TimelineChart({
                         }}
                       >
                         <div 
-                          className={`w-4 h-4 rounded border-2 transition-colors ${entry.inactive ? 'bg-transparent' : 'bg-current'}`}
+                          className={`w-4 h-4 rounded-xl border-2 transition-colors ${entry.inactive ? 'bg-transparent' : 'bg-current'}`}
                           style={{ 
                             borderColor: entry.color,
                             color: entry.color

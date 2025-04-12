@@ -37,15 +37,15 @@ export function DataTable({ data }: DataTableProps) {
   };
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="bg-card border-border rounded-xl">
       <CardHeader>
-        <CardTitle className="text-base font-medium text-card-foreground">Data Table</CardTitle>
+        <CardTitle className="text-base font-medium text-card-foreground">Daily Stats</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border border-border">
+        <div className="rounded-xl border border-border">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-muted border-border">
+              <TableRow className="hover:bg-muted border-border first:rounded-t-xl">
                 <TableHead className="text-muted-foreground">Date</TableHead>
                 <TableHead className="text-right text-muted-foreground">Volume</TableHead>
                 <TableHead className="text-right text-muted-foreground">Users</TableHead>
@@ -55,7 +55,7 @@ export function DataTable({ data }: DataTableProps) {
             </TableHeader>
             <TableBody>
               {currentData.map((row, index) => (
-                <TableRow key={index} className="hover:bg-muted/50 border-border">
+                <TableRow key={index} className="hover:bg-muted/50 border-border last:rounded-b-xl">
                   <TableCell className="text-foreground">
                     {new Intl.DateTimeFormat("en-US", {
                       month: "short",
@@ -105,7 +105,7 @@ export function DataTable({ data }: DataTableProps) {
           <button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="p-1 rounded-md transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1 rounded-lg transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronLeftIcon className="h-4 w-4" />
           </button>
@@ -125,7 +125,7 @@ export function DataTable({ data }: DataTableProps) {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`min-w-[32px] h-8 flex items-center justify-center rounded-md text-sm transition-colors
+                      className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm transition-colors
                         ${currentPage === pageNum 
                           ? 'bg-primary text-primary-foreground' 
                           : 'hover:bg-muted text-muted-foreground'}`}
@@ -151,7 +151,7 @@ export function DataTable({ data }: DataTableProps) {
           <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="p-1 rounded-md transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1 rounded-lg transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronRightIcon className="h-4 w-4" />
           </button>

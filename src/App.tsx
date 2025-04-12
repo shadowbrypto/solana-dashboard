@@ -22,6 +22,7 @@ const MainContent = (): JSX.Element => {
   // Apply dark theme by default
   useEffect(() => {
     document.documentElement.classList.add('dark');
+    document.body.classList.add('dark:bg-background');
   }, []);
 
   // Use React Router's useSearchParams hook instead of directly accessing window.location
@@ -470,7 +471,7 @@ const MainContent = (): JSX.Element => {
       </div>
     ) : (
       protocol === 'all' ? (
-        <div className="p-4 text-white text-center">
+        <div className="min-h-screen bg-background text-foreground dark:bg-background dark:text-foreground">
           <p>Table view is not available for combined protocols.</p>
         </div>
       ) : (

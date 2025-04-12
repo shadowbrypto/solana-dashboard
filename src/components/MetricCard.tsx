@@ -19,7 +19,7 @@ export function MetricCard({
   const isNegative = percentageChange && percentageChange < 0;
 
   return (
-    <Card className="bg-card">
+    <Card className="bg-card rounded-xl">
       <CardHeader className="pb-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

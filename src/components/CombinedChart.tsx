@@ -80,20 +80,20 @@ export function CombinedChart({
   }, [data, timeframe]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-0">
+    <Card className="bg-card border-border rounded-xl">
+      <CardHeader className="flex flex-row items-center justify-between border-b">
         <div>
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted transition-colors">
+          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-popover-foreground">
-            <SelectItem value="7d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 7 days</SelectItem>
-            <SelectItem value="30d" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 30 days</SelectItem>
-            <SelectItem value="3m" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">Last 3 months</SelectItem>
-            <SelectItem value="all" className="text-foreground hover:bg-muted focus:bg-muted focus:text-foreground">All time</SelectItem>
+          <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+            <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
+            <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
+            <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
+            <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -160,7 +160,7 @@ export function CombinedChart({
               content={({ active, payload, label }: TooltipProps<number, string>) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                    <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
                       <div className="grid gap-2">
                         <div className="text-[10px] text-muted-foreground">
                           {(() => {
@@ -176,7 +176,7 @@ export function CombinedChart({
                           {payload.map((entry) => (
                             <div key={entry.name} className="flex items-center gap-2">
                               <div 
-                                className="w-2 h-2 rounded-sm" 
+                                className="w-2 h-2 rounded-lg" 
                                 style={{ 
                                   backgroundColor: entry.name === barChartLabel
                                     ? "hsl(var(--chart-1))" 
@@ -204,7 +204,7 @@ export function CombinedChart({
             <Bar
               dataKey={volumeKey}
               yAxisId="left"
-              fill="hsl(var(--chart-1))"
+              fill="hsl(var(--chart-3))"
               radius={[4, 4, 0, 0]}
               name={barChartLabel}
             />
@@ -212,7 +212,7 @@ export function CombinedChart({
               type="monotone"
               dataKey={feesKey}
               yAxisId="right"
-              stroke="hsl(var(--chart-2))"
+              stroke="hsl(var(--chart-1))"
               strokeWidth={2}
               dot={false}
               name={lineChartLabel}

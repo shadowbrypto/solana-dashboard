@@ -24,7 +24,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
           <button
             key={protocol.id}
             onClick={() => handleProtocolChange(protocol.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               currentProtocol === protocol.id
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

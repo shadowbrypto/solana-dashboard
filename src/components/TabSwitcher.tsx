@@ -5,24 +5,16 @@ interface TabSwitcherProps {
 
 export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
   return (
-    <div className="flex gap-1 bg-[#1C1C28] p-1 rounded-lg w-fit">
+    <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
       <button
         onClick={() => onTabChange("charts")}
-        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-          activeTab === "charts"
-            ? "bg-black text-white"
-            : "text-gray-400 hover:text-white"
-        }`}
+        className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${activeTab === "charts" ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50 hover:text-foreground'}`}
       >
         Charts
       </button>
       <button
         onClick={() => onTabChange("data")}
-        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-          activeTab === "data"
-            ? "bg-black text-white"
-            : "text-gray-400 hover:text-white"
-        }`}
+        className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${activeTab === "data" ? 'bg-background text-foreground shadow-sm' : 'hover:bg-background/50 hover:text-foreground'}`}
       >
         Data
       </button>

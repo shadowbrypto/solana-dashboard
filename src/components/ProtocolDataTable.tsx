@@ -8,13 +8,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -131,30 +125,26 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
   };
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-base font-medium text-card-foreground">Protocol Stats</CardTitle>
-        <div className="flex items-center space-x-4">
-          <Select
-            value={selectedMetric}
-            onValueChange={(value) => setSelectedMetric(value as MetricKey)}
-          >
-            <SelectTrigger className="w-[200px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-              <SelectValue placeholder="Select metric" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border text-foreground rounded-xl">
-              {Object.entries(metricLabels).map(([key, label]) => (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  className="text-foreground hover:bg-muted/50 focus:bg-muted/50 rounded-xl"
-                >
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <Card className="bg-background border-border rounded-xl">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Protocol Stats</CardTitle>
+        <Tabs
+          value={selectedMetric}
+          onValueChange={(value: string) => setSelectedMetric(value as MetricKey)}
+          className="w-fit ml-auto"
+        >
+          <TabsList className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900/90 p-1 text-muted-foreground">
+            {Object.entries(metricLabels).map(([key, label]) => (
+              <TabsTrigger
+                key={key}
+                value={key}
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-medium ring-offset-background transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-zinc-800 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">

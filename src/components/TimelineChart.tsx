@@ -66,33 +66,48 @@ export function TimelineChart({
   );
 
   const filteredData = useMemo(() => {
-    if (timeframe === "all") return [...data];
+    let processedData = [...data];
+    
+    // Apply timeframe filter
+    if (timeframe !== "all") {
+      const now = new Date();
+      let daysToSubtract: number;
 
-    const now = new Date();
-    let daysToSubtract: number;
+      switch (timeframe) {
+        case "7d":
+          daysToSubtract = 7;
+          break;
+        case "30d":
+          daysToSubtract = 30;
+          break;
+        case "3m":
+          daysToSubtract = 90;
+          break;
+        default:
+          daysToSubtract = 90;
+      }
 
-    switch (timeframe) {
-      case "7d":
-        daysToSubtract = 7;
-        break;
-      case "30d":
-        daysToSubtract = 30;
-        break;
-      case "3m":
-        daysToSubtract = 90;
-        break;
-      default:
-        daysToSubtract = 90;
-    }
+      const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-    const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
-
-    return [...data]
-      .filter(item => {
+      processedData = processedData.filter(item => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         return itemDate >= cutoffDate;
       });
+    }
+
+    // Sort data in chronological order if it's not a multi-line chart
+    if (!isMultiLine) {
+      processedData = processedData.sort((a, b) => {
+        const [dayA, monthA, yearA] = a.formattedDay.split("-");
+        const [dayB, monthB, yearB] = b.formattedDay.split("-");
+        const dateA = new Date(parseInt(yearA), parseInt(monthA) - 1, parseInt(dayA));
+        const dateB = new Date(parseInt(yearB), parseInt(monthB) - 1, parseInt(dayB));
+        return dateA.getTime() - dateB.getTime(); // Changed to ascending order
+      });
+    }
+
+    return processedData;
   }, [data, timeframe]);
   return (
     <Card className="bg-card border-border rounded-xl">

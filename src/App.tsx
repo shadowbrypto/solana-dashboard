@@ -75,6 +75,7 @@ const MainContent = (): JSX.Element => {
                 typeof row.daily_users === "number" &&
                 typeof row.daily_trades === "number" &&
                 typeof row.total_fees_usd === "number" &&
+                typeof row.numberOfNewUsers === "number" &&
                 row.formattedDay
             );
 
@@ -97,6 +98,7 @@ const MainContent = (): JSX.Element => {
                 // Add protocol-specific keys for the chart
                 [`${protocol}_total_volume_usd`]: row.total_volume_usd,
                 [`${protocol}_daily_users`]: row.daily_users,
+                [`${protocol}_numberOfNewUsers`]: row.numberOfNewUsers,
                 [`${protocol}_daily_trades`]: row.daily_trades,
                 [`${protocol}_total_fees_usd`]: row.total_fees_usd,
               };
@@ -129,14 +131,17 @@ const MainContent = (): JSX.Element => {
                 daily_users: 0,
                 daily_trades: 0,
                 total_fees_usd: 0,
+                numberOfNewUsers: 0,
                 bullx_total_volume_usd: 0,
                 bullx_daily_users: 0,
                 bullx_daily_trades: 0,
                 bullx_total_fees_usd: 0,
+                bullx_numberOfNewUsers: 0,
                 photon_total_volume_usd: 0,
                 photon_daily_users: 0,
                 photon_daily_trades: 0,
                 photon_total_fees_usd: 0,
+                photon_numberOfNewUsers: 0,
                 trojan_total_volume_usd: 0,
                 trojan_daily_users: 0,
                 trojan_daily_trades: 0,
@@ -151,12 +156,14 @@ const MainContent = (): JSX.Element => {
             existingEntry[`${item.protocol}_daily_users`] = item.daily_users;
             existingEntry[`${item.protocol}_daily_trades`] = item.daily_trades;
             existingEntry[`${item.protocol}_total_fees_usd`] = item.total_fees_usd;
+            existingEntry[`${item.protocol}_numberOfNewUsers`] = item.numberOfNewUsers;
             
             // Update combined metrics
             existingEntry.total_volume_usd += item.total_volume_usd;
             existingEntry.daily_users += item.daily_users;
             existingEntry.daily_trades += item.daily_trades;
             existingEntry.total_fees_usd += item.total_fees_usd;
+            existingEntry.numberOfNewUsers += item.numberOfNewUsers;
             
             dateMap.set(item.formattedDay, existingEntry);
           });

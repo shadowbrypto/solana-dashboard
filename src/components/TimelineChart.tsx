@@ -39,11 +39,18 @@ interface TimelineChartProps {
   isMultiLine?: boolean;
 }
 
-// Color palette for different protocols
-const PROTOCOL_COLORS = {
-  'Bull X': 'hsl(var(--chart-1))',  // Blue
-  'Photon': 'hsl(var(--chart-2))',  // Green
-  'Trojan': 'hsl(var(--chart-3))',  // Orange
+// Color themes from shadcn/ui charts
+const PALETTE_COLORS = [
+  { stroke: 'hsl(4 86% 58%)', fill: 'hsl(4 86% 58% / 0.2)' },      // Red
+  { stroke: 'hsl(172 66% 50%)', fill: 'hsl(172 66% 50% / 0.2)' },  // Cyan
+  { stroke: 'hsl(262 83% 58%)', fill: 'hsl(262 83% 58% / 0.2)' },  // Purple
+  { stroke: 'hsl(316 73% 52%)', fill: 'hsl(316 73% 52% / 0.2)' },  // Pink
+  { stroke: 'hsl(221 83% 53%)', fill: 'hsl(221 83% 53% / 0.2)' },  // Blue
+];
+
+const MIDNIGHT_THEME = {
+  stroke: 'hsl(217.2 91.2% 59.8%)',  // blue-400
+  fill: 'hsl(217.2 91.2% 59.8% / 0.1)',
 };
 
 export function TimelineChart({ 
@@ -111,28 +118,24 @@ export function TimelineChart({
         <AreaChart data={filteredData} margin={{ top: 20, right: 0, left: 0, bottom:  0 }}>
           <defs>
             {isMultiLine ? (
-              Object.entries(multipleDataKeys || {}).map(([name, key]) => (
+              Object.entries(multipleDataKeys || {}).map(([name, key], index) => (
                 <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop
-                    offset="5%"
-                    stopColor={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
-                             key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
-                             PROTOCOL_COLORS['Trojan']}
+                    offset="0%"
+                    stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
                     stopOpacity={0.2}
                   />
                   <stop
-                    offset="95%"
-                    stopColor={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
-                             key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
-                             PROTOCOL_COLORS['Trojan']}
+                    offset="100%"
+                    stopColor={PALETTE_COLORS[index % PALETTE_COLORS.length].stroke}
                     stopOpacity={0.05}
                   />
                 </linearGradient>
               ))
             ) : (
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
+                <stop offset="0%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.2} />
+                <stop offset="100%" stopColor={MIDNIGHT_THEME.stroke} stopOpacity={0.05} />
               </linearGradient>
             )}
           </defs>
@@ -227,26 +230,25 @@ export function TimelineChart({
           />
           {isMultiLine ? (
             // Render multiple lines for different protocols
-            Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => (
-              activeKeys.has(key) && (
-                <Area
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
-                  strokeWidth={1.5}
-                  dot={false}
-                  fill={`url(#gradient-${key})`}
-                  fillOpacity={0.1}
-                />
-              )
+            Object.entries(multipleDataKeys || {}).map(([name, key], idx) => (
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={PALETTE_COLORS[idx % PALETTE_COLORS.length].stroke}
+                strokeWidth={1.5}
+                dot={false}
+                fill={`url(#gradient-${key})`}
+                fillOpacity={0.1}
+                hide={!activeKeys.has(key)}
+              />
             ))
           ) : (
             // Render single line for specific protocol
             <Area
               type="monotone"
               dataKey={dataKey}
-              stroke="hsl(var(--chart-1))"
+              stroke={MIDNIGHT_THEME.stroke}
               strokeWidth={1.5}
               dot={false}
               fill="url(#colorValue)"
@@ -262,12 +264,10 @@ export function TimelineChart({
               }}
               verticalAlign="bottom"
               content={() => {
-                const legendItems = Object.entries(multipleDataKeys || {}).map(([name, key]) => ({
+                const legendItems = Object.entries(multipleDataKeys || {}).map(([name, key], idx) => ({
                   name,
                   key,
-                  color: key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
-                         key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
-                         PROTOCOL_COLORS['Trojan'],
+                  color: PALETTE_COLORS[idx % PALETTE_COLORS.length].stroke,
                   active: activeKeys.has(key)
                 }));
 

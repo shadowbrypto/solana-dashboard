@@ -110,19 +110,31 @@ export function TimelineChart({
         <ResponsiveContainer width="100%" height={400}>
         <AreaChart data={filteredData} margin={{ top: 20, right: 0, left: 0, bottom:  0 }}>
           <defs>
-            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
-            </linearGradient>
-            {/* Add gradients for each protocol */}
-            <linearGradient id="bullxGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.05} />
-            </linearGradient>
-            <linearGradient id="photonGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.05} />
-            </linearGradient>
+            {isMultiLine ? (
+              Object.entries(multipleDataKeys || {}).map(([name, key]) => (
+                <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
+                             key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
+                             PROTOCOL_COLORS['Trojan']}
+                    stopOpacity={0.2}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : 
+                             key.includes('photon') ? PROTOCOL_COLORS['Photon'] : 
+                             PROTOCOL_COLORS['Trojan']}
+                    stopOpacity={0.05}
+                  />
+                </linearGradient>
+              ))
+            ) : (
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.05} />
+              </linearGradient>
+            )}
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
@@ -224,7 +236,7 @@ export function TimelineChart({
                   stroke={key.includes('bullx') ? PROTOCOL_COLORS['Bull X'] : key.includes('photon') ? PROTOCOL_COLORS['Photon'] : PROTOCOL_COLORS['Trojan']}
                   strokeWidth={1.5}
                   dot={false}
-                  fill={`url(#${key.includes('bullx') ? 'bullxGradient' : key.includes('photon') ? 'photonGradient' : 'trojGradient'})`}
+                  fill={`url(#gradient-${key})`}
                   fillOpacity={0.1}
                 />
               )

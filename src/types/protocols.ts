@@ -1,1 +1,1 @@
-export type Protocol = 'BullX' | 'Jupiter' | 'Raydium' | 'Orca' | 'Drift';
+export type Protocol = 'bullx' | 'photon' | 'trojan';

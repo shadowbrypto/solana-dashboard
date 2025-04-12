@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
 
+// Make TypeScript treat this as a module
 export {};
 
 type CSVRecord = {
@@ -68,18 +69,36 @@ function parseCSVFiles(): TimeseriesData {
 const data = parseCSVFiles();
 const outputPath = path.join(__dirname, '..', '..', 'public', 'data', 'protocolData.json');
 
-// Sort the data by date
+// Sort the data by date in descending order
 const sortedData: TimeseriesData = {};
 Object.keys(data).sort().forEach(date => {
     sortedData[date] = data[date];
 });
 
-// Write to file with pretty formatting
-fs.writeFileSync(outputPath, JSON.stringify(sortedData, null, 2));
-console.log(`Data has been written to ${outputPath}`);
+// Convert the sorted data to an array of entries with dates
+const combinedData = Object.entries(sortedData).map(([date, metrics]) => ({
+    formattedDay: date,
+    ...metrics
+}));
+
+// Sort by date in descending order
+combinedData.sort((a, b) => {
+    const [dayA, monthA, yearA] = a.formattedDay.split('/');
+    const [dayB, monthB, yearB] = b.formattedDay.split('/');
+    const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+    const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+    return dateB.getTime() - dateA.getTime(); // Descending order
+});
+
+// Write the combined data to a JSON file
+fs.writeFileSync(outputPath, JSON.stringify(combinedData, null, 2));
+
+console.log('Data has been processed, sorted by date in descending order, and saved to protocolData.json');
 
 // Print a sample of the data
 const dates = Object.keys(sortedData);
-const firstDate = dates[0];
-console.log('\nSample data for first date:', firstDate);
-console.log(sortedData[firstDate]);
+if (dates.length > 0) {
+    console.log('Sample data for first date:', sortedData[dates[0]]);
+}
+
+export {};

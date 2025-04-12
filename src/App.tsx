@@ -15,6 +15,9 @@ import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
 import { ProtocolSelector } from "./components/ProtocolSelector";
 import { CombinedChart } from "./components/CombinedChart";
+import { ProtocolDataTable } from "./components/ProtocolDataTable";
+import { Protocol } from "./types/protocols";
+import { ProtocolMetrics } from "./types";
 
 import Reports from "./pages/Reports";
 
@@ -53,7 +56,7 @@ const MainContent = (): JSX.Element => {
 
         if (selectedProtocol === "all") {
           // Load data from all protocols
-          const protocols = ["bullx", "photon", "trojan"];
+          const protocols: Protocol[] = ['bullx', 'photon', 'trojan'];
           const allData: Array<DailyData & { protocol: string }> = [];
 
           for (const protocol of protocols) {
@@ -91,9 +94,18 @@ const MainContent = (): JSX.Element => {
               const date = new Date(`${year}-${month}-${day}`);
               if (isNaN(date.getTime())) return null;
               
+              // Convert protocol name to proper Protocol type
+              let protocolName: Protocol;
+              switch (protocol) {
+                case 'bullx': protocolName = 'bullx'; break;
+                case 'photon': protocolName = 'photon'; break;
+                case 'trojan': protocolName = 'trojan'; break;
+                default: return null; // Skip invalid protocols
+              }
+              
               return {
                 ...row,
-                protocol,
+                protocol: protocolName,
                 formattedDay: `${String(day).padStart(2, '0')}-${String(month).padStart(2, '0')}-${year}`,
                 // Add protocol-specific keys for the chart
                 [`${protocol}_total_volume_usd`]: row.total_volume_usd,
@@ -104,16 +116,18 @@ const MainContent = (): JSX.Element => {
               };
             });
 
-            // Filter out null values and cast to the correct type
-            const validFormattedData = formattedData.filter((item): item is DailyData & { protocol: string } => item !== null)
-              .sort((a, b) => {
-                const [dayA, monthA, yearA] = a.formattedDay.split('-');
-                const [dayB, monthB, yearB] = b.formattedDay.split('-');
-                const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-                const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-                return dateB.getTime() - dateA.getTime();
-              });
-            allData.push(...validFormattedData);
+            // Filter out null values and sort by date
+            const sortedData = formattedData
+                .filter((d): d is DailyData & { protocol: Protocol } => d !== null)
+                .sort((a, b) => {
+                  const [dayA, monthA, yearA] = a.formattedDay.split('-');
+                  const [dayB, monthB, yearB] = b.formattedDay.split('-');
+                  const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+                  const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+                  return dateA.getTime() - dateB.getTime();
+                });
+
+            allData.push(...sortedData);
           }
 
           if (allData.length === 0) {
@@ -121,7 +135,7 @@ const MainContent = (): JSX.Element => {
           }
 
           // Combine data by date
-          const dateMap = new Map<string, any>();
+          const dateMap = new Map<string, DailyData>();
           
           allData.forEach(item => {
             if (!dateMap.has(item.formattedDay)) {
@@ -146,46 +160,45 @@ const MainContent = (): JSX.Element => {
                 trojan_daily_users: 0,
                 trojan_daily_trades: 0,
                 trojan_total_fees_usd: 0,
+                trojan_numberOfNewUsers: 0
               });
             }
-            
-            const existingEntry = dateMap.get(item.formattedDay);
+
+            const dailyData = dateMap.get(item.formattedDay)!;
+            const prefix = item.protocol;
             
             // Update protocol-specific metrics
-            existingEntry[`${item.protocol}_total_volume_usd`] = item.total_volume_usd;
-            existingEntry[`${item.protocol}_daily_users`] = item.daily_users;
-            existingEntry[`${item.protocol}_daily_trades`] = item.daily_trades;
-            existingEntry[`${item.protocol}_total_fees_usd`] = item.total_fees_usd;
-            existingEntry[`${item.protocol}_numberOfNewUsers`] = item.numberOfNewUsers;
-            
-            // Update combined metrics
-            existingEntry.total_volume_usd += item.total_volume_usd;
-            existingEntry.daily_users += item.daily_users;
-            existingEntry.daily_trades += item.daily_trades;
-            existingEntry.total_fees_usd += item.total_fees_usd;
-            existingEntry.numberOfNewUsers += item.numberOfNewUsers;
-            
-            dateMap.set(item.formattedDay, existingEntry);
+            dailyData[`${prefix}_total_volume_usd`] = item.total_volume_usd;
+            dailyData[`${prefix}_daily_users`] = item.daily_users;
+            dailyData[`${prefix}_daily_trades`] = item.daily_trades;
+            dailyData[`${prefix}_total_fees_usd`] = item.total_fees_usd;
+            dailyData[`${prefix}_numberOfNewUsers`] = item.numberOfNewUsers;
+
+            // Update total metrics
+            dailyData.total_volume_usd += item.total_volume_usd;
+            dailyData.daily_users += item.daily_users;
+            dailyData.daily_trades += item.daily_trades;
+            dailyData.total_fees_usd += item.total_fees_usd;
+            dailyData.numberOfNewUsers += item.numberOfNewUsers;
+
+            dateMap.set(item.formattedDay, dailyData);
           });
-          
-          // Convert map to array and sort by date
-          const combinedData = Array.from(dateMap.values()).sort((a, b) => {
-            // Safely parse dates for comparison
-            const partsA = (a.formattedDay || '').split("-");
-            const partsB = (b.formattedDay || '').split("-");
-            if (partsA.length !== 3 || partsB.length !== 3) return 0;
-            
-            const [dayA, monthA, yearA] = partsA;
-            const [dayB, monthB, yearB] = partsB;
-            if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
-            
-            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
-            return dateB.getTime() - dateA.getTime();
-          });
-          
-          setData(combinedData);
+
+          // Convert Map to array and sort by date
+          const sortedData = Array.from(dateMap.values())
+            .sort((a, b) => {
+              const [dayA, monthA, yearA] = (a.formattedDay || '').split('-');
+              const [dayB, monthB, yearB] = (b.formattedDay || '').split('-');
+              if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB) return 0;
+              
+              const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+              const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+              if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
+              return dateA.getTime() - dateB.getTime();
+            });
+
+          setData(sortedData);
+          setLoading(false);
         } else {
           // Load data for a single protocol
           const response = await fetch(`/data/${selectedProtocol}.csv`);
@@ -308,16 +321,21 @@ const MainContent = (): JSX.Element => {
   // Calculate percentage changes comparing current with 30-day average
   const calculatePercentageChange = (
     metric: keyof Omit<DailyData, "formattedDay">
-  ) => {
-    if (data.length < 30) return 0;
+  ): number => {
+    if (!data || data.length === 0) return 0;
 
-    const current = data[0][metric] as number;
-    const last30Days = data.slice(0, 30);
-    const average =
-      last30Days.reduce((acc, curr) => acc + (curr[metric] as number), 0) / 30;
+    // Get the latest value
+    const latestValue = data[data.length - 1][metric];
 
-    if (average === 0) return 0;
-    return ((current - average) / average) * 100;
+    // Calculate the average of the last 30 days
+    const thirtyDayAverage =
+      data
+        .slice(-30)
+        .reduce((acc: number, curr) => acc + (curr[metric] as number), 0) / 30;
+
+    // Calculate the percentage change
+    if (thirtyDayAverage === 0) return 0;
+    return ((latestValue as number) - thirtyDayAverage) / thirtyDayAverage * 100;
   };
 
   return (
@@ -393,62 +411,62 @@ const MainContent = (): JSX.Element => {
           {protocol === 'all' ? (
             <>
               <TimelineChart
-                title="Volume"
+                title="Trading Volume by Protocol"
                 data={data}
                 dataKey="total_volume_usd"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_total_volume_usd',
+                  'BullX': 'bullx_total_volume_usd',
                   'Photon': 'photon_total_volume_usd',
                   'Trojan': 'trojan_total_volume_usd'
                 }}
-                isMultiLine
               />
               <TimelineChart
-                title="Fees"
+                title="Trading Fees by Protocol"
                 data={data}
                 dataKey="total_fees_usd"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_total_fees_usd',
+                  'BullX': 'bullx_total_fees_usd',
                   'Photon': 'photon_total_fees_usd',
                   'Trojan': 'trojan_total_fees_usd'
                 }}
-                isMultiLine
               />
               <TimelineChart
-                title="Daily Active Users"
+                title="Daily Active Users by Protocol"
                 data={data}
                 dataKey="daily_users"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_daily_users',
+                  'BullX': 'bullx_daily_users',
                   'Photon': 'photon_daily_users',
                   'Trojan': 'trojan_daily_users'
                 }}
-                isMultiLine
               />
               <TimelineChart
-                title="New Users"
+                title="New Users by Protocol"
                 data={data}
                 dataKey="numberOfNewUsers"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_numberOfNewUsers',
+                  'BullX': 'bullx_numberOfNewUsers',
                   'Photon': 'photon_numberOfNewUsers',
                   'Trojan': 'trojan_numberOfNewUsers'
                 }}
-                isMultiLine
               />
               <TimelineChart
-                title="Trades"
+                title="Daily Trades by Protocol"
                 data={data}
                 dataKey="daily_trades"
+                isMultiLine={true}
                 multipleDataKeys={{
-                  'Bull X': 'bullx_daily_trades',
+                  'BullX': 'bullx_daily_trades',
                   'Photon': 'photon_daily_trades',
                   'Trojan': 'trojan_daily_trades'
                 }}
-                isMultiLine
               />
-          </>
-        ) : (
+            </>
+          ) : (
           <>
             <CombinedChart
               title="Volume & Fees"
@@ -477,7 +495,31 @@ const MainContent = (): JSX.Element => {
     ) : (
       protocol === 'all' ? (
         <div className="min-h-screen bg-background text-foreground dark:bg-background dark:text-foreground">
-          <p>Table view is not available for combined protocols.</p>
+          <ProtocolDataTable 
+            data={data.reduce((acc: Record<string, Record<Protocol, ProtocolMetrics>>, item) => {
+              const date = item.formattedDay;
+              if (!acc[date]) {
+                acc[date] = {
+                  bullx: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 },
+                  photon: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 },
+                  trojan: { total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0 }
+                };
+              }
+              
+              ['bullx', 'photon', 'trojan'].forEach(protocol => {
+                acc[date][protocol as Protocol] = {
+                  total_volume_usd: item[`${protocol}_total_volume_usd`] as number || 0,
+                  daily_users: item[`${protocol}_daily_users`] as number || 0,
+                  numberOfNewUsers: item[`${protocol}_numberOfNewUsers`] as number || 0,
+                  daily_trades: item[`${protocol}_daily_trades`] as number || 0,
+                  total_fees_usd: item[`${protocol}_total_fees_usd`] as number || 0,
+                };
+              });
+              
+              return acc;
+            }, {} as Record<string, Record<Protocol, ProtocolMetrics>>)}
+            protocols={['bullx', 'photon', 'trojan'] as Protocol[]}
+          />
         </div>
       ) : (
         <DataTable data={data} />

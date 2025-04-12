@@ -41,18 +41,25 @@ function parseCSVFiles() {
 const data = parseCSVFiles();
 const outputPath = path.join(__dirname, '..', '..', 'public', 'data', 'protocolData.json');
 
-// Sort the data by date
+// Sort the data by date in descending order
 const sortedData = {};
-Object.keys(data).sort().forEach(date => {
+Object.keys(data).sort((a, b) => {
+    const [dayA, monthA, yearA] = a.split('/');
+    const [dayB, monthB, yearB] = b.split('/');
+    const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
+    const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
+    return dateB.getTime() - dateA.getTime(); // Descending order
+}).forEach(date => {
     sortedData[date] = data[date];
 });
 
 // Write to file with pretty formatting
 fs.writeFileSync(outputPath, JSON.stringify(sortedData, null, 2));
+console.log('Data has been processed and sorted in descending order');
 console.log(`Data has been written to ${outputPath}`);
 
-// Print a sample of the data
+// Print a sample of the data (should be the most recent date)
 const dates = Object.keys(sortedData);
-const firstDate = dates[0];
-console.log('\nSample data for first date:', firstDate);
-console.log(sortedData[firstDate]);
+const mostRecentDate = dates[0];
+console.log('\nSample data for most recent date:', mostRecentDate);
+console.log(sortedData[mostRecentDate]);

@@ -386,21 +386,49 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === 'all' ? (
             <>
-              <CombinedChart
-                title="Volume & Fees"
+              <TimelineChart
+                title="Volume"
                 data={data}
-                volumeKey="total_volume_usd"
-                feesKey="total_fees_usd"
+                dataKey="total_volume_usd"
+                multipleDataKeys={{
+                  'Bull X': 'bullx_total_volume_usd',
+                  'Photon': 'photon_total_volume_usd',
+                  'Trojan': 'trojan_total_volume_usd'
+                }}
+                isMultiLine
               />
-              <CombinedChart
-                title="User Activity"
+              <TimelineChart
+                title="Fees"
                 data={data}
-                volumeKey="daily_users"
-                feesKey="numberOfNewUsers"
-                barChartLabel="Daily Active Users"
-                lineChartLabel="New Users"
-                leftAxisFormatter={(value) => `${(value).toFixed(0)}`}
-                rightAxisFormatter={(value) => `${(value).toFixed(0)}`}
+                dataKey="total_fees_usd"
+                multipleDataKeys={{
+                  'Bull X': 'bullx_total_fees_usd',
+                  'Photon': 'photon_total_fees_usd',
+                  'Trojan': 'trojan_total_fees_usd'
+                }}
+                isMultiLine
+              />
+              <TimelineChart
+                title="Daily Active Users"
+                data={data}
+                dataKey="daily_users"
+                multipleDataKeys={{
+                  'Bull X': 'bullx_daily_users',
+                  'Photon': 'photon_daily_users',
+                  'Trojan': 'trojan_daily_users'
+                }}
+                isMultiLine
+              />
+              <TimelineChart
+                title="New Users"
+                data={data}
+                dataKey="numberOfNewUsers"
+                multipleDataKeys={{
+                  'Bull X': 'bullx_numberOfNewUsers',
+                  'Photon': 'photon_numberOfNewUsers',
+                  'Trojan': 'trojan_numberOfNewUsers'
+                }}
+                isMultiLine
               />
               <TimelineChart
                 title="Trades"
@@ -411,6 +439,7 @@ const MainContent = (): JSX.Element => {
                   'Photon': 'photon_daily_trades',
                   'Trojan': 'trojan_daily_trades'
                 }}
+                isMultiLine
               />
           </>
         ) : (

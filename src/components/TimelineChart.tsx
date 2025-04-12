@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import {
   Card,
   CardContent,
@@ -156,61 +157,49 @@ export function TimelineChart({
             dx={-10}
           />
           <Tooltip
-            content={({ active, payload, label }: TooltipProps<number, string>) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="rounded-lg border border-border bg-popover p-2 shadow-md">
-                    <div className="text-sm text-muted-foreground mb-1">
-                      {(() => {
-                        const [rawDay, rawMonth, rawYear] = label.split('-');
-                        const date = new Date(`${rawYear}-${rawMonth}-${rawDay}`);
-                        return new Intl.DateTimeFormat('en-US', { 
-                          day: 'numeric', 
-                          month: 'short',
-                          year: 'numeric'
-                        }).format(date);
-                      })()}
-                    </div>
-                    <div className="space-y-1">
-                      {payload.map((entry: any, index: number) => {
-                        const color = isMultiLine
-                          ? (typeof entry.dataKey === 'string' && entry.dataKey.includes('bullx')
-                            ? '#BC2AF8'
-                            : typeof entry.dataKey === 'string' && entry.dataKey.includes('photon')
-                            ? '#FF4444'
-                            : '#00E0B0')
-                          : 'hsl(var(--chart-1))';
-                        
-                        return (
-                          <div key={index} className="flex items-center gap-2">
-                            <div 
-                              className="w-2 h-2 rounded-sm" 
-                              style={{ backgroundColor: color }}
-                            />
-                            <span className="text-sm text-foreground">
-                              {title}: {typeof entry.value === 'number'
-                                ? new Intl.NumberFormat('en-US', {
-                                    notation: 'compact',
-                                    maximumFractionDigits: 0,
-                                    compactDisplay: 'short'
-                                  }).format(entry.value)
-                                : '-'}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            }}
-            labelFormatter={(label: string) => {
-              const [day, month, year] = label.split('-');
-              const date = new Date(`${year}-${month}-${day}`);
-              return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(date);
-            }}
+            content={({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+              if (!active || !payload || payload.length === 0) return null;
 
+              return (
+                <div className="rounded-lg bg-background p-4 shadow-md border border-border">
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    {(() => {
+                      const [day, month, year] = label.split('-');
+                      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                      return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(date);
+                    })()}
+                  </p>
+                  {payload.map((entry: any, index: number) => {
+                    // Find protocol name from multipleDataKeys if available
+                    let protocolName = entry.name;
+                    if (multipleDataKeys) {
+                      const foundProtocol = Object.entries(multipleDataKeys).find(([_, value]) => value === entry.dataKey);
+                      if (foundProtocol) {
+                        protocolName = foundProtocol[0];
+                      }
+                    }
+
+                    return (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <div
+                          className="w-3 h-3 rounded"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-muted-foreground">{protocolName}:</span>
+                        <span className="font-medium text-foreground">
+                          {typeof entry.value === 'number'
+                            ? new Intl.NumberFormat('en-US', {
+                                notation: 'compact',
+                                maximumFractionDigits: 2
+                              }).format(entry.value)
+                            : entry.value}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }}
           />
           {isMultiLine && multipleDataKeys ? (
             // Render multiple lines for different protocols
@@ -218,7 +207,7 @@ export function TimelineChart({
               <Area
                 key={key}
                 type="monotone"
-                dataKey={activeKeys.has('all') || activeKeys.has(key) ? key : ''}
+                dataKey={activeKeys.has(key) ? key : ''}
                 name={name}
                 stroke={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
                 fill={key.includes('bullx') ? '#BC2AF8' : key.includes('photon') ? '#FF4444' : '#00E0B0'}
@@ -247,38 +236,42 @@ export function TimelineChart({
               iconType="square"
               iconSize={16}
               verticalAlign="bottom"
-              formatter={(value: string) => (
-                <span className="text-foreground ml-2">{value}</span>
-              )}
               onClick={(e: any) => {
                 const dataKey = e.dataKey as string;
-                setActiveKeys(prev => {
-                  const newKeys = new Set(prev);
-                  if (dataKey === 'all') {
-                    if (newKeys.has('all')) {
-                      newKeys.clear();
-                      newKeys.add('all');
+                if (dataKey === 'all') {
+                  // Toggle all keys
+                  setActiveKeys(prev => {
+                    const newKeys = new Set<string>();
+                    if (prev.size === (multipleDataKeys ? Object.keys(multipleDataKeys).length : 1)) {
+                      // If all keys are active, clear them
+                      return newKeys;
                     } else {
-                      newKeys.clear();
-                      newKeys.add('all');
+                      // If not all keys are active, add all keys
                       Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
+                      return newKeys;
                     }
-                  } else {
-                    newKeys.delete('all');
+                  });
+                } else {
+                  // Toggle individual key
+                  setActiveKeys(prev => {
+                    const newKeys = new Set(prev);
                     if (newKeys.has(dataKey)) {
                       newKeys.delete(dataKey);
-                      if (newKeys.size === 0) {
-                        newKeys.add('all');
-                        Object.values(multipleDataKeys || {}).forEach(key => newKeys.add(key));
-                      }
                     } else {
                       newKeys.add(dataKey);
                     }
-                  }
-                  return newKeys;
-                });
+                    return newKeys;
+                  });
+                }
               }}
               payload={[
+                {
+                  value: 'All',
+                  type: 'rect' as const,
+                  color: '#666',
+                  dataKey: 'all',
+                  inactive: activeKeys.size !== (multipleDataKeys ? Object.keys(multipleDataKeys).length : 1)
+                },
                 ...Object.entries(multipleDataKeys || {}).map(([name, key]: [string, string]) => ({
                   value: name,
                   type: 'rect' as const,

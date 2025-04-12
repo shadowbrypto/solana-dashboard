@@ -269,6 +269,7 @@ const MainContent = (): JSX.Element => {
   const latestData = data.reduce(
     (acc, curr) => {
       acc.total_volume_usd += curr.total_volume_usd;
+      acc.numberOfNewUsers += curr.numberOfNewUsers;
       acc.daily_users += curr.daily_users;
       acc.daily_trades += curr.daily_trades;
       acc.total_fees_usd += curr.total_fees_usd;
@@ -276,6 +277,7 @@ const MainContent = (): JSX.Element => {
     },
     {
       total_volume_usd: 0,
+      numberOfNewUsers: 0,
       daily_users: 0,
       daily_trades: 0,
       total_fees_usd: 0,
@@ -354,7 +356,7 @@ const MainContent = (): JSX.Element => {
           value={new Intl.NumberFormat("en-US", {
             notation: "compact",
             maximumFractionDigits: 1,
-          }).format(latestData.daily_users)}
+          }).format(latestData.numberOfNewUsers)}
         />
         <MetricCard
           title="Trades"

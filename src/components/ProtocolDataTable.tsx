@@ -63,7 +63,21 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
     () => [
       {
         accessorKey: 'date',
-        header: 'Date',
+        header: ({ column }) => {
+          return (
+            <button
+              className="inline-flex items-center gap-2 hover:text-foreground"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Date
+              {column.getIsSorted() === "asc" ? (
+                <span className="text-xs">↑</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="text-xs">↓</span>
+              ) : null}
+            </button>
+          )
+        },
         cell: ({ row }: { row: any }) => row.getValue('date'),
         sortingFn: (rowA, rowB) => {
           const dateA = rowA.getValue('date') as string;
@@ -72,12 +86,12 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
           const [dayB, monthB, yearB] = dateB.split('/');
           const dateObjA = new Date(`${yearA}-${monthA}-${dayA}`);
           const dateObjB = new Date(`${yearB}-${monthB}-${dayB}`);
-          return dateObjA.getTime() - dateObjB.getTime();
+          return dateObjB.getTime() - dateObjA.getTime();
         }
       },
       ...protocols.map((protocol) => ({
         accessorKey: protocol,
-        header: protocol,
+        header: protocol.charAt(0).toUpperCase() + protocol.slice(1),
         cell: ({ row }: { row: any }) => {
           const value = row.getValue(protocol) as ProtocolMetrics;
           return formatValue(value[selectedMetric]);
@@ -109,6 +123,7 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
       pagination: {
         pageSize: 10, // Show 10 rows per page
       },
+      sorting: [{ id: 'date', desc: true }], // Ensure latest dates appear first
     },
   });
 
@@ -147,14 +162,17 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
         </Tabs>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
+        <div className="rounded-xl border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead
+                        key={header.id}
+                        className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hover:text-foreground [&:has([role=checkbox])]:pr-0"
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(

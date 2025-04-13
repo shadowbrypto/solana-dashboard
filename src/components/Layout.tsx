@@ -1,11 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import {
-  BarChart3,
-  Home,
-  Info,
-  Menu,
-} from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from './ui/separator';
@@ -52,68 +47,24 @@ export function Layout() {
 
         <Separator className="bg-white/10" />
 
-        {/* Navigation */}
+        {/* Protocol Selection */}
         <nav className="flex-1 p-4">
           <div className="space-y-2">
-            <Link to="/">
-              <Button 
-                variant="ghost" 
+            <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Protocols</h3>
+            {protocols.map((protocol) => (
+              <Button
+                key={protocol.id}
+                variant="ghost"
                 className={cn(
                   "w-full justify-start text-white hover:bg-white/10 rounded-xl",
-                  location.pathname === '/' && "bg-white/10"
+                  currentProtocol === protocol.id && "bg-white/10"
                 )}
+                onClick={() => handleProtocolChange(protocol.id)}
               >
-                <Home className="mr-2 h-4 w-4" />
-                {sidebarOpen && "Dashboard"}
+                {protocol.name}
               </Button>
-            </Link>
-            <Link to="/analytics">
-              <Button 
-                variant="ghost" 
-                className={cn(
-                  "w-full justify-start text-white hover:bg-white/10 rounded-xl",
-                  location.pathname === '/analytics' && "bg-white/10"
-                )}
-              >
-                <BarChart3 className="mr-2 h-4 w-4" />
-                {sidebarOpen && "Analytics"}
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button 
-                variant="ghost" 
-                className={cn(
-                  "w-full justify-start text-white hover:bg-white/10 rounded-xl",
-                  location.pathname === '/about' && "bg-white/10"
-                )}
-              >
-                <Info className="mr-2 h-4 w-4" />
-                {sidebarOpen && "About"}
-              </Button>
-            </Link>
+            ))}
           </div>
-
-          {sidebarOpen && (
-            <>
-              <Separator className="my-4 bg-white/10" />
-              <div className="space-y-2">
-                <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Protocols</h3>
-                {protocols.map((protocol) => (
-                  <Button
-                    key={protocol.id}
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start text-white hover:bg-white/10 rounded-xl",
-                      currentProtocol === protocol.id && "bg-white/10"
-                    )}
-                    onClick={() => handleProtocolChange(protocol.id)}
-                  >
-                    {protocol.name}
-                  </Button>
-                ))}
-              </div>
-            </>
-          )}
         </nav>
       </aside>
 

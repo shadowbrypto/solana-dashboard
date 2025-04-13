@@ -16,6 +16,7 @@ import { DailyData } from "./types";
 
 import { CombinedChart } from "./components/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
+import { StackedBarChart } from "./components/StackedBarChart";
 import { Protocol } from "./types/protocols";
 import { ProtocolMetrics } from "./types";
 
@@ -398,60 +399,40 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === 'all' ? (
             <>
-              <TimelineChart
-                title="Trading Volume by Protocol"
+              <StackedBarChart
+                title="Volume by Protocol"
                 data={data}
-                dataKey="total_volume_usd"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_total_volume_usd',
-                  'Photon': 'photon_total_volume_usd',
-                  'Trojan': 'trojan_total_volume_usd'
-                }}
+                dataKeys={['bullx_total_volume_usd', 'photon_total_volume_usd', 'trojan_total_volume_usd']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
-              <TimelineChart
-                title="Trading Fees by Protocol"
+              <StackedBarChart
+                title="Daily Users by Protocol"
                 data={data}
-                dataKey="total_fees_usd"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_total_fees_usd',
-                  'Photon': 'photon_total_fees_usd',
-                  'Trojan': 'trojan_total_fees_usd'
-                }}
+                dataKeys={['bullx_daily_users', 'photon_daily_users', 'trojan_daily_users']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
               />
-              <TimelineChart
-                title="Daily Active Users by Protocol"
-                data={data}
-                dataKey="daily_users"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_daily_users',
-                  'Photon': 'photon_daily_users',
-                  'Trojan': 'trojan_daily_users'
-                }}
-              />
-              <TimelineChart
+              <StackedBarChart
                 title="New Users by Protocol"
                 data={data}
-                dataKey="numberOfNewUsers"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_numberOfNewUsers',
-                  'Photon': 'photon_numberOfNewUsers',
-                  'Trojan': 'trojan_numberOfNewUsers'
-                }}
+                dataKeys={['bullx_numberOfNewUsers', 'photon_numberOfNewUsers', 'trojan_numberOfNewUsers']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
               />
-              <TimelineChart
+              <StackedBarChart
                 title="Daily Trades by Protocol"
                 data={data}
-                dataKey="daily_trades"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_daily_trades',
-                  'Photon': 'photon_daily_trades',
-                  'Trojan': 'trojan_daily_trades'
-                }}
+                dataKeys={['bullx_daily_trades', 'photon_daily_trades', 'trojan_daily_trades']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
+              />
+              <StackedBarChart
+                title="Fees by Protocol"
+                data={data}
+                dataKeys={['bullx_total_fees_usd', 'photon_total_fees_usd', 'trojan_total_fees_usd']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
             </>
           ) : (

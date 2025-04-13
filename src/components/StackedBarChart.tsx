@@ -128,7 +128,7 @@ export function StackedBarChart({
                   return (
                     <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
                       <div className="grid gap-2">
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-sm font-medium text-muted-foreground">
                           {(() => {
                             const [day, month, year] = label.split('-');
                             return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {

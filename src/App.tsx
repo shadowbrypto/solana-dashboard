@@ -13,7 +13,7 @@ import { TimelineChart } from "./components/TimelineChart";
 import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
-import { ProtocolSelector } from "./components/ProtocolSelector";
+
 import { CombinedChart } from "./components/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { Protocol } from "./types/protocols";
@@ -35,7 +35,7 @@ const MainContent = (): JSX.Element => {
   const [activeView, setActiveView] = useState<"charts" | "data">(searchParams.get("view") === "data" ? "data" : "charts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [protocol, setProtocol] = useState(searchParams.get("protocol")?.toLowerCase() || "bullx");
+  const protocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
   const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
   
   // Load data for the selected protocol
@@ -343,19 +343,6 @@ const MainContent = (): JSX.Element => {
       <h1 className="text-3xl font-bold mb-8 text-white/90 text-center">
         {protocol === 'all' ? 'Combined Protocols' : protocol.charAt(0).toUpperCase() + protocol.slice(1)} Dashboard
       </h1>
-
-      <div className="mb-8">
-        <ProtocolSelector 
-          currentProtocol={protocol} 
-          onProtocolChange={(newProtocol) => {
-            setProtocol(newProtocol);
-            setSearchParams(params => {
-              params.set("protocol", newProtocol);
-              return params;
-            });
-          }} 
-        />
-      </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard

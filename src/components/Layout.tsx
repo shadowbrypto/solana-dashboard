@@ -22,7 +22,7 @@ export function Layout() {
   const currentProtocol = searchParams.get('protocol')?.toLowerCase() || 'all';
 
   const handleProtocolChange = (protocolId: string) => {
-    setSearchParams({ protocol: protocolId });
+    navigate('/?protocol=' + protocolId);
   };
 
   return (
@@ -48,7 +48,7 @@ export function Layout() {
         <Separator className="bg-white/10" />
 
         {/* Protocol Selection */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 space-y-8">
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Protocols</h3>
             {protocols.map((protocol) => (
@@ -64,6 +64,26 @@ export function Layout() {
                 {protocol.name}
               </Button>
             ))}
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Reports</h3>
+            <Link to="/reports/daily">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white hover:bg-white/10 rounded-xl"
+              >
+                Daily Report
+              </Button>
+            </Link>
+            <Link to="/reports/monthly">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white hover:bg-white/10 rounded-xl"
+              >
+                Monthly Report
+              </Button>
+            </Link>
           </div>
         </nav>
       </aside>

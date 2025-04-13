@@ -19,7 +19,8 @@ import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { Protocol } from "./types/protocols";
 import { ProtocolMetrics } from "./types";
 
-import Reports from "./pages/Reports";
+import DailyReport from "./pages/DailyReport";
+import MonthlyReport from "./pages/MonthlyReport";
 
 const MainContent = (): JSX.Element => {
   // Apply dark theme by default
@@ -520,7 +521,8 @@ const App = (): JSX.Element => {
   return (
     <Routes>
       <Route path="/" element={<MainContent />} />
-      <Route path="/reports" element={<Reports />} />
+      <Route path="/reports/daily" element={<DailyReport />} />
+      <Route path="/reports/monthly" element={<MonthlyReport />} />
     </Routes>
   );
 };

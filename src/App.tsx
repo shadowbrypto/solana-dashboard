@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, useCallback, lazy } from "react";
 import Papa from "papaparse";
-import { Routes, Route, useSearchParams, Navigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { MetricCard } from "./components/MetricCard";
@@ -349,7 +349,8 @@ const MainContent = (): JSX.Element => {
 
   // If the protocol is invalid, redirect to the NotFound page
   if (invalidProtocol) {
-    return <Navigate to="/not-found" />;
+    window.location.href = '/not-found';
+    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
   }
 
   if (loading) {
@@ -510,16 +511,17 @@ const MainContent = (): JSX.Element => {
 };
 
 const App = (): JSX.Element => {
+  const location = window.location.pathname;
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-        <Routes>
-          <Route path="/" element={<MainContent />} />
-          <Route path="/reports/daily" element={<DailyReport />} />
-          <Route path="/reports/monthly" element={<MonthlyReport />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      {location === '/reports/daily' ? (
+        <DailyReport />
+      ) : location === '/reports/monthly' ? (
+        <MonthlyReport />
+      ) : (
+        <MainContent />
+      )}
     </ErrorBoundary>
   );
 };

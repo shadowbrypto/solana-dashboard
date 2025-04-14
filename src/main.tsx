@@ -22,6 +22,27 @@ const router = createBrowserRouter([
         element: <App />,
       },
       {
+        path: 'reports',
+        children: [
+          {
+            path: 'daily',
+            element: (
+              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                <App />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: 'monthly',
+            element: (
+              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                <App />
+              </React.Suspense>
+            ),
+          },
+        ],
+      },
+      {
         path: 'about',
         element: <About />,
       },

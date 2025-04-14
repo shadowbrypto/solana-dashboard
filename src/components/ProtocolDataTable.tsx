@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Column,
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -63,7 +64,7 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
     () => [
       {
         accessorKey: 'date',
-        header: ({ column }) => {
+        header: ({ column }: { column: Column<TableData> }) => {
           return (
             <button
               className="inline-flex items-center gap-2 hover:text-foreground"
@@ -79,22 +80,45 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
           )
         },
         cell: ({ row }: { row: any }) => row.getValue('date'),
-        sortingFn: (rowA, rowB) => {
+        sortingFn: (rowA: any, rowB: any) => {
           const dateA = rowA.getValue('date') as string;
           const dateB = rowB.getValue('date') as string;
-          const [dayA, monthA, yearA] = dateA.split('/');
-          const [dayB, monthB, yearB] = dateB.split('/');
-          const dateObjA = new Date(`${yearA}-${monthA}-${dayA}`);
-          const dateObjB = new Date(`${yearB}-${monthB}-${dayB}`);
-          return dateObjB.getTime() - dateObjA.getTime();
+          const [dayA, monthA, yearA] = dateA.split('/').map(Number);
+          const [dayB, monthB, yearB] = dateB.split('/').map(Number);
+          
+          // Compare years first
+          if (yearA !== yearB) return yearB - yearA;
+          // If years are equal, compare months
+          if (monthA !== monthB) return monthB - monthA;
+          // If months are equal, compare days
+          return dayB - dayA;
         }
       },
       ...protocols.map((protocol) => ({
         accessorKey: protocol,
-        header: protocol.charAt(0).toUpperCase() + protocol.slice(1),
+        header: ({ column }: { column: Column<TableData> }) => {
+          return (
+            <button
+              className="inline-flex items-center gap-2 hover:text-foreground"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
+              {column.getIsSorted() === "asc" ? (
+                <span className="text-xs">↑</span>
+              ) : column.getIsSorted() === "desc" ? (
+                <span className="text-xs">↓</span>
+              ) : null}
+            </button>
+          )
+        },
         cell: ({ row }: { row: any }) => {
           const value = row.getValue(protocol) as ProtocolMetrics;
           return formatValue(value[selectedMetric]);
+        },
+        sortingFn: (rowA: any, rowB: any) => {
+          const valueA = (rowA.getValue(protocol) as ProtocolMetrics)[selectedMetric];
+          const valueB = (rowB.getValue(protocol) as ProtocolMetrics)[selectedMetric];
+          return valueB - valueA; // Sort in descending order by default
         }
       }))
     ],
@@ -102,10 +126,13 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
   );
 
   const tableData = React.useMemo(() => {
-    return Object.entries(data).map(([date, protocolData]) => ({
-      date,
-      ...protocolData
-    }));
+    // Convert to array, reverse the order, then map to table format
+    return Object.entries(data)
+      .reverse()
+      .map(([date, protocolData]) => ({
+        date,
+        ...protocolData
+      }));
   }, [data]);
 
   const table = useReactTable<TableData>({

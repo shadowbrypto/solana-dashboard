@@ -10,7 +10,6 @@ import {
 import { format } from "date-fns";
 import { Protocol } from '../types/protocols';
 import { ProtocolMetrics } from '../utils/types';
-import { DatePicker } from './ui/date-picker';
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -67,9 +66,9 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
   return (
     <div className="space-y-4 rounded-xl border bg-card p-6">
-      <div className="flex items-center justify-between border-b pb-4">
+      <div className="flex items-center justify-between pb-4">
         <h3 className="text-lg font-semibold">Protocol Metrics</h3>
-        <DatePicker date={date} onDateChange={handleDateChange} />
+        
       </div>
 
       <div className="rounded-xl border bg-card">

@@ -10,6 +10,7 @@ import {
 import { format } from "date-fns";
 import { Protocol } from '../types/protocols';
 import { ProtocolMetrics } from '../utils/types';
+import { DatePicker } from './DatePicker';
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -61,14 +62,16 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     }
   };
 
-  const selectedDate = format(date, "dd/MM/yyyy");
+  const selectedDate = format(date, "dd/MM/yyyy"); // Format matches the data structure
   const dailyData = data[selectedDate] || {};
 
   return (
     <div className="space-y-4 rounded-xl border bg-card p-6">
       <div className="flex items-center justify-between pb-4">
         <h3 className="text-lg font-semibold">Protocol Metrics</h3>
-        
+        <div className="w-[240px]">
+          <DatePicker date={date} onDateChange={handleDateChange} />
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card">

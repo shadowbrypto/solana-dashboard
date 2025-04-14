@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "../ui/select";
 import {
   Area,
   Bar,
@@ -97,9 +97,9 @@ export function CombinedChart({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <ResponsiveContainer width="100%" height={400}>
-          <ComposedChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <ComposedChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -160,9 +160,9 @@ export function CombinedChart({
               content={({ active, payload, label }: TooltipProps<number, string>) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
+                    <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
                       <div className="grid gap-2">
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-sm font-medium text-muted-foreground">
                           {(() => {
                             const [day, month, year] = label.split('-');
                             return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
@@ -216,6 +216,18 @@ export function CombinedChart({
               strokeWidth={2}
               dot={false}
               name={lineChartLabel}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={32}
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{
+                paddingTop: "12px"
+              }}
+              formatter={(value) => (
+                <span className="text-sm text-muted-foreground">{value}</span>
+              )}
             />
           </ComposedChart>
         </ResponsiveContainer>

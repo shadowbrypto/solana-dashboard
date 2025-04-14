@@ -1,4 +1,4 @@
-import { DailyData } from "@/types";
+import { DailyData } from "../../utils/types";
 import { useState, useMemo } from "react";
 import {
   Area,
@@ -200,9 +200,9 @@ export function TimelineChart({
               if (!active || !payload || payload.length === 0) return null;
 
               return (
-                <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
+                <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
                   <div className="grid gap-2">
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-sm font-medium text-muted-foreground">
                       {(() => {
                         const [day, month, year] = label.split('-');
                         return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {

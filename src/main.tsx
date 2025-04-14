@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './globals.css';
+import './styles/globals.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { Layout } from './components/Layout';
+import { Layout } from './layouts/Layout';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 
@@ -20,6 +20,27 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <App />,
+      },
+      {
+        path: 'reports',
+        children: [
+          {
+            path: 'daily',
+            element: (
+              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                <App />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: 'monthly',
+            element: (
+              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                <App />
+              </React.Suspense>
+            ),
+          },
+        ],
       },
       {
         path: 'about',

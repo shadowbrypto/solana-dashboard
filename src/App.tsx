@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, lazy } from "react";
 import Papa from "papaparse";
-import { Routes, Route, useSearchParams, Navigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { MetricCard } from "./components/MetricCard";
 import {
@@ -9,17 +10,67 @@ import {
   BarChart2Icon,
   CoinsIcon,
 } from "lucide-react";
-import { TimelineChart } from "./components/TimelineChart";
+import { TimelineChart } from "./components/charts/TimelineChart";
 import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
-import { ProtocolSelector } from "./components/ProtocolSelector";
-import { CombinedChart } from "./components/CombinedChart";
-import { ProtocolDataTable } from "./components/ProtocolDataTable";
-import { Protocol } from "./types/protocols";
-import { ProtocolMetrics } from "./types";
 
-import Reports from "./pages/Reports";
+import { CombinedChart } from "./components/charts/CombinedChart";
+import { ProtocolDataTable } from "./components/ProtocolDataTable";
+import { StackedBarChart } from "./components/charts/StackedBarChart";
+import { Protocol } from "./types/protocols";
+import { ProtocolMetrics } from "./utils/types";
+
+const DailyReport = lazy(() => import("./pages/DailyReport"));
+const MonthlyReport = lazy(() => import("./pages/MonthlyReport"));
+
+const ErrorFallback = ({ error }: { error: Error }) => (
+  <div className="p-4 text-red-600">
+    <h2 className="text-lg font-bold">Something went wrong:</h2>
+    <pre className="mt-2">{error.message}</pre>
+  </div>
+);
+
+const MetricCards = ({ latestData }: { latestData: Record<string, number> }) => (
+  <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <MetricCard
+      title="Volume"
+      type="volume"
+      value={new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.total_volume_usd)}
+    />
+    <MetricCard
+      title="Users"
+      type="users"
+      value={new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.numberOfNewUsers)}
+    />
+    <MetricCard
+      title="Trades"
+      type="trades"
+      value={new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.daily_trades)}
+    />
+    <MetricCard
+      title="Fees"
+      type="fees"
+      value={new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.total_fees_usd)}
+    />
+  </div>
+);
 
 const MainContent = (): JSX.Element => {
   // Apply dark theme by default
@@ -35,11 +86,11 @@ const MainContent = (): JSX.Element => {
   const [activeView, setActiveView] = useState<"charts" | "data">(searchParams.get("view") === "data" ? "data" : "charts");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [protocol, setProtocol] = useState(searchParams.get("protocol")?.toLowerCase() || "bullx");
+  const protocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
   const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
   
   // Load data for the selected protocol
-  const loadData = async (selectedProtocol: string) => {
+  const loadData = useCallback(async (selectedProtocol: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -273,21 +324,20 @@ const MainContent = (): JSX.Element => {
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
   // Load data when protocol changes
   useEffect(() => {
     loadData(protocol);
   }, [protocol]);
 
-  const latestData = data.reduce(
-    (acc, curr) => {
-      acc.total_volume_usd += curr.total_volume_usd;
-      acc.numberOfNewUsers += curr.numberOfNewUsers;
-      acc.daily_users += curr.daily_users;
-      acc.daily_trades += curr.daily_trades;
-      acc.total_fees_usd += curr.total_fees_usd;
-      return acc;
-    },
+  const latestData = useMemo(() => data.reduce(
+    (acc, curr) => ({
+      total_volume_usd: acc.total_volume_usd + curr.total_volume_usd,
+      numberOfNewUsers: acc.numberOfNewUsers + curr.numberOfNewUsers,
+      daily_users: acc.daily_users + curr.daily_users,
+      daily_trades: acc.daily_trades + curr.daily_trades,
+      total_fees_usd: acc.total_fees_usd + curr.total_fees_usd,
+    }),
     {
       total_volume_usd: 0,
       numberOfNewUsers: 0,
@@ -295,11 +345,12 @@ const MainContent = (): JSX.Element => {
       daily_trades: 0,
       total_fees_usd: 0,
     }
-  );
+  ), [data]);
 
   // If the protocol is invalid, redirect to the NotFound page
   if (invalidProtocol) {
-    return <Navigate to="/not-found" />;
+    window.location.href = '/not-found';
+    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
   }
 
   if (loading) {
@@ -344,57 +395,7 @@ const MainContent = (): JSX.Element => {
         {protocol === 'all' ? 'Combined Protocols' : protocol.charAt(0).toUpperCase() + protocol.slice(1)} Dashboard
       </h1>
 
-      <div className="mb-8">
-        <ProtocolSelector 
-          currentProtocol={protocol} 
-          onProtocolChange={(newProtocol) => {
-            setProtocol(newProtocol);
-            setSearchParams(params => {
-              params.set("protocol", newProtocol);
-              return params;
-            });
-          }} 
-        />
-      </div>
-
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Volume"
-          type="volume"
-          value={new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.total_volume_usd)}
-        />
-        <MetricCard
-          title="Users"
-          type="users"
-          value={new Intl.NumberFormat("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.numberOfNewUsers)}
-        />
-        <MetricCard
-          title="Trades"
-          type="trades"
-          value={new Intl.NumberFormat("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.daily_trades)}
-        />
-        <MetricCard
-          title="Fees"
-          type="fees"
-          value={new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.total_fees_usd)}
-        />
-      </div>
+      <MetricCards latestData={latestData} />
 
       <div className="mt-8 mb-4">
         <TabSwitcher activeTab={activeView} onTabChange={(view) => {
@@ -410,60 +411,40 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === 'all' ? (
             <>
-              <TimelineChart
-                title="Trading Volume by Protocol"
+              <StackedBarChart
+                title="Volume by Protocol"
                 data={data}
-                dataKey="total_volume_usd"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_total_volume_usd',
-                  'Photon': 'photon_total_volume_usd',
-                  'Trojan': 'trojan_total_volume_usd'
-                }}
+                dataKeys={['bullx_total_volume_usd', 'photon_total_volume_usd', 'trojan_total_volume_usd']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
-              <TimelineChart
-                title="Trading Fees by Protocol"
+              <StackedBarChart
+                title="Daily Users by Protocol"
                 data={data}
-                dataKey="total_fees_usd"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_total_fees_usd',
-                  'Photon': 'photon_total_fees_usd',
-                  'Trojan': 'trojan_total_fees_usd'
-                }}
+                dataKeys={['bullx_daily_users', 'photon_daily_users', 'trojan_daily_users']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
               />
-              <TimelineChart
-                title="Daily Active Users by Protocol"
-                data={data}
-                dataKey="daily_users"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_daily_users',
-                  'Photon': 'photon_daily_users',
-                  'Trojan': 'trojan_daily_users'
-                }}
-              />
-              <TimelineChart
+              <StackedBarChart
                 title="New Users by Protocol"
                 data={data}
-                dataKey="numberOfNewUsers"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_numberOfNewUsers',
-                  'Photon': 'photon_numberOfNewUsers',
-                  'Trojan': 'trojan_numberOfNewUsers'
-                }}
+                dataKeys={['bullx_numberOfNewUsers', 'photon_numberOfNewUsers', 'trojan_numberOfNewUsers']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
               />
-              <TimelineChart
+              <StackedBarChart
                 title="Daily Trades by Protocol"
                 data={data}
-                dataKey="daily_trades"
-                isMultiLine={true}
-                multipleDataKeys={{
-                  'BullX': 'bullx_daily_trades',
-                  'Photon': 'photon_daily_trades',
-                  'Trojan': 'trojan_daily_trades'
-                }}
+                dataKeys={['bullx_daily_trades', 'photon_daily_trades', 'trojan_daily_trades']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => value.toLocaleString()}
+              />
+              <StackedBarChart
+                title="Fees by Protocol"
+                data={data}
+                dataKeys={['bullx_total_fees_usd', 'photon_total_fees_usd', 'trojan_total_fees_usd']}
+                labels={['BullX', 'Photon', 'Trojan']}
+                valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
             </>
           ) : (
@@ -530,11 +511,18 @@ const MainContent = (): JSX.Element => {
 };
 
 const App = (): JSX.Element => {
+  const location = window.location.pathname;
+
   return (
-    <Routes>
-      <Route path="/" element={<MainContent />} />
-      <Route path="/reports" element={<Reports />} />
-    </Routes>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      {location === '/reports/daily' ? (
+        <DailyReport />
+      ) : location === '/reports/monthly' ? (
+        <MonthlyReport />
+      ) : (
+        <MainContent />
+      )}
+    </ErrorBoundary>
   );
 };
 

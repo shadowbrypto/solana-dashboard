@@ -40,6 +40,7 @@ export function StackedBarChart({
   xAxisKey = "formattedDay",
   valueFormatter = (value: number) => `${value.toLocaleString()}`
 }: StackedBarChartProps) {
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
   const filteredData = useMemo(() => {
@@ -126,7 +127,7 @@ export function StackedBarChart({
               content={({ active, payload, label }: TooltipProps<number, string>) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="rounded-lg bg-popover p-4 shadow-md border border-border">
+                    <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
                       <div className="grid gap-2">
                         <div className="text-sm font-medium text-muted-foreground">
                           {(() => {
@@ -163,9 +164,11 @@ export function StackedBarChart({
                 key={key}
                 dataKey={key}
                 stackId="a"
-                fill={colors[index]}
+                fill={hoveredBar === key ? `${colors[index]}CC` : colors[index]}
                 radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                 name={labels[index]}
+                onMouseEnter={() => setHoveredBar(key)}
+                onMouseLeave={() => setHoveredBar(null)}
               />
             ))}
             <Legend

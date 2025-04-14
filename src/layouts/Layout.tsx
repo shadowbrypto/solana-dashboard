@@ -12,17 +12,27 @@ const protocols = [
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 
+const reports = [
+  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
+  { id: 'monthly', name: 'Monthly Report', icon: CalendarClock, path: '/reports/monthly' }
+];
+
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get protocol from URL params or default to 'all'
-  const currentProtocol = searchParams.get('protocol')?.toLowerCase() || 'all';
+  // Only highlight protocol if we're on the main page
+  const isMainPage = location.pathname === '/';
+  const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'all') : '';
 
   const handleProtocolChange = (protocolId: string) => {
     navigate('/?protocol=' + protocolId);
+  };
+
+  const handleReportChange = (path: string) => {
+    navigate(path);
   };
 
   return (
@@ -61,9 +71,9 @@ export function Layout() {
                   key={protocol.id}
                   variant="ghost"
                   className={cn(
-                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
+                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
                     sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
-                    currentProtocol === protocol.id && "bg-white/10"
+                    currentProtocol === protocol.id && "bg-white/10 font-medium"
                   )}
                   onClick={() => handleProtocolChange(protocol.id)}
                 >
@@ -76,30 +86,24 @@ export function Layout() {
 
           <div className="space-y-2">
             {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Reports</h3>}
-            <Link to="/reports/daily">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
-                  sidebarOpen ? "justify-start px-2 gap-3" : "justify-center"
-                )}
-              >
-                <CalendarDays className="h-4 w-4" />
-                {sidebarOpen && 'Daily Report'}
-              </Button>
-            </Link>
-            <Link to="/reports/monthly">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
-                  sidebarOpen ? "justify-start px-2 gap-3" : "justify-center"
-                )}
-              >
-                <CalendarClock className="h-4 w-4" />
-                {sidebarOpen && 'Monthly Report'}
-              </Button>
-            </Link>
+            {reports.map((report) => {
+              const Icon = report.icon;
+              return (
+                <Button
+                  key={report.id}
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                    sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                    location.pathname === report.path && "bg-white/10 font-medium"
+                  )}
+                  onClick={() => handleReportChange(report.path)}
+                >
+                  <Icon className="h-4 w-4" />
+                  {sidebarOpen && report.name}
+                </Button>
+              );
+            })}
           </div>
         </nav>
       </aside>

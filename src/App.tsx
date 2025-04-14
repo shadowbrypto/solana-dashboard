@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import Papa from "papaparse";
 import { Routes, Route, useSearchParams, Navigate } from "react-router-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { MetricCard } from "./components/MetricCard";
 import {
@@ -20,8 +21,56 @@ import { StackedBarChart } from "./components/StackedBarChart";
 import { Protocol } from "./types/protocols";
 import { ProtocolMetrics } from "./types";
 
-import DailyReport from "./pages/DailyReport";
-import MonthlyReport from "./pages/MonthlyReport";
+const DailyReport = lazy(() => import("./pages/DailyReport"));
+const MonthlyReport = lazy(() => import("./pages/MonthlyReport"));
+
+const ErrorFallback = ({ error }: { error: Error }) => (
+  <div className="p-4 text-red-600">
+    <h2 className="text-lg font-bold">Something went wrong:</h2>
+    <pre className="mt-2">{error.message}</pre>
+  </div>
+);
+
+const MetricCards = ({ latestData }: { latestData: Record<string, number> }) => (
+  <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <MetricCard
+      title="Volume"
+      type="volume"
+      value={new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.total_volume_usd)}
+    />
+    <MetricCard
+      title="Users"
+      type="users"
+      value={new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.numberOfNewUsers)}
+    />
+    <MetricCard
+      title="Trades"
+      type="trades"
+      value={new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.daily_trades)}
+    />
+    <MetricCard
+      title="Fees"
+      type="fees"
+      value={new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(latestData.total_fees_usd)}
+    />
+  </div>
+);
 
 const MainContent = (): JSX.Element => {
   // Apply dark theme by default
@@ -41,7 +90,7 @@ const MainContent = (): JSX.Element => {
   const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
   
   // Load data for the selected protocol
-  const loadData = async (selectedProtocol: string) => {
+  const loadData = useCallback(async (selectedProtocol: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -275,21 +324,20 @@ const MainContent = (): JSX.Element => {
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
   // Load data when protocol changes
   useEffect(() => {
     loadData(protocol);
   }, [protocol]);
 
-  const latestData = data.reduce(
-    (acc, curr) => {
-      acc.total_volume_usd += curr.total_volume_usd;
-      acc.numberOfNewUsers += curr.numberOfNewUsers;
-      acc.daily_users += curr.daily_users;
-      acc.daily_trades += curr.daily_trades;
-      acc.total_fees_usd += curr.total_fees_usd;
-      return acc;
-    },
+  const latestData = useMemo(() => data.reduce(
+    (acc, curr) => ({
+      total_volume_usd: acc.total_volume_usd + curr.total_volume_usd,
+      numberOfNewUsers: acc.numberOfNewUsers + curr.numberOfNewUsers,
+      daily_users: acc.daily_users + curr.daily_users,
+      daily_trades: acc.daily_trades + curr.daily_trades,
+      total_fees_usd: acc.total_fees_usd + curr.total_fees_usd,
+    }),
     {
       total_volume_usd: 0,
       numberOfNewUsers: 0,
@@ -297,7 +345,7 @@ const MainContent = (): JSX.Element => {
       daily_trades: 0,
       total_fees_usd: 0,
     }
-  );
+  ), [data]);
 
   // If the protocol is invalid, redirect to the NotFound page
   if (invalidProtocol) {
@@ -346,44 +394,7 @@ const MainContent = (): JSX.Element => {
         {protocol === 'all' ? 'Combined Protocols' : protocol.charAt(0).toUpperCase() + protocol.slice(1)} Dashboard
       </h1>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Volume"
-          type="volume"
-          value={new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.total_volume_usd)}
-        />
-        <MetricCard
-          title="Users"
-          type="users"
-          value={new Intl.NumberFormat("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.numberOfNewUsers)}
-        />
-        <MetricCard
-          title="Trades"
-          type="trades"
-          value={new Intl.NumberFormat("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.daily_trades)}
-        />
-        <MetricCard
-          title="Fees"
-          type="fees"
-          value={new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(latestData.total_fees_usd)}
-        />
-      </div>
+      <MetricCards latestData={latestData} />
 
       <div className="mt-8 mb-4">
         <TabSwitcher activeTab={activeView} onTabChange={(view) => {
@@ -500,11 +511,16 @@ const MainContent = (): JSX.Element => {
 
 const App = (): JSX.Element => {
   return (
-    <Routes>
-      <Route path="/" element={<MainContent />} />
-      <Route path="/reports/daily" element={<DailyReport />} />
-      <Route path="/reports/monthly" element={<MonthlyReport />} />
-    </Routes>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<MainContent />} />
+          <Route path="/reports/daily" element={<DailyReport />} />
+          <Route path="/reports/monthly" element={<MonthlyReport />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

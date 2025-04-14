@@ -1,15 +1,15 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Menu } from 'lucide-react';
+import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from './ui/separator';
 
 const protocols = [
-  { id: 'bullx', name: 'Bull X' },
-  { id: 'photon', name: 'Photon' },
-  { id: 'trojan', name: 'Trojan' },
-  { id: 'all', name: 'All Protocols' }
+  { id: 'bullx', name: 'Bull X', icon: BarChart2 },
+  { id: 'photon', name: 'Photon', icon: Zap },
+  { id: 'trojan', name: 'Trojan', icon: Sword },
+  { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 
 export function Layout() {
@@ -33,7 +33,10 @@ export function Layout() {
         sidebarOpen ? "w-64" : "w-16"
       )}>
         {/* Logo and toggle */}
-        <div className="p-4 flex items-center justify-between">
+        <div className={cn(
+          "p-4 flex items-center",
+          sidebarOpen ? "justify-between" : "justify-center"
+        )}>
           {sidebarOpen && <span className="font-bold text-xl">Sol Charts</span>}
           <Button 
             variant="ghost" 
@@ -48,40 +51,53 @@ export function Layout() {
         <Separator className="bg-white/10" />
 
         {/* Protocol Selection */}
-        <nav className="flex-1 p-4 space-y-8">
+        <nav className="flex-1 px-2 py-4 space-y-8">
           <div className="space-y-2">
-            <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Protocols</h3>
-            {protocols.map((protocol) => (
-              <Button
-                key={protocol.id}
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start text-white hover:bg-white/10 rounded-xl",
-                  currentProtocol === protocol.id && "bg-white/10"
-                )}
-                onClick={() => handleProtocolChange(protocol.id)}
-              >
-                {protocol.name}
-              </Button>
-            ))}
+            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Protocols</h3>}
+            {protocols.map((protocol) => {
+              const Icon = protocol.icon;
+              return (
+                <Button
+                  key={protocol.id}
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
+                    sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                    currentProtocol === protocol.id && "bg-white/10"
+                  )}
+                  onClick={() => handleProtocolChange(protocol.id)}
+                >
+                  <Icon className="h-4 w-4" />
+                  {sidebarOpen && protocol.name}
+                </Button>
+              );
+            })}
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xs uppercase text-white/50 font-medium mb-2">Reports</h3>
+            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Reports</h3>}
             <Link to="/reports/daily">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-white hover:bg-white/10 rounded-xl"
+                className={cn(
+                  "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
+                  sidebarOpen ? "justify-start px-2 gap-3" : "justify-center"
+                )}
               >
-                Daily Report
+                <CalendarDays className="h-4 w-4" />
+                {sidebarOpen && 'Daily Report'}
               </Button>
             </Link>
             <Link to="/reports/monthly">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-white hover:bg-white/10 rounded-xl"
+                className={cn(
+                  "w-full text-white hover:bg-white/10 rounded-xl flex items-center",
+                  sidebarOpen ? "justify-start px-2 gap-3" : "justify-center"
+                )}
               >
-                Monthly Report
+                <CalendarClock className="h-4 w-4" />
+                {sidebarOpen && 'Monthly Report'}
               </Button>
             </Link>
           </div>

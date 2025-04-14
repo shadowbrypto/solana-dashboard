@@ -1,4 +1,4 @@
-import { DailyData } from "@/types";
+import { DailyData } from "../../utils/types";
 import { useState, useMemo } from "react";
 import {
   Area,

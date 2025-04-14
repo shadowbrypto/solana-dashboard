@@ -10,16 +10,16 @@ import {
   BarChart2Icon,
   CoinsIcon,
 } from "lucide-react";
-import { TimelineChart } from "./components/TimelineChart";
+import { TimelineChart } from "./components/charts/TimelineChart";
 import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { DailyData } from "./types";
 
-import { CombinedChart } from "./components/CombinedChart";
+import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
-import { StackedBarChart } from "./components/StackedBarChart";
+import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { Protocol } from "./types/protocols";
-import { ProtocolMetrics } from "./types";
+import { ProtocolMetrics } from "./utils/types";
 
 const DailyReport = lazy(() => import("./pages/DailyReport"));
 const MonthlyReport = lazy(() => import("./pages/MonthlyReport"));

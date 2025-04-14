@@ -1,9 +1,9 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn } from '../utils/utils';
 import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
-import { Separator } from './ui/separator';
+import { Separator } from '../components/ui/separator';
 
 const protocols = [
   { id: 'bullx', name: 'Bull X', icon: BarChart2 },

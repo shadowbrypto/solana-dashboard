@@ -9,7 +9,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "./ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -26,15 +26,15 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Protocol } from '@/types/protocols';
-import { ProtocolMetrics } from '@/types';
+} from "./ui/pagination";
+import { Protocol } from '../types/protocols';
+import { ProtocolMetrics } from '../utils/types';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "./ui/card";
 
 type MetricKey = keyof ProtocolMetrics;
 

@@ -1,22 +1,20 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { createClient } from "@supabase/supabase-js";
 
-const client = postgres(process.env.DATABASE_URL || "", { prepare: false });
-const db = drizzle({ client });
+// Create a single supabase client for interacting with your database
+const supabase = createClient(
+  import.meta.env.SUPABASE_URL,
+  import.meta.env.SUPABASE_ANON_KEY
+);
 
 export async function queryProtocolData(protocol = "bullx") {
   try {
-    const result = await db
-      .execute(
-        `SELECT * FROM protocol_data WHERE ${
-          protocol !== "all" ? `protocol_name = '${protocol}'` : ""
-        }`
-      )
-      .execute();
-    console.log(result);
-    return result;
+    const { data } = await supabase
+      .from("protocol_stats")
+      .select()
+      .eq("protocol_name", protocol);
+    return data;
   } catch (error) {
-    console.error("Error fetching protocol data:", error);
+    console.error(error);
     return [];
   }
 }

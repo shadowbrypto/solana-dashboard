@@ -26,8 +26,8 @@ const router = createBrowserRouter([
         index: true,
         element: <App />,
         loader: async ({ request }) => {
-          const protocol = request.url.split("?")[0].split("/").pop();
-
+          const searchParams = new URL(request.url).searchParams;
+          const protocol = searchParams.get("protocol") || "";
           return { data: await queryProtocolData(protocol) };
         },
       },

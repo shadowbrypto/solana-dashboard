@@ -600,17 +600,9 @@ const MainContent = (): JSX.Element => {
 };
 
 const App = (): JSX.Element => {
-  const location = window.location.pathname;
-
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      {location === "/reports/daily" ? (
-        <DailyReport />
-      ) : location === "/reports/monthly" ? (
-        <MonthlyReport />
-      ) : (
-        <MainContent />
-      )}
+      <MainContent />
     </ErrorBoundary>
   );
 };

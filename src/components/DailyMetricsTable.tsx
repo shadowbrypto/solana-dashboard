@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 import { format } from "date-fns";
 import { ProtocolMetrics, Protocol } from "../types";
 import { DatePicker } from "./DatePicker";
+import { useLoaderData } from "react-router-dom";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -37,10 +38,9 @@ const formatNumber = (value: number): string => {
 };
 
 export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
+  const data = useLoaderData();
+
   const [date, setDate] = useState<Date>(new Date());
-  const [data, setData] = useState<
-    Record<string, Record<Protocol, ProtocolMetrics>>
-  >({});
 
   const metrics: MetricDefinition[] = [
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
@@ -49,13 +49,6 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     { key: "daily_trades", label: "Trades", format: formatNumber },
     { key: "total_fees_usd", label: "Fees", format: formatCurrency },
   ];
-
-  useEffect(() => {
-    fetch("/data/protocolData.json")
-      .then((response) => response.json())
-      .then((jsonData) => setData(jsonData))
-      .catch((error) => console.error("Error loading protocol data:", error));
-  }, []);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {

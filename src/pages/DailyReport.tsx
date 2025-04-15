@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Protocol } from "../types/protocols";
-import { ProtocolMetrics } from "../utils/types";
+import { ProtocolMetrics, Protocol } from "../types";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
 
 export default function DailyReport() {
   const [date, setDate] = useState<Date>(new Date());
-  const [data, setData] = useState<Record<string, Record<Protocol, ProtocolMetrics>>>({});
+  const [data, setData] = useState<
+    Record<string, Record<Protocol, ProtocolMetrics>>
+  >({});
   const protocols: Protocol[] = ["bullx", "photon", "trojan"];
 
   useEffect(() => {
@@ -19,23 +20,23 @@ export default function DailyReport() {
           daily_users: 100,
           numberOfNewUsers: 10,
           daily_trades: 500,
-          total_fees_usd: 5000
+          total_fees_usd: 5000,
         },
         photon: {
           total_volume_usd: 2000000,
           daily_users: 200,
           numberOfNewUsers: 20,
           daily_trades: 1000,
-          total_fees_usd: 10000
+          total_fees_usd: 10000,
         },
         trojan: {
           total_volume_usd: 3000000,
           daily_users: 300,
           numberOfNewUsers: 30,
           daily_trades: 1500,
-          total_fees_usd: 15000
-        }
-      }
+          total_fees_usd: 15000,
+        },
+      },
     };
     setData(mockData);
   }, [date]);
@@ -43,9 +44,9 @@ export default function DailyReport() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Daily Report</h1>
-      <DailyMetricsTable 
-        data={data} 
-        protocols={protocols} 
+      <DailyMetricsTable
+        data={data}
+        protocols={protocols}
         date={date}
         onDateChange={setDate}
       />

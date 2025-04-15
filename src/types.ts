@@ -15,3 +15,5 @@ export interface ProtocolMetrics {
   daily_trades: number;
   total_fees_usd: number;
 }
+
+export type Protocol = "bullx" | "photon" | "trojan";

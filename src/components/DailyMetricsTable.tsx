@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,9 +8,8 @@ import {
   TableRow,
 } from "./ui/table";
 import { format } from "date-fns";
-import { Protocol } from '../types/protocols';
-import { ProtocolMetrics } from '../utils/types';
-import { DatePicker } from './DatePicker';
+import { ProtocolMetrics, Protocol } from "../types";
+import { DatePicker } from "./DatePicker";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -39,21 +38,23 @@ const formatNumber = (value: number): string => {
 
 export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const [date, setDate] = useState<Date>(new Date());
-  const [data, setData] = useState<Record<string, Record<Protocol, ProtocolMetrics>>>({});
+  const [data, setData] = useState<
+    Record<string, Record<Protocol, ProtocolMetrics>>
+  >({});
 
   const metrics: MetricDefinition[] = [
-    { key: 'total_volume_usd', label: 'Volume', format: formatCurrency },
-    { key: 'daily_users', label: 'Daily Users', format: formatNumber },
-    { key: 'numberOfNewUsers', label: 'New Users', format: formatNumber },
-    { key: 'daily_trades', label: 'Trades', format: formatNumber },
-    { key: 'total_fees_usd', label: 'Fees', format: formatCurrency },
+    { key: "total_volume_usd", label: "Volume", format: formatCurrency },
+    { key: "daily_users", label: "Daily Users", format: formatNumber },
+    { key: "numberOfNewUsers", label: "New Users", format: formatNumber },
+    { key: "daily_trades", label: "Trades", format: formatNumber },
+    { key: "total_fees_usd", label: "Fees", format: formatCurrency },
   ];
 
   useEffect(() => {
-    fetch('/data/protocolData.json')
-      .then(response => response.json())
-      .then(jsonData => setData(jsonData))
-      .catch(error => console.error('Error loading protocol data:', error));
+    fetch("/data/protocolData.json")
+      .then((response) => response.json())
+      .then((jsonData) => setData(jsonData))
+      .catch((error) => console.error("Error loading protocol data:", error));
   }, []);
 
   const handleDateChange = (newDate: Date | undefined) => {

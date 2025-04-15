@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Column,
   ColumnDef,
@@ -27,23 +27,17 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
-import { Protocol } from '../types/protocols';
-import { ProtocolMetrics } from '../utils/types';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { ProtocolMetrics, Protocol } from "../types";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 type MetricKey = keyof ProtocolMetrics;
 
 const metricLabels: Record<MetricKey, string> = {
-  total_volume_usd: 'Volume',
-  daily_users: 'Daily Active Users',
-  numberOfNewUsers: 'New Users',
-  daily_trades: 'Trades',
-  total_fees_usd: 'Fees'
+  total_volume_usd: "Volume",
+  daily_users: "Daily Active Users",
+  numberOfNewUsers: "New Users",
+  daily_trades: "Trades",
+  total_fees_usd: "Fees",
 } as const;
 
 interface ProtocolDataTableProps {
@@ -52,8 +46,11 @@ interface ProtocolDataTableProps {
 }
 
 export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
-  const [selectedMetric, setSelectedMetric] = React.useState<MetricKey>('total_volume_usd');
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: 'date', desc: true }]);
+  const [selectedMetric, setSelectedMetric] =
+    React.useState<MetricKey>("total_volume_usd");
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "date", desc: true },
+  ]);
 
   interface TableData {
     date: string;
@@ -63,12 +60,14 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
   const columns = React.useMemo<ColumnDef<TableData>[]>(
     () => [
       {
-        accessorKey: 'date',
+        accessorKey: "date",
         header: ({ column }: { column: Column<TableData> }) => {
           return (
             <button
               className="inline-flex items-center gap-2 hover:text-foreground"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
             >
               Date
               {column.getIsSorted() === "asc" ? (
@@ -77,22 +76,22 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                 <span className="text-xs">↓</span>
               ) : null}
             </button>
-          )
+          );
         },
-        cell: ({ row }: { row: any }) => row.getValue('date'),
+        cell: ({ row }: { row: any }) => row.getValue("date"),
         sortingFn: (rowA: any, rowB: any) => {
-          const dateA = rowA.getValue('date') as string;
-          const dateB = rowB.getValue('date') as string;
-          const [dayA, monthA, yearA] = dateA.split('/').map(Number);
-          const [dayB, monthB, yearB] = dateB.split('/').map(Number);
-          
+          const dateA = rowA.getValue("date") as string;
+          const dateB = rowB.getValue("date") as string;
+          const [dayA, monthA, yearA] = dateA.split("/").map(Number);
+          const [dayB, monthB, yearB] = dateB.split("/").map(Number);
+
           // Compare years first
           if (yearA !== yearB) return yearB - yearA;
           // If years are equal, compare months
           if (monthA !== monthB) return monthB - monthA;
           // If months are equal, compare days
           return dayB - dayA;
-        }
+        },
       },
       ...protocols.map((protocol) => ({
         accessorKey: protocol,
@@ -100,7 +99,9 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
           return (
             <button
               className="inline-flex items-center gap-2 hover:text-foreground"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
             >
               {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
               {column.getIsSorted() === "asc" ? (
@@ -109,18 +110,22 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                 <span className="text-xs">↓</span>
               ) : null}
             </button>
-          )
+          );
         },
         cell: ({ row }: { row: any }) => {
           const value = row.getValue(protocol) as ProtocolMetrics;
           return formatValue(value[selectedMetric]);
         },
         sortingFn: (rowA: any, rowB: any) => {
-          const valueA = (rowA.getValue(protocol) as ProtocolMetrics)[selectedMetric];
-          const valueB = (rowB.getValue(protocol) as ProtocolMetrics)[selectedMetric];
+          const valueA = (rowA.getValue(protocol) as ProtocolMetrics)[
+            selectedMetric
+          ];
+          const valueB = (rowB.getValue(protocol) as ProtocolMetrics)[
+            selectedMetric
+          ];
           return valueB - valueA; // Sort in descending order by default
-        }
-      }))
+        },
+      })),
     ],
     [protocols, selectedMetric]
   );
@@ -131,7 +136,7 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
       .reverse()
       .map(([date, protocolData]) => ({
         date,
-        ...protocolData
+        ...protocolData,
       }));
   }, [data]);
 
@@ -150,29 +155,33 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
       pagination: {
         pageSize: 10, // Show 10 rows per page
       },
-      sorting: [{ id: 'date', desc: true }], // Ensure latest dates appear first
+      sorting: [{ id: "date", desc: true }], // Ensure latest dates appear first
     },
   });
 
   const formatValue = (value: number): string => {
-    if (selectedMetric.toString().includes('usd')) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+    if (selectedMetric.toString().includes("usd")) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }).format(value);
     }
-    return new Intl.NumberFormat('en-US').format(value);
+    return new Intl.NumberFormat("en-US").format(value);
   };
 
   return (
     <Card className="bg-background border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-semibold tracking-tight">Protocol Stats</CardTitle>
+        <CardTitle className="text-lg font-semibold tracking-tight">
+          Protocol Stats
+        </CardTitle>
         <Tabs
           value={selectedMetric}
-          onValueChange={(value: string) => setSelectedMetric(value as MetricKey)}
+          onValueChange={(value: string) =>
+            setSelectedMetric(value as MetricKey)
+          }
           className="w-fit ml-auto"
         >
           <TabsList className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900/90 p-1 text-muted-foreground">
@@ -289,7 +298,9 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                       <PaginationItem>
                         <PaginationLink
                           onClick={() =>
-                            table.setPageIndex(table.getState().pagination.pageIndex - 1)
+                            table.setPageIndex(
+                              table.getState().pagination.pageIndex - 1
+                            )
                           }
                         >
                           {table.getState().pagination.pageIndex}
@@ -297,12 +308,15 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                       </PaginationItem>
                     )}
                     {table.getState().pagination.pageIndex > 0 &&
-                      table.getState().pagination.pageIndex < table.getPageCount() - 1 && (
+                      table.getState().pagination.pageIndex <
+                        table.getPageCount() - 1 && (
                         <PaginationItem>
                           <PaginationLink
                             isActive
                             onClick={() =>
-                              table.setPageIndex(table.getState().pagination.pageIndex)
+                              table.setPageIndex(
+                                table.getState().pagination.pageIndex
+                              )
                             }
                           >
                             {table.getState().pagination.pageIndex + 1}
@@ -314,7 +328,9 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                       <PaginationItem>
                         <PaginationLink
                           onClick={() =>
-                            table.setPageIndex(table.getState().pagination.pageIndex + 1)
+                            table.setPageIndex(
+                              table.getState().pagination.pageIndex + 1
+                            )
                           }
                         >
                           {table.getState().pagination.pageIndex + 2}
@@ -331,7 +347,9 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
                       table.getPageCount() - 1 && (
                       <PaginationItem>
                         <PaginationLink
-                          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                          onClick={() =>
+                            table.setPageIndex(table.getPageCount() - 1)
+                          }
                         >
                           {table.getPageCount()}
                         </PaginationLink>

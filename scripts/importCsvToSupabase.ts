@@ -3,8 +3,8 @@ import Papa from 'papaparse';
 import { createClient } from '@supabase/supabase-js';
 
 // TODO: Replace with your actual Supabase project details
-const supabaseUrl = 'https://kctohdlzcnnmcubgxiaa.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjdG9oZGx6Y25ubWN1Ymd4aWFhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDcxNjg2NiwiZXhwIjoyMDYwMjkyODY2fQ.hSiPxdY28riZfuXnpZqIFun2wRmqa0a371xuiDtJr8I'; // Use service role key for server-side scripts
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 const tableName = 'protocol_stats'; // Replace with your table name
 
 import path from 'path';

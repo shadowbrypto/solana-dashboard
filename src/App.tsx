@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, lazy } from "react";
 import Papa from "papaparse";
-import { useSearchParams } from "react-router-dom";
+import { useLoaderData, useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { MetricCard } from "./components/MetricCard";
@@ -13,9 +13,6 @@ import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { ProtocolMetrics, Protocol } from "./types";
-
-const DailyReport = lazy(() => import("./pages/DailyReport"));
-const MonthlyReport = lazy(() => import("./pages/MonthlyReport"));
 
 const ErrorFallback = ({ error }: { error: Error }) => (
   <div className="p-4 text-red-600">
@@ -78,6 +75,10 @@ const MainContent = (): JSX.Element => {
 
   // Use React Router's useSearchParams hook instead of directly accessing window.location
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const protocolData = useLoaderData();
+
+  console.log(protocolData);
 
   const [data, setData] = useState<DailyData[]>([]);
   const [activeView, setActiveView] = useState<"charts" | "data">(
@@ -600,17 +601,9 @@ const MainContent = (): JSX.Element => {
 };
 
 const App = (): JSX.Element => {
-  const location = window.location.pathname;
-
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      {location === "/reports/daily" ? (
-        <DailyReport />
-      ) : location === "/reports/monthly" ? (
-        <MonthlyReport />
-      ) : (
-        <MainContent />
-      )}
+      <MainContent />
     </ErrorBoundary>
   );
 };

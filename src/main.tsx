@@ -1,64 +1,85 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './styles/globals.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { Layout } from './layouts/Layout';
-import About from './pages/About';
-import NotFound from './pages/NotFound';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./styles/globals.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { Layout } from "./layouts/Layout";
+import About from "./pages/About";
+import NotFound from "./pages/NotFound";
+import DailyReport from "./pages/DailyReport";
+import MonthlyReport from "./pages/MonthlyReport";
+
+// import jsonData from "../public/data/protocolData.json";
+import { queryProtocolData } from "./loaders/protocol";
 
 // Set dark mode as default
-document.documentElement.classList.add('dark');
+document.documentElement.classList.add("dark");
 
 // Create a router with our routes
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <Layout />,
     children: [
       {
         index: true,
         element: <App />,
+        loader: async ({ request }) => {
+          const protocol = request.url.split("?")[0].split("/").pop();
+
+          return { data: await queryProtocolData(protocol) };
+        },
       },
       {
-        path: 'reports',
+        path: "reports",
         children: [
           {
-            path: 'daily',
+            path: "daily",
             element: (
-              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                <App />
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <DailyReport />
               </React.Suspense>
             ),
+            loader: async () => {
+              return {};
+            },
           },
           {
-            path: 'monthly',
+            path: "monthly",
             element: (
-              <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                <App />
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <MonthlyReport />
               </React.Suspense>
             ),
           },
         ],
       },
       {
-        path: 'about',
+        path: "about",
         element: <About />,
       },
       {
-        path: 'not-found',
-        element: <NotFound />,
-      },
-      {
-        path: '*',
+        path: "*",
         element: <NotFound />,
       },
     ],
   },
 ]);
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
   </React.StrictMode>

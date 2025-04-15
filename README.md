@@ -6,6 +6,10 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
+### `npm run db:update`
+
+This will fetch all CSVs and update the duckdb
+
 ### `npm start`
 
 Runs the app in the development mode.\

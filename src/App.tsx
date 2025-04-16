@@ -287,17 +287,11 @@ const MainContent = (): JSX.Element => {
                 title="Daily Users"
                 data={data.filter(
                   (d) =>
-                    d.daily_users !== undefined
+                    d.daily_users !== undefined &&
+                    d.new_users !== undefined
                 )}
                 volumeKey="daily_users"
-                barChartLabel="Daily Active Users"
-                leftAxisFormatter={(value) => `${value.toFixed(0)}`}
-                rightAxisFormatter={(value) => `${value.toFixed(0)}`}
-              />
-              <TimelineChart
-                title="New Users"
-                data={data.filter((d) => d.new_users !== undefined)}
-                dataKey="new_users"
+                feesKey="new_users"
               />
               <TimelineChart
                 title="Trades"

@@ -51,7 +51,7 @@ const MetricCards = ({
       }).format(totalMetrics.total_volume_usd)}
     />
     <MetricCard
-      title="Users"
+      title="Daily Users"
       type="users"
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
@@ -278,18 +278,20 @@ const MainContent = (): JSX.Element => {
                 feesKey="fees_usd"
               />
               <CombinedChart
-                title="User Activity"
+                title="Daily Users"
                 data={data.filter(
                   (d) =>
-                    d.daily_users !== undefined &&
-                    d.new_users !== undefined
+                    d.daily_users !== undefined
                 )}
                 volumeKey="daily_users"
-                feesKey="new_users"
                 barChartLabel="Daily Active Users"
-                lineChartLabel="New Users"
                 leftAxisFormatter={(value) => `${value.toFixed(0)}`}
                 rightAxisFormatter={(value) => `${value.toFixed(0)}`}
+              />
+              <TimelineChart
+                title="New Users"
+                data={data.filter((d) => d.new_users !== undefined)}
+                dataKey="new_users"
               />
               <TimelineChart
                 title="Trades"
@@ -357,7 +359,7 @@ const MainContent = (): JSX.Element => {
           />
         </div>
       ) : (
-        <DataTable data={data} />
+        <DataTable protocol={protocol} />
       )}
     </div>
   );

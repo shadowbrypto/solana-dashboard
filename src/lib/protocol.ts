@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
 
+type ProtocolStatsWithDay = ProtocolStats & { formattedDay: string };
+
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -41,26 +43,27 @@ export async function getProtocolStats(protocolName?: string) {
   let formattedData;
   
   if (!protocolName) {
-    // For all protocols, group by date and aggregate protocol data
-    const dateMap = new Map<string, any>();
+    // For all protocols, group by date
+    const dateMap = new Map<string, Record<string, ProtocolStatsWithDay>>();
     
     data.forEach((row: ProtocolStats) => {
       const formattedDay = formatDate(row.date);
       if (!dateMap.has(formattedDay)) {
-        dateMap.set(formattedDay, {
-          formattedDay,
-          date: row.date
-        });
+        dateMap.set(formattedDay, {});
       }
-      const dateEntry = dateMap.get(formattedDay);
-      // Add protocol-specific metrics
-      dateEntry[`${row.protocol_name}_volume`] = row.volume_usd;
-      dateEntry[`${row.protocol_name}_users`] = row.daily_users;
-      dateEntry[`${row.protocol_name}_trades`] = row.trades;
-      dateEntry[`${row.protocol_name}_fees`] = row.fees_usd;
+      const dateEntry = dateMap.get(formattedDay)!;
+      // Store complete protocol stats for each protocol
+      dateEntry[row.protocol_name] = {
+        ...row,
+        formattedDay
+      };
     });
 
-    formattedData = Array.from(dateMap.values());
+    // Convert to array format expected by TimelineChart
+    formattedData = Array.from(dateMap.entries()).map(([formattedDay, protocols]) => ({
+      formattedDay,
+      ...protocols
+    })) as ProtocolStatsWithDay[];
   } else {
     formattedData = data.map((row: ProtocolStats) => ({
       ...row,

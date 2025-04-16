@@ -1,5 +1,7 @@
-import { DailyData } from "@/types";
+import { ProtocolStats } from "@/types/protocol";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import {
   Card,
   CardContent,
@@ -15,14 +17,76 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface DataTableProps {
-  data: DailyData[];
+  protocol?: string;
+  date?: string;
 }
 
-export function DataTable({ data }: DataTableProps) {
+export function DataTable({ protocol, date }: DataTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+
+  const { data, isLoading, error } = useQuery<ProtocolStats[]>({
+    queryKey: ['protocol-stats', protocol, date],
+    queryFn: async () => {
+      let query = supabase
+        .from('protocol_daily_stats')
+        .select(`
+          protocol_name,
+          date,
+          volume_usd,
+          daily_users,
+          new_users,
+          trades,
+          fees_usd
+        `)
+        .order('date', { ascending: false });
+
+      if (protocol) {
+        query = query.eq('protocol_name', protocol);
+      }
+      if (date) {
+        query = query.eq('date', date);
+      }
+
+      const { data: stats, error } = await query;
+      if (error) throw error;
+      return stats;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card border-border rounded-xl">
+        <CardContent className="flex items-center justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card border-border rounded-xl">
+        <CardContent className="py-10">
+          <p className="text-center text-destructive">Error loading data</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data?.length) {
+    return (
+      <Card className="bg-card border-border rounded-xl">
+        <CardContent className="py-10">
+          <p className="text-center text-muted-foreground">No data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const totalPages = Math.ceil(data.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
@@ -48,13 +112,14 @@ export function DataTable({ data }: DataTableProps) {
               <TableRow className="hover:bg-muted border-border first:rounded-t-xl">
                 <TableHead className="text-muted-foreground">Date</TableHead>
                 <TableHead className="text-right text-muted-foreground">Volume</TableHead>
-                <TableHead className="text-right text-muted-foreground">Users</TableHead>
+                <TableHead className="text-right text-muted-foreground">Daily Users</TableHead>
+                <TableHead className="text-right text-muted-foreground">New Users</TableHead>
                 <TableHead className="text-right text-muted-foreground">Trades</TableHead>
                 <TableHead className="text-right text-muted-foreground">Fees</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentData.map((row, index) => (
+              {currentData.map((row: ProtocolStats, index: number) => (
                 <TableRow key={index} className="hover:bg-muted/50 border-border last:rounded-b-xl">
                   <TableCell className="text-foreground">
                     {new Intl.DateTimeFormat("en-US", {
@@ -62,9 +127,7 @@ export function DataTable({ data }: DataTableProps) {
                       day: "numeric",
                       year: "numeric",
                     }).format(
-                      new Date(
-                        row.formattedDay.split("-").reverse().join("-")
-                      )
+                      new Date(row.date)
                     )}
                   </TableCell>
                   <TableCell className="text-foreground text-right">
@@ -74,13 +137,16 @@ export function DataTable({ data }: DataTableProps) {
                       notation: "compact",
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 1,
-                    }).format(row.total_volume_usd)}
+                    }).format(row.volume_usd)}
                   </TableCell>
                   <TableCell className="text-foreground text-right">
                     {new Intl.NumberFormat("en-US").format(row.daily_users)}
                   </TableCell>
+                  <TableCell className="text-foreground text-right">
+                    {new Intl.NumberFormat("en-US").format(row.new_users)}
+                  </TableCell>
                   <TableCell className="text-right text-foreground">
-                    {new Intl.NumberFormat("en-US").format(row.daily_trades)}
+                    {new Intl.NumberFormat("en-US").format(row.trades)}
                   </TableCell>
                   <TableCell className="text-right text-foreground">
                     {new Intl.NumberFormat("en-US", {
@@ -89,7 +155,7 @@ export function DataTable({ data }: DataTableProps) {
                       notation: "compact",
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 1,
-                    }).format(row.total_fees_usd)}
+                    }).format(row.fees_usd)}
                   </TableCell>
                 </TableRow>
               ))}

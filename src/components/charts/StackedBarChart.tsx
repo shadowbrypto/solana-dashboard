@@ -43,7 +43,9 @@ export function StackedBarChart({
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
   const filteredData = useMemo(() => {
-    if (timeframe === "all") return [...data];
+    // Create a copy and reverse the data array
+    const reversedData = [...data].reverse();
+    if (timeframe === "all") return reversedData;
 
     const now = new Date();
     let daysToSubtract: number;
@@ -65,6 +67,7 @@ export function StackedBarChart({
     const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
     return [...data]
+      .reverse()
       .filter(item => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));

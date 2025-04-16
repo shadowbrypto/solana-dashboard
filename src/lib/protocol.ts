@@ -21,6 +21,7 @@ export async function getProtocolStats(protocolName?: string) {
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
+
   let query = supabase
     .from('protocol_stats')
     .select('*')
@@ -37,10 +38,35 @@ export async function getProtocolStats(protocolName?: string) {
     return [];
   }
 
-  const formattedData = data.map((row: ProtocolStats) => ({
-    ...row,
-    formattedDay: formatDate(row.date),
-  }));
+  let formattedData;
+  
+  if (!protocolName) {
+    // For all protocols, group by date and aggregate protocol data
+    const dateMap = new Map<string, any>();
+    
+    data.forEach((row: ProtocolStats) => {
+      const formattedDay = formatDate(row.date);
+      if (!dateMap.has(formattedDay)) {
+        dateMap.set(formattedDay, {
+          formattedDay,
+          date: row.date
+        });
+      }
+      const dateEntry = dateMap.get(formattedDay);
+      // Add protocol-specific metrics
+      dateEntry[`${row.protocol_name}_volume`] = row.volume_usd;
+      dateEntry[`${row.protocol_name}_users`] = row.daily_users;
+      dateEntry[`${row.protocol_name}_trades`] = row.trades;
+      dateEntry[`${row.protocol_name}_fees`] = row.fees_usd;
+    });
+
+    formattedData = Array.from(dateMap.values());
+  } else {
+    formattedData = data.map((row: ProtocolStats) => ({
+      ...row,
+      formattedDay: formatDate(row.date),
+    }));
+  }
 
   protocolStatsCache.set(cacheKey, {
     data: formattedData,

@@ -224,53 +224,42 @@ const MainContent = (): JSX.Element => {
                 title="Volume by Protocol"
                 data={data}
                 dataKeys={[
-                  "bullx_total_volume_usd",
-                  "photon_total_volume_usd",
-                  "trojan_total_volume_usd",
+                  "bullx_volume",
+                  "photon_volume",
+                  "trojan_volume",
                 ]}
                 labels={["BullX", "Photon", "Trojan"]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
               <StackedBarChart
-                title="Daily Users by Protocol"
+                title="Users by Protocol"
                 data={data}
                 dataKeys={[
-                  "bullx_daily_users",
-                  "photon_daily_users",
-                  "trojan_daily_users",
+                  "bullx_users",
+                  "photon_users",
+                  "trojan_users",
                 ]}
                 labels={["BullX", "Photon", "Trojan"]}
-                valueFormatter={(value) => value.toLocaleString()}
+                valueFormatter={(value) => value.toFixed(0)}
               />
               <StackedBarChart
-                title="New Users by Protocol"
+                title="Trades by Protocol"
                 data={data}
                 dataKeys={[
-                  "bullx_numberOfNewUsers",
-                  "photon_numberOfNewUsers",
-                  "trojan_numberOfNewUsers",
+                  "bullx_trades",
+                  "photon_trades",
+                  "trojan_trades",
                 ]}
                 labels={["BullX", "Photon", "Trojan"]}
-                valueFormatter={(value) => value.toLocaleString()}
-              />
-              <StackedBarChart
-                title="Daily Trades by Protocol"
-                data={data}
-                dataKeys={[
-                  "bullx_daily_trades",
-                  "photon_daily_trades",
-                  "trojan_daily_trades",
-                ]}
-                labels={["BullX", "Photon", "Trojan"]}
-                valueFormatter={(value) => value.toLocaleString()}
+                valueFormatter={(value) => value.toFixed(0)}
               />
               <StackedBarChart
                 title="Fees by Protocol"
                 data={data}
                 dataKeys={[
-                  "bullx_total_fees_usd",
-                  "photon_total_fees_usd",
-                  "trojan_total_fees_usd",
+                  "bullx_fees",
+                  "photon_fees",
+                  "trojan_fees",
                 ]}
                 labels={["BullX", "Photon", "Trojan"]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}

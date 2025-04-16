@@ -12,7 +12,7 @@ import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { Protocol } from "./types";
-import { getProtocolStats } from "./lib/protocol";
+import { getProtocolStats, getTotalProtocolStats } from "./lib/protocol";
 
 interface DailyData extends ProtocolMetrics {
   formattedDay: string;
@@ -35,9 +35,9 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 );
 
 const MetricCards = ({
-  latestData,
+  totalMetrics,
 }: {
-  latestData: ProtocolStatsWithDay;
+  totalMetrics: ProtocolMetrics;
 }) => (
   <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
     <MetricCard
@@ -48,7 +48,7 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.volume_usd)}
+      }).format(totalMetrics.total_volume_usd)}
     />
     <MetricCard
       title="Users"
@@ -56,7 +56,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.new_users)}
+      }).format(totalMetrics.numberOfNewUsers)}
     />
     <MetricCard
       title="Trades"
@@ -64,7 +64,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.trades)}
+      }).format(totalMetrics.daily_trades)}
     />
     <MetricCard
       title="Fees"
@@ -74,7 +74,7 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.fees_usd)}
+      }).format(totalMetrics.total_fees_usd)}
     />
   </div>
 );
@@ -83,6 +83,7 @@ const MainContent = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invalidProtocol, setInvalidProtocol] = useState(false);
+  const [totalMetrics, setTotalMetrics] = useState<ProtocolMetrics>({total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0});
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -109,11 +110,16 @@ const MainContent = (): JSX.Element => {
         return;
       }
 
-      const stats = await getProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol);
+      const [stats, totalStats] = await Promise.all([
+        getProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol),
+        getTotalProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol)
+      ]);
       
-      if (!stats) {
+      if (!stats || !totalStats) {
         throw new Error('Failed to fetch protocol stats');
       }
+      
+      setTotalMetrics(totalStats);
 
       if (selectedProtocol === 'all') {
         const processedData = stats.reduce((acc: ProtocolStatsWithDay[], item: ProtocolStatsWithDay) => {
@@ -195,7 +201,7 @@ const MainContent = (): JSX.Element => {
         Dashboard
       </h1>
 
-      {latestData && <MetricCards latestData={latestData} />}
+      <MetricCards totalMetrics={totalMetrics} />
 
       <div className="mt-8 mb-4">
         <TabSwitcher

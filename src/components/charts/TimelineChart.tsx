@@ -1,4 +1,4 @@
-import { DailyData } from "../../types";
+import { ProtocolStats } from "../../types/protocol";
 import { useState, useMemo } from "react";
 import {
   Area,
@@ -28,12 +28,9 @@ type TimeFrame = "7d" | "30d" | "3m" | "all";
 
 interface TimelineChartProps {
   title: string;
-  data: Array<{
-    formattedDay: string;
-    [key: string]: string | number;
-  }>;
-  dataKey: string;
-  multipleDataKeys?: Record<string, string>;
+  data: Array<ProtocolStats & { formattedDay: string }>;
+  dataKey: keyof ProtocolStats;
+  multipleDataKeys?: Record<string, keyof ProtocolStats>;
   isMultiLine?: boolean;
 }
 
@@ -51,6 +48,18 @@ const MIDNIGHT_THEME = {
   fill: "hsl(var(--primary))",
 };
 
+import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
+
+type ChartDataKey = 'volume_usd' | 'daily_users' | 'new_users' | 'trades' | 'fees_usd' | 'total_volume_usd' | 'total_fees_usd' | 'daily_trades' | 'numberOfNewUsers';
+
+interface TimelineChartProps {
+  title: string;
+  data: (ProtocolStats & { formattedDay: string })[];
+  dataKey: ChartDataKey;
+  multipleDataKeys?: Record<string, ChartDataKey>;
+  isMultiLine?: boolean;
+}
+
 export function TimelineChart({
   title,
   data,
@@ -59,7 +68,7 @@ export function TimelineChart({
   isMultiLine = false,
 }: TimelineChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
-  const [activeKeys, setActiveKeys] = useState<Set<string>>(
+  const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
     new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
   );
 
@@ -327,7 +336,7 @@ export function TimelineChart({
                   dot={false}
                   fill={`url(#gradient-${key})`}
                   fillOpacity={1}
-                  hide={!activeKeys.has(key)}
+                  hide={!selectedDataKeys.has(key)}
                 />
               ))
             ) : (
@@ -358,7 +367,7 @@ export function TimelineChart({
                     name,
                     key,
                     color: PALETTE_COLORS[idx % PALETTE_COLORS.length].stroke,
-                    active: activeKeys.has(key),
+                    active: selectedDataKeys.has(key),
                   }));
 
                   return (
@@ -366,7 +375,7 @@ export function TimelineChart({
                       <div
                         className="flex items-center cursor-pointer select-none"
                         onClick={() => {
-                          setActiveKeys((prev) => {
+                          setSelectedDataKeys((prev) => {
                             const allKeys = Object.values(
                               multipleDataKeys || {}
                             );
@@ -378,7 +387,7 @@ export function TimelineChart({
                       >
                         <div
                           className={`w-4 h-4 rounded-xl border-2 transition-colors ${
-                            activeKeys.size ===
+                            selectedDataKeys.size ===
                             Object.keys(multipleDataKeys || {}).length
                               ? "bg-current"
                               : "bg-transparent"
@@ -397,15 +406,18 @@ export function TimelineChart({
                           key={item.key}
                           className="flex items-center cursor-pointer select-none"
                           onClick={() => {
-                            setActiveKeys((prev) => {
-                              const newKeys = new Set(prev);
-                              if (newKeys.has(item.key)) {
-                                newKeys.delete(item.key);
-                              } else {
-                                newKeys.add(item.key);
-                              }
-                              return newKeys;
-                            });
+                            const handleDataKeyToggle = (key: ChartDataKey) => {
+                              setSelectedDataKeys((prev) => {
+                                const newSet = new Set(prev);
+                                if (newSet.has(key)) {
+                                  newSet.delete(key);
+                                } else {
+                                  newSet.add(key);
+                                }
+                                return newSet;
+                              });
+                            };
+                            handleDataKeyToggle(item.key);
                           }}
                         >
                           <div

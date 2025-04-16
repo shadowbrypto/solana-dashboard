@@ -1,18 +1,31 @@
-import { useEffect, useState, useMemo, useCallback, lazy } from "react";
-import Papa from "papaparse";
-import { useLoaderData, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { MetricCard } from "./components/MetricCard";
 import { TimelineChart } from "./components/charts/TimelineChart";
 import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
-import { DailyData } from "./types";
+import { ProtocolStats, ProtocolMetrics } from "./types/protocol";
 
 import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
-import { ProtocolMetrics, Protocol } from "./types";
+import { Protocol } from "./types";
+import { getProtocolStats } from "./lib/protocol";
+
+interface DailyData extends ProtocolMetrics {
+  formattedDay: string;
+  [key: string]: string | number;
+}
+
+type ProtocolStatsWithDay = ProtocolStats & DailyData & {
+  volume_usd: number;
+  daily_users: number;
+  new_users: number;
+  trades: number;
+  fees_usd: number;
+};
 
 const ErrorFallback = ({ error }: { error: Error }) => (
   <div className="p-4 text-red-600">
@@ -24,7 +37,7 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 const MetricCards = ({
   latestData,
 }: {
-  latestData: Record<string, number>;
+  latestData: ProtocolStatsWithDay;
 }) => (
   <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
     <MetricCard
@@ -35,7 +48,7 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.total_volume_usd)}
+      }).format(latestData.volume_usd)}
     />
     <MetricCard
       title="Users"
@@ -43,7 +56,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.numberOfNewUsers)}
+      }).format(latestData.new_users)}
     />
     <MetricCard
       title="Trades"
@@ -51,7 +64,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.daily_trades)}
+      }).format(latestData.trades)}
     />
     <MetricCard
       title="Fees"
@@ -61,316 +74,93 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(latestData.total_fees_usd)}
+      }).format(latestData.fees_usd)}
     />
   </div>
 );
 
 const MainContent = (): JSX.Element => {
-  // Apply dark theme by default
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [invalidProtocol, setInvalidProtocol] = useState(false);
+
   useEffect(() => {
     document.documentElement.classList.add("dark");
     document.body.classList.add("dark:bg-background");
   }, []);
 
-  // Use React Router's useSearchParams hook instead of directly accessing window.location
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const protocolData = useLoaderData();
-
-  console.log(protocolData);
-
-  const [data, setData] = useState<DailyData[]>([]);
+  const [data, setData] = useState<ProtocolStatsWithDay[]>([]);
   const [activeView, setActiveView] = useState<"charts" | "data">(
     searchParams.get("view") === "data" ? "data" : "charts"
   );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const protocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
-  const [invalidProtocol, setInvalidProtocol] = useState<boolean>(false);
 
-  // Load data for the selected protocol
   const loadData = useCallback(async (selectedProtocol: string) => {
     try {
       setLoading(true);
       setError(null);
       setInvalidProtocol(false);
 
-      // Validate protocol
       const validProtocols = ["bullx", "photon", "trojan", "all"];
       if (!validProtocols.includes(selectedProtocol)) {
-        // Instead of throwing an error, set the invalidProtocol flag to true
         setInvalidProtocol(true);
         setLoading(false);
-        return; // Exit early
+        return;
       }
 
-      if (selectedProtocol === "all") {
-        // Load data from all protocols
-        const protocols: Protocol[] = ["bullx", "photon", "trojan"];
-        const allData: Array<DailyData & { protocol: string }> = [];
+      const stats = await getProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol);
+      
+      if (!stats) {
+        throw new Error('Failed to fetch protocol stats');
+      }
 
-        for (const protocol of protocols) {
-          const response = await fetch(`/data/${protocol}.csv`);
-          if (!response.ok) throw new Error(`Failed to fetch ${protocol} data`);
-
-          const csvText = await response.text();
-          const result = Papa.parse<DailyData>(csvText, {
-            header: true,
-            dynamicTyping: true,
-            delimiter: ",",
-          });
-
-          // Filter out empty rows and rows with missing fields
-          const validData = result.data.filter(
-            (row) =>
-              row &&
-              typeof row.total_volume_usd === "number" &&
-              typeof row.daily_users === "number" &&
-              typeof row.daily_trades === "number" &&
-              typeof row.total_fees_usd === "number" &&
-              typeof row.numberOfNewUsers === "number" &&
-              row.formattedDay
+      if (selectedProtocol === 'all') {
+        const processedData = stats.reduce((acc: ProtocolStatsWithDay[], item: ProtocolStatsWithDay) => {
+          const existingDay = acc.find(
+            (d) => d.formattedDay === item.formattedDay
           );
 
-          // Format dates and add protocol identifier
-          const formattedData = validData.map((row) => {
-            if (!row.formattedDay) return null;
-            // Ensure date parts are valid strings
-            const dateParts = (row.formattedDay || "").split("/");
-            if (dateParts.length !== 3) return null;
-            const [day, month, year] = dateParts;
-            if (!day || !month || !year) return null;
-
-            const date = new Date(`${year}-${month}-${day}`);
-            if (isNaN(date.getTime())) return null;
-
-            // Convert protocol name to proper Protocol type
-            let protocolName: Protocol;
-            switch (protocol) {
-              case "bullx":
-                protocolName = "bullx";
-                break;
-              case "photon":
-                protocolName = "photon";
-                break;
-              case "trojan":
-                protocolName = "trojan";
-                break;
-              default:
-                return null; // Skip invalid protocols
-            }
-
-            return {
-              ...row,
-              protocol: protocolName,
-              formattedDay: `${String(day).padStart(2, "0")}-${String(
-                month
-              ).padStart(2, "0")}-${year}`,
-              // Add protocol-specific keys for the chart
-              [`${protocol}_total_volume_usd`]: row.total_volume_usd,
-              [`${protocol}_daily_users`]: row.daily_users,
-              [`${protocol}_numberOfNewUsers`]: row.numberOfNewUsers,
-              [`${protocol}_daily_trades`]: row.daily_trades,
-              [`${protocol}_total_fees_usd`]: row.total_fees_usd,
-            };
-          });
-
-          // Filter out null values and sort by date
-          const sortedData = formattedData
-            .filter((d): d is DailyData & { protocol: Protocol } => d !== null)
-            .sort((a, b) => {
-              const [dayA, monthA, yearA] = a.formattedDay.split("-");
-              const [dayB, monthB, yearB] = b.formattedDay.split("-");
-              const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-              const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-              return dateA.getTime() - dateB.getTime();
-            });
-
-          allData.push(...sortedData);
-        }
-
-        if (allData.length === 0) {
-          throw new Error("No valid data found");
-        }
-
-        // Combine data by date
-        const dateMap = new Map<string, DailyData>();
-
-        allData.forEach((item) => {
-          if (!dateMap.has(item.formattedDay)) {
-            dateMap.set(item.formattedDay, {
-              formattedDay: item.formattedDay,
-              total_volume_usd: 0,
-              daily_users: 0,
-              daily_trades: 0,
-              total_fees_usd: 0,
-              numberOfNewUsers: 0,
-              bullx_total_volume_usd: 0,
-              bullx_daily_users: 0,
-              bullx_daily_trades: 0,
-              bullx_total_fees_usd: 0,
-              bullx_numberOfNewUsers: 0,
-              photon_total_volume_usd: 0,
-              photon_daily_users: 0,
-              photon_daily_trades: 0,
-              photon_total_fees_usd: 0,
-              photon_numberOfNewUsers: 0,
-              trojan_total_volume_usd: 0,
-              trojan_daily_users: 0,
-              trojan_daily_trades: 0,
-              trojan_total_fees_usd: 0,
-              trojan_numberOfNewUsers: 0,
+          if (existingDay) {
+            existingDay.volume_usd = (existingDay.volume_usd || 0) + item.volume_usd;
+            existingDay.daily_users = (existingDay.daily_users || 0) + item.daily_users;
+            existingDay.new_users = (existingDay.new_users || 0) + item.new_users;
+            existingDay.trades = (existingDay.trades || 0) + item.trades;
+            existingDay.fees_usd = (existingDay.fees_usd || 0) + item.fees_usd;
+          } else {
+            acc.push({
+              ...item,
+              formattedDay: item.formattedDay
             });
           }
 
-          const dailyData = dateMap.get(item.formattedDay)!;
-          const prefix = item.protocol;
+          return acc;
+        }, []);
 
-          // Update protocol-specific metrics
-          dailyData[`${prefix}_total_volume_usd`] = item.total_volume_usd;
-          dailyData[`${prefix}_daily_users`] = item.daily_users;
-          dailyData[`${prefix}_daily_trades`] = item.daily_trades;
-          dailyData[`${prefix}_total_fees_usd`] = item.total_fees_usd;
-          dailyData[`${prefix}_numberOfNewUsers`] = item.numberOfNewUsers;
-
-          // Update total metrics
-          dailyData.total_volume_usd += item.total_volume_usd;
-          dailyData.daily_users += item.daily_users;
-          dailyData.daily_trades += item.daily_trades;
-          dailyData.total_fees_usd += item.total_fees_usd;
-          dailyData.numberOfNewUsers += item.numberOfNewUsers;
-
-          dateMap.set(item.formattedDay, dailyData);
-        });
-
-        // Convert Map to array and sort by date
-        const sortedData = Array.from(dateMap.values()).sort((a, b) => {
-          const [dayA, monthA, yearA] = (a.formattedDay || "").split("-");
-          const [dayB, monthB, yearB] = (b.formattedDay || "").split("-");
-          if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB)
-            return 0;
-
-          const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-          const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        setData(sortedData);
-        setLoading(false);
+        setData(processedData);
       } else {
-        // Load data for a single protocol
-        const response = await fetch(`/data/${selectedProtocol}.csv`);
-        if (!response.ok) throw new Error("Failed to fetch data");
-
-        const csvText = await response.text();
-        const result = Papa.parse<DailyData>(csvText, {
-          header: true,
-          dynamicTyping: true,
-          delimiter: ",",
-        });
-
-        // Filter out empty rows and rows with missing fields and sort by date
-        const validData = result.data
-          .filter(
-            (row) =>
-              row &&
-              typeof row.total_volume_usd === "number" &&
-              typeof row.daily_users === "number" &&
-              typeof row.daily_trades === "number" &&
-              typeof row.total_fees_usd === "number" &&
-              row.formattedDay
-          )
-          .sort((a, b) => {
-            const [dayA, monthA, yearA] = a.formattedDay.split("/");
-            const [dayB, monthB, yearB] = b.formattedDay.split("/");
-            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-            return dateB.getTime() - dateA.getTime();
-          });
-
-        if (validData.length === 0) {
-          throw new Error("No valid data found");
-        }
-
-        // Format dates and sort data by date in descending order
-        const sortedData = validData
-          .map((row) => {
-            if (!row.formattedDay) return null;
-            // Ensure date parts are valid strings
-            const dateParts = (row.formattedDay || "").split("/");
-            if (dateParts.length !== 3) return null;
-            const [day, month, year] = dateParts;
-            if (!day || !month || !year) return null;
-
-            const date = new Date(`${year}-${month}-${day}`);
-            if (isNaN(date.getTime())) return null;
-
-            return {
-              ...row,
-              formattedDay: `${String(day).padStart(2, "0")}-${String(
-                month
-              ).padStart(2, "0")}-${year}`,
-            };
-          })
-          .filter((item): item is DailyData => item !== null)
-          .sort((a, b) => {
-            // Safely parse dates for comparison
-            const partsA = (a.formattedDay || "").split("-");
-            const partsB = (b.formattedDay || "").split("-");
-            if (partsA.length !== 3 || partsB.length !== 3) return 0;
-
-            const [dayA, monthA, yearA] = partsA;
-            const [dayB, monthB, yearB] = partsB;
-            if (!dayA || !monthA || !yearA || !dayB || !monthB || !yearB)
-              return 0;
-
-            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0;
-            return dateB.getTime() - dateA.getTime();
-          });
-
-        // Filter out null values before setting state
-        const validSortedData = sortedData.filter(
-          (item): item is DailyData => item !== null
-        );
-        setData(validSortedData);
+        setData(stats);
       }
+
+      setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
+      console.error("Error loading data:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while loading the data"
+      );
       setLoading(false);
     }
   }, []);
-  // Load data when protocol changes
+
   useEffect(() => {
+    const protocol = searchParams.get("protocol") || "all";
     loadData(protocol);
-  }, [protocol]);
+  }, [searchParams, loadData]);
 
-  const latestData = useMemo(
-    () =>
-      data.reduce(
-        (acc, curr) => ({
-          total_volume_usd: acc.total_volume_usd + curr.total_volume_usd,
-          numberOfNewUsers: acc.numberOfNewUsers + curr.numberOfNewUsers,
-          daily_users: acc.daily_users + curr.daily_users,
-          daily_trades: acc.daily_trades + curr.daily_trades,
-          total_fees_usd: acc.total_fees_usd + curr.total_fees_usd,
-        }),
-        {
-          total_volume_usd: 0,
-          numberOfNewUsers: 0,
-          daily_users: 0,
-          daily_trades: 0,
-          total_fees_usd: 0,
-        }
-      ),
-    [data]
-  );
+  const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => data[data.length - 1], [data]);
 
-  // If the protocol is invalid, redirect to the NotFound page
   if (invalidProtocol) {
     window.location.href = "/not-found";
     return (
@@ -396,28 +186,6 @@ const MainContent = (): JSX.Element => {
     );
   }
 
-  // Calculate percentage changes comparing current with 30-day average
-  const calculatePercentageChange = (
-    metric: keyof Omit<DailyData, "formattedDay">
-  ): number => {
-    if (!data || data.length === 0) return 0;
-
-    // Get the latest value
-    const latestValue = data[data.length - 1][metric];
-
-    // Calculate the average of the last 30 days
-    const thirtyDayAverage =
-      data
-        .slice(-30)
-        .reduce((acc: number, curr) => acc + (curr[metric] as number), 0) / 30;
-
-    // Calculate the percentage change
-    if (thirtyDayAverage === 0) return 0;
-    return (
-      (((latestValue as number) - thirtyDayAverage) / thirtyDayAverage) * 100
-    );
-  };
-
   return (
     <div className="p-4">
       <h1 className="text-3xl font-bold mb-8 text-white/90 text-center">
@@ -427,7 +195,7 @@ const MainContent = (): JSX.Element => {
         Dashboard
       </h1>
 
-      <MetricCards latestData={latestData} />
+      {latestData && <MetricCards latestData={latestData} />}
 
       <div className="mt-8 mb-4">
         <TabSwitcher
@@ -508,21 +276,21 @@ const MainContent = (): JSX.Element => {
                 title="Volume & Fees"
                 data={data.filter(
                   (d) =>
-                    d.total_volume_usd !== undefined &&
-                    d.total_fees_usd !== undefined
+                    d.volume_usd !== undefined &&
+                    d.fees_usd !== undefined
                 )}
-                volumeKey="total_volume_usd"
-                feesKey="total_fees_usd"
+                volumeKey="volume_usd"
+                feesKey="fees_usd"
               />
               <CombinedChart
                 title="User Activity"
                 data={data.filter(
                   (d) =>
                     d.daily_users !== undefined &&
-                    d.numberOfNewUsers !== undefined
+                    d.new_users !== undefined
                 )}
                 volumeKey="daily_users"
-                feesKey="numberOfNewUsers"
+                feesKey="new_users"
                 barChartLabel="Daily Active Users"
                 lineChartLabel="New Users"
                 leftAxisFormatter={(value) => `${value.toFixed(0)}`}
@@ -530,8 +298,8 @@ const MainContent = (): JSX.Element => {
               />
               <TimelineChart
                 title="Trades"
-                data={data.filter((d) => d.daily_trades !== undefined)}
-                dataKey="daily_trades"
+                data={data.filter((d) => d.trades !== undefined)}
+                dataKey="trades"
               />
             </>
           )}

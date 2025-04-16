@@ -31,8 +31,8 @@ export function DataTable({ protocol, date }: DataTableProps) {
   const { data, isLoading, error } = useQuery<ProtocolStats[]>({
     queryKey: ['protocol-stats', protocol, date],
     queryFn: async () => {
-      let query = supabase
-        .from('protocol_daily_stats')
+      const { data: stats, error } = await supabase
+        .from('protocol_stats')
         .select(`
           protocol_name,
           date,
@@ -42,16 +42,9 @@ export function DataTable({ protocol, date }: DataTableProps) {
           trades,
           fees_usd
         `)
+        .eq('protocol_name', protocol || 'bullx')
         .order('date', { ascending: false });
 
-      if (protocol) {
-        query = query.eq('protocol_name', protocol);
-      }
-      if (date) {
-        query = query.eq('date', date);
-      }
-
-      const { data: stats, error } = await query;
       if (error) throw error;
       return stats;
     },

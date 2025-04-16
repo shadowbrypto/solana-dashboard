@@ -26,11 +26,13 @@ import {
 
 type TimeFrame = "7d" | "30d" | "3m" | "all";
 
+type ChartDataKey = 'volume_usd' | 'daily_users' | 'new_users' | 'trades' | 'fees_usd';
+
 interface TimelineChartProps {
   title: string;
   data: Array<ProtocolStats & { formattedDay: string }>;
-  dataKey: keyof ProtocolStats;
-  multipleDataKeys?: Record<string, keyof ProtocolStats>;
+  dataKey: ChartDataKey;
+  multipleDataKeys?: Record<string, ChartDataKey>;
   isMultiLine?: boolean;
 }
 
@@ -50,15 +52,7 @@ const MIDNIGHT_THEME = {
 
 import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 
-type ChartDataKey = 'volume_usd' | 'daily_users' | 'new_users' | 'trades' | 'fees_usd' | 'total_volume_usd' | 'total_fees_usd' | 'daily_trades' | 'numberOfNewUsers';
 
-interface TimelineChartProps {
-  title: string;
-  data: (ProtocolStats & { formattedDay: string })[];
-  dataKey: ChartDataKey;
-  multipleDataKeys?: Record<string, ChartDataKey>;
-  isMultiLine?: boolean;
-}
 
 export function TimelineChart({
   title,

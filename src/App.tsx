@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { MetricCard } from "./components/MetricCard";
 import { TimelineChart } from "./components/charts/TimelineChart";
@@ -14,8 +15,13 @@ import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { Protocol } from "./types";
 import { getProtocolStats, getTotalProtocolStats } from "./lib/protocol";
 
-interface DailyData extends ProtocolMetrics {
+interface DailyData {
   formattedDay: string;
+  volume_usd: number;
+  daily_users: number;
+  new_users: number;
+  trades: number;
+  fees_usd: number;
   [key: string]: string | number;
 }
 
@@ -365,11 +371,15 @@ const MainContent = (): JSX.Element => {
   );
 };
 
+const queryClient = new QueryClient();
+
 const App = (): JSX.Element => {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <MainContent />
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <MainContent />
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 };
 

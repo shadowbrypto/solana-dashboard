@@ -4,7 +4,8 @@ import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
 export async function getProtocolStats(protocolName?: string) {
   let query = supabase
     .from('protocol_stats')
-    .select('*');
+    .select('*')
+    .order('date', { ascending: false });
   
   if (protocolName) {
     query = query.eq('protocol_name', protocolName);

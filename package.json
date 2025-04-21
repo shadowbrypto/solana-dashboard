@@ -9,9 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "db:update_csv": "sh scripts/update.sh",
-    "db:migrate": "rm public/data/data.db && duckdb public/data/data.db < db/migration.sql",
-    "db:update": "npm run db:update_csv && npm run db:migrate"
+    "db:update_csv": "sh scripts/update.sh"
   },
   "eslintConfig": {
     "extends": [

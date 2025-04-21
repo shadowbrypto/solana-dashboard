@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '../utils/utils';
-import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock } from 'lucide-react';
+import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -9,6 +9,7 @@ const protocols = [
   { id: 'bullx', name: 'Bull X', icon: BarChart2 },
   { id: 'photon', name: 'Photon', icon: Zap },
   { id: 'trojan', name: 'Trojan', icon: Sword },
+  { id: 'axiom', name: 'Axiom', icon: Aperture },
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 

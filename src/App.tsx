@@ -12,7 +12,7 @@ import { ProtocolStats, ProtocolMetrics } from "./types/protocol";
 import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
-import { Protocol } from "./types";
+import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats } from "./lib/protocol";
 
 interface DailyData {
@@ -54,7 +54,7 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(totalMetrics.total_volume_usd)}
+      }).format(totalMetrics.total_volume_usd ?? 0)}
     />
     <MetricCard
       title="Daily Users"
@@ -62,7 +62,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(totalMetrics.numberOfNewUsers)}
+      }).format(totalMetrics.numberOfNewUsers ?? 0)}
     />
     <MetricCard
       title="Trades"
@@ -70,7 +70,7 @@ const MetricCards = ({
       value={new Intl.NumberFormat("en-US", {
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(totalMetrics.daily_trades)}
+      }).format(totalMetrics.daily_trades ?? 0)}
     />
     <MetricCard
       title="Fees"
@@ -80,7 +80,7 @@ const MetricCards = ({
         currency: "USD",
         notation: "compact",
         maximumFractionDigits: 1,
-      }).format(totalMetrics.total_fees_usd)}
+      }).format(totalMetrics.total_fees_usd ?? 0)}
     />
   </div>
 );
@@ -109,7 +109,7 @@ const MainContent = (): JSX.Element => {
       setError(null);
       setInvalidProtocol(false);
 
-      const validProtocols = ["bullx", "photon", "trojan", "all"];
+      const validProtocols = ["bullx", "photon", "trojan", "axiom", "all"];
       if (!validProtocols.includes(selectedProtocol)) {
         setInvalidProtocol(true);
         setLoading(false);
@@ -333,21 +333,28 @@ const MainContent = (): JSX.Element => {
                       daily_trades: 0,
                       total_fees_usd: 0,
                     },
+                    axiom: {
+                      total_volume_usd: 0,
+                      daily_users: 0,
+                      numberOfNewUsers: 0,
+                      daily_trades: 0,
+                      total_fees_usd: 0,
+                    },
                   };
                 }
 
-                ["bullx", "photon", "trojan"].forEach((protocol) => {
+                ["bullx", "photon", "trojan", "axiom"].forEach((protocol) => {
                   acc[date][protocol as Protocol] = {
                     total_volume_usd:
-                      (item[`${protocol}_total_volume_usd`] as number) || 0,
+                      (item[`${protocol}_total_volume_usd`] as number) ?? 0,
                     daily_users:
-                      (item[`${protocol}_daily_users`] as number) || 0,
+                      (item[`${protocol}_daily_users`] as number) ?? 0,
                     numberOfNewUsers:
-                      (item[`${protocol}_numberOfNewUsers`] as number) || 0,
+                      (item[`${protocol}_numberOfNewUsers`] as number) ?? 0,
                     daily_trades:
-                      (item[`${protocol}_daily_trades`] as number) || 0,
+                      (item[`${protocol}_daily_trades`] as number) ?? 0,
                     total_fees_usd:
-                      (item[`${protocol}_total_fees_usd`] as number) || 0,
+                      (item[`${protocol}_total_fees_usd`] as number) ?? 0,
                   };
                 });
 
@@ -355,7 +362,7 @@ const MainContent = (): JSX.Element => {
               },
               {} as Record<string, Record<Protocol, ProtocolMetrics>>
             )}
-            protocols={["bullx", "photon", "trojan"] as Protocol[]}
+            protocols={["bullx", "photon", "trojan", "axiom"] as Protocol[]}
           />
         </div>
       ) : (

@@ -10,6 +10,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
     { id: 'bullx', name: 'Bull X' },
     { id: 'photon', name: 'Photon' },
     { id: 'trojan', name: 'Trojan' },
+    { id: 'axiom', name: 'Axiom' },
     { id: 'all', name: 'All Protocols' }
   ];
 

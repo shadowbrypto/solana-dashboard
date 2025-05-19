@@ -98,7 +98,7 @@ const MainContent = (): JSX.Element => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [protocolData, setProtocolData] = useState<ProtocolStats[]>([]);
-  const [data, setData] = useState<ProtocolStatsWithDay[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [activeView, setActiveView] = useState<"charts" | "data">(
     searchParams.get("view") === "data" ? "data" : "charts"
   );
@@ -179,41 +179,28 @@ const MainContent = (): JSX.Element => {
         fetchedData = await getProtocolStats(selectedProtocol);
       }
       
-      interface ProtocolMetrics {
+      interface CombinedMetrics {
         date: string;
         formattedDay: string;
-        [key: `${string}_volume`]: number;
-        [key: `${string}_users`]: number;
-        [key: `${string}_trades`]: number;
-        [key: `${string}_fees`]: number;
+        [key: string]: string | number;
       }
 
       if (selectedProtocol === 'all') {
-        // First, get data for each protocol
         const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
-        const protocolData = new Map<string, any[]>();
         
-        // Fetch data for each protocol
-        for (const protocol of protocols) {
-          console.log(`Fetching data for ${protocol}...`);
-          const data = await getProtocolStats(protocol);
-          if (data && data.length > 0) {
-            protocolData.set(protocol, data);
-          }
-        }
+
+        const allData = await getProtocolStats(protocols);
+
+        // Group data by date
+        const dataByDate = new Map<string, CombinedMetrics>();
 
         // Get all unique dates
         const allDates = new Set<string>();
-        protocolData.forEach(data => {
-          data.forEach(item => allDates.add(item.date));
-        });
-
-        // Create combined data structure
-        const dataByDate = new Map<string, any>();
+        allData.forEach(item => allDates.add(item.date));
 
         // Initialize data structure for each date
         Array.from(allDates).forEach(date => {
-          const entry: ProtocolMetrics = {
+          const entry: CombinedMetrics = {
             date,
             formattedDay: formatDate(date)
           };
@@ -230,24 +217,21 @@ const MainContent = (): JSX.Element => {
         });
 
         // Fill in actual values
-        protocolData.forEach((data, protocol) => {
-          data.forEach(item => {
-            const dateEntry = dataByDate.get(item.date);
-            if (dateEntry) {
-              dateEntry[`${protocol}_volume`] = item.volume_usd || 0;
-              dateEntry[`${protocol}_users`] = item.daily_users || 0;
-              dateEntry[`${protocol}_trades`] = item.trades || 0;
-              dateEntry[`${protocol}_fees`] = item.fees_usd || 0;
-            }
-          });
+        allData.forEach(item => {
+          const dateEntry = dataByDate.get(item.date);
+          if (dateEntry) {
+            const protocol = item.protocol_name.toLowerCase();
+            dateEntry[`${protocol}_volume`] = item.volume_usd || 0;
+            dateEntry[`${protocol}_users`] = item.daily_users || 0;
+            dateEntry[`${protocol}_trades`] = item.trades || 0;
+            dateEntry[`${protocol}_fees`] = item.fees_usd || 0;
+          }
         });
 
         // Convert to array and sort by date
         const combinedData = Array.from(dataByDate.values())
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        console.log('First day of combined data:', combinedData[0]);
-        console.log('Available metrics:', Object.keys(combinedData[0]));
         setData(combinedData);
       } else {
         // For single protocol, just format the data

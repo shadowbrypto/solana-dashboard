@@ -19,10 +19,13 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
 }
 
-export async function getProtocolStats(protocolName?: string) {
-  const cacheKey = protocolName || 'all';
-  const cachedData = protocolStatsCache.get(cacheKey);
+export async function getProtocolStats(protocolName?: string | string[]) {
+  // If array of protocol names is provided, create a cache key from sorted names
+  const cacheKey = Array.isArray(protocolName) 
+    ? protocolName.sort().join(',') 
+    : (protocolName || 'all');
 
+  const cachedData = protocolStatsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
@@ -33,34 +36,32 @@ export async function getProtocolStats(protocolName?: string) {
     .order('date', { ascending: false });
   
   if (protocolName) {
-    const normalizedProtocol = protocolName.toLowerCase();
-    console.log('Querying for protocol:', normalizedProtocol);
-    query = query.eq('protocol_name', normalizedProtocol);
+    if (Array.isArray(protocolName)) {
+      // For multiple protocols, use in query
+      const normalizedProtocols = protocolName.map(p => p.toLowerCase());
+      query = query.in('protocol_name', normalizedProtocols);
+
+    } else {
+      // For single protocol
+      const normalizedProtocol = protocolName.toLowerCase();
+      query = query.eq('protocol_name', normalizedProtocol);
+
+    }
   } else {
-    console.log('Querying for all protocols');
+
   }
 
   const { data, error } = await query;
   
   if (error) {
-    console.error('Error fetching protocol stats:', error);
+
     return [];
   }
 
-  let formattedData;
-  
-  if (!protocolName) {
-    // For all protocols, just return raw data
-    formattedData = data.map((row: ProtocolStats) => ({
-      ...row,
-      formattedDay: formatDate(row.date)
-    }));
-  } else {
-    formattedData = data.map((row: ProtocolStats) => ({
-      ...row,
-      formattedDay: formatDate(row.date),
-    }));
-  }
+  const formattedData = data.map((row: ProtocolStats) => ({
+    ...row,
+    formattedDay: formatDate(row.date)
+  }));
 
   protocolStatsCache.set(cacheKey, {
     data: formattedData,
@@ -88,7 +89,7 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
   const { data, error } = await query;
 
   if (error || !data || data.length === 0) {
-    console.error('Error fetching total protocol stats:', error);
+
     return {
       total_volume_usd: 0,
       daily_users: 0,

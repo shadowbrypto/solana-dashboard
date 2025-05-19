@@ -241,15 +241,31 @@ const MainContent = (): JSX.Element => {
                   "axiom_volume",
                   "gmgnai_volume",
                   "bloom_volume",
+                  "bonkbot_volume",
+                  "nova_volume",
+                  "soltradingbot_volume",
+                  "maestro_volume",
+                  "banana_volume",
+                  "padre_volume",
+                  "moonshot_volume",
+                  "vector_volume",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
                   "hsl(var(--chart-1))",
                   "hsl(var(--chart-2))",
                   "hsl(var(--chart-3))",
                   "hsl(var(--chart-4))",
                   "hsl(var(--chart-5))",
-                  "hsl(var(--chart-1))",
+                  "hsl(var(--chart-6))",
+                  "hsl(var(--chart-7))",
+                  "hsl(var(--chart-8))",
+                  "hsl(var(--chart-9))",
+                  "hsl(var(--chart-10))",
+                  "hsl(var(--chart-11))",
+                  "hsl(var(--chart-12))",
+                  "hsl(var(--chart-13))",
+                  "hsl(var(--chart-14))",
                 ]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
@@ -263,15 +279,31 @@ const MainContent = (): JSX.Element => {
                   "axiom_users",
                   "gmgnai_users",
                   "bloom_users",
+                  "bonkbot_users",
+                  "nova_users",
+                  "soltradingbot_users",
+                  "maestro_users",
+                  "banana_users",
+                  "padre_users",
+                  "moonshot_users",
+                  "vector_users",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
                   "hsl(var(--chart-1))",
                   "hsl(var(--chart-2))",
                   "hsl(var(--chart-3))",
                   "hsl(var(--chart-4))",
                   "hsl(var(--chart-5))",
-                  "hsl(var(--chart-1))",
+                  "hsl(var(--chart-6))",
+                  "hsl(var(--chart-7))",
+                  "hsl(var(--chart-8))",
+                  "hsl(var(--chart-9))",
+                  "hsl(var(--chart-10))",
+                  "hsl(var(--chart-11))",
+                  "hsl(var(--chart-12))",
+                  "hsl(var(--chart-13))",
+                  "hsl(var(--chart-14))",
                 ]}
                 valueFormatter={(value) => value.toFixed(0)}
               />
@@ -285,8 +317,16 @@ const MainContent = (): JSX.Element => {
                   "axiom_trades",
                   "gmgnai_trades",
                   "bloom_trades",
+                  "bonkbot_trades",
+                  "nova_trades",
+                  "soltradingbot_trades",
+                  "maestro_trades",
+                  "banana_trades",
+                  "padre_trades",
+                  "moonshot_trades",
+                  "vector_trades",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
                   "hsl(var(--chart-1))",
                   "hsl(var(--chart-2))",
@@ -294,6 +334,14 @@ const MainContent = (): JSX.Element => {
                   "hsl(var(--chart-4))",
                   "hsl(var(--chart-5))",
                   "hsl(var(--chart-6))",
+                  "hsl(var(--chart-7))",
+                  "hsl(var(--chart-8))",
+                  "hsl(var(--chart-9))",
+                  "hsl(var(--chart-10))",
+                  "hsl(var(--chart-11))",
+                  "hsl(var(--chart-12))",
+                  "hsl(var(--chart-13))",
+                  "hsl(var(--chart-14))",
                 ]}
                 valueFormatter={(value) => `${value.toFixed(0)}`}
               />
@@ -307,15 +355,31 @@ const MainContent = (): JSX.Element => {
                   "axiom_fees",
                   "gmgnai_fees",
                   "bloom_fees",
+                  "bonkbot_fees",
+                  "nova_fees",
+                  "soltradingbot_fees",
+                  "maestro_fees",
+                  "banana_fees",
+                  "padre_fees",
+                  "moonshot_fees",
+                  "vector_fees",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
                   "hsl(var(--chart-1))",
                   "hsl(var(--chart-2))",
                   "hsl(var(--chart-3))",
                   "hsl(var(--chart-4))",
                   "hsl(var(--chart-5))",
-                  "hsl(var(--chart-1))",
+                  "hsl(var(--chart-6))",
+                  "hsl(var(--chart-7))",
+                  "hsl(var(--chart-8))",
+                  "hsl(var(--chart-9))",
+                  "hsl(var(--chart-10))",
+                  "hsl(var(--chart-11))",
+                  "hsl(var(--chart-12))",
+                  "hsl(var(--chart-13))",
+                  "hsl(var(--chart-14))",
                 ]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
@@ -360,49 +424,29 @@ const MainContent = (): JSX.Element => {
               ) => {
                 const date = item.formattedDay;
                 if (!acc[date]) {
+                  const emptyMetrics = {
+                    total_volume_usd: 0,
+                    daily_users: 0,
+                    numberOfNewUsers: 0,
+                    daily_trades: 0,
+                    total_fees_usd: 0,
+                  };
                   acc[date] = {
-                    axiom: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    },
-                    bullx: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    },
-                    bloom: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    },
-                    gmgnai: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    },
-                    photon: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    },
-                    trojan: {
-                      total_volume_usd: 0,
-                      daily_users: 0,
-                      numberOfNewUsers: 0,
-                      daily_trades: 0,
-                      total_fees_usd: 0,
-                    }
+                    axiom: { ...emptyMetrics },
+                    bullx: { ...emptyMetrics },
+                    bloom: { ...emptyMetrics },
+                    gmgnai: { ...emptyMetrics },
+                    photon: { ...emptyMetrics },
+                    trojan: { ...emptyMetrics },
+                    bonkbot: { ...emptyMetrics },
+                    nova: { ...emptyMetrics },
+                    soltradingbot: { ...emptyMetrics },
+                    maestro: { ...emptyMetrics },
+                    banana: { ...emptyMetrics },
+                    padre: { ...emptyMetrics },
+                    moonshot: { ...emptyMetrics },
+                    vector: { ...emptyMetrics },
+                    all: { ...emptyMetrics }
                   };
                 }
 

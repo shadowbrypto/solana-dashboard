@@ -8,11 +8,19 @@ export default function DailyReport() {
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
-  const protocols: Protocol[] = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+  const protocols: Protocol[] = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "all"];
 
   useEffect(() => {
     // In a real app, you would fetch data here
     // For now, we'll use mock data
+    const emptyMetrics = {
+      total_volume_usd: 0,
+      daily_users: 0,
+      numberOfNewUsers: 0,
+      daily_trades: 0,
+      total_fees_usd: 0,
+    };
+
     const mockData: Record<string, Record<Protocol, ProtocolMetrics>> = {
       [format(date, "dd/MM/yyyy")]: {
         bullx: {
@@ -36,6 +44,18 @@ export default function DailyReport() {
           daily_trades: 1500,
           total_fees_usd: 15000,
         },
+        axiom: { ...emptyMetrics },
+        gmgnai: { ...emptyMetrics },
+        bloom: { ...emptyMetrics },
+        bonkbot: { ...emptyMetrics },
+        nova: { ...emptyMetrics },
+        soltradingbot: { ...emptyMetrics },
+        maestro: { ...emptyMetrics },
+        banana: { ...emptyMetrics },
+        padre: { ...emptyMetrics },
+        moonshot: { ...emptyMetrics },
+        vector: { ...emptyMetrics },
+        all: { ...emptyMetrics },
       },
     };
     setData(mockData);

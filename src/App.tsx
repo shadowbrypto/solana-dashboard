@@ -209,6 +209,7 @@ const MainContent = (): JSX.Element => {
           protocols.forEach(protocol => {
             entry[`${protocol}_volume`] = 0;
             entry[`${protocol}_users`] = 0;
+            entry[`${protocol}_new_users`] = 0;
             entry[`${protocol}_trades`] = 0;
             entry[`${protocol}_fees`] = 0;
           });
@@ -223,6 +224,7 @@ const MainContent = (): JSX.Element => {
             const protocol = item.protocol_name.toLowerCase();
             dateEntry[`${protocol}_volume`] = item.volume_usd || 0;
             dateEntry[`${protocol}_users`] = item.daily_users || 0;
+            dateEntry[`${protocol}_new_users`] = item.new_users || 0;
             dateEntry[`${protocol}_trades`] = item.trades || 0;
             dateEntry[`${protocol}_fees`] = item.fees_usd || 0;
           }
@@ -361,7 +363,7 @@ const MainContent = (): JSX.Element => {
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
               <StackedBarChart
-                title="Users by Protocol"
+                title="Daily Active Users by Protocol"
                 data={data}
                 dataKeys={[
                   "bullx_users",
@@ -378,6 +380,44 @@ const MainContent = (): JSX.Element => {
                   "padre_users",
                   "moonshot_users",
                   "vector_users",
+                ]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                colors={[
+                  "hsl(0 94% 65%)",    // Vibrant Red
+                  "hsl(280 91% 65%)",  // Bright Purple
+                  "hsl(145 80% 42%)",  // Deep Green
+                  "hsl(45 93% 47%)",   // Golden Yellow
+                  "hsl(200 98% 50%)",  // Electric Blue
+                  "hsl(326 100% 59%)", // Hot Pink
+                  "hsl(31 94% 52%)",   // Bright Orange
+                  "hsl(168 83% 45%)",  // Turquoise
+                  "hsl(142 76% 36%)",  // Emerald
+                  "hsl(262 83% 58%)",  // Purple
+                  "hsl(221 83% 53%)",  // Blue
+                  "hsl(346 84% 61%)",  // Rose
+                  "hsl(15 72% 50%)",   // Orange
+                  "hsl(172 66% 50%)",  // Teal
+                ]}
+                valueFormatter={(value) => value.toFixed(0)}
+              />
+              <StackedBarChart
+                title="New Users by Protocol"
+                data={data}
+                dataKeys={[
+                  "bullx_new_users",
+                  "photon_new_users",
+                  "trojan_new_users",
+                  "axiom_new_users",
+                  "gmgnai_new_users",
+                  "bloom_new_users",
+                  "bonkbot_new_users",
+                  "nova_new_users",
+                  "soltradingbot_new_users",
+                  "maestro_new_users",
+                  "banana_new_users",
+                  "padre_new_users",
+                  "moonshot_new_users",
+                  "vector_new_users",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[

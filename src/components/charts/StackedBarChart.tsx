@@ -31,6 +31,14 @@ interface StackedBarChartProps {
   valueFormatter?: (value: number) => string;
 }
 
+function formatNumberWithSuffix(value: number): string {
+  const absValue = Math.abs(value);
+  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
+  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
+  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+  return value.toFixed(0);
+}
+
 export function StackedBarChart({ 
   title, 
   data,
@@ -119,13 +127,7 @@ export function StackedBarChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickFormatter={(value) => {
-                const absValue = Math.abs(value);
-                if (absValue >= 1e9) return `${Math.round(value / 1e9)}B`;
-                if (absValue >= 1e6) return `${Math.round(value / 1e6)}M`;
-                if (absValue >= 1e3) return `${Math.round(value / 1e3)}K`;
-                return `${Math.round(value)}`;
-              }}
+              tickFormatter={(value) => formatNumberWithSuffix(value)}
             />
             <Tooltip
               content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -151,7 +153,7 @@ export function StackedBarChart({
                                 style={{ backgroundColor: colors[index] }}
                               />
                               <span className="text-sm text-foreground">
-                                {labels[index]}: {valueFormatter(entry.value || 0)}
+                                {labels[index]}: {entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}
                               </span>
                             </div>
                           ))}

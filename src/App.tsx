@@ -8,6 +8,7 @@ import { TimelineChart } from "./components/charts/TimelineChart";
 import { TabSwitcher } from "./components/TabSwitcher";
 import { DataTable } from "./components/DataTable";
 import { ProtocolStats, ProtocolMetrics } from "./types/protocol";
+import { protocolColorsList, getProtocolColor } from "./lib/colors";
 
 import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
@@ -344,22 +345,7 @@ const MainContent = (): JSX.Element => {
                   "vector_volume",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={[
-                  "hsl(0 94% 65%)",    // Vibrant Red
-                  "hsl(280 91% 65%)",  // Bright Purple
-                  "hsl(145 80% 42%)",  // Deep Green
-                  "hsl(45 93% 47%)",   // Golden Yellow
-                  "hsl(200 98% 50%)",  // Electric Blue
-                  "hsl(326 100% 59%)", // Hot Pink
-                  "hsl(31 94% 52%)",   // Bright Orange
-                  "hsl(168 83% 45%)",  // Turquoise
-                  "hsl(142 76% 36%)",  // Emerald
-                  "hsl(262 83% 58%)",  // Purple
-                  "hsl(221 83% 53%)",  // Blue
-                  "hsl(346 84% 61%)",  // Rose
-                  "hsl(15 72% 50%)",   // Orange
-                  "hsl(172 66% 50%)",  // Teal
-                ]}
+                colors={protocolColorsList}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
               <StackedBarChart
@@ -382,22 +368,7 @@ const MainContent = (): JSX.Element => {
                   "vector_users",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={[
-                  "hsl(0 94% 65%)",    // Vibrant Red
-                  "hsl(280 91% 65%)",  // Bright Purple
-                  "hsl(145 80% 42%)",  // Deep Green
-                  "hsl(45 93% 47%)",   // Golden Yellow
-                  "hsl(200 98% 50%)",  // Electric Blue
-                  "hsl(326 100% 59%)", // Hot Pink
-                  "hsl(31 94% 52%)",   // Bright Orange
-                  "hsl(168 83% 45%)",  // Turquoise
-                  "hsl(142 76% 36%)",  // Emerald
-                  "hsl(262 83% 58%)",  // Purple
-                  "hsl(221 83% 53%)",  // Blue
-                  "hsl(346 84% 61%)",  // Rose
-                  "hsl(15 72% 50%)",   // Orange
-                  "hsl(172 66% 50%)",  // Teal
-                ]}
+                colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
               <StackedBarChart
@@ -420,22 +391,7 @@ const MainContent = (): JSX.Element => {
                   "vector_new_users",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={[
-                  "hsl(0 94% 65%)",    // Vibrant Red
-                  "hsl(280 91% 65%)",  // Bright Purple
-                  "hsl(145 80% 42%)",  // Deep Green
-                  "hsl(45 93% 47%)",   // Golden Yellow
-                  "hsl(200 98% 50%)",  // Electric Blue
-                  "hsl(326 100% 59%)", // Hot Pink
-                  "hsl(31 94% 52%)",   // Bright Orange
-                  "hsl(168 83% 45%)",  // Turquoise
-                  "hsl(142 76% 36%)",  // Emerald
-                  "hsl(262 83% 58%)",  // Purple
-                  "hsl(221 83% 53%)",  // Blue
-                  "hsl(346 84% 61%)",  // Rose
-                  "hsl(15 72% 50%)",   // Orange
-                  "hsl(172 66% 50%)",  // Teal
-                ]}
+                colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
               <StackedBarChart
@@ -458,22 +414,7 @@ const MainContent = (): JSX.Element => {
                   "vector_trades",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={[
-                  "hsl(0 94% 65%)",    // Vibrant Red
-                  "hsl(280 91% 65%)",  // Bright Purple
-                  "hsl(145 80% 42%)",  // Deep Green
-                  "hsl(45 93% 47%)",   // Golden Yellow
-                  "hsl(200 98% 50%)",  // Electric Blue
-                  "hsl(326 100% 59%)", // Hot Pink
-                  "hsl(31 94% 52%)",   // Bright Orange
-                  "hsl(168 83% 45%)",  // Turquoise
-                  "hsl(142 76% 36%)",  // Emerald
-                  "hsl(262 83% 58%)",  // Purple
-                  "hsl(221 83% 53%)",  // Blue
-                  "hsl(346 84% 61%)",  // Rose
-                  "hsl(15 72% 50%)",   // Orange
-                  "hsl(172 66% 50%)",  // Teal
-                ]}
+                colors={protocolColorsList}
                 valueFormatter={(value) => `${value.toFixed(0)}`}
               />
               <StackedBarChart
@@ -496,22 +437,7 @@ const MainContent = (): JSX.Element => {
                   "vector_fees",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={[
-                  "hsl(0 94% 65%)",    // Vibrant Red
-                  "hsl(280 91% 65%)",  // Bright Purple
-                  "hsl(145 80% 42%)",  // Deep Green
-                  "hsl(45 93% 47%)",   // Golden Yellow
-                  "hsl(200 98% 50%)",  // Electric Blue
-                  "hsl(326 100% 59%)", // Hot Pink
-                  "hsl(31 94% 52%)",   // Bright Orange
-                  "hsl(168 83% 45%)",  // Turquoise
-                  "hsl(142 76% 36%)",  // Emerald
-                  "hsl(262 83% 58%)",  // Purple
-                  "hsl(221 83% 53%)",  // Blue
-                  "hsl(346 84% 61%)",  // Rose
-                  "hsl(15 72% 50%)",   // Orange
-                  "hsl(172 66% 50%)",  // Teal
-                ]}
+                colors={protocolColorsList}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
             </>

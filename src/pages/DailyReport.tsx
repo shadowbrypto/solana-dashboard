@@ -8,7 +8,7 @@ export default function DailyReport() {
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
-  const protocols: Protocol[] = ["bullx", "photon", "trojan", "axiom"];
+  const protocols: Protocol[] = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
 
   useEffect(() => {
     // In a real app, you would fetch data here

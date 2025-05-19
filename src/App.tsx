@@ -110,7 +110,7 @@ const MainContent = (): JSX.Element => {
       setError(null);
       setInvalidProtocol(false);
 
-      const validProtocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "all", "newprotocol1", "newprotocol2"];
+      const validProtocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "all", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
       if (!validProtocols.includes(selectedProtocol)) {
         setInvalidProtocol(true);
         setLoading(false);
@@ -406,7 +406,7 @@ const MainContent = (): JSX.Element => {
                   };
                 }
 
-                ["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan"].forEach((protocol) => {
+                ["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"].forEach((protocol) => {
                   acc[date][protocol as Protocol] = {
                     total_volume_usd:
                       (item[`${protocol}_total_volume_usd`] as number) ?? 0,
@@ -425,7 +425,7 @@ const MainContent = (): JSX.Element => {
               },
               {} as Record<string, Record<Protocol, ProtocolMetrics>>
             )}
-            protocols={["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan"] as Protocol[]}
+            protocols={["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"] as Protocol[]}
           />
         </div>
       ) : (

@@ -16,4 +16,4 @@ export interface ProtocolMetrics {
   total_fees_usd: number;
 }
 
-export type Protocol = "bullx" | "photon" | "trojan";
+export type Protocol = "bullx" | "photon" | "trojan" | "axiom" | "gmgnai" | "bloom" | "bonkbot" | "nova" | "soltradingbot" | "maestro" | "banana" | "padre" | "moonshot" | "vector";

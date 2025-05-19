@@ -12,6 +12,14 @@ const protocols = [
   { id: 'axiom', name: 'Axiom', icon: Aperture },
   { id: 'gmgnai', name: 'GmGnAi', icon: CalendarClock },
   { id: 'bloom', name: 'Bloom', icon: Aperture },
+  { id: 'bonkbot', name: 'BonkBot', icon: Aperture },
+  { id: 'nova', name: 'Nova', icon: Aperture },
+  { id: 'soltradingbot', name: 'SolTradingBot', icon: Aperture },
+  { id: 'maestro', name: 'Maestro', icon: Aperture },
+  { id: 'banana', name: 'Banana', icon: Aperture },
+  { id: 'padre', name: 'Padre', icon: Aperture },
+  { id: 'moonshot', name: 'Moonshot', icon: Aperture },
+  { id: 'vector', name: 'Vector', icon: Aperture },
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 

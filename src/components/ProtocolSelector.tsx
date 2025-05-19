@@ -13,6 +13,14 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
     { id: 'axiom', name: 'Axiom' },
     { id: 'gmgnai', name: 'GmGnAi' },
     { id: 'bloom', name: 'Bloom' },
+    { id: 'bonkbot', name: 'BonkBot' },
+    { id: 'nova', name: 'Nova' },
+    { id: 'soltradingbot', name: 'SolTradingBot' },
+    { id: 'maestro', name: 'Maestro' },
+    { id: 'banana', name: 'Banana' },
+    { id: 'padre', name: 'Padre' },
+    { id: 'moonshot', name: 'Moonshot' },
+    { id: 'vector', name: 'Vector' },
     { id: 'all', name: 'All Protocols' }
   ];
 

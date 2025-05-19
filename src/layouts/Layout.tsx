@@ -10,6 +10,8 @@ const protocols = [
   { id: 'photon', name: 'Photon', icon: Zap },
   { id: 'trojan', name: 'Trojan', icon: Sword },
   { id: 'axiom', name: 'Axiom', icon: Aperture },
+  { id: 'gmgnai', name: 'GmGnAi', icon: CalendarClock },
+  { id: 'bloom', name: 'Bloom', icon: Aperture },
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 

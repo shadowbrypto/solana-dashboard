@@ -11,6 +11,8 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
     { id: 'photon', name: 'Photon' },
     { id: 'trojan', name: 'Trojan' },
     { id: 'axiom', name: 'Axiom' },
+    { id: 'gmgnai', name: 'GmGnAi' },
+    { id: 'bloom', name: 'Bloom' },
     { id: 'all', name: 'All Protocols' }
   ];
 

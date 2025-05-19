@@ -1,32 +1,20 @@
-export interface ProtocolMetrics {
-  // For compatibility with all usages in the app
-  date?: string;
-  // Old keys
-  volume_usd?: number;
-  daily_users?: number;
-  new_users?: number;
-  trades?: number;
-  fees_usd?: number;
-  // New keys used in metrics and tables
-  total_volume_usd?: number;
-  numberOfNewUsers?: number;
-  daily_trades?: number;
-  total_fees_usd?: number;
-}
-
-export type Protocol = 'bullx' | 'photon' | 'trojan' | 'axiom';
+export type Protocol = "axiom" | "bullx" | "photon" | "trojan" | "gmgnai" | "bloom" | "all";
 
 export interface ProtocolStats {
-  protocol_name: string;
+  protocol_name: Protocol;
   date: string;
   volume_usd: number;
   daily_users: number;
   new_users: number;
   trades: number;
   fees_usd: number;
+  formattedDay?: string;
 }
 
-export type TimeseriesDataPoint = {
-  date: string;
-  value: number;
+export interface ProtocolMetrics {
+  total_volume_usd: number;
+  daily_users: number;
+  numberOfNewUsers: number;
+  daily_trades: number;
+  total_fees_usd: number;
 }

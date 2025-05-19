@@ -1,7 +1,10 @@
 import { supabase } from './supabase';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
 
-type ProtocolStatsWithDay = ProtocolStats & { formattedDay: string };
+export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
+  formattedDay: string;
+  [key: string]: ProtocolStats | string | number;
+}
 
 interface CacheEntry<T> {
   data: T;
@@ -123,7 +126,7 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
   return metrics;
 }
 
-function formatDate(isoDate: string): string {
+export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}-${month}-${year}`;
 }

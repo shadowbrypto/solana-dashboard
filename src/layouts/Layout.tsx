@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '../utils/utils';
-import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture } from 'lucide-react';
+import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -11,15 +11,15 @@ const protocols = [
   { id: 'trojan', name: 'Trojan', icon: Sword },
   { id: 'axiom', name: 'Axiom', icon: Aperture },
   { id: 'gmgnai', name: 'GmGnAi', icon: CalendarClock },
-  { id: 'bloom', name: 'Bloom', icon: Aperture },
-  { id: 'bonkbot', name: 'BonkBot', icon: Aperture },
-  { id: 'nova', name: 'Nova', icon: Aperture },
-  { id: 'soltradingbot', name: 'SolTradingBot', icon: Aperture },
-  { id: 'maestro', name: 'Maestro', icon: Aperture },
-  { id: 'banana', name: 'Banana', icon: Aperture },
-  { id: 'padre', name: 'Padre', icon: Aperture },
-  { id: 'moonshot', name: 'Moonshot', icon: Aperture },
-  { id: 'vector', name: 'Vector', icon: Aperture },
+  { id: 'bloom', name: 'Bloom', icon: Wand2 },
+  { id: 'bonkbot', name: 'BonkBot', icon: Bot },
+  { id: 'nova', name: 'Nova', icon: Star },
+  { id: 'soltradingbot', name: 'SolTradingBot', icon: Rocket },
+  { id: 'maestro', name: 'Maestro', icon: Zap },
+  { id: 'banana', name: 'Banana', icon: Banana },
+  { id: 'padre', name: 'Padre', icon: Cross },
+  { id: 'moonshot', name: 'Moonshot', icon: Moon },
+  { id: 'vector', name: 'Vector', icon: ArrowUpRight },
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
 ];
 

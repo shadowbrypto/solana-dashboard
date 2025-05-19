@@ -117,12 +117,147 @@ const MainContent = (): JSX.Element => {
         return;
       }
 
-      const fetchedData = await getProtocolStats(selectedProtocol === "all" ? undefined : selectedProtocol);
-      const formattedData = fetchedData.map(item => ({
-        ...item,
-        formattedDay: item.formattedDay || formatDate(item.date)
-      })) as ProtocolStatsWithDay[];
-      setData(formattedData);
+      let fetchedData;
+      if (selectedProtocol === "all") {
+        // For 'all', fetch data for each protocol separately
+        const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+        const protocolDataMap = new Map<string, any>();
+
+        // Initialize empty data structure for all days
+        const allDays = new Set<string>();
+        const emptyMetrics = protocols.reduce((acc, protocol) => {
+          acc[`${protocol}_volume`] = 0;
+          acc[`${protocol}_users`] = 0;
+          acc[`${protocol}_trades`] = 0;
+          acc[`${protocol}_fees`] = 0;
+          return acc;
+        }, {} as Record<string, number>);
+
+        // Fetch data for each protocol
+        for (const protocol of protocols) {
+          console.log(`Fetching data for ${protocol}...`);
+          const protocolData = await getProtocolStats(protocol);
+          if (!protocolData) continue;
+          
+          // First collect all unique days
+          for (const data of protocolData) {
+            allDays.add(data.date);
+          }
+
+          // Then add protocol data
+          for (const data of protocolData) {
+            if (!protocolDataMap.has(data.date)) {
+              protocolDataMap.set(data.date, {
+                date: data.date,
+                formattedDay: formatDate(data.date),
+                ...emptyMetrics
+              });
+            }
+            const dayData = protocolDataMap.get(data.date)!;
+            dayData[`${protocol}_volume`] = data.volume_usd || 0;
+            dayData[`${protocol}_users`] = data.daily_users || 0;
+            dayData[`${protocol}_trades`] = data.trades || 0;
+            dayData[`${protocol}_fees`] = data.fees_usd || 0;
+          }
+        }
+
+        // Make sure all days have data for all protocols
+        for (const day of Array.from(allDays)) {
+          if (!protocolDataMap.has(day)) {
+            protocolDataMap.set(day, {
+              date: day,
+              formattedDay: formatDate(day),
+              ...emptyMetrics
+            });
+          }
+        }
+
+        fetchedData = Array.from(protocolDataMap.values());
+        console.log('First day of combined data:', fetchedData[0]);
+        console.log('Combined data example:', fetchedData[0]); // Log first day's combined data
+      } else {
+        fetchedData = await getProtocolStats(selectedProtocol);
+      }
+      
+      interface ProtocolMetrics {
+        date: string;
+        formattedDay: string;
+        [key: `${string}_volume`]: number;
+        [key: `${string}_users`]: number;
+        [key: `${string}_trades`]: number;
+        [key: `${string}_fees`]: number;
+      }
+
+      if (selectedProtocol === 'all') {
+        // First, get data for each protocol
+        const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+        const protocolData = new Map<string, any[]>();
+        
+        // Fetch data for each protocol
+        for (const protocol of protocols) {
+          console.log(`Fetching data for ${protocol}...`);
+          const data = await getProtocolStats(protocol);
+          if (data && data.length > 0) {
+            protocolData.set(protocol, data);
+          }
+        }
+
+        // Get all unique dates
+        const allDates = new Set<string>();
+        protocolData.forEach(data => {
+          data.forEach(item => allDates.add(item.date));
+        });
+
+        // Create combined data structure
+        const dataByDate = new Map<string, any>();
+
+        // Initialize data structure for each date
+        Array.from(allDates).forEach(date => {
+          const entry: ProtocolMetrics = {
+            date,
+            formattedDay: formatDate(date)
+          };
+
+          // Initialize all protocol metrics to 0
+          protocols.forEach(protocol => {
+            entry[`${protocol}_volume`] = 0;
+            entry[`${protocol}_users`] = 0;
+            entry[`${protocol}_trades`] = 0;
+            entry[`${protocol}_fees`] = 0;
+          });
+
+          dataByDate.set(date, entry);
+        });
+
+        // Fill in actual values
+        protocolData.forEach((data, protocol) => {
+          data.forEach(item => {
+            const dateEntry = dataByDate.get(item.date);
+            if (dateEntry) {
+              dateEntry[`${protocol}_volume`] = item.volume_usd || 0;
+              dateEntry[`${protocol}_users`] = item.daily_users || 0;
+              dateEntry[`${protocol}_trades`] = item.trades || 0;
+              dateEntry[`${protocol}_fees`] = item.fees_usd || 0;
+            }
+          });
+        });
+
+        // Convert to array and sort by date
+        const combinedData = Array.from(dataByDate.values())
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        console.log('First day of combined data:', combinedData[0]);
+        console.log('Available metrics:', Object.keys(combinedData[0]));
+        setData(combinedData);
+      } else {
+        // For single protocol, just format the data
+        const formattedData = fetchedData.map((item: any) => ({
+          ...item,
+          formattedDay: formatDate(item.date)
+        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setData(formattedData);
+      }
 
       const totalStats = await getTotalProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol);
       if (!totalStats) {
@@ -130,34 +265,6 @@ const MainContent = (): JSX.Element => {
       }
       
       setTotalMetrics(totalStats);
-
-      if (selectedProtocol === 'all') {
-        const processedData = formattedData.reduce((acc: ProtocolStatsWithDay[], item: ProtocolStatsWithDay) => {
-          const existingDay = acc.find(
-            (d) => d.formattedDay === item.formattedDay
-          );
-          if (existingDay) {
-            existingDay[item.protocol_name] = item;
-          } else {
-            const newDay: ProtocolStatsWithDay = {
-              formattedDay: item.formattedDay,
-              protocol_name: item.protocol_name,
-              date: item.date,
-              volume_usd: item.volume_usd,
-              daily_users: item.daily_users,
-              new_users: item.new_users,
-              trades: item.trades,
-              fees_usd: item.fees_usd,
-              [item.protocol_name]: item
-            };
-            acc.push(newDay);
-          }
-          return acc;
-        }, [] as ProtocolStatsWithDay[]);
-        setData(processedData);
-      } else {
-        setData(formattedData);
-      }
 
       setLoading(false);
     } catch (err) {
@@ -250,22 +357,22 @@ const MainContent = (): JSX.Element => {
                   "moonshot_volume",
                   "vector_volume",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
-                  "hsl(var(--chart-1))",
-                  "hsl(var(--chart-2))",
-                  "hsl(var(--chart-3))",
-                  "hsl(var(--chart-4))",
-                  "hsl(var(--chart-5))",
-                  "hsl(var(--chart-6))",
-                  "hsl(var(--chart-7))",
-                  "hsl(var(--chart-8))",
-                  "hsl(var(--chart-9))",
-                  "hsl(var(--chart-10))",
-                  "hsl(var(--chart-11))",
-                  "hsl(var(--chart-12))",
-                  "hsl(var(--chart-13))",
-                  "hsl(var(--chart-14))",
+                  "hsl(0 94% 65%)",    // Vibrant Red
+                  "hsl(280 91% 65%)",  // Bright Purple
+                  "hsl(145 80% 42%)",  // Deep Green
+                  "hsl(45 93% 47%)",   // Golden Yellow
+                  "hsl(200 98% 50%)",  // Electric Blue
+                  "hsl(326 100% 59%)", // Hot Pink
+                  "hsl(31 94% 52%)",   // Bright Orange
+                  "hsl(168 83% 45%)",  // Turquoise
+                  "hsl(142 76% 36%)",  // Emerald
+                  "hsl(262 83% 58%)",  // Purple
+                  "hsl(221 83% 53%)",  // Blue
+                  "hsl(346 84% 61%)",  // Rose
+                  "hsl(15 72% 50%)",   // Orange
+                  "hsl(172 66% 50%)",  // Teal
                 ]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
@@ -288,22 +395,22 @@ const MainContent = (): JSX.Element => {
                   "moonshot_users",
                   "vector_users",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
-                  "hsl(var(--chart-1))",
-                  "hsl(var(--chart-2))",
-                  "hsl(var(--chart-3))",
-                  "hsl(var(--chart-4))",
-                  "hsl(var(--chart-5))",
-                  "hsl(var(--chart-6))",
-                  "hsl(var(--chart-7))",
-                  "hsl(var(--chart-8))",
-                  "hsl(var(--chart-9))",
-                  "hsl(var(--chart-10))",
-                  "hsl(var(--chart-11))",
-                  "hsl(var(--chart-12))",
-                  "hsl(var(--chart-13))",
-                  "hsl(var(--chart-14))",
+                  "hsl(0 94% 65%)",    // Vibrant Red
+                  "hsl(280 91% 65%)",  // Bright Purple
+                  "hsl(145 80% 42%)",  // Deep Green
+                  "hsl(45 93% 47%)",   // Golden Yellow
+                  "hsl(200 98% 50%)",  // Electric Blue
+                  "hsl(326 100% 59%)", // Hot Pink
+                  "hsl(31 94% 52%)",   // Bright Orange
+                  "hsl(168 83% 45%)",  // Turquoise
+                  "hsl(142 76% 36%)",  // Emerald
+                  "hsl(262 83% 58%)",  // Purple
+                  "hsl(221 83% 53%)",  // Blue
+                  "hsl(346 84% 61%)",  // Rose
+                  "hsl(15 72% 50%)",   // Orange
+                  "hsl(172 66% 50%)",  // Teal
                 ]}
                 valueFormatter={(value) => value.toFixed(0)}
               />
@@ -326,22 +433,22 @@ const MainContent = (): JSX.Element => {
                   "moonshot_trades",
                   "vector_trades",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
-                  "hsl(var(--chart-1))",
-                  "hsl(var(--chart-2))",
-                  "hsl(var(--chart-3))",
-                  "hsl(var(--chart-4))",
-                  "hsl(var(--chart-5))",
-                  "hsl(var(--chart-6))",
-                  "hsl(var(--chart-7))",
-                  "hsl(var(--chart-8))",
-                  "hsl(var(--chart-9))",
-                  "hsl(var(--chart-10))",
-                  "hsl(var(--chart-11))",
-                  "hsl(var(--chart-12))",
-                  "hsl(var(--chart-13))",
-                  "hsl(var(--chart-14))",
+                  "hsl(0 94% 65%)",    // Vibrant Red
+                  "hsl(280 91% 65%)",  // Bright Purple
+                  "hsl(145 80% 42%)",  // Deep Green
+                  "hsl(45 93% 47%)",   // Golden Yellow
+                  "hsl(200 98% 50%)",  // Electric Blue
+                  "hsl(326 100% 59%)", // Hot Pink
+                  "hsl(31 94% 52%)",   // Bright Orange
+                  "hsl(168 83% 45%)",  // Turquoise
+                  "hsl(142 76% 36%)",  // Emerald
+                  "hsl(262 83% 58%)",  // Purple
+                  "hsl(221 83% 53%)",  // Blue
+                  "hsl(346 84% 61%)",  // Rose
+                  "hsl(15 72% 50%)",   // Orange
+                  "hsl(172 66% 50%)",  // Teal
                 ]}
                 valueFormatter={(value) => `${value.toFixed(0)}`}
               />
@@ -364,22 +471,22 @@ const MainContent = (): JSX.Element => {
                   "moonshot_fees",
                   "vector_fees",
                 ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GMG Nai", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={[
-                  "hsl(var(--chart-1))",
-                  "hsl(var(--chart-2))",
-                  "hsl(var(--chart-3))",
-                  "hsl(var(--chart-4))",
-                  "hsl(var(--chart-5))",
-                  "hsl(var(--chart-6))",
-                  "hsl(var(--chart-7))",
-                  "hsl(var(--chart-8))",
-                  "hsl(var(--chart-9))",
-                  "hsl(var(--chart-10))",
-                  "hsl(var(--chart-11))",
-                  "hsl(var(--chart-12))",
-                  "hsl(var(--chart-13))",
-                  "hsl(var(--chart-14))",
+                  "hsl(0 94% 65%)",    // Vibrant Red
+                  "hsl(280 91% 65%)",  // Bright Purple
+                  "hsl(145 80% 42%)",  // Deep Green
+                  "hsl(45 93% 47%)",   // Golden Yellow
+                  "hsl(200 98% 50%)",  // Electric Blue
+                  "hsl(326 100% 59%)", // Hot Pink
+                  "hsl(31 94% 52%)",   // Bright Orange
+                  "hsl(168 83% 45%)",  // Turquoise
+                  "hsl(142 76% 36%)",  // Emerald
+                  "hsl(262 83% 58%)",  // Purple
+                  "hsl(221 83% 53%)",  // Blue
+                  "hsl(346 84% 61%)",  // Rose
+                  "hsl(15 72% 50%)",   // Orange
+                  "hsl(172 66% 50%)",  // Teal
                 ]}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />

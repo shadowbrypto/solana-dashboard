@@ -43,6 +43,13 @@ export function StackedBarChart({
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
   const filteredData = useMemo(() => {
+    if (data.length > 0) {
+      console.log('StackedBarChart first day data:', data[0]);
+      console.log('Data keys for first day:', Object.keys(data[0]));
+      console.log('Expected data keys:', dataKeys);
+      console.log('Sample values:', dataKeys.map(key => ({ key, value: data[0][key] })));
+    }
+    
     // Create a copy and reverse the data array
     const reversedData = [...data].reverse();
     if (timeframe === "all") return reversedData;

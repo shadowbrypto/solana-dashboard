@@ -33,7 +33,11 @@ export async function getProtocolStats(protocolName?: string) {
     .order('date', { ascending: false });
   
   if (protocolName) {
-    query = query.eq('protocol_name', protocolName);
+    const normalizedProtocol = protocolName.toLowerCase();
+    console.log('Querying for protocol:', normalizedProtocol);
+    query = query.eq('protocol_name', normalizedProtocol);
+  } else {
+    console.log('Querying for all protocols');
   }
 
   const { data, error } = await query;
@@ -46,27 +50,11 @@ export async function getProtocolStats(protocolName?: string) {
   let formattedData;
   
   if (!protocolName) {
-    // For all protocols, group by date
-    const dateMap = new Map<string, Record<string, ProtocolStatsWithDay>>();
-    
-    data.forEach((row: ProtocolStats) => {
-      const formattedDay = formatDate(row.date);
-      if (!dateMap.has(formattedDay)) {
-        dateMap.set(formattedDay, {});
-      }
-      const dateEntry = dateMap.get(formattedDay)!;
-      // Store complete protocol stats for each protocol
-      dateEntry[row.protocol_name] = {
-        ...row,
-        formattedDay
-      };
-    });
-
-    // Convert to array format expected by TimelineChart
-    formattedData = Array.from(dateMap.entries()).map(([formattedDay, protocols]) => ({
-      formattedDay,
-      ...protocols
-    })) as ProtocolStatsWithDay[];
+    // For all protocols, just return raw data
+    formattedData = data.map((row: ProtocolStats) => ({
+      ...row,
+      formattedDay: formatDate(row.date)
+    }));
   } else {
     formattedData = data.map((row: ProtocolStats) => ({
       ...row,

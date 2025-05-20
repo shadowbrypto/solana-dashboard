@@ -13,6 +13,7 @@ import { protocolColorsList, getProtocolColor } from "./lib/colors";
 import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
+import { StackedAreaChart } from "./components/charts/StackedAreaChart";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate } from "./lib/protocol";
 
@@ -347,6 +348,52 @@ const MainContent = (): JSX.Element => {
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={protocolColorsList}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
+              />
+              <StackedAreaChart
+                title="Volume Dominance by Protocol"
+                data={data.map(day => {
+                  const totalVolume = [
+                    "bullx_volume", "photon_volume", "trojan_volume", "axiom_volume",
+                    "gmgnai_volume", "bloom_volume", "bonkbot_volume", "nova_volume",
+                    "soltradingbot_volume", "maestro_volume", "banana_volume",
+                    "padre_volume", "moonshot_volume", "vector_volume"
+                  ].reduce((sum, key) => sum + (day[key] || 0), 0);
+
+                  return {
+                    formattedDay: day.formattedDay,
+                    bullx_dominance: totalVolume > 0 ? day.bullx_volume / totalVolume : 0,
+                    photon_dominance: totalVolume > 0 ? day.photon_volume / totalVolume : 0,
+                    trojan_dominance: totalVolume > 0 ? day.trojan_volume / totalVolume : 0,
+                    axiom_dominance: totalVolume > 0 ? day.axiom_volume / totalVolume : 0,
+                    gmgnai_dominance: totalVolume > 0 ? day.gmgnai_volume / totalVolume : 0,
+                    bloom_dominance: totalVolume > 0 ? day.bloom_volume / totalVolume : 0,
+                    bonkbot_dominance: totalVolume > 0 ? day.bonkbot_volume / totalVolume : 0,
+                    nova_dominance: totalVolume > 0 ? day.nova_volume / totalVolume : 0,
+                    soltradingbot_dominance: totalVolume > 0 ? day.soltradingbot_volume / totalVolume : 0,
+                    maestro_dominance: totalVolume > 0 ? day.maestro_volume / totalVolume : 0,
+                    banana_dominance: totalVolume > 0 ? day.banana_volume / totalVolume : 0,
+                    padre_dominance: totalVolume > 0 ? day.padre_volume / totalVolume : 0,
+                    moonshot_dominance: totalVolume > 0 ? day.moonshot_volume / totalVolume : 0,
+                    vector_dominance: totalVolume > 0 ? day.vector_volume / totalVolume : 0
+                  };
+                })}
+                keys={[
+                  "bullx_dominance",
+                  "photon_dominance",
+                  "trojan_dominance",
+                  "axiom_dominance",
+                  "gmgnai_dominance",
+                  "bloom_dominance",
+                  "bonkbot_dominance",
+                  "nova_dominance",
+                  "soltradingbot_dominance",
+                  "maestro_dominance",
+                  "banana_dominance",
+                  "padre_dominance",
+                  "moonshot_dominance",
+                  "vector_dominance"
+                ]}
+                colors={protocolColorsList}
               />
               <StackedBarChart
                 title="Daily Active Users by Protocol"

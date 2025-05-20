@@ -47,6 +47,7 @@ export function StackedAreaChart({
   valueFormatter = (value: number) => `${(value * 100).toFixed(2)}%`
 }: StackedAreaChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
     // Create a copy and reverse the data array
@@ -169,16 +170,16 @@ export function StackedAreaChart({
               }}
             />
             {keys.map((key, index) => (
-              <Area
-                key={key}
-                dataKey={key}
-                stackId="1"
-                stroke={colors[index]}
-                fill={colors[index]}
-                fillOpacity={0.85}
-                strokeWidth={2}
-                name={labels[index]}
-              />
+                <Area
+                  key={key}
+                  dataKey={key}
+                  stackId="1"
+                  stroke={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                  fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                  fillOpacity={disabledKeys.includes(key) ? 0.2 : 0.85}
+                  strokeWidth={2}
+                  name={labels[index]}
+                />
             ))}
             <Legend
               verticalAlign="bottom"
@@ -188,9 +189,25 @@ export function StackedAreaChart({
               wrapperStyle={{
                 paddingTop: "12px"
               }}
-              formatter={(value) => (
-                <span className="text-sm text-muted-foreground">{value}</span>
-              )}
+              onClick={(e) => {
+                if (e && typeof e.dataKey === 'string') {
+                  setDisabledKeys((prev: string[]) => 
+                    prev.includes(e.dataKey as string)
+                      ? prev.filter(key => key !== e.dataKey)
+                      : [...prev, e.dataKey as string]
+                  );
+                }
+              }}
+              formatter={(value, entry) => {
+                const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
+                return (
+                  <span 
+                    className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                  >
+                    {value}
+                  </span>
+                );
+              }}
             />
           </RechartsAreaChart>
         </ResponsiveContainer>

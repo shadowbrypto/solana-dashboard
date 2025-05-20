@@ -49,6 +49,7 @@ export function StackedBarChart({
   valueFormatter = (value: number) => `${value.toLocaleString()}`
 }: StackedBarChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
 
@@ -166,14 +167,15 @@ export function StackedBarChart({
               }}
             />
             {dataKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                stackId="a"
-                fill={colors[index]}
-                radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                name={labels[index]}
-              />
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="a"
+                  fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                  fillOpacity={disabledKeys.includes(key) ? 0.3 : 1}
+                  radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  name={labels[index]}
+                />
             ))}
             <Legend
               verticalAlign="bottom"
@@ -183,9 +185,25 @@ export function StackedBarChart({
               wrapperStyle={{
                 paddingTop: "12px"
               }}
-              formatter={(value) => (
-                <span className="text-sm text-muted-foreground">{value}</span>
-              )}
+              onClick={(e) => {
+                if (e && typeof e.dataKey === 'string') {
+                  setDisabledKeys((prev: string[]) => 
+                    prev.includes(e.dataKey as string)
+                      ? prev.filter(key => key !== e.dataKey)
+                      : [...prev, e.dataKey as string]
+                  );
+                }
+              }}
+              formatter={(value, entry) => {
+                const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
+                return (
+                  <span 
+                    className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                  >
+                    {value}
+                  </span>
+                );
+              }}
             />
           </RechartsBarChart>
         </ResponsiveContainer>

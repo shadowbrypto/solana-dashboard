@@ -418,6 +418,52 @@ const MainContent = (): JSX.Element => {
                 colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
+              <StackedAreaChart
+                title="DAU Dominance by Protocol"
+                data={data.map(day => {
+                  const totalDAU = [
+                    "bullx_users", "photon_users", "trojan_users", "axiom_users",
+                    "gmgnai_users", "bloom_users", "bonkbot_users", "nova_users",
+                    "soltradingbot_users", "maestro_users", "banana_users",
+                    "padre_users", "moonshot_users", "vector_users"
+                  ].reduce((sum, key) => sum + (day[key] || 0), 0);
+
+                  return {
+                    formattedDay: day.formattedDay,
+                    bullx_dominance: totalDAU > 0 ? day.bullx_users / totalDAU : 0,
+                    photon_dominance: totalDAU > 0 ? day.photon_users / totalDAU : 0,
+                    trojan_dominance: totalDAU > 0 ? day.trojan_users / totalDAU : 0,
+                    axiom_dominance: totalDAU > 0 ? day.axiom_users / totalDAU : 0,
+                    gmgnai_dominance: totalDAU > 0 ? day.gmgnai_users / totalDAU : 0,
+                    bloom_dominance: totalDAU > 0 ? day.bloom_users / totalDAU : 0,
+                    bonkbot_dominance: totalDAU > 0 ? day.bonkbot_users / totalDAU : 0,
+                    nova_dominance: totalDAU > 0 ? day.nova_users / totalDAU : 0,
+                    soltradingbot_dominance: totalDAU > 0 ? day.soltradingbot_users / totalDAU : 0,
+                    maestro_dominance: totalDAU > 0 ? day.maestro_users / totalDAU : 0,
+                    banana_dominance: totalDAU > 0 ? day.banana_users / totalDAU : 0,
+                    padre_dominance: totalDAU > 0 ? day.padre_users / totalDAU : 0,
+                    moonshot_dominance: totalDAU > 0 ? day.moonshot_users / totalDAU : 0,
+                    vector_dominance: totalDAU > 0 ? day.vector_users / totalDAU : 0
+                  };
+                })}
+                keys={[
+                  "bullx_dominance",
+                  "photon_dominance",
+                  "trojan_dominance",
+                  "axiom_dominance",
+                  "gmgnai_dominance",
+                  "bloom_dominance",
+                  "bonkbot_dominance",
+                  "nova_dominance",
+                  "soltradingbot_dominance",
+                  "maestro_dominance",
+                  "banana_dominance",
+                  "padre_dominance",
+                  "moonshot_dominance",
+                  "vector_dominance"
+                ]}
+                colors={protocolColorsList}
+              />
               <StackedBarChart
                 title="New Users by Protocol"
                 data={data}
@@ -441,6 +487,52 @@ const MainContent = (): JSX.Element => {
                 colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
+              <StackedAreaChart
+                title="New Users Dominance by Protocol"
+                data={data.map(day => {
+                  const totalNewUsers =   [
+                    "bullx_new_users", "photon_new_users", "trojan_new_users", "axiom_new_users",
+                    "gmgnai_new_users", "bloom_new_users", "bonkbot_new_users", "nova_new_users",
+                    "soltradingbot_new_users", "maestro_new_users", "banana_new_users",
+                    "padre_new_users", "moonshot_new_users", "vector_new_users"
+                  ].reduce((sum, key) => sum + (day[key] || 0), 0);
+
+                  return {
+                    formattedDay: day.formattedDay,
+                    bullx_dominance: totalNewUsers > 0 ? day.bullx_new_users / totalNewUsers : 0,
+                    photon_dominance: totalNewUsers > 0 ? day.photon_new_users / totalNewUsers : 0,
+                    trojan_dominance: totalNewUsers > 0 ? day.trojan_new_users / totalNewUsers : 0,
+                    axiom_dominance: totalNewUsers > 0 ? day.axiom_new_users / totalNewUsers : 0,
+                    gmgnai_dominance: totalNewUsers > 0 ? day.gmgnai_new_users / totalNewUsers : 0,
+                    bloom_dominance: totalNewUsers > 0 ? day.bloom_new_users / totalNewUsers : 0,
+                    bonkbot_dominance: totalNewUsers > 0 ? day.bonkbot_new_users / totalNewUsers : 0,
+                    nova_dominance: totalNewUsers > 0 ? day.nova_new_users / totalNewUsers : 0,
+                    soltradingbot_dominance: totalNewUsers > 0 ? day.soltradingbot_new_users / totalNewUsers : 0,
+                    maestro_dominance: totalNewUsers > 0 ? day.maestro_new_users / totalNewUsers : 0,
+                    banana_dominance: totalNewUsers > 0 ? day.banana_new_users / totalNewUsers : 0,
+                    padre_dominance: totalNewUsers > 0 ? day.padre_new_users / totalNewUsers : 0,
+                    moonshot_dominance: totalNewUsers > 0 ? day.moonshot_new_users / totalNewUsers : 0,
+                    vector_dominance: totalNewUsers > 0 ? day.vector_new_users / totalNewUsers : 0
+                  };
+                })}
+                keys={[
+                  "bullx_dominance",
+                  "photon_dominance",
+                  "trojan_dominance",
+                  "axiom_dominance",
+                  "gmgnai_dominance",
+                  "bloom_dominance",
+                  "bonkbot_dominance",
+                  "nova_dominance",
+                  "soltradingbot_dominance",
+                  "maestro_dominance",
+                  "banana_dominance",
+                  "padre_dominance",
+                  "moonshot_dominance",
+                  "vector_dominance"
+                ]}
+                colors={protocolColorsList}
+              />
               <StackedBarChart
                 title="Trades by Protocol"
                 data={data}
@@ -463,6 +555,52 @@ const MainContent = (): JSX.Element => {
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={protocolColorsList}
                 valueFormatter={(value) => `${value.toFixed(0)}`}
+              />
+              <StackedAreaChart
+                title="Trades Dominance by Protocol"
+                data={data.map(day => {
+                  const totalTrades =   [
+                    "bullx_trades", "photon_trades", "trojan_trades", "axiom_trades",
+                    "gmgnai_trades", "bloom_trades", "bonkbot_trades", "nova_trades",
+                    "soltradingbot_trades", "maestro_trades", "banana_trades",
+                    "padre_trades", "moonshot_trades", "vector_trades"
+                  ].reduce((sum, key) => sum + (day[key] || 0), 0);
+
+                  return {
+                    formattedDay: day.formattedDay,
+                    bullx_dominance: totalTrades > 0 ? day.bullx_trades / totalTrades : 0,
+                    photon_dominance: totalTrades > 0 ? day.photon_trades / totalTrades : 0,
+                    trojan_dominance: totalTrades > 0 ? day.trojan_trades / totalTrades : 0,
+                    axiom_dominance: totalTrades > 0 ? day.axiom_trades / totalTrades : 0,
+                    gmgnai_dominance: totalTrades > 0 ? day.gmgnai_trades / totalTrades : 0,
+                    bloom_dominance: totalTrades > 0 ? day.bloom_trades / totalTrades : 0,
+                    bonkbot_dominance: totalTrades > 0 ? day.bonkbot_trades / totalTrades : 0,
+                    nova_dominance: totalTrades > 0 ? day.nova_trades / totalTrades : 0,
+                    soltradingbot_dominance: totalTrades > 0 ? day.soltradingbot_trades / totalTrades : 0,
+                    maestro_dominance: totalTrades > 0 ? day.maestro_trades / totalTrades : 0,
+                    banana_dominance: totalTrades > 0 ? day.banana_trades / totalTrades : 0,
+                    padre_dominance: totalTrades > 0 ? day.padre_trades / totalTrades : 0,
+                    moonshot_dominance: totalTrades > 0 ? day.moonshot_trades / totalTrades : 0,
+                    vector_dominance: totalTrades > 0 ? day.vector_trades / totalTrades : 0
+                  };
+                })}
+                keys={[
+                  "bullx_dominance",
+                  "photon_dominance",
+                  "trojan_dominance",
+                  "axiom_dominance",
+                  "gmgnai_dominance",
+                  "bloom_dominance",
+                  "bonkbot_dominance",
+                  "nova_dominance",
+                  "soltradingbot_dominance",
+                  "maestro_dominance",
+                  "banana_dominance",
+                  "padre_dominance",
+                  "moonshot_dominance",
+                  "vector_dominance"
+                ]}
+                colors={protocolColorsList}
               />
               <StackedBarChart
                 title="Fees by Protocol"

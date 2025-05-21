@@ -656,7 +656,7 @@ const MainContent = (): JSX.Element => {
             </>
           )}
         </div>
-      ) : protocol === "all" ? (
+      ) : activeView === "data" ? (
         <div className="min-h-screen bg-background text-foreground dark:bg-background dark:text-foreground">
           <ProtocolDataTable
             data={data.reduce(
@@ -686,24 +686,19 @@ const MainContent = (): JSX.Element => {
                     maestro: { ...emptyMetrics },
                     banana: { ...emptyMetrics },
                     padre: { ...emptyMetrics },
-                    moonshot: { ...emptyMetrics },
                     vector: { ...emptyMetrics },
+                    moonshot: { ...emptyMetrics },
                     all: { ...emptyMetrics }
                   };
                 }
 
-                ["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"].forEach((protocol) => {
-                  acc[date][protocol as Protocol] = {
-                    total_volume_usd:
-                      (item[`${protocol}_total_volume_usd`] as number) ?? 0,
-                    daily_users:
-                      (item[`${protocol}_daily_users`] as number) ?? 0,
-                    numberOfNewUsers:
-                      (item[`${protocol}_numberOfNewUsers`] as number) ?? 0,
-                    daily_trades:
-                      (item[`${protocol}_daily_trades`] as number) ?? 0,
-                    total_fees_usd:
-                      (item[`${protocol}_total_fees_usd`] as number) ?? 0,
+                ["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"].forEach((p) => {
+                  acc[date][p as Protocol] = {
+                    total_volume_usd: item[`${p}_volume`] ?? 0,
+                    daily_users: item[`${p}_users`] ?? 0,
+                    numberOfNewUsers: item[`${p}_new_users`] ?? 0,
+                    daily_trades: item[`${p}_trades`] ?? 0,
+                    total_fees_usd: item[`${p}_fees`] ?? 0,
                   };
                 });
 

@@ -52,35 +52,56 @@ export function StackedAreaChart({
   const filteredData = useMemo(() => {
     // Create a copy and reverse the data array
     const reversedData = [...data].reverse();
-    if (timeframe === "all") return reversedData;
+    let timeFilteredData = reversedData;
 
-    const now = new Date();
-    let daysToSubtract: number;
+    if (timeframe !== "all") {
+      const now = new Date();
+      let daysToSubtract: number;
 
-    switch (timeframe) {
-      case "7d":
-        daysToSubtract = 7;
-        break;
-      case "30d":
-        daysToSubtract = 30;
-        break;
-      case "3m":
-        daysToSubtract = 90;
-        break;
-      default:
-        daysToSubtract = 90;
-    }
+      switch (timeframe) {
+        case "7d":
+          daysToSubtract = 7;
+          break;
+        case "30d":
+          daysToSubtract = 30;
+          break;
+        case "3m":
+          daysToSubtract = 90;
+          break;
+        default:
+          daysToSubtract = 90;
+      }
 
-    const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+      const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-    return [...data]
-      .reverse()
-      .filter(item => {
+      timeFilteredData = reversedData.filter(item => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         return itemDate >= cutoffDate;
       });
-  }, [data, timeframe]);
+    }
+
+    // Recalculate shares based on enabled protocols
+    return timeFilteredData.map(item => {
+      const newItem = { ...item };
+      const enabledKeys = keys.filter(key => !disabledKeys.includes(key));
+      
+      // Calculate total of enabled protocols
+      const enabledTotal = enabledKeys.reduce((sum, key) => sum + item[key], 0);
+      
+      // Set disabled protocols to 0 and adjust shares of enabled ones
+      keys.forEach(key => {
+        if (disabledKeys.includes(key)) {
+          newItem[key] = 0;
+        } else if (enabledTotal > 0) {
+          // Recalculate share as a proportion of enabled total
+          newItem[key] = item[key] / enabledTotal;
+        }
+      });
+      
+      return newItem;
+    });
+  }, [data, timeframe, disabledKeys]);
 
   // Convert protocol names to display labels
   const labels = keys.map(key => {

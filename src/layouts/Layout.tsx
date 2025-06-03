@@ -59,7 +59,7 @@ export function Layout() {
           "p-4 flex items-center",
           sidebarOpen ? "justify-between" : "justify-center"
         )}>
-          {sidebarOpen && <span className="font-bold text-xl">Sol Charts</span>}
+          {sidebarOpen && <span className="font-bold text-xl">Trading Apps</span>}
           <Button 
             variant="ghost" 
             size="icon"
@@ -94,7 +94,7 @@ export function Layout() {
 
           {/* Protocol Categories */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Protocols</h3>}
+            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Categories</h3>}
             {protocolCategories.map((category) => {
               const [isExpanded, setIsExpanded] = useState(false);
               return (

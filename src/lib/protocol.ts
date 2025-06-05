@@ -78,18 +78,37 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
-  let query = supabase
-    .from('protocol_stats')
-    .select('volume_usd, daily_users, new_users, trades, fees_usd');
+  // Initialize empty array to store all records
+  let allData: any[] = [];
+  let hasMore = true;
+  let page = 0;
+  const PAGE_SIZE = 1000;
 
-  if (protocolName) {
-    query = query.eq('protocol_name', protocolName);
+  // Fetch all records using pagination
+  while (hasMore) {
+    const query = supabase
+      .from('protocol_stats')
+      .select('volume_usd, daily_users, new_users, trades, fees_usd')
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (protocolName) {
+      query.eq('protocol_name', protocolName);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    page++;
+
+    // Log progress
+    console.log(`Fetched ${allData.length} records so far...`);
   }
 
-  const { data, error } = await query;
-
-  if (error || !data || data.length === 0) {
-
+  if (allData.length === 0) {
     return {
       total_volume_usd: 0,
       daily_users: 0,
@@ -99,12 +118,14 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
     };
   }
 
+  console.log(`Total records fetched: ${allData.length}`);
+
   const metrics: ProtocolMetrics = {
-    total_volume_usd: data.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0),
-    daily_users: data.reduce((sum, row) => sum + (Number(row.daily_users) || 0), 0),
-    numberOfNewUsers: data.reduce((sum, row) => sum + (Number(row.new_users) || 0), 0),
-    daily_trades: data.reduce((sum, row) => sum + (Number(row.trades) || 0), 0),
-    total_fees_usd: data.reduce((sum, row) => sum + (Number(row.fees_usd) || 0), 0)
+    total_volume_usd: allData.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0),
+    daily_users: allData.reduce((sum, row) => sum + (Number(row.daily_users) || 0), 0),
+    numberOfNewUsers: allData.reduce((sum, row) => sum + (Number(row.new_users) || 0), 0),
+    daily_trades: allData.reduce((sum, row) => sum + (Number(row.trades) || 0), 0),
+    total_fees_usd: allData.reduce((sum, row) => sum + (Number(row.fees_usd) || 0), 0)
   };
 
   totalStatsCache.set(cacheKey, {

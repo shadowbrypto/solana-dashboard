@@ -31,21 +31,48 @@ export function DataTable({ protocol, date }: DataTableProps) {
   const { data, isLoading, error } = useQuery<ProtocolStats[]>({
     queryKey: ['protocol-stats', protocol, date],
     queryFn: async () => {
-      const { data: stats, error } = await supabase
-        .from('protocol_stats')
-        .select(`
-          protocol_name,
-          date,
-          volume_usd,
-          daily_users,
-          new_users,
-          trades,
-          fees_usd
-        `)
-        .eq('protocol_name', protocol || 'bullx')
-        .order('date', { ascending: false });
+      const fetchStats = async () => {
+        try {
+          let allData: any[] = [];
+          let hasMore = true;
+          let page = 0;
+          const PAGE_SIZE = 1000;
 
-      if (error) throw error;
+          while (hasMore) {
+            const { data: stats, error } = await supabase
+              .from('protocol_stats')
+              .select(`
+                protocol_name,
+                date,
+                volume_usd,
+                daily_users,
+                new_users,
+                trades,
+                fees_usd
+              `)
+              .eq('protocol_name', protocol || 'bullx')
+              .order('date', { ascending: false })
+              .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+            if (error) throw error;
+            if (!stats || stats.length === 0) break;
+
+            allData = allData.concat(stats);
+            hasMore = stats.length === PAGE_SIZE;
+            page++;
+
+            console.log(`Fetched ${allData.length} table records so far...`);
+          }
+
+          console.log(`Total table records fetched: ${allData.length}`);
+          return allData;
+        } catch (error) {
+          console.error('Error:', error);
+          return [];
+        }
+      };
+
+      const stats = await fetchStats();
       return stats;
     },
   });

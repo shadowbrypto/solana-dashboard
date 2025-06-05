@@ -20,7 +20,6 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
 }
 
 export async function getProtocolStats(protocolName?: string | string[]) {
-  // If array of protocol names is provided, create a cache key from sorted names
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') 
     : (protocolName || 'all');
@@ -30,35 +29,51 @@ export async function getProtocolStats(protocolName?: string | string[]) {
     return cachedData.data;
   }
 
-  let query = supabase
-    .from('protocol_stats')
-    .select('*')
-    .order('date', { ascending: false });
-  
-  if (protocolName) {
-    if (Array.isArray(protocolName)) {
-      // For multiple protocols, use in query
-      const normalizedProtocols = protocolName.map(p => p.toLowerCase());
-      query = query.in('protocol_name', normalizedProtocols);
+  let allData: any[] = [];
+  let hasMore = true;
+  let page = 0;
+  const PAGE_SIZE = 1000;
 
-    } else {
-      // For single protocol
-      const normalizedProtocol = protocolName.toLowerCase();
-      query = query.eq('protocol_name', normalizedProtocol);
-
+  while (hasMore) {
+    let query = supabase
+      .from('protocol_stats')
+      .select('*')
+      .order('date', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    
+    if (protocolName) {
+      if (Array.isArray(protocolName)) {
+        const normalizedProtocols = protocolName.map(p => p.toLowerCase());
+        query = query.in('protocol_name', normalizedProtocols);
+      } else {
+        const normalizedProtocol = protocolName.toLowerCase();
+        query = query.eq('protocol_name', normalizedProtocol);
+      }
     }
-  } else {
 
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching protocol stats:', error);
+      break;
+    }
+
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    page++;
+
+    console.log(`Fetched ${allData.length} protocol stats records so far...`);
   }
 
-  const { data, error } = await query;
-  
-  if (error) {
-
+  if (allData.length === 0) {
     return [];
   }
 
-  const formattedData = data.map((row: ProtocolStats) => ({
+  console.log(`Total protocol stats records fetched: ${allData.length}`);
+
+  const formattedData = allData.map((row: ProtocolStats) => ({
     ...row,
     formattedDay: formatDate(row.date)
   }));

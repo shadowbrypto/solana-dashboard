@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import { useState, useMemo } from "react";
 
-type TimeFrame = "7d" | "30d" | "3m" | "all";
+type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 interface StackedBarChartProps {
   title: string;
@@ -71,6 +71,12 @@ export function StackedBarChart({
       case "3m":
         daysToSubtract = 90;
         break;
+      case "6m":
+        daysToSubtract = 180;
+        break;
+      case "1y":
+        daysToSubtract = 365;
+        break;
       default:
         daysToSubtract = 90;
     }
@@ -100,6 +106,8 @@ export function StackedBarChart({
             <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
             <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
             <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
+            <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
+            <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
             <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
           </SelectContent>
         </Select>

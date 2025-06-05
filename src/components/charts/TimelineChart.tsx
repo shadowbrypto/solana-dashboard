@@ -1,4 +1,3 @@
-import { ProtocolStats } from "../../types/protocol";
 import { useState, useMemo } from "react";
 import {
   Area,
@@ -23,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 
-type TimeFrame = "7d" | "30d" | "3m" | "all";
+type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 type ChartDataKey = 'volume_usd' | 'daily_users' | 'new_users' | 'trades' | 'fees_usd';
 
@@ -49,8 +49,6 @@ const MIDNIGHT_THEME = {
   stroke: "hsl(var(--primary))",
   fill: "hsl(var(--primary))",
 };
-
-import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 
 
 
@@ -83,6 +81,12 @@ export function TimelineChart({
           break;
         case "3m":
           daysToSubtract = 90;
+          break;
+        case "6m":
+          daysToSubtract = 180;
+          break;
+        case "1y":
+          daysToSubtract = 365;
           break;
         default:
           daysToSubtract = 90;
@@ -411,7 +415,7 @@ export function TimelineChart({
                                 return newSet;
                               });
                             };
-                            handleDataKeyToggle(item.key);
+                            handleDataKeyToggle(item.key as ChartDataKey);
                           }}
                         >
                           <div

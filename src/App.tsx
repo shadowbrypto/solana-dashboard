@@ -333,12 +333,34 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === "all" ? (
             <>
-              <Accordion type="single" collapsible className="w-full space-y-4">
-                <AccordionItem value="volume" className="border-none bg-card rounded-xl">
-                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
-                    <span className="text-lg font-semibold">Volume Metrics</span>
+              <Accordion type="single" collapsible className="w-full space-y-4 rounded-xl overflow-hidden">
+                {/* Volume Metrics */}
+                <AccordionItem value="volume" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-lg font-semibold flex-1 text-left">Volume Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-4 px-6">
+                  <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <HorizontalBarChart
                   title="Total Volume by Protocol"
                   data={[
@@ -430,11 +452,32 @@ const MainContent = (): JSX.Element => {
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="users" className="border-none bg-card rounded-xl">
-                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
-                    <span className="text-lg font-semibold">User Metrics</span>
+                <AccordionItem value="users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-lg font-semibold flex-1 text-left">DAU Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-4 px-6">
+                  <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <StackedBarChart
                       title="Daily Active Users by Protocol"
                 data={data}
@@ -504,6 +547,32 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
+                              <AccordionItem value="users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-lg font-semibold flex-1 text-left">New Users Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
               <StackedBarChart
                 title="New Users by Protocol"
                 data={data}
@@ -588,6 +657,8 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
+                                </AccordionContent>
+                                </AccordionItem>
               <HorizontalBarChart
                   title="Total Trades by Protocol"
                   data={[
@@ -606,11 +677,32 @@ const MainContent = (): JSX.Element => {
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="trades" className="border-none bg-card rounded-xl">
-                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
-                    <span className="text-lg font-semibold">Trading Metrics</span>
+                <AccordionItem value="trades" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                      </div>
+                      <span className="text-lg font-semibold flex-1 text-left">Trades Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-4 px-6">
+                  <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <StackedBarChart
                       title="Trades by Protocol"
                 data={data}
@@ -683,11 +775,32 @@ const MainContent = (): JSX.Element => {
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="fees" className="border-none bg-card rounded-xl">
-                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
-                    <span className="text-lg font-semibold">Fee Metrics</span>
+                <AccordionItem value="fees" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
+                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-lg font-semibold flex-1 text-left">Fee Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-4 px-6">
+                  <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <StackedBarChart
                       title="Fees by Protocol"
                 data={data}
@@ -717,25 +830,6 @@ const MainContent = (): JSX.Element => {
             </>
           ) : (
             <>
-               <HorizontalBarChart
-                  title="Total Fees by Protocol"
-                  data={[
-                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                  ].map(p => ({
-                    name: p.charAt(0).toUpperCase() + p.slice(1),
-                    values: data.map(item => ({
-                      value: item[`${p}_fees`] || 0,
-                      date: item.date
-                    })),
-                    value: data.reduce((sum, item) => sum + (item[`${p}_fees`] || 0), 0),
-                    color: getProtocolColor(p)
-                  }))}
-                  valueFormatter={(value) => {
-                    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-                    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-                    return `$${(value / 1e3).toFixed(2)}K`;
-                  }}
-                />
               <CombinedChart
                 title="Volume & Fees"
                 data={data.filter(

@@ -545,7 +545,11 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
-                              <AccordionItem value="users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
+  
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="new_users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
                         <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -570,7 +574,21 @@ const MainContent = (): JSX.Element => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-              <StackedBarChart
+                  <HorizontalBarChart
+                  title="Total Users by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_users`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_users`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                />
+             <StackedBarChart
                 title="New Users by Protocol"
                 data={data}
                 dataKeys={[
@@ -593,21 +611,6 @@ const MainContent = (): JSX.Element => {
                 colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
-              <HorizontalBarChart
-                  title="Total Users by Protocol"
-                  data={[
-                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                  ].map(p => ({
-                    name: p.charAt(0).toUpperCase() + p.slice(1),
-                    values: data.map(item => ({
-                      value: item[`${p}_users`] || 0,
-                      date: item.date
-                    })),
-                    value: data.reduce((sum, item) => sum + (item[`${p}_users`] || 0), 0),
-                    color: getProtocolColor(p)
-                  }))}
-                  valueFormatter={(value) => value.toLocaleString()}
-                />
               <StackedAreaChart
                 title="New Users Dominance by Protocol"
                 data={data.map(day => {
@@ -656,23 +659,6 @@ const MainContent = (): JSX.Element => {
               />
                                 </AccordionContent>
                                 </AccordionItem>
-              <HorizontalBarChart
-                  title="Total Trades by Protocol"
-                  data={[
-                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                  ].map(p => ({
-                    name: p.charAt(0).toUpperCase() + p.slice(1),
-                    values: data.map(item => ({
-                      value: item[`${p}_trades`] || 0,
-                      date: item.date
-                    })),
-                    value: data.reduce((sum, item) => sum + (item[`${p}_trades`] || 0), 0),
-                    color: getProtocolColor(p)
-                  }))}
-                  valueFormatter={(value) => value.toLocaleString()}
-                />
-                  </AccordionContent>
-                </AccordionItem>
 
                 <AccordionItem value="trades" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
@@ -699,6 +685,20 @@ const MainContent = (): JSX.Element => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                  <HorizontalBarChart
+                  title="Total Trades by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_trades`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_trades`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                />
                     <StackedBarChart
                       title="Trades by Protocol"
                 data={data}

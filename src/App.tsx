@@ -338,11 +338,10 @@ const MainContent = (): JSX.Element => {
                 <AccordionItem value="volume" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
-                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                      </div>
+
                       <span className="text-lg font-semibold flex-1 text-left">Volume Metrics</span>
                       <svg
                         className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
@@ -455,11 +454,10 @@ const MainContent = (): JSX.Element => {
                 <AccordionItem value="users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
-                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                      </div>
+
                       <span className="text-lg font-semibold flex-1 text-left">DAU Metrics</span>
                       <svg
                         className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
@@ -550,11 +548,10 @@ const MainContent = (): JSX.Element => {
                               <AccordionItem value="users" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
-                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                      </div>
+
                       <span className="text-lg font-semibold flex-1 text-left">New Users Metrics</span>
                       <svg
                         className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
@@ -680,11 +677,10 @@ const MainContent = (): JSX.Element => {
                 <AccordionItem value="trades" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
-                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                         </svg>
-                      </div>
+
                       <span className="text-lg font-semibold flex-1 text-left">Trades Metrics</span>
                       <svg
                         className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
@@ -778,11 +774,10 @@ const MainContent = (): JSX.Element => {
                 <AccordionItem value="fees" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
                     <div className="flex items-center gap-3 w-full px-6 py-4 hover:bg-muted/50 rounded-xl group">
-                      <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-6 h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                      </div>
+
                       <span className="text-lg font-semibold flex-1 text-left">Fee Metrics</span>
                       <svg
                         className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"

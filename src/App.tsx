@@ -16,6 +16,7 @@ import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { StackedAreaChart } from "./components/charts/StackedAreaChart";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate } from "./lib/protocol";
+import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 
 interface DailyData {
   formattedDay: string;
@@ -326,6 +327,25 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === "all" ? (
             <>
+              <HorizontalBarChart
+                  title="Total Volume by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_volume`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_volume`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                  valueFormatter={(value) => {
+                    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+                    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+                    return `$${(value / 1e3).toFixed(2)}K`;
+                  }}
+                />
               <StackedBarChart
                 title="Volume by Protocol"
                 data={data}
@@ -487,6 +507,21 @@ const MainContent = (): JSX.Element => {
                 colors={protocolColorsList}
                 valueFormatter={(value) => value.toFixed(0)}
               />
+              <HorizontalBarChart
+                  title="Total Users by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_users`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_users`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                  valueFormatter={(value) => value.toLocaleString()}
+                />
               <StackedAreaChart
                 title="New Users Dominance by Protocol"
                 data={data.map(day => {
@@ -533,6 +568,21 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
+              <HorizontalBarChart
+                  title="Total Trades by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_trades`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_trades`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                  valueFormatter={(value) => value.toLocaleString()}
+                />
               <StackedBarChart
                 title="Trades by Protocol"
                 data={data}
@@ -628,6 +678,25 @@ const MainContent = (): JSX.Element => {
             </>
           ) : (
             <>
+               <HorizontalBarChart
+                  title="Total Fees by Protocol"
+                  data={[
+                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                  ].map(p => ({
+                    name: p.charAt(0).toUpperCase() + p.slice(1),
+                    values: data.map(item => ({
+                      value: item[`${p}_fees`] || 0,
+                      date: item.date
+                    })),
+                    value: data.reduce((sum, item) => sum + (item[`${p}_fees`] || 0), 0),
+                    color: getProtocolColor(p)
+                  }))}
+                  valueFormatter={(value) => {
+                    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+                    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+                    return `$${(value / 1e3).toFixed(2)}K`;
+                  }}
+                />
               <CombinedChart
                 title="Volume & Fees"
                 data={data.filter(

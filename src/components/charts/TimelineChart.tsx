@@ -26,13 +26,13 @@ import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
-type ChartDataKey = 'volume_usd' | 'daily_users' | 'new_users' | 'trades' | 'fees_usd';
+type ChartDataKey = string;
 
 interface TimelineChartProps {
   title: string;
   data: Array<ProtocolStats & { formattedDay: string }>;
   dataKey: ChartDataKey;
-  multipleDataKeys?: Record<string, ChartDataKey>;
+  multipleDataKeys?: Record<string, string>;
   isMultiLine?: boolean;
   color?: string;
 }
@@ -417,7 +417,7 @@ export function TimelineChart({
                                 return newSet;
                               });
                             };
-                            handleDataKeyToggle(item.key as ChartDataKey);
+                            handleDataKeyToggle(item.key);
                           }}
                         >
                           <div

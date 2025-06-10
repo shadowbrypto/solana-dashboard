@@ -32,6 +32,7 @@ interface CombinedChartProps {
   lineChartLabel?: string;
   leftAxisFormatter?: (value: number) => string;
   rightAxisFormatter?: (value: number) => string;
+  colors?: string[];
 }
 
 export function CombinedChart({ 
@@ -43,6 +44,7 @@ export function CombinedChart({
   lineChartLabel = 'Fees',
   leftAxisFormatter = (value: number) => `$${(value / 1000000).toFixed(2)}M`,
   rightAxisFormatter = (value: number) => `$${(value / 1000).toFixed(1)}K`,
+  colors = ["hsl(var(--chart-3))"],
 }: CombinedChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
@@ -212,7 +214,8 @@ export function CombinedChart({
             <Bar
               dataKey={volumeKey}
               yAxisId="left"
-              fill="hsl(var(--chart-3))"
+              fill={colors?.[0] || "hsl(var(--chart-3))"}
+              opacity={0.8}
               radius={[4, 4, 0, 0]}
               name={barChartLabel}
             />
@@ -220,7 +223,7 @@ export function CombinedChart({
               type="monotone"
               dataKey={feesKey}
               yAxisId="right"
-              stroke="hsl(var(--chart-1))"
+              stroke="hsl(var(--muted-foreground))"
               strokeWidth={2}
               dot={false}
               name={lineChartLabel}

@@ -637,6 +637,7 @@ const MainContent = (): JSX.Element => {
                 )}
                 volumeKey="volume_usd"
                 feesKey="fees_usd"
+                colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
               />
               <CombinedChart
                 title="Daily Users"
@@ -647,11 +648,13 @@ const MainContent = (): JSX.Element => {
                 )}
                 volumeKey="daily_users"
                 feesKey="new_users"
+                colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
               />
               <TimelineChart
                 title="Trades"
                 data={data.filter((d) => d.trades !== undefined)}
                 dataKey="trades"
+                color={getProtocolColor(protocol)}
               />
             </>
           )}

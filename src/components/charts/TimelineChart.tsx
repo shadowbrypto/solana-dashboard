@@ -34,6 +34,7 @@ interface TimelineChartProps {
   dataKey: ChartDataKey;
   multipleDataKeys?: Record<string, ChartDataKey>;
   isMultiLine?: boolean;
+  color?: string;
 }
 
 // Color themes from shadcn/ui charts
@@ -58,6 +59,7 @@ export function TimelineChart({
   dataKey,
   multipleDataKeys,
   isMultiLine = false,
+  color = "hsl(var(--chart-1))",
 }: TimelineChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
@@ -224,7 +226,7 @@ export function TimelineChart({
             <CartesianGrid
               strokeDasharray="3 3"
               className="stroke-border"
-              stroke="hsl(var(--border))"
+              stroke={color || "hsl(var(--chart-1))"}
               strokeOpacity={0.2}
               vertical={false}
             />
@@ -342,11 +344,11 @@ export function TimelineChart({
               <Area
                 type="monotone"
                 dataKey={dataKey}
-                stroke={MIDNIGHT_THEME.stroke}
+                stroke={color}
                 strokeWidth={2}
                 dot={false}
-                fill="url(#colorValue)"
-                fillOpacity={1}
+                fill={color}
+                fillOpacity={0.2}
               />
             )}
             {isMultiLine && (

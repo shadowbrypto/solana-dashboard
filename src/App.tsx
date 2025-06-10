@@ -1,7 +1,13 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { ErrorBoundary } from "react-error-boundary";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from 'react-error-boundary';
+import * as AccordionPrimitive from '@radix-ui/react-accordion';
+
+const Accordion = AccordionPrimitive.Root;
+const AccordionItem = AccordionPrimitive.Item;
+const AccordionTrigger = AccordionPrimitive.Trigger;
+const AccordionContent = AccordionPrimitive.Content;
 
 import { MetricCard } from "./components/MetricCard";
 import { TimelineChart } from "./components/charts/TimelineChart";
@@ -327,7 +333,13 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === "all" ? (
             <>
-              <HorizontalBarChart
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                <AccordionItem value="volume" className="border-none bg-card rounded-xl">
+                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
+                    <span className="text-lg font-semibold">Volume Metrics</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-6">
+                    <HorizontalBarChart
                   title="Total Volume by Protocol"
                   data={[
                     "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
@@ -415,8 +427,16 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
-              <StackedBarChart
-                title="Daily Active Users by Protocol"
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="users" className="border-none bg-card rounded-xl">
+                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
+                    <span className="text-lg font-semibold">User Metrics</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-6">
+                    <StackedBarChart
+                      title="Daily Active Users by Protocol"
                 data={data}
                 dataKeys={[
                   "bullx_users",
@@ -583,8 +603,16 @@ const MainContent = (): JSX.Element => {
                   }))}
                   valueFormatter={(value) => value.toLocaleString()}
                 />
-              <StackedBarChart
-                title="Trades by Protocol"
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="trades" className="border-none bg-card rounded-xl">
+                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
+                    <span className="text-lg font-semibold">Trading Metrics</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-6">
+                    <StackedBarChart
+                      title="Trades by Protocol"
                 data={data}
                 dataKeys={[
                   "bullx_trades",
@@ -652,8 +680,16 @@ const MainContent = (): JSX.Element => {
                 ]}
                 colors={protocolColorsList}
               />
-              <StackedBarChart
-                title="Fees by Protocol"
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="fees" className="border-none bg-card rounded-xl">
+                  <AccordionTrigger className="px-6 hover:no-underline hover:bg-muted/50 rounded-xl [&[data-state=open]]:rounded-b-none">
+                    <span className="text-lg font-semibold">Fee Metrics</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-6">
+                    <StackedBarChart
+                      title="Fees by Protocol"
                 data={data}
                 dataKeys={[
                   "bullx_fees",
@@ -675,6 +711,9 @@ const MainContent = (): JSX.Element => {
                 colors={protocolColorsList}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
               />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </>
           ) : (
             <>

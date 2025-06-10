@@ -333,7 +333,7 @@ const MainContent = (): JSX.Element => {
         <div className="space-y-6">
           {protocol === "all" ? (
             <>
-              <Accordion type="single" collapsible className="w-full space-y-4 rounded-xl overflow-hidden">
+              <Accordion type="multiple" defaultValue={["volume", "new_users", "trades", "fees", "users"]} className="w-full space-y-4 rounded-xl overflow-hidden">
                 {/* Volume Metrics */}
                 <AccordionItem value="volume" className="border border-border/40 bg-card rounded-xl overflow-hidden transition-all duration-200 hover:border-border/80 data-[state=open]:bg-muted/50">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">

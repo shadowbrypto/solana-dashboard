@@ -118,12 +118,17 @@ export function HorizontalBarChart({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-2 px-2">
         <ResponsiveContainer width="100%" height={filteredData.length * 35 + 20}>
           <RechartsBarChart
             data={filteredData}
             layout="vertical"
-            margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+            margin={{
+              top: 0,
+              right: 60,
+              bottom: 0,
+              left: 20,
+            }}
           >
             <CartesianGrid
               strokeDasharray="3 3"

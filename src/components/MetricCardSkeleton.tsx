@@ -6,11 +6,6 @@ export function MetricCardSkeleton() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-16 rounded-xl" />
-          <Skeleton className="h-6 w-14 rounded-full" />
         </div>
       </div>
       

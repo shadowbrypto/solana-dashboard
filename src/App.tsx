@@ -316,20 +316,7 @@ const MainContent = (): JSX.Element => {
 
       <MetricCards totalMetrics={totalMetrics} />
 
-      <div className="mt-8 mb-4">
-        <TabSwitcher
-          activeTab={activeView}
-          onTabChange={(view) => {
-            setActiveView(view);
-            setSearchParams((params) => {
-              params.set("view", view);
-              return params;
-            });
-          }}
-        />
-      </div>
 
-      {activeView === "charts" ? (
         <div className="space-y-6">
           {protocol === "all" ? (
             <>
@@ -856,62 +843,6 @@ const MainContent = (): JSX.Element => {
             </>
           )}
         </div>
-      ) : activeView === "data" ? (
-        <div className="min-h-screen bg-background text-foreground dark:bg-background dark:text-foreground">
-          <ProtocolDataTable
-            data={data.reduce(
-              (
-                acc: Record<string, Record<Protocol, ProtocolMetrics>>,
-                item
-              ) => {
-                const date = item.formattedDay;
-                if (!acc[date]) {
-                  const emptyMetrics = {
-                    total_volume_usd: 0,
-                    daily_users: 0,
-                    numberOfNewUsers: 0,
-                    daily_trades: 0,
-                    total_fees_usd: 0,
-                  };
-                  acc[date] = {
-                    axiom: { ...emptyMetrics },
-                    bullx: { ...emptyMetrics },
-                    bloom: { ...emptyMetrics },
-                    gmgnai: { ...emptyMetrics },
-                    photon: { ...emptyMetrics },
-                    trojan: { ...emptyMetrics },
-                    bonkbot: { ...emptyMetrics },
-                    nova: { ...emptyMetrics },
-                    soltradingbot: { ...emptyMetrics },
-                    maestro: { ...emptyMetrics },
-                    banana: { ...emptyMetrics },
-                    padre: { ...emptyMetrics },
-                    vector: { ...emptyMetrics },
-                    moonshot: { ...emptyMetrics },
-                    all: { ...emptyMetrics }
-                  };
-                }
-
-                ["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"].forEach((p) => {
-                  acc[date][p as Protocol] = {
-                    total_volume_usd: item[`${p}_volume`] ?? 0,
-                    daily_users: item[`${p}_users`] ?? 0,
-                    numberOfNewUsers: item[`${p}_new_users`] ?? 0,
-                    daily_trades: item[`${p}_trades`] ?? 0,
-                    total_fees_usd: item[`${p}_fees`] ?? 0,
-                  };
-                });
-
-                return acc;
-              },
-              {} as Record<string, Record<Protocol, ProtocolMetrics>>
-            )}
-            protocols={["axiom", "bullx", "bloom", "gmgnai", "photon", "trojan", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"] as Protocol[]}
-          />
-        </div>
-      ) : (
-        <DataTable protocol={protocol} />
-      )}
     </div>
   );
 };

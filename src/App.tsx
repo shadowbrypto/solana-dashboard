@@ -10,9 +10,12 @@ const AccordionTrigger = AccordionPrimitive.Trigger;
 const AccordionContent = AccordionPrimitive.Content;
 
 import { MetricCard } from "./components/MetricCard";
+import { MetricCardSkeleton } from "./components/MetricCardSkeleton";
+import { Skeleton } from "./components/ui/skeleton";
 import { TimelineChart } from "./components/charts/TimelineChart";
-import { TabSwitcher } from "./components/TabSwitcher";
-import { DataTable } from "./components/DataTable";
+import { TimelineChartSkeleton } from "./components/charts/TimelineChartSkeleton";
+import { HorizontalBarChartSkeleton } from "./components/charts/HorizontalBarChartSkeleton";
+import { StackedBarChartSkeleton } from "./components/charts/StackedBarChartSkeleton";
 import { ProtocolStats, ProtocolMetrics } from "./types/protocol";
 import { protocolColorsList, getProtocolColor } from "./lib/colors";
 
@@ -278,7 +281,22 @@ const MainContent = (): JSX.Element => {
   if (loading) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl mb-4">Loading...</h1>
+        <div className="text-3xl mb-8 text-white/90 text-center">
+          <Skeleton className="h-10 w-48 mx-auto" />
+        </div>
+        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+        </div>
+        <div className="space-y-6">
+          <TimelineChartSkeleton />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <HorizontalBarChartSkeleton />
+            <StackedBarChartSkeleton />
+          </div>
+        </div>
       </div>
     );
   }
@@ -334,93 +352,96 @@ const MainContent = (): JSX.Element => {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <HorizontalBarChart
-                  title="Total Volume by Protocol"
-                  data={[
-                    "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                  ].map(p => ({
-                    name: p.charAt(0).toUpperCase() + p.slice(1),
-                    values: data.map(item => ({
-                      value: item[`${p}_volume`] || 0,
-                      date: item.date
-                    })),
-                    value: data.reduce((sum, item) => sum + (item[`${p}_volume`] || 0), 0),
-                    color: getProtocolColor(p)
-                  }))}
-                  valueFormatter={(value) => {
-                    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-                    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-                    return `$${(value / 1e3).toFixed(2)}K`;
-                  }}
-                />
-              <StackedBarChart
-                title="Volume by Protocol"
-                data={data}
-                dataKeys={[
-                  "bullx_volume",
-                  "photon_volume",
-                  "trojan_volume",
-                  "axiom_volume",
-                  "gmgnai_volume",
-                  "bloom_volume",
-                  "bonkbot_volume",
-                  "nova_volume",
-                  "soltradingbot_volume",
-                  "maestro_volume",
-                  "banana_volume",
-                  "padre_volume",
-                  "moonshot_volume",
-                  "vector_volume",
-                ]}
-                labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
-                colors={protocolColorsList}
-                valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
-              />
-              <StackedAreaChart
-                title="Volume Dominance by Protocol"
-                data={data.map(day => {
-                  const totalVolume = [
-                    "bullx_volume", "photon_volume", "trojan_volume", "axiom_volume",
-                    "gmgnai_volume", "bloom_volume", "bonkbot_volume", "nova_volume",
-                    "soltradingbot_volume", "maestro_volume", "banana_volume",
-                    "padre_volume", "moonshot_volume", "vector_volume"
-                  ].reduce((sum, key) => sum + (day[key] || 0), 0);
+                      title="Total Volume by Protocol"
+                      data={[
+                        "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
+                      ].map(p => ({
+                        name: p.charAt(0).toUpperCase() + p.slice(1),
+                        values: data.map(item => ({
+                          value: item[`${p}_volume`] || 0,
+                          date: item.date
+                        })),
+                        value: data.reduce((sum, item) => sum + (item[`${p}_volume`] || 0), 0),
+                        color: getProtocolColor(p)
+                      }))}
+                      valueFormatter={(value) => {
+                        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+                        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+                        return `$${(value / 1e3).toFixed(2)}K`;
+                      }}
+                      loading={loading}
+                    />
+                    <StackedBarChart
+                      title="Volume by Protocol"
+                      data={data}
+                      dataKeys={[
+                        "bullx_volume",
+                        "photon_volume",
+                        "trojan_volume",
+                        "axiom_volume",
+                        "gmgnai_volume",
+                        "bloom_volume",
+                        "bonkbot_volume",
+                        "nova_volume",
+                        "soltradingbot_volume",
+                        "maestro_volume",
+                        "banana_volume",
+                        "padre_volume",
+                        "moonshot_volume",
+                        "vector_volume",
+                      ]}
+                      labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                      colors={protocolColorsList}
+                      valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
+                      loading={loading}
+                    />
+                    <StackedAreaChart
+                      title="Volume Dominance by Protocol"
+                      data={data.map(day => {
+                        const totalVolume = [
+                          "bullx_volume", "photon_volume", "trojan_volume", "axiom_volume",
+                          "gmgnai_volume", "bloom_volume", "bonkbot_volume", "nova_volume",
+                          "soltradingbot_volume", "maestro_volume", "banana_volume",
+                          "padre_volume", "moonshot_volume", "vector_volume"
+                        ].reduce((sum, key) => sum + (day[key] || 0), 0);
 
-                  return {
-                    formattedDay: day.formattedDay,
-                    bullx_dominance: totalVolume > 0 ? day.bullx_volume / totalVolume : 0,
-                    photon_dominance: totalVolume > 0 ? day.photon_volume / totalVolume : 0,
-                    trojan_dominance: totalVolume > 0 ? day.trojan_volume / totalVolume : 0,
-                    axiom_dominance: totalVolume > 0 ? day.axiom_volume / totalVolume : 0,
-                    gmgnai_dominance: totalVolume > 0 ? day.gmgnai_volume / totalVolume : 0,
-                    bloom_dominance: totalVolume > 0 ? day.bloom_volume / totalVolume : 0,
-                    bonkbot_dominance: totalVolume > 0 ? day.bonkbot_volume / totalVolume : 0,
-                    nova_dominance: totalVolume > 0 ? day.nova_volume / totalVolume : 0,
-                    soltradingbot_dominance: totalVolume > 0 ? day.soltradingbot_volume / totalVolume : 0,
-                    maestro_dominance: totalVolume > 0 ? day.maestro_volume / totalVolume : 0,
-                    banana_dominance: totalVolume > 0 ? day.banana_volume / totalVolume : 0,
-                    padre_dominance: totalVolume > 0 ? day.padre_volume / totalVolume : 0,
-                    moonshot_dominance: totalVolume > 0 ? day.moonshot_volume / totalVolume : 0,
-                    vector_dominance: totalVolume > 0 ? day.vector_volume / totalVolume : 0
-                  };
-                })}
-                keys={[
-                  "bullx_dominance",
-                  "photon_dominance",
-                  "trojan_dominance",
-                  "axiom_dominance",
-                  "gmgnai_dominance",
-                  "bloom_dominance",
-                  "bonkbot_dominance",
-                  "nova_dominance",
-                  "soltradingbot_dominance",
-                  "maestro_dominance",
-                  "banana_dominance",
-                  "padre_dominance",
-                  "moonshot_dominance",
-                  "vector_dominance"
-                ]}
-                colors={protocolColorsList}
-              />
+                        return {
+                          formattedDay: day.formattedDay,
+                          bullx_dominance: totalVolume > 0 ? day.bullx_volume / totalVolume : 0,
+                          photon_dominance: totalVolume > 0 ? day.photon_volume / totalVolume : 0,
+                          trojan_dominance: totalVolume > 0 ? day.trojan_volume / totalVolume : 0,
+                          axiom_dominance: totalVolume > 0 ? day.axiom_volume / totalVolume : 0,
+                          gmgnai_dominance: totalVolume > 0 ? day.gmgnai_volume / totalVolume : 0,
+                          bloom_dominance: totalVolume > 0 ? day.bloom_volume / totalVolume : 0,
+                          bonkbot_dominance: totalVolume > 0 ? day.bonkbot_volume / totalVolume : 0,
+                          nova_dominance: totalVolume > 0 ? day.nova_volume / totalVolume : 0,
+                          soltradingbot_dominance: totalVolume > 0 ? day.soltradingbot_volume / totalVolume : 0,
+                          maestro_dominance: totalVolume > 0 ? day.maestro_volume / totalVolume : 0,
+                          banana_dominance: totalVolume > 0 ? day.banana_volume / totalVolume : 0,
+                          padre_dominance: totalVolume > 0 ? day.padre_volume / totalVolume : 0,
+                          moonshot_dominance: totalVolume > 0 ? day.moonshot_volume / totalVolume : 0,
+                          vector_dominance: totalVolume > 0 ? day.vector_volume / totalVolume : 0
+                        };
+                      })}
+                      keys={[
+                        "bullx_dominance",
+                        "photon_dominance",
+                        "trojan_dominance",
+                        "axiom_dominance",
+                        "gmgnai_dominance",
+                        "bloom_dominance",
+                        "bonkbot_dominance",
+                        "nova_dominance",
+                        "soltradingbot_dominance",
+                        "maestro_dominance",
+                        "banana_dominance",
+                        "padre_dominance",
+                        "moonshot_dominance",
+                        "vector_dominance"
+                      ]}
+                      colors={protocolColorsList}
+                      loading={loading}
+                    />
                   </AccordionContent>
                 </AccordionItem>
 
@@ -770,27 +791,28 @@ const MainContent = (): JSX.Element => {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 px-6 pt-2 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <StackedBarChart
-                      title="Fees by Protocol"
+                title="Volume by Protocol"
                 data={data}
                 dataKeys={[
-                  "bullx_fees",
-                  "photon_fees",
-                  "trojan_fees",
-                  "axiom_fees",
-                  "gmgnai_fees",
-                  "bloom_fees",
-                  "bonkbot_fees",
-                  "nova_fees",
-                  "soltradingbot_fees",
-                  "maestro_fees",
-                  "banana_fees",
-                  "padre_fees",
-                  "moonshot_fees",
-                  "vector_fees",
+                  "bullx_volume",
+                  "photon_volume",
+                  "trojan_volume",
+                  "axiom_volume",
+                  "gmgnai_volume",
+                  "bloom_volume",
+                  "bonkbot_volume",
+                  "nova_volume",
+                  "soltradingbot_volume",
+                  "maestro_volume",
+                  "banana_volume",
+                  "padre_volume",
+                  "moonshot_volume",
+                  "vector_volume",
                 ]}
                 labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
                 colors={protocolColorsList}
                 valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
+                loading={loading}
               />
                   </AccordionContent>
                 </AccordionItem>
@@ -808,6 +830,7 @@ const MainContent = (): JSX.Element => {
                 volumeKey="volume_usd"
                 feesKey="fees_usd"
                 colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
+                loading={loading}
               />
               <CombinedChart
                 title="Daily Users"
@@ -819,12 +842,14 @@ const MainContent = (): JSX.Element => {
                 volumeKey="daily_users"
                 feesKey="new_users"
                 colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
+                loading={loading}
               />
               <TimelineChart
                 title="Trades"
                 data={data.filter((d) => d.trades !== undefined)}
                 dataKey="trades"
                 color={getProtocolColor(protocol)}
+                loading={loading}
               />
             </>
           )}

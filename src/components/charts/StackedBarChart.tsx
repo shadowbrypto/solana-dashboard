@@ -21,6 +21,8 @@ import { useState, useMemo } from "react";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
+import { StackedBarChartSkeleton } from "./StackedBarChartSkeleton";
+
 interface StackedBarChartProps {
   title: string;
   data: any[];
@@ -29,6 +31,7 @@ interface StackedBarChartProps {
   colors?: string[];
   xAxisKey?: string;
   valueFormatter?: (value: number) => string;
+  loading?: boolean;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -46,8 +49,13 @@ export function StackedBarChart({
   labels,
   colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"],
   xAxisKey = "formattedDay",
-  valueFormatter = (value: number) => `${value.toLocaleString()}`
+  valueFormatter = (value: number) => `${value.toLocaleString()}`,
+  loading,
 }: StackedBarChartProps) {
+  if (loading) {
+    return <StackedBarChartSkeleton />;
+  }
+
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 

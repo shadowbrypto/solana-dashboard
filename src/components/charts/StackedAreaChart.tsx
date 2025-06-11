@@ -21,6 +21,8 @@ import { useState, useMemo } from "react";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
+import { StackedAreaChartSkeleton } from "./StackedAreaChartSkeleton";
+
 interface StackedAreaChartProps {
   title: string;
   data: any[];
@@ -28,6 +30,7 @@ interface StackedAreaChartProps {
   colors?: string[];
   xAxisKey?: string;
   valueFormatter?: (value: number) => string;
+  loading?: boolean;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -44,8 +47,12 @@ export function StackedAreaChart({
   keys,
   colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"],
   xAxisKey = "formattedDay",
-  valueFormatter = (value: number) => `${(value * 100).toFixed(2)}%`
+  valueFormatter = (value: number) => `${(value * 100).toFixed(2)}%`,
+  loading
 }: StackedAreaChartProps) {
+  if (loading) {
+    return <StackedAreaChartSkeleton />;
+  }
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 

@@ -23,6 +23,8 @@ import {
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
+import { HorizontalBarChartSkeleton } from "./HorizontalBarChartSkeleton";
+
 interface HorizontalBarChartProps {
   title: string;
   data: {
@@ -35,6 +37,7 @@ interface HorizontalBarChartProps {
     }[];
   }[];
   valueFormatter?: (value: number) => string;
+  loading?: boolean;
 }
 
 const formatNumber = (value: number): string => {
@@ -52,8 +55,12 @@ const formatNumber = (value: number): string => {
 export function HorizontalBarChart({ 
   title, 
   data,
-  valueFormatter = formatNumber
+  valueFormatter = formatNumber,
+  loading
 }: HorizontalBarChartProps) {
+  if (loading) {
+    return <HorizontalBarChartSkeleton />;
+  }
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
   const filteredData = useMemo(() => {

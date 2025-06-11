@@ -23,6 +23,8 @@ import { useState, useMemo } from "react";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
+import { CombinedChartSkeleton } from "./CombinedChartSkeleton";
+
 interface CombinedChartProps {
   title: string;
   data: any[];
@@ -33,6 +35,7 @@ interface CombinedChartProps {
   leftAxisFormatter?: (value: number) => string;
   rightAxisFormatter?: (value: number) => string;
   colors?: string[];
+  loading?: boolean;
 }
 
 export function CombinedChart({ 
@@ -45,7 +48,12 @@ export function CombinedChart({
   leftAxisFormatter = (value: number) => `$${(value / 1000000).toFixed(2)}M`,
   rightAxisFormatter = (value: number) => `$${(value / 1000).toFixed(1)}K`,
   colors = ["hsl(var(--chart-3))"],
+  loading
 }: CombinedChartProps) {
+  if (loading) {
+    return <CombinedChartSkeleton />;
+  }
+
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
 

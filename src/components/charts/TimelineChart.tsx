@@ -28,13 +28,17 @@ type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 type ChartDataKey = string;
 
+import { TimelineChartSkeleton } from "./TimelineChartSkeleton";
+
 interface TimelineChartProps {
   title: string;
   data: Array<ProtocolStats & { formattedDay: string }>;
-  dataKey: ChartDataKey;
+  dataKey: string;
   multipleDataKeys?: Record<string, string>;
   isMultiLine?: boolean;
   color?: string;
+  valueFormatter?: (value: number) => string;
+  loading?: boolean;
 }
 
 // Color themes from shadcn/ui charts
@@ -51,8 +55,6 @@ const MIDNIGHT_THEME = {
   fill: "hsl(var(--primary))",
 };
 
-
-
 export function TimelineChart({
   title,
   data,
@@ -60,7 +62,13 @@ export function TimelineChart({
   multipleDataKeys,
   isMultiLine = false,
   color = "hsl(var(--chart-1))",
+  valueFormatter,
+  loading,
 }: TimelineChartProps) {
+  if (loading) {
+    return <TimelineChartSkeleton />;
+  }
+
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
     new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
@@ -130,6 +138,7 @@ export function TimelineChart({
 
     return processedData;
   }, [data, timeframe]);
+
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">

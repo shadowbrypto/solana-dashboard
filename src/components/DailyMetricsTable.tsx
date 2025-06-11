@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { format } from "date-fns";
+
 import { ProtocolMetrics, Protocol } from "../types";
 import { DatePicker } from "./DatePicker";
 import { getDailyMetrics } from "../lib/protocol";
@@ -53,6 +54,7 @@ const formatPercentage = (value: number): string => {
 };
 
 export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
+  const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [date, setDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
@@ -135,11 +137,21 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                 </TableHead>
               ))}
             </TableRow>
+
           </TableHeader>
           <TableBody>
             {protocolCategories.map((category) => {
               const categoryProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
               if (categoryProtocols.length === 0) return null;
+              
+              const isCollapsed = collapsedCategories.includes(category.name);
+              const toggleCollapse = () => {
+                setCollapsedCategories(prev =>
+                  prev.includes(category.name)
+                    ? prev.filter(c => c !== category.name)
+                    : [...prev, category.name]
+                );
+              };
 
               // Calculate category totals for current day
               const categoryTotals = metrics.reduce((acc, metric) => {
@@ -159,7 +171,10 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               return (
                 <React.Fragment key={category.name}>
                   {/* Category Header */}
-                  <TableRow className="bg-muted/50 border-t hover:bg-muted/60">
+                  <TableRow 
+                    className="bg-muted/50 border-t hover:bg-muted/60 cursor-pointer" 
+                    onClick={toggleCollapse}
+                  >
                     <TableCell className="font-semibold text-sm uppercase tracking-wide py-4">
                       {category.name}
                     </TableCell>
@@ -183,7 +198,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   
                   {/* Protocol Rows */}
                   {categoryProtocols.map((protocol) => (
-                    <TableRow key={protocol} className="hover:bg-muted/20">
+                    <TableRow key={protocol} className={isCollapsed ? 'hidden' : ''}>
                       <TableCell className="pl-6 text-muted-foreground">
                         {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
                       </TableCell>

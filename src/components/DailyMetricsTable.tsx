@@ -54,6 +54,7 @@ const formatPercentage = (value: number): string => {
 };
 
 export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
+  const [maxVolumeProtocol, setMaxVolumeProtocol] = useState<Protocol | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [date, setDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
@@ -93,12 +94,24 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
   useEffect(() => {
     const fetchData = async () => {
+      setMaxVolumeProtocol(null);
       try {
         const [currentData, previousData] = await Promise.all([
           getDailyMetrics(date),
           getDailyMetrics(new Date(date.getTime() - 24 * 60 * 60 * 1000))
         ]);
         setDailyData(currentData);
+        
+        // Find protocol with highest volume
+        let maxVolume = 0;
+        let maxProtocol = null;
+        Object.entries(currentData).forEach(([protocol, metrics]) => {
+          if (metrics.total_volume_usd > maxVolume) {
+            maxVolume = metrics.total_volume_usd;
+            maxProtocol = protocol as Protocol;
+          }
+        });
+        setMaxVolumeProtocol(maxProtocol);
         setPreviousDayData(previousData);
       } catch (error) {
         console.error('Error fetching metrics:', error);
@@ -198,7 +211,10 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   
                   {/* Protocol Rows */}
                   {categoryProtocols.map((protocol) => (
-                    <TableRow key={protocol} className={isCollapsed ? 'hidden' : ''}>
+                    <TableRow 
+                      key={protocol} 
+                      className={`${isCollapsed ? 'hidden' : ''} ${protocol === maxVolumeProtocol ? 'bg-success/5' : ''}`}
+                    >
                       <TableCell className="pl-6 text-muted-foreground">
                         {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
                       </TableCell>

@@ -58,38 +58,24 @@ const MetricCards = ({
     <MetricCard
       title="Volume"
       type="volume"
-      value={new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(totalMetrics.total_volume_usd ?? 0)}
+      value={totalMetrics.total_volume_usd ?? 0}
+      prefix="$"
     />
     <MetricCard
       title="Daily Users"
       type="users"
-      value={new Intl.NumberFormat("en-US", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(totalMetrics.numberOfNewUsers ?? 0)}
+      value={totalMetrics.numberOfNewUsers ?? 0}
     />
     <MetricCard
       title="Trades"
       type="trades"
-      value={new Intl.NumberFormat("en-US", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(totalMetrics.daily_trades ?? 0)}
+      value={totalMetrics.daily_trades ?? 0}
     />
     <MetricCard
       title="Fees"
       type="fees"
-      value={new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(totalMetrics.total_fees_usd ?? 0)}
+      value={totalMetrics.total_fees_usd ?? 0}
+      prefix="$"
     />
   </div>
 );
@@ -292,7 +278,7 @@ const MainContent = (): JSX.Element => {
   if (loading) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+        <h1 className="text-2xl mb-4">Loading...</h1>
       </div>
     );
   }
@@ -300,16 +286,16 @@ const MainContent = (): JSX.Element => {
   if (error) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4 text-red-600">Error: {error}</h1>
+        <h1 className="text-2xl mb-4 text-red-600">Error: {error}</h1>
       </div>
     );
   }
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl font-bold mb-8 text-white/90 text-center">
+      <h1 className="text-3xl mb-8 text-white/90 text-center">
         {protocol === "all"
-          ? "Combined Protocols"
+          ? "Overview"
           : protocol.charAt(0).toUpperCase() + protocol.slice(1)}{" "}
         Dashboard
       </h1>

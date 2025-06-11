@@ -8,6 +8,7 @@ interface MetricCardProps {
   icon?: React.ReactNode;
   description?: string;
   type?: 'volume' | 'users' | 'trades' | 'fees';
+  prefix?: string;
 }
 
 export function MetricCard({
@@ -18,9 +19,22 @@ export function MetricCard({
   icon,
   description,
   type = 'volume',
+  prefix,
 }: MetricCardProps) {
   const isNegative = percentageChange && percentageChange < 0;
   const TrendIcon = isNegative ? TrendingDown : TrendingUp;
+
+  const formatNumber = (value: number): string => {
+    const absValue = Math.abs(value);
+    if (absValue >= 1e9) {
+      return (value / 1e9).toFixed(2) + 'B';
+    } else if (absValue >= 1e6) {
+      return (value / 1e6).toFixed(2) + 'M';
+    } else if (absValue >= 1e3) {
+      return (value / 1e3).toFixed(2) + 'K';
+    }
+    return value.toFixed(2);
+  };
 
   const getIcon = () => {
     switch (type) {
@@ -61,8 +75,8 @@ export function MetricCard({
       </div>
       
       <div className="space-y-4">
-        <div className="text-4xl font-semibold tracking-tight">
-          {value}
+        <div className="text-4xl tracking-tight">
+          {typeof value === 'number' ? `${prefix || ''}${formatNumber(value)}` : value}
         </div>
         
         {(duration || description) && (

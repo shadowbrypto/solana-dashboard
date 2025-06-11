@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
+import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
+import { format } from 'date-fns';
 
 export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
   formattedDay: string;
@@ -11,9 +12,10 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 60 * 60 * 1000; // 5 in milliseconds
+const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
+const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
 
 function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
@@ -154,4 +156,48 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}-${month}-${year}`;
+}
+
+export async function getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {
+  const formattedDate = format(date, 'yyyy-MM-dd');
+  const cacheKey = formattedDate;
+
+  // Check cache first
+  const cachedData = dailyMetricsCache.get(cacheKey);
+  if (cachedData && isCacheValid(cachedData)) {
+    return cachedData.data;
+  }
+
+  // Fetch data for all protocols for the given date
+  const { data, error } = await supabase
+    .from('protocol_stats')
+    .select('protocol_name, volume_usd, daily_users, new_users, trades, fees_usd')
+    .eq('date', formattedDate);
+
+  if (error) {
+    console.error('Error fetching daily metrics:', error);
+    throw error;
+  }
+
+  // Transform the data into the required format
+  const metrics: Record<Protocol, ProtocolMetrics> = {} as Record<Protocol, ProtocolMetrics>;
+
+  data?.forEach((row) => {
+    const protocol = row.protocol_name as Protocol;
+    metrics[protocol] = {
+      total_volume_usd: Number(row.volume_usd) || 0,
+      daily_users: Number(row.daily_users) || 0,
+      numberOfNewUsers: Number(row.new_users) || 0,
+      daily_trades: Number(row.trades) || 0,
+      total_fees_usd: Number(row.fees_usd) || 0
+    };
+  });
+
+  // Cache the results
+  dailyMetricsCache.set(cacheKey, {
+    data: metrics,
+    timestamp: Date.now()
+  });
+
+  return metrics;
 }

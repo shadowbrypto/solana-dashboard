@@ -100,18 +100,22 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
           getDailyMetrics(date),
           getDailyMetrics(new Date(date.getTime() - 24 * 60 * 60 * 1000))
         ]);
+        // Sort protocols by volume to find the highest one
+        const sortedByVolume = Object.entries(currentData)
+          .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
+          .sort((a, b) => (b[1]?.total_volume_usd || 0) - (a[1]?.total_volume_usd || 0));
+        
+        console.log('Sorted volumes:', sortedByVolume.map(([p, m]) => ({ protocol: p, volume: m.total_volume_usd })));
+        
         setDailyData(currentData);
         
-        // Find protocol with highest volume
-        let maxVolume = 0;
-        let maxProtocol = null;
-        Object.entries(currentData).forEach(([protocol, metrics]) => {
-          if (metrics.total_volume_usd > maxVolume) {
-            maxVolume = metrics.total_volume_usd;
-            maxProtocol = protocol as Protocol;
-          }
-        });
-        setMaxVolumeProtocol(maxProtocol);
+        if (sortedByVolume.length > 0) {
+          const topProtocol = sortedByVolume[0][0] as Protocol;
+          console.log('Setting max volume protocol:', topProtocol);
+          setMaxVolumeProtocol(topProtocol);
+        } else {
+          console.log('No protocols with volume found');
+        }
         setPreviousDayData(previousData);
       } catch (error) {
         console.error('Error fetching metrics:', error);
@@ -213,7 +217,11 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   {categoryProtocols.map((protocol) => (
                     <TableRow 
                       key={protocol} 
-                      className={`${isCollapsed ? 'hidden' : ''} ${protocol === maxVolumeProtocol ? 'bg-success/5' : ''}`}
+                      className={`${isCollapsed ? 'hidden' : ''} transition-colors ${
+                        protocol === maxVolumeProtocol 
+                          ? 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/70' 
+                          : 'hover:bg-muted/20'
+                      }`}
                     >
                       <TableCell className="pl-6 text-muted-foreground">
                         {protocol.charAt(0).toUpperCase() + protocol.slice(1)}

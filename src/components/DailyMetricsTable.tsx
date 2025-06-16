@@ -23,7 +23,7 @@ type MetricKey = keyof ProtocolMetrics | 'market_share';
 interface MetricDefinition {
   key: MetricKey;
   label: string;
-  format: (value: number) => string;
+  format: (value: number, isCategory?: boolean) => React.ReactNode;
   getValue?: (data: ProtocolMetrics) => number;
   skipGradient?: boolean;
 }
@@ -78,9 +78,16 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     {
       key: "daily_growth" as MetricKey,
       label: "Daily Growth",
-      format: (value) => {
-        const formatted = formatPercentage(value);
-        return value > 0 ? `+${formatted}` : formatted;
+      format: (value, isCategory = false) => {
+        const formatted = formatPercentage(Math.abs(value));
+        const isPositive = value > 0;
+        const sign = isPositive ? '+' : '-';
+        
+        return (
+          <span className={isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+            {sign}{formatted}
+          </span>
+        );
       },
       getValue: (data) => {
         const currentVolume = data?.total_volume_usd || 0;
@@ -133,6 +140,19 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   };
 
   const selectedDate = format(date, "dd/MM/yyyy");
+
+  const formatValue = (metric: MetricDefinition, value: number, isCategory = false) => {
+    if (isCategory && metric.key === 'market_share') return '—';
+    return metric.format(value, isCategory);
+  };
+
+  const toggleCollapse = (categoryName: string) => {
+    setCollapsedCategories(prev =>
+      prev.includes(categoryName)
+        ? prev.filter(c => c !== categoryName)
+        : [...prev, categoryName]
+    );
+  };
 
   return (
     <div className="space-y-4 rounded-xl border border-border/40 bg-card p-6 shadow-sm">
@@ -198,9 +218,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                     {metrics.map((metric) => (
                       <TableCell 
                         key={metric.key} 
-                        className={`text-right font-medium py-0.5 ${metric.key === 'daily_growth' 
-                          ? getGrowthBackground(categoryTotals[metric.key])
-                          : ''}`}
+                        className="text-right font-medium py-0.5"
                       >
                         <span>
                           {metric.key === 'daily_growth'

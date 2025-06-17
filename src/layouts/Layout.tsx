@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { cn } from '../utils/utils';
+import { cn } from '../lib/utils';
 import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';

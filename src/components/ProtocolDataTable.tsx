@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
-import { ProtocolMetrics, Protocol } from "../types";
+import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 type MetricKey = keyof ProtocolMetrics;

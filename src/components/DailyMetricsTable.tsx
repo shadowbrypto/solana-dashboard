@@ -9,7 +9,7 @@ import {
 } from "./ui/table";
 import { format } from "date-fns";
 
-import { ProtocolMetrics, Protocol } from "../types";
+import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
 import { getDailyMetrics } from "../lib/protocol";
 import { protocolCategories } from "../lib/protocol-categories";

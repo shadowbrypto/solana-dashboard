@@ -10,9 +10,6 @@ import NotFound from "./pages/NotFound";
 import DailyReport from "./pages/DailyReport";
 import MonthlyReport from "./pages/MonthlyReport";
 
-// import jsonData from "../public/data/protocolData.json";
-import { queryProtocolData } from "./loaders/protocol";
-
 // Set dark mode as default
 document.documentElement.classList.add("dark");
 
@@ -25,11 +22,6 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <App />,
-        loader: async ({ request }) => {
-          const searchParams = new URL(request.url).searchParams;
-          const protocol = searchParams.get("protocol") || "";
-          return { data: await queryProtocolData(protocol) };
-        },
       },
       {
         path: "reports",
@@ -47,9 +39,6 @@ const router = createBrowserRouter([
                 <DailyReport />
               </React.Suspense>
             ),
-            loader: async () => {
-              return {};
-            },
           },
           {
             path: "monthly",

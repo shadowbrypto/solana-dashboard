@@ -1,7 +1,7 @@
 import { ProtocolStats } from "@/types/protocol";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { getProtocolStats } from "@/lib/protocol";
 import {
   Card,
   CardContent,
@@ -31,51 +31,22 @@ export function DataTable({ protocol, date }: DataTableProps) {
   const { data, isLoading, error } = useQuery<ProtocolStats[]>({
     queryKey: ['protocol-stats', protocol, date],
     queryFn: async () => {
-      const fetchStats = async () => {
-        try {
-          let allData: any[] = [];
-          let hasMore = true;
-          let page = 0;
-          const PAGE_SIZE = 1000;
-
-          while (hasMore) {
-            const { data: stats, error } = await supabase
-              .from('protocol_stats')
-              .select(`
-                protocol_name,
-                date,
-                volume_usd,
-                daily_users,
-                new_users,
-                trades,
-                fees_usd
-              `)
-              .eq('protocol_name', protocol || 'bullx')
-              .order('date', { ascending: false })
-              .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-
-            if (error) throw error;
-            if (!stats || stats.length === 0) break;
-
-            allData = allData.concat(stats);
-            hasMore = stats.length === PAGE_SIZE;
-            page++;
-
-            console.log(`Fetched ${allData.length} table records so far...`);
-          }
-
-          console.log(`Total table records fetched: ${allData.length}`);
-          return allData;
-        } catch (error) {
-          console.error('Error:', error);
-          return [];
-        }
-      };
-
-      const stats = await fetchStats();
-      return stats;
+      try {
+        const stats = await getProtocolStats(protocol);
+        return stats;
+      } catch (error) {
+        console.error('Error fetching protocol stats:', error);
+        return [];
+      }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
+
+  const totalPages = Math.ceil((data?.length || 0) / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = data?.slice(startIndex, endIndex) || [];
 
   if (isLoading) {
     return (
@@ -97,7 +68,7 @@ export function DataTable({ protocol, date }: DataTableProps) {
     );
   }
 
-  if (!data?.length) {
+  if (!data || data.length === 0) {
     return (
       <Card className="bg-card border-border rounded-xl">
         <CardContent className="py-10">
@@ -106,11 +77,6 @@ export function DataTable({ protocol, date }: DataTableProps) {
       </Card>
     );
   }
-
-  const totalPages = Math.ceil(data.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));

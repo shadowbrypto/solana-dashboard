@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
 import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
+import { protocolApi } from './api';
 import { format } from 'date-fns';
 
 export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
@@ -7,12 +7,13 @@ export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'
   [key: string]: ProtocolStats | string | number;
 }
 
+// Cache interface for consistency (though caching is now handled by the backend)
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds (shorter since backend has its own cache)
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
@@ -26,131 +27,65 @@ export async function getProtocolStats(protocolName?: string | string[]) {
     ? protocolName.sort().join(',') 
     : (protocolName || 'all');
 
+  // Check local cache first
   const cachedData = protocolStatsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
 
-  let allData: any[] = [];
-  let hasMore = true;
-  let page = 0;
-  const PAGE_SIZE = 1000;
-
-  while (hasMore) {
-    let query = supabase
-      .from('protocol_stats')
-      .select('*')
-      .order('date', { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+  try {
+    const stats = await protocolApi.getProtocolStats(protocolName);
     
-    if (protocolName) {
-      if (Array.isArray(protocolName)) {
-        const normalizedProtocols = protocolName.map(p => p.toLowerCase());
-        query = query.in('protocol_name', normalizedProtocols);
-      } else {
-        const normalizedProtocol = protocolName.toLowerCase();
-        query = query.eq('protocol_name', normalizedProtocol);
-      }
+    // Cache the results locally
+    protocolStatsCache.set(cacheKey, {
+      data: stats,
+      timestamp: Date.now()
+    });
+
+    return stats;
+  } catch (error) {
+    console.error('Error fetching protocol stats from API:', error);
+    
+    // Return cached data if available, even if expired
+    if (cachedData) {
+      console.warn('Returning expired cached data due to API error');
+      return cachedData.data;
     }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching protocol stats:', error);
-      break;
-    }
-
-    if (!data || data.length === 0) break;
-
-    allData = allData.concat(data);
-    hasMore = data.length === PAGE_SIZE;
-    page++;
-
-    console.log(`Fetched ${allData.length} protocol stats records so far...`);
+    
+    throw error;
   }
-
-  if (allData.length === 0) {
-    return [];
-  }
-
-  console.log(`Total protocol stats records fetched: ${allData.length}`);
-
-  const formattedData = allData.map((row: ProtocolStats) => ({
-    ...row,
-    formattedDay: formatDate(row.date)
-  }));
-
-  protocolStatsCache.set(cacheKey, {
-    data: formattedData,
-    timestamp: Date.now()
-  });
-
-  return formattedData;
 }
 
 export async function getTotalProtocolStats(protocolName?: string): Promise<ProtocolMetrics> {
   const cacheKey = protocolName || 'all';
+  
+  // Check local cache first
   const cachedData = totalStatsCache.get(cacheKey);
-
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
-  // Initialize empty array to store all records
-  let allData: any[] = [];
-  let hasMore = true;
-  let page = 0;
-  const PAGE_SIZE = 1000;
 
-  // Fetch all records using pagination
-  while (hasMore) {
-    const query = supabase
-      .from('protocol_stats')
-      .select('volume_usd, daily_users, new_users, trades, fees_usd')
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+  try {
+    const totalStats = await protocolApi.getTotalProtocolStats(protocolName);
+    
+    // Cache the results locally
+    totalStatsCache.set(cacheKey, {
+      data: totalStats,
+      timestamp: Date.now()
+    });
 
-    if (protocolName) {
-      query.eq('protocol_name', protocolName);
+    return totalStats;
+  } catch (error) {
+    console.error('Error fetching total protocol stats from API:', error);
+    
+    // Return cached data if available, even if expired
+    if (cachedData) {
+      console.warn('Returning expired cached data due to API error');
+      return cachedData.data;
     }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-
-    allData = allData.concat(data);
-    hasMore = data.length === PAGE_SIZE;
-    page++;
-
-    // Log progress
-    console.log(`Fetched ${allData.length} records so far...`);
+    
+    throw error;
   }
-
-  if (allData.length === 0) {
-    return {
-      total_volume_usd: 0,
-      daily_users: 0,
-      numberOfNewUsers: 0,
-      daily_trades: 0,
-      total_fees_usd: 0
-    };
-  }
-
-  console.log(`Total records fetched: ${allData.length}`);
-
-  const metrics: ProtocolMetrics = {
-    total_volume_usd: allData.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0),
-    daily_users: allData.reduce((sum, row) => sum + (Number(row.daily_users) || 0), 0),
-    numberOfNewUsers: allData.reduce((sum, row) => sum + (Number(row.new_users) || 0), 0),
-    daily_trades: allData.reduce((sum, row) => sum + (Number(row.trades) || 0), 0),
-    total_fees_usd: allData.reduce((sum, row) => sum + (Number(row.fees_usd) || 0), 0)
-  };
-
-  totalStatsCache.set(cacheKey, {
-    data: metrics,
-    timestamp: Date.now()
-  });
-
-  return metrics;
 }
 
 export function formatDate(isoDate: string): string {
@@ -162,42 +97,31 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const formattedDate = format(date, 'yyyy-MM-dd');
   const cacheKey = formattedDate;
 
-  // Check cache first
+  // Check local cache first
   const cachedData = dailyMetricsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
   }
 
-  // Fetch data for all protocols for the given date
-  const { data, error } = await supabase
-    .from('protocol_stats')
-    .select('protocol_name, volume_usd, daily_users, new_users, trades, fees_usd')
-    .eq('date', formattedDate);
+  try {
+    const dailyMetrics = await protocolApi.getDailyMetrics(date);
+    
+    // Cache the results locally
+    dailyMetricsCache.set(cacheKey, {
+      data: dailyMetrics,
+      timestamp: Date.now()
+    });
 
-  if (error) {
-    console.error('Error fetching daily metrics:', error);
+    return dailyMetrics;
+  } catch (error) {
+    console.error('Error fetching daily metrics from API:', error);
+    
+    // Return cached data if available, even if expired
+    if (cachedData) {
+      console.warn('Returning expired cached data due to API error');
+      return cachedData.data;
+    }
+    
     throw error;
   }
-
-  // Transform the data into the required format
-  const metrics: Record<Protocol, ProtocolMetrics> = {} as Record<Protocol, ProtocolMetrics>;
-
-  data?.forEach((row) => {
-    const protocol = row.protocol_name as Protocol;
-    metrics[protocol] = {
-      total_volume_usd: Number(row.volume_usd) || 0,
-      daily_users: Number(row.daily_users) || 0,
-      numberOfNewUsers: Number(row.new_users) || 0,
-      daily_trades: Number(row.trades) || 0,
-      total_fees_usd: Number(row.fees_usd) || 0
-    };
-  });
-
-  // Cache the results
-  dailyMetricsCache.set(cacheKey, {
-    data: metrics,
-    timestamp: Date.now()
-  });
-
-  return metrics;
 }

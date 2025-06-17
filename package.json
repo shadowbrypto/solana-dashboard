@@ -11,7 +11,13 @@
     "test": "vitest",
     "db:update_csv": "sh scripts/update.sh",
     "db:migrate": "npx tsx scripts/importCsvToSupabase.ts",
-    "db:force_migrate": "npx tsx scripts/importCsvToSupabaseWithDelete.ts"
+    "db:force_migrate": "npx tsx scripts/importCsvToSupabaseWithDelete.ts",
+    "server:install": "cd server && npm install",
+    "server:dev": "cd server && npm run dev",
+    "server:build": "cd server && npm run build",
+    "server:start": "cd server && npm start",
+    "dev:full": "concurrently \"npm run server:dev\" \"npm run dev\"",
+    "start:full": "concurrently \"npm run server:start\" \"npm run start\""
   },
   "eslintConfig": {
     "extends": [
@@ -74,6 +80,7 @@
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "concurrently": "^7.6.0",
     "lucide-react": "^0.487.0",
     "postcss": "^8.5.3",
     "react-router-dom": "^7.5.0",

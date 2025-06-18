@@ -150,7 +150,7 @@ export function StackedBarChart({
               content={({ active, payload, label }: TooltipProps<number, string>) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
+                    <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
                       <div className="grid gap-2">
                         <div className="text-sm font-medium text-muted-foreground">
                           {(() => {
@@ -181,6 +181,13 @@ export function StackedBarChart({
                 }
                 return null;
               }}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--foreground))'
+              }}
+              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
             />
             {dataKeys.map((key, index) => (
                 <Bar

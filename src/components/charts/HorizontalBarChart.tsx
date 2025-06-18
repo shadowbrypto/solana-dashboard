@@ -163,7 +163,7 @@ export function HorizontalBarChart({
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
+                    <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
                       <div className="grid gap-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
@@ -179,6 +179,13 @@ export function HorizontalBarChart({
                 }
                 return null;
               }}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--foreground))'
+              }}
+              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
             />
             <Bar
               dataKey="value"
@@ -199,27 +206,9 @@ export function HorizontalBarChart({
               {filteredData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  id={`bar-${index}`}
                   fill={entry.color || "hsl(var(--primary))"}
-                  fillOpacity={0.7}
-                  onMouseEnter={(e: React.MouseEvent<SVGElement>) => {
-                    const bar = document.querySelector(`#bar-${index}`);
-                    if (!bar) return;
-                    const currentFill = bar.getAttribute('fill') || '';
-                    bar.setAttribute('data-original-fill', currentFill);
-                    if (currentFill.startsWith('hsl')) {
-                      const [h, s, l] = currentFill.match(/\d+/g)?.map(Number) || [];
-                      bar.setAttribute('fill', `hsl(${h} ${s}% ${Math.max(0, l - 10)}%)`);
-                    }
-                  }}
-                  onMouseLeave={(e: React.MouseEvent<SVGElement>) => {
-                    const bar = document.querySelector(`#bar-${index}`);
-                    if (!bar) return;
-                    const originalFill = bar.getAttribute('data-original-fill');
-                    if (originalFill) {
-                      bar.setAttribute('fill', originalFill);
-                    }
-                  }}
+                  fillOpacity={0.8}
+                  className="transition-opacity duration-200 hover:opacity-90"
                 />
               ))}
             </Bar>

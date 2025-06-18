@@ -52,18 +52,22 @@ export function MetricCard({
   };
 
   return (
-    <div className="border rounded-2xl p-6 shadow-sm [--tw-gradient-position:to_top_in_oklab] bg-gradient-to-t from-background to-muted/50">
+    <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6 shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           {getIcon()}
           <h3 className="text-muted-foreground text-md">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center rounded-xl border px-2.5 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground">
+          <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2.5 py-1 text-xs font-semibold transition-colors text-muted-foreground">
             Lifetime
           </div>
           {percentageChange && (
-            <div className="flex items-center gap-1 rounded-full bg-background/10 px-2 py-1">
+            <div className={`flex items-center gap-1 rounded-lg px-2 py-1 ${
+              isNegative 
+                ? 'bg-destructive/10 text-destructive' 
+                : 'bg-green-500/10 text-green-600 dark:text-green-400'
+            }`}>
               <TrendIcon className="h-3 w-3" />
               <span className="text-xs font-medium">
                 {isNegative ? "" : "+"}
@@ -75,14 +79,14 @@ export function MetricCard({
       </div>
       
       <div className="space-y-4">
-        <div className="text-4xl tracking-tight">
+        <div className="text-4xl font-bold tracking-tight text-foreground">
           {typeof value === 'number' ? `${prefix || ''}${formatNumber(value)}` : value}
         </div>
         
         {(duration || description) && (
           <div className="space-y-1">
             {duration && (
-              <div className="flex items-center gap-2 text-sm font-medium">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 {duration}
                 <TrendIcon className="h-4 w-4" />
               </div>

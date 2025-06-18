@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { format } from "date-fns";
-import { GripVertical } from "lucide-react";
+import { GripVertical, ChevronRight } from "lucide-react";
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
@@ -62,6 +62,8 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
+  const [draggedProtocol, setDraggedProtocol] = useState<{ protocol: string; category: string } | null>(null);
+  const [categoryProtocolOrder, setCategoryProtocolOrder] = useState<Record<string, string[]>>({});
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -140,6 +142,79 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   // Create ordered metrics based on column order
   const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
+  // Initialize category protocol order on mount
+  useEffect(() => {
+    const initialOrder: Record<string, string[]> = {};
+    protocolCategories.forEach(category => {
+      initialOrder[category.name] = category.protocols.filter(p => protocols.includes(p as Protocol));
+    });
+    setCategoryProtocolOrder(initialOrder);
+  }, [protocols]);
+
+  // Category-based bright coloring using shadcn theme colors
+  const getCategoryRowColor = (categoryName: string): string => {
+    switch (categoryName) {
+      case 'Telegram Bots':
+        return 'bg-blue-200 dark:bg-blue-800/60 hover:bg-blue-300 dark:hover:bg-blue-700/70';
+      case 'Trading Terminals':
+        return 'bg-green-200 dark:bg-green-800/60 hover:bg-green-300 dark:hover:bg-green-700/70';
+      case 'Mobile Apps':
+        return 'bg-purple-200 dark:bg-purple-800/60 hover:bg-purple-300 dark:hover:bg-purple-700/70';
+      default:
+        return 'hover:bg-muted/30';
+    }
+  };
+
+  // Protocol row drag handlers
+  const handleProtocolDragStart = (e: React.DragEvent, protocol: string, category: string) => {
+    setDraggedProtocol({ protocol, category });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleProtocolDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedProtocol) {
+      e.dataTransfer.dropEffect = 'move';
+    }
+  };
+
+  const handleProtocolDrop = (e: React.DragEvent, targetProtocol: string, targetCategory: string) => {
+    e.preventDefault();
+    
+    if (!draggedProtocol || draggedProtocol.category !== targetCategory) {
+      // Don't allow dropping in different categories
+      setDraggedProtocol(null);
+      return;
+    }
+
+    if (draggedProtocol.protocol === targetProtocol) {
+      setDraggedProtocol(null);
+      return;
+    }
+
+    const newOrder = [...(categoryProtocolOrder[targetCategory] || [])];
+    const draggedIndex = newOrder.indexOf(draggedProtocol.protocol);
+    const targetIndex = newOrder.indexOf(targetProtocol);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      // Remove dragged item
+      newOrder.splice(draggedIndex, 1);
+      // Insert at new position
+      newOrder.splice(targetIndex, 0, draggedProtocol.protocol);
+      
+      setCategoryProtocolOrder({
+        ...categoryProtocolOrder,
+        [targetCategory]: newOrder
+      });
+    }
+
+    setDraggedProtocol(null);
+  };
+
+  const handleProtocolDragEnd = () => {
+    setDraggedProtocol(null);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setMaxVolumeProtocol(null);
@@ -196,15 +271,15 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   };
 
   return (
-    <div className="space-y-4 rounded-xl border border-border/40 bg-card p-6 shadow-sm">
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6 shadow-sm">
       <div className="flex items-center justify-between pb-4">
-        <h3 className="text-lg font-semibold">Protocol Metrics</h3>
+        <h3 className="text-lg font-semibold text-foreground">Protocol Metrics</h3>
         <div className="w-[240px]">
           <DatePicker date={date} onDateChange={handleDateChange} />
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card">
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -232,8 +307,8 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
           </TableHeader>
           <TableBody>
             {protocolCategories.map((category) => {
-              const categoryProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
-              if (categoryProtocols.length === 0) return null;
+              const orderedProtocols = categoryProtocolOrder[category.name] || category.protocols.filter(p => protocols.includes(p as Protocol));
+              if (orderedProtocols.length === 0) return null;
               
               const isCollapsed = collapsedCategories.includes(category.name);
               const toggleCollapse = () => {
@@ -247,13 +322,13 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               // Calculate category totals for current day
               const categoryTotals = orderedMetrics.reduce((acc, metric) => {
                 if (metric.key === 'daily_growth') {
-                  const currentVolume = categoryProtocols
+                  const currentVolume = orderedProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
-                  const previousVolume = categoryProtocols
+                  const previousVolume = orderedProtocols
                     .reduce((sum, p) => sum + (previousDayData[p as Protocol]?.total_volume_usd || 0), 0);
                   acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
                 } else if (metric.key !== 'market_share') {
-                  acc[metric.key] = categoryProtocols
+                  acc[metric.key] = orderedProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
                 }
                 return acc;
@@ -266,8 +341,15 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                     className="bg-muted/50 border-t hover:bg-muted/60 cursor-pointer" 
                     onClick={toggleCollapse}
                   >
-                    <TableCell className="font-semibold text-sm uppercase tracking-wide py-4">
-                      {category.name}
+                    <TableCell className="font-semibold text-sm tracking-wide py-4">
+                      <div className="flex items-center gap-2">
+                        <ChevronRight 
+                          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                            !isCollapsed ? 'rotate-90' : ''
+                          }`}
+                        />
+                        {category.name}
+                      </div>
                     </TableCell>
                     {orderedMetrics.map((metric) => (
                       <TableCell 
@@ -286,17 +368,23 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   </TableRow>
                   
                   {/* Protocol Rows */}
-                  {categoryProtocols.map((protocol) => (
+                  {orderedProtocols.map((protocol) => (
                     <TableRow 
                       key={protocol} 
-                      className={`${isCollapsed ? 'hidden' : ''} transition-colors ${
-                        protocol === maxVolumeProtocol 
-                          ? 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/70' 
-                          : 'hover:bg-muted/20'
-                      }`}
+                      className={`${isCollapsed ? 'hidden' : ''} transition-colors ${getCategoryRowColor(category.name)} ${
+                        draggedProtocol?.protocol === protocol ? 'opacity-50' : ''
+                      } cursor-move`}
+                      draggable
+                      onDragStart={(e) => handleProtocolDragStart(e, protocol, category.name)}
+                      onDragOver={handleProtocolDragOver}
+                      onDrop={(e) => handleProtocolDrop(e, protocol, category.name)}
+                      onDragEnd={handleProtocolDragEnd}
                     >
                       <TableCell className="pl-6 text-muted-foreground">
-                        {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
+                        <div className="flex items-center gap-2">
+                          <GripVertical className="w-4 h-4 opacity-50" />
+                          {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
+                        </div>
                       </TableCell>
                       {orderedMetrics.map((metric) => (
                         <TableCell 

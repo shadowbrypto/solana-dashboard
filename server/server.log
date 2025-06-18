@@ -33,3 +33,88 @@ Total records fetched: 5393
 2025-06-18T12:37:16.127Z - GET /api/protocols/aggregated-stats
 2025-06-18T12:39:32.219Z - GET /api/protocols/daily-metrics
 2025-06-18T12:39:32.219Z - GET /api/protocols/daily-metrics
+2025-06-18T12:43:21.444Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:43:21.446Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:45:28.215Z - GET /api/protocols/daily-metrics
+2025-06-18T12:45:28.215Z - GET /api/protocols/daily-metrics
+2025-06-18T12:49:15.821Z - GET /api/protocols/daily-metrics
+2025-06-18T12:49:15.824Z - GET /api/protocols/daily-metrics
+2025-06-18T12:49:15.825Z - GET /api/protocols/daily-metrics
+2025-06-18T12:49:15.826Z - GET /api/protocols/daily-metrics
+2025-06-18T12:49:28.009Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:49:28.012Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:49:28.018Z - GET /api/protocols/total-stats
+2025-06-18T12:49:28.020Z - GET /api/protocols/total-stats
+2025-06-18T12:49:42.634Z - GET /api/protocols/stats
+Fetched 663 protocol stats records so far...
+Total protocol stats records fetched: 663
+2025-06-18T12:49:43.420Z - GET /api/protocols/total-stats
+Fetched 663 records so far...
+Total records fetched: 663
+2025-06-18T12:52:11.952Z - GET /api/protocols/stats
+Fetched 531 protocol stats records so far...
+Total protocol stats records fetched: 531
+2025-06-18T12:52:12.507Z - GET /api/protocols/total-stats
+Fetched 531 records so far...
+Total records fetched: 531
+2025-06-18T12:53:24.240Z - GET /api/protocols/stats
+2025-06-18T12:53:24.240Z - GET /api/protocols/stats
+2025-06-18T12:53:24.260Z - GET /api/protocols/total-stats
+2025-06-18T12:53:24.261Z - GET /api/protocols/total-stats
+2025-06-18T18:14:08.815Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database...
+Fetched 1000 total records for aggregation
+Aggregated data for 72 unique dates
+2025-06-18T18:14:09.560Z - GET /api/protocols/total-stats
+Fetched 1000 records so far...
+Fetched 2000 records so far...
+Fetched 3000 records so far...
+Fetched 4000 records so far...
+Fetched 5000 records so far...
+Fetched 5393 records so far...
+Total records fetched: 5393
+2025-06-18T18:15:06.379Z - GET /api/protocols/daily-metrics
+2025-06-18T18:15:06.380Z - GET /api/protocols/daily-metrics
+2025-06-18T18:15:06.549Z - GET /api/protocols/daily-metrics
+2025-06-18T18:15:06.745Z - GET /api/protocols/daily-metrics
+2025-06-18T18:21:04.612Z - GET /api/protocols/daily-metrics
+2025-06-18T18:21:04.613Z - GET /api/protocols/daily-metrics
+2025-06-18T18:21:39.012Z - GET /api/protocols/aggregated-stats
+2025-06-18T18:21:39.015Z - GET /api/protocols/aggregated-stats
+2025-06-18T18:21:39.023Z - GET /api/protocols/total-stats
+2025-06-18T18:21:39.025Z - GET /api/protocols/total-stats
+2025-06-18T18:26:23.891Z - GET /api/protocols/daily-metrics
+2025-06-18T18:26:23.892Z - GET /api/protocols/daily-metrics
+2025-06-18T18:29:12.752Z - GET /api/protocols/daily-metrics
+2025-06-18T18:29:13.359Z - GET /api/protocols/daily-metrics
+2025-06-18T18:31:12.626Z - GET /api/protocols/aggregated-stats
+2025-06-18T18:31:12.629Z - GET /api/protocols/aggregated-stats
+2025-06-18T18:31:12.635Z - GET /api/protocols/total-stats
+2025-06-18T18:31:12.638Z - GET /api/protocols/total-stats
+2025-06-18T18:31:44.430Z - GET /api/protocols/daily-metrics
+2025-06-18T18:31:44.431Z - GET /api/protocols/daily-metrics
+2025-06-18T18:31:44.431Z - GET /api/protocols/daily-metrics
+2025-06-18T18:31:44.432Z - GET /api/protocols/daily-metrics
+2025-06-18T18:32:16.756Z - GET /api/protocols/daily-metrics
+2025-06-18T18:32:19.022Z - GET /api/protocols/daily-metrics
+2025-06-18T18:32:20.061Z - GET /api/protocols/daily-metrics
+2025-06-18T18:32:20.062Z - GET /api/protocols/daily-metrics
+2025-06-18T18:32:24.749Z - GET /api/protocols/daily-metrics
+2025-06-18T18:34:52.046Z - GET /api/protocols/stats
+Fetched 663 protocol stats records so far...
+Total protocol stats records fetched: 663
+2025-06-18T18:34:52.586Z - GET /api/protocols/total-stats
+Fetched 663 records so far...
+Total records fetched: 663
+2025-06-18T18:34:56.895Z - GET /api/protocols/stats
+Fetched 531 protocol stats records so far...
+Total protocol stats records fetched: 531
+2025-06-18T18:34:57.068Z - GET /api/protocols/total-stats
+Fetched 531 records so far...
+Total records fetched: 531
+2025-06-18T18:35:08.578Z - GET /api/protocols/daily-metrics
+2025-06-18T18:35:08.581Z - GET /api/protocols/daily-metrics
+2025-06-18T18:35:09.588Z - GET /api/protocols/daily-metrics
+2025-06-18T18:35:09.589Z - GET /api/protocols/daily-metrics
+2025-06-18T18:35:10.117Z - GET /api/protocols/daily-metrics
+2025-06-18T18:35:10.882Z - GET /api/protocols/daily-metrics

@@ -336,12 +336,12 @@ const WeeklyInsights: React.FC = () => {
         <h2 className="text-xl font-semibold text-foreground mb-4">🤖 AI-Generated Insights</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {insights.map(insight => (
-            <Card key={insight.id} className="border-border bg-card">
+            <Card key={insight.id} className="shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {getInsightIcon(insight.type)}
-                    <CardTitle className="text-lg text-card-foreground">{insight.title}</CardTitle>
+                    <CardTitle className="text-lg text-foreground">{insight.title}</CardTitle>
                   </div>
                   <Badge variant="secondary" className={getImpactBadgeColor(insight.impact)}>
                     {insight.impact}
@@ -403,7 +403,7 @@ const WeeklyInsights: React.FC = () => {
             Drag columns to reorder
           </div>
         </div>
-        <Card className="border-border bg-card">
+        <Card className="shadow-sm">
           <CardContent className="pt-6">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

@@ -51,10 +51,10 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside className={cn(
-        "bg-[#111111] text-white transition-all duration-300 flex flex-col",
+        "border-r bg-muted/10 transition-all duration-300 flex flex-col",
         sidebarOpen ? "w-64" : "w-16"
       )}>
         {/* Logo and toggle */}
@@ -62,31 +62,31 @@ export function Layout() {
           "p-4 flex items-center",
           sidebarOpen ? "justify-between" : "justify-center"
         )}>
-          {sidebarOpen && <span className="font-bold text-xl">Trading Apps</span>}
+          {sidebarOpen && <span className="font-bold text-xl text-foreground">Trading Apps</span>}
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-white hover:bg-white/10"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <Menu className="h-4 w-4" />
           </Button>
         </div>
 
-        <Separator className="bg-white/10" />
+        <Separator className="bg-border" />
 
         {/* Protocol Selection */}
         <nav className="flex-1 px-2 py-4 space-y-8">
           {/* Overview Section */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Overview</h3>}
+            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>}
             <Button
               key="all"
               variant="ghost"
               className={cn(
-                "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
                 sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
-                currentProtocol === 'all' && "bg-white/10 font-medium"
+                currentProtocol === 'all' && "bg-muted text-foreground font-medium"
               )}
               onClick={() => handleProtocolChange('all')}
             >
@@ -101,9 +101,9 @@ export function Layout() {
                   key={page.id}
                   variant="ghost"
                   className={cn(
-                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
                     sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
-                    location.pathname === page.path && "bg-white/10 font-medium"
+                    location.pathname === page.path && "bg-muted text-foreground font-medium"
                   )}
                   onClick={() => handleReportChange(page.path)}
                 >
@@ -116,7 +116,7 @@ export function Layout() {
 
           {/* Protocol Categories */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Categories</h3>}
+            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>}
             {protocolCategories.map((category) => {
               const [isExpanded, setIsExpanded] = useState(false);
               return (
@@ -124,7 +124,7 @@ export function Layout() {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                      "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
                       sidebarOpen ? "justify-between px-2" : "justify-center"
                     )}
                     onClick={() => sidebarOpen && setIsExpanded(!isExpanded)}
@@ -147,9 +147,9 @@ export function Layout() {
                             key={protocol.id}
                             variant="ghost"
                             className={cn(
-                              "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                              "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
                               "justify-start px-2 gap-3",
-                              currentProtocol === protocol.id && "bg-white/10 font-medium"
+                              currentProtocol === protocol.id && "bg-muted text-foreground font-medium"
                             )}
                             onClick={() => handleProtocolChange(protocol.id)}
                           >
@@ -166,7 +166,7 @@ export function Layout() {
           </div>
 
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Reports</h3>}
+            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>}
             {reports.map((report) => {
               const Icon = report.icon;
               return (
@@ -174,9 +174,9 @@ export function Layout() {
                   key={report.id}
                   variant="ghost"
                   className={cn(
-                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
                     sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
-                    location.pathname === report.path && "bg-white/10 font-medium"
+                    location.pathname === report.path && "bg-muted text-foreground font-medium"
                   )}
                   onClick={() => handleReportChange(report.path)}
                 >
@@ -190,7 +190,7 @@ export function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 bg-muted/20">
         <div className="max-w-7xl mx-auto">
           <Outlet />
         </div>

@@ -35,6 +35,7 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
           selected={date}
           onSelect={onDateChange}
           initialFocus
+          disabled={(date) => date > new Date() || date < new Date("2024-01-01")}
         />
       </PopoverContent>
     </Popover>

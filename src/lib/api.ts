@@ -86,6 +86,11 @@ export const protocolApi = {
     return apiRequest<Record<Protocol, ProtocolMetrics>>(endpoint);
   },
 
+  // Get aggregated stats for all protocols (optimized for "all" view)
+  async getAggregatedProtocolStats(): Promise<any[]> {
+    return apiRequest<any[]>('/protocols/aggregated-stats');
+  },
+
   // Health check
   async healthCheck(): Promise<{ message: string; timestamp: string }> {
     return apiRequest<{ message: string; timestamp: string }>('/protocols/health');

@@ -1,0 +1,29 @@
+
+> sol-analytics-backend@1.0.0 start
+> tsx src/index.ts
+
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints: http://localhost:3001/api/protocols
+2025-06-18T12:11:14.656Z - GET /api/protocols/health
+2025-06-18T12:11:23.379Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database...
+Fetched 1000 total records for aggregation
+Aggregated data for 72 unique dates
+2025-06-18T12:11:32.659Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:11:32.660Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:11:32.683Z - GET /api/protocols/total-stats
+Fetched 1000 records so far...
+Fetched 2000 records so far...
+Fetched 3000 records so far...
+Fetched 4000 records so far...
+Fetched 5000 records so far...
+Fetched 5393 records so far...
+Total records fetched: 5393
+2025-06-18T12:11:35.929Z - GET /api/protocols/total-stats
+2025-06-18T12:11:45.935Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:11:45.940Z - GET /api/protocols/total-stats
+2025-06-18T12:16:47.606Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:16:47.607Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:16:47.611Z - GET /api/protocols/total-stats
+2025-06-18T12:16:47.611Z - GET /api/protocols/total-stats

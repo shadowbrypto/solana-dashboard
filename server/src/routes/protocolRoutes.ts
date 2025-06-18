@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats } from '../services/protocolService.js';
 
 const router = Router();
 
@@ -86,6 +86,22 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch daily metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/aggregated-stats
+// Returns pre-aggregated data for all protocols by date
+router.get('/aggregated-stats', async (req: Request, res: Response) => {
+  try {
+    const aggregatedStats = await getAggregatedProtocolStats();
+    res.json({ success: true, data: aggregatedStats });
+  } catch (error) {
+    console.error('Error fetching aggregated protocol stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch aggregated protocol stats',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

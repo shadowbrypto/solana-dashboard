@@ -17,6 +17,7 @@ const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds (shorter since 
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
+const aggregatedStatsCache = new Map<string, CacheEntry<any[]>>();
 
 function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
@@ -123,5 +124,91 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
     }
     
     throw error;
+  }
+}
+
+export async function getAggregatedProtocolStats(): Promise<any[]> {
+  const cacheKey = 'all-protocols-aggregated';
+  
+  // Check local cache first
+  const cachedData = aggregatedStatsCache.get(cacheKey);
+  if (cachedData && isCacheValid(cachedData)) {
+    return cachedData.data;
+  }
+
+  try {
+    const aggregatedStats = await protocolApi.getAggregatedProtocolStats();
+    
+    // Cache the results locally
+    aggregatedStatsCache.set(cacheKey, {
+      data: aggregatedStats,
+      timestamp: Date.now()
+    });
+
+    return aggregatedStats;
+  } catch (error) {
+    console.warn('Aggregated endpoint failed, falling back to individual protocol fetching:', error);
+    
+    // Fallback to the old method if the new endpoint fails
+    try {
+      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+      const allData = await getProtocolStats(protocols);
+
+      // Transform the data to match the aggregated format
+      const dataByDate = new Map();
+      const allDates = new Set(allData.map(item => item.date));
+
+      Array.from(allDates).forEach(date => {
+        const entry: any = {
+          date,
+          formattedDay: formatDate(date)
+        };
+
+        protocols.forEach(protocol => {
+          entry[`${protocol}_volume`] = 0;
+          entry[`${protocol}_users`] = 0;
+          entry[`${protocol}_new_users`] = 0;
+          entry[`${protocol}_trades`] = 0;
+          entry[`${protocol}_fees`] = 0;
+        });
+
+        dataByDate.set(date, entry);
+      });
+
+      allData.forEach(item => {
+        const dateEntry = dataByDate.get(item.date);
+        if (dateEntry) {
+          const protocol = item.protocol_name.toLowerCase();
+          if (protocols.includes(protocol)) {
+            dateEntry[`${protocol}_volume`] = Number(item.volume_usd) || 0;
+            dateEntry[`${protocol}_users`] = Number(item.daily_users) || 0;
+            dateEntry[`${protocol}_new_users`] = Number(item.new_users) || 0;
+            dateEntry[`${protocol}_trades`] = Number(item.trades) || 0;
+            dateEntry[`${protocol}_fees`] = Number(item.fees_usd) || 0;
+          }
+        }
+      });
+
+      const fallbackData = Array.from(dataByDate.values())
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      // Cache the fallback results
+      aggregatedStatsCache.set(cacheKey, {
+        data: fallbackData,
+        timestamp: Date.now()
+      });
+
+      return fallbackData;
+    } catch (fallbackError) {
+      console.error('Both aggregated and fallback methods failed:', fallbackError);
+      
+      // Return cached data if available, even if expired
+      if (cachedData) {
+        console.warn('Returning expired cached data due to all API errors');
+        return cachedData.data;
+      }
+      
+      throw fallbackError;
+    }
   }
 }

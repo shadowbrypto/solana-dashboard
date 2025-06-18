@@ -13,8 +13,8 @@ router.get('/stats', async (req: Request, res: Response) => {
     if (protocol) {
       if (typeof protocol === 'string') {
         protocolName = protocol.includes(',') ? protocol.split(',').map(p => p.trim()) : protocol;
-      } else {
-        protocolName = protocol as string;
+      } else if (Array.isArray(protocol)) {
+        protocolName = protocol.filter(p => typeof p === 'string') as string[];
       }
     }
 

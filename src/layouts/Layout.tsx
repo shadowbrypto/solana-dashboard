@@ -25,8 +25,7 @@ const protocols = [
 ];
 
 const reports = [
-  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
-  { id: 'monthly', name: 'Monthly Report', icon: CalendarClock, path: '/reports/monthly' }
+  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' }
 ];
 
 export function Layout() {

@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { format } from "date-fns";
+import { GripVertical } from "lucide-react";
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
@@ -59,6 +60,8 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
+  const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
+  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -98,6 +101,44 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
       }
     },
   ];
+
+  const handleDragStart = (e: React.DragEvent, columnIndex: number) => {
+    setDraggedColumn(columnIndex);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedColumn === null || draggedColumn === dropIndex) {
+      setDraggedColumn(null);
+      return;
+    }
+
+    const newOrder = [...columnOrder];
+    const draggedItem = newOrder[draggedColumn];
+    
+    // Remove the dragged item
+    newOrder.splice(draggedColumn, 1);
+    
+    // Insert at new position
+    newOrder.splice(dropIndex, 0, draggedItem);
+    
+    setColumnOrder(newOrder);
+    setDraggedColumn(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedColumn(null);
+  };
+
+  // Create ordered metrics based on column order
+  const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,9 +209,22 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[200px] py-0.5">Protocol</TableHead>
-              {metrics.map((metric) => (
-                <TableHead key={metric.key} className="text-right py-0.5">
-                  {metric.label}
+              {orderedMetrics.map((metric, index) => (
+                <TableHead 
+                  key={metric.key} 
+                  className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 ${
+                    draggedColumn === index ? 'opacity-50' : ''
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="flex items-center gap-2 justify-end">
+                    <span>{metric.label}</span>
+                    <GripVertical className="w-3 h-3 opacity-50" />
+                  </div>
                 </TableHead>
               ))}
             </TableRow>
@@ -191,7 +245,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               };
 
               // Calculate category totals for current day
-              const categoryTotals = metrics.reduce((acc, metric) => {
+              const categoryTotals = orderedMetrics.reduce((acc, metric) => {
                 if (metric.key === 'daily_growth') {
                   const currentVolume = categoryProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
@@ -215,7 +269,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                     <TableCell className="font-semibold text-sm uppercase tracking-wide py-4">
                       {category.name}
                     </TableCell>
-                    {metrics.map((metric) => (
+                    {orderedMetrics.map((metric) => (
                       <TableCell 
                         key={metric.key} 
                         className="text-right font-medium py-0.5"
@@ -244,7 +298,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                       <TableCell className="pl-6 text-muted-foreground">
                         {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
                       </TableCell>
-                      {metrics.map((metric) => (
+                      {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
                           className={`text-right py-0.5 ${metric.key === 'daily_growth'
@@ -287,7 +341,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               <TableCell className="font-medium">
                 All Protocols
               </TableCell>
-              {metrics.map((metric) => {
+              {orderedMetrics.map((metric) => {
                 let total: number;
                 if (metric.key === 'daily_growth') {
                   const currentVolume = protocols

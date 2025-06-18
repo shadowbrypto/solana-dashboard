@@ -4,7 +4,7 @@ import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import { getProtocolStats, getAggregatedProtocolStats } from '../lib/protocol';
 import { ProtocolStats } from '../types/protocol';
-import { TrendingUp, TrendingDown, AlertTriangle, BarChart3, Users, DollarSign, Activity, Shield, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, BarChart3, Users, DollarSign, Activity, Shield, Target, GripVertical } from 'lucide-react';
 import { generateAdvancedAIInsights } from '../lib/ai-insights';
 
 interface WeeklyInsight {
@@ -37,11 +37,20 @@ interface WeeklyStats {
   market_share_users: number;
 }
 
+interface TableColumn {
+  key: string;
+  label: string;
+  align: 'left' | 'right';
+  render: (stat: WeeklyStats) => React.ReactNode;
+}
+
 const WeeklyInsights: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
   const [insights, setInsights] = useState<WeeklyInsight[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
+  const [columnOrder, setColumnOrder] = useState<string[]>(['protocol', 'volume', 'users', 'trades', 'fees', 'market_share']);
 
   useEffect(() => {
     loadWeeklyData();
@@ -139,6 +148,112 @@ const WeeklyInsights: React.FC = () => {
       return `$${(value / 1e3).toFixed(0)}K`;
     }
     return value.toLocaleString();
+  };
+
+  const columns: Record<string, TableColumn> = {
+    protocol: {
+      key: 'protocol',
+      label: 'Protocol',
+      align: 'left',
+      render: (stat: WeeklyStats) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium capitalize text-foreground">{stat.protocol}</span>
+          {stat.protocol === 'trojan' && (
+            <Badge variant="outline" className="text-xs">Focus</Badge>
+          )}
+        </div>
+      )
+    },
+    volume: {
+      key: 'volume',
+      label: 'Volume',
+      align: 'right',
+      render: (stat: WeeklyStats) => (
+        <div className="space-y-1">
+          <div className="text-foreground">{formatValue(stat.volume_total, 'volume')}</div>
+          <div>{formatChange(stat.volume_change)}</div>
+        </div>
+      )
+    },
+    users: {
+      key: 'users',
+      label: 'Users',
+      align: 'right',
+      render: (stat: WeeklyStats) => (
+        <div className="space-y-1">
+          <div className="text-foreground">{formatValue(stat.users_total, 'users')}</div>
+          <div>{formatChange(stat.users_change)}</div>
+        </div>
+      )
+    },
+    trades: {
+      key: 'trades',
+      label: 'Trades',
+      align: 'right',
+      render: (stat: WeeklyStats) => (
+        <div className="space-y-1">
+          <div className="text-foreground">{formatValue(stat.trades_total, 'trades')}</div>
+          <div>{formatChange(stat.trades_change)}</div>
+        </div>
+      )
+    },
+    fees: {
+      key: 'fees',
+      label: 'Fees',
+      align: 'right',
+      render: (stat: WeeklyStats) => (
+        <div className="space-y-1">
+          <div className="text-foreground">{formatValue(stat.fees_total, 'fees')}</div>
+          <div>{formatChange(stat.fees_change)}</div>
+        </div>
+      )
+    },
+    market_share: {
+      key: 'market_share',
+      label: 'Market Share',
+      align: 'right',
+      render: (stat: WeeklyStats) => (
+        <div className="space-y-1">
+          <div className="text-foreground">{stat.market_share_volume.toFixed(1)}%</div>
+          <div className="text-xs text-muted-foreground">of volume</div>
+        </div>
+      )
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, columnIndex: number) => {
+    setDraggedColumn(columnIndex);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedColumn === null || draggedColumn === dropIndex) {
+      setDraggedColumn(null);
+      return;
+    }
+
+    const newOrder = [...columnOrder];
+    const draggedItem = newOrder[draggedColumn];
+    
+    // Remove the dragged item
+    newOrder.splice(draggedColumn, 1);
+    
+    // Insert at new position
+    newOrder.splice(dropIndex, 0, draggedItem);
+    
+    setColumnOrder(newOrder);
+    setDraggedColumn(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedColumn(null);
   };
 
   const getInsightIcon = (type: WeeklyInsight['type']) => {
@@ -281,19 +396,40 @@ const WeeklyInsights: React.FC = () => {
 
       {/* Protocol Performance Table */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground">📊 7-Day Protocol Performance</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-foreground">📊 7-Day Protocol Performance</h2>
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <GripVertical className="w-3 h-3" />
+            Drag columns to reorder
+          </div>
+        </div>
         <Card className="border-border bg-card">
           <CardContent className="pt-6">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Protocol</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Volume</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Users</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Trades</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Fees</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Market Share</th>
+                    {columnOrder.map((columnKey, index) => {
+                      const column = columns[columnKey];
+                      return (
+                        <th
+                          key={columnKey}
+                          className={`py-3 px-4 font-medium text-muted-foreground cursor-move select-none transition-colors hover:bg-muted/50 ${
+                            column.align === 'left' ? 'text-left' : 'text-right'
+                          } ${draggedColumn === index ? 'opacity-50' : ''}`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <div className="flex items-center gap-2 justify-between">
+                            <span>{column.label}</span>
+                            <GripVertical className="w-3 h-3 opacity-50" />
+                          </div>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
@@ -301,44 +437,17 @@ const WeeklyInsights: React.FC = () => {
                     .sort((a, b) => b.volume_total - a.volume_total)
                     .map(stat => (
                       <tr key={stat.protocol} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium capitalize text-foreground">{stat.protocol}</span>
-                            {stat.protocol === 'trojan' && (
-                              <Badge variant="outline" className="text-xs">Focus</Badge>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="space-y-1">
-                            <div className="text-foreground">{formatValue(stat.volume_total, 'volume')}</div>
-                            <div>{formatChange(stat.volume_change)}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="space-y-1">
-                            <div className="text-foreground">{formatValue(stat.users_total, 'users')}</div>
-                            <div>{formatChange(stat.users_change)}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="space-y-1">
-                            <div className="text-foreground">{formatValue(stat.trades_total, 'trades')}</div>
-                            <div>{formatChange(stat.trades_change)}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="space-y-1">
-                            <div className="text-foreground">{formatValue(stat.fees_total, 'fees')}</div>
-                            <div>{formatChange(stat.fees_change)}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="space-y-1">
-                            <div className="text-foreground">{stat.market_share_volume.toFixed(1)}%</div>
-                            <div className="text-xs text-muted-foreground">of volume</div>
-                          </div>
-                        </td>
+                        {columnOrder.map((columnKey) => {
+                          const column = columns[columnKey];
+                          return (
+                            <td 
+                              key={columnKey} 
+                              className={`py-3 px-4 ${column.align === 'left' ? 'text-left' : 'text-right'}`}
+                            >
+                              {column.render(stat)}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                 </tbody>

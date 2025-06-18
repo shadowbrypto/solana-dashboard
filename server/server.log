@@ -15,3 +15,21 @@ Generated 2 weekly insights
 2025-06-18T12:28:24.158Z - GET /api/protocols/aggregated-stats
 2025-06-18T12:31:47.522Z - GET /api/protocols/aggregated-stats
 2025-06-18T12:31:47.523Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:33:09.576Z - GET /api/protocols/total-stats
+Fetched 1000 records so far...
+Fetched 2000 records so far...
+Fetched 3000 records so far...
+Fetched 4000 records so far...
+Fetched 5000 records so far...
+Fetched 5393 records so far...
+Total records fetched: 5393
+2025-06-18T12:33:11.446Z - GET /api/protocols/total-stats
+2025-06-18T12:34:03.726Z - GET /api/protocols/daily-metrics
+2025-06-18T12:34:03.729Z - GET /api/protocols/daily-metrics
+2025-06-18T12:34:03.945Z - GET /api/protocols/daily-metrics
+2025-06-18T12:34:03.971Z - GET /api/protocols/daily-metrics
+2025-06-18T12:34:06.785Z - GET /api/protocols/daily-metrics
+2025-06-18T12:37:16.125Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:37:16.127Z - GET /api/protocols/aggregated-stats
+2025-06-18T12:39:32.219Z - GET /api/protocols/daily-metrics
+2025-06-18T12:39:32.219Z - GET /api/protocols/daily-metrics

@@ -1,13 +1,12 @@
 import fs from "fs";
 import Papa from "papaparse";
-import { createClient } from "@supabase/supabase-js";
 import path from "path";
+import { supabase } from "../src/lib/supabase.js";
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || "";
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || "";
 const tableName = "protocol_stats"; // Replace with your table name
 
-const dataDir = "./public/data";
+// Data directory relative to the server root
+const dataDir = path.join(process.cwd(), "..", "public", "data");
 
 // Map CSV columns to Supabase table columns
 const columnMap: Record<string, string> = {
@@ -20,7 +19,13 @@ const columnMap: Record<string, string> = {
 };
 
 async function importAllCsvs() {
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  console.log(`Looking for CSV files in: ${dataDir}`);
+  
+  // Check if data directory exists
+  if (!fs.existsSync(dataDir)) {
+    console.error(`Data directory does not exist: ${dataDir}`);
+    return;
+  }
 
   // Delete all existing data from the table
   console.log(`\n--- Deleting all existing data from ${tableName} ---`);
@@ -36,6 +41,7 @@ async function importAllCsvs() {
   console.log("Successfully deleted all existing data");
 
   const files = fs.readdirSync(dataDir).filter((f) => f.endsWith(".csv"));
+  console.log(`Found ${files.length} CSV files:`, files);
 
   for (const fileName of files) {
     const csvFilePath = path.join(dataDir, fileName);
@@ -100,4 +106,4 @@ async function importAllCsvs() {
   }
 }
 
-importAllCsvs();
+importAllCsvs().catch(console.error);

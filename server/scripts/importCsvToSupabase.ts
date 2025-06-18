@@ -1,18 +1,15 @@
 import fs from "fs";
 import Papa from "papaparse";
-import { createClient } from "@supabase/supabase-js";
 import path from "path";
+import { supabase } from "../src/lib/supabase.js";
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || "";
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || "";
 const tableName = "protocol_stats"; // Replace with your table name
 
-const dataDir = "./public/data";
+// Data directory relative to the server root
+const dataDir = path.join(process.cwd(), "..", "public", "data");
 
 // Map CSV columns to Supabase table columns
-// Example: { csv_col: 'table_col', ... }
 const columnMap: Record<string, string> = {
-  // TODO: Replace these with your actual mappings
   formattedDay: "date",
   total_volume_usd: "volume_usd",
   daily_users: "daily_users",
@@ -22,9 +19,17 @@ const columnMap: Record<string, string> = {
 };
 
 async function importAllCsvs() {
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  console.log(`Looking for CSV files in: ${dataDir}`);
+  
+  // Check if data directory exists
+  if (!fs.existsSync(dataDir)) {
+    console.error(`Data directory does not exist: ${dataDir}`);
+    return;
+  }
+
   // Only insert new records (no purge)
   const files = fs.readdirSync(dataDir).filter((f) => f.endsWith(".csv"));
+  console.log(`Found ${files.length} CSV files:`, files);
 
   for (const fileName of files) {
     const csvFilePath = path.join(dataDir, fileName);
@@ -55,6 +60,7 @@ async function importAllCsvs() {
       mappedRow.protocol_name = protocolName;
       return mappedRow;
     });
+    
     // Insert in batches
     const batchSize = 500;
     let success = true;
@@ -93,4 +99,4 @@ async function importAllCsvs() {
   }
 }
 
-importAllCsvs();
+importAllCsvs().catch(console.error);

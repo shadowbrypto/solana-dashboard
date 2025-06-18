@@ -10,13 +10,13 @@
 # fi
 
 API_KEY="C5OGjFaT3m3DFiExbTfMdkj1wtfKgvkH"
-DATA_DIR="public/data"
+DATA_DIR="../public/data"
 
 # Create data directory if it doesn't exist
 mkdir -p "$DATA_DIR"
 
 # Read sources from sources.json
-SOURCES_FILE="sources.json"
+SOURCES_FILE="$(dirname "$0")/../sources.json"
 if [ ! -f "$SOURCES_FILE" ]; then
   echo "Error: sources.json not found"
   exit 1

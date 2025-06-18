@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight, ChevronDown, ChevronRight, Brain } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -22,6 +22,10 @@ const protocols = [
   { id: 'moonshot', name: 'Moonshot', icon: Moon },
   { id: 'vector', name: 'Vector', icon: ArrowUpRight },
   { id: 'all', name: 'All Protocols', icon: LayoutGrid }
+];
+
+const overviewPages = [
+  { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights' }
 ];
 
 const reports = [
@@ -73,7 +77,7 @@ export function Layout() {
 
         {/* Protocol Selection */}
         <nav className="flex-1 px-2 py-4 space-y-8">
-          {/* All Protocols Button */}
+          {/* Overview Section */}
           <div className="space-y-2">
             {sidebarOpen && <h3 className="text-xs uppercase text-white/50 font-medium mb-2 px-2">Overview</h3>}
             <Button
@@ -89,6 +93,25 @@ export function Layout() {
               <LayoutGrid className="h-4 w-4" />
               {sidebarOpen && 'All Protocols'}
             </Button>
+            
+            {overviewPages.map((page) => {
+              const Icon = page.icon;
+              return (
+                <Button
+                  key={page.id}
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-white hover:bg-white/10 rounded-xl flex items-center h-10",
+                    sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                    location.pathname === page.path && "bg-white/10 font-medium"
+                  )}
+                  onClick={() => handleReportChange(page.path)}
+                >
+                  <Icon className="h-4 w-4" />
+                  {sidebarOpen && page.name}
+                </Button>
+              );
+            })}
           </div>
 
           {/* Protocol Categories */}

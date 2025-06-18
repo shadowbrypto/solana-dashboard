@@ -4,3 +4,4 @@ export declare function getProtocolStats(protocolName?: string | string[]): Prom
 export declare function getTotalProtocolStats(protocolName?: string): Promise<ProtocolMetrics>;
 export declare function getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>>;
 export declare function getAggregatedProtocolStats(): Promise<any[]>;
+export declare function generateWeeklyInsights(): Promise<any>;

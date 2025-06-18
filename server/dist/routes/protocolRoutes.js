@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
 const router = Router();
 // GET /api/protocols/stats
 // Query params: protocol (optional, can be single string or comma-separated list)
@@ -95,6 +95,22 @@ router.get('/aggregated-stats', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch aggregated protocol stats',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// GET /api/protocols/weekly-insights
+// Returns AI-generated insights for the past week
+router.get('/weekly-insights', async (req, res) => {
+    try {
+        const insights = await generateWeeklyInsights();
+        res.json({ success: true, data: insights });
+    }
+    catch (error) {
+        console.error('Error generating weekly insights:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate weekly insights',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
     }

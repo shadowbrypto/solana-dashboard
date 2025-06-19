@@ -12,6 +12,17 @@ server/node_modules
 # production
 /build
 /dist
+dist/
+server/dist/
+
+# TypeScript build artifacts
+*.js.map
+*.d.ts.map
+
+# Generated type declarations from build process
+/dist/**/*.d.ts
+/server/dist/**/*.d.ts
+/build/**/*.d.ts
 
 # misc
 .DS_Store

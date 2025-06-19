@@ -88,6 +88,16 @@ export function useDataSync() {
     }
   }, [getCETDate]);
 
+  const updateTimeDisplay = useCallback(() => {
+    setState(prev => {
+      if (prev.nextAvailableTime) {
+        const timeUntilNext = formatTimeUntilNext(prev.nextAvailableTime);
+        return { ...prev, timeUntilNext };
+      }
+      return prev;
+    });
+  }, [formatTimeUntilNext]);
+
   const updateSyncState = useCallback(() => {
     const lastSyncStr = localStorage.getItem(STORAGE_KEY);
     const lastSync = lastSyncStr ? new Date(lastSyncStr) : null;
@@ -170,17 +180,25 @@ export function useDataSync() {
     }
   }, [state.lastSyncTime, updateSyncState]);
 
-  // Update sync state every second for live countdown
+  // Update countdown display every second (local only, no API calls)
+  useEffect(() => {
+    const interval = setInterval(updateTimeDisplay, 1000);
+    return () => clearInterval(interval);
+  }, [updateTimeDisplay]);
+
+  // Update sync state every 10 minutes
   useEffect(() => {
     updateSyncState();
-    const interval = setInterval(updateSyncState, 1000); // Update every second
+    const interval = setInterval(updateSyncState, 600000); // Update every 10 minutes
     return () => clearInterval(interval);
   }, [updateSyncState]);
 
-  // Check server sync status on mount
+  // Check server sync status every 10 minutes
   useEffect(() => {
     checkSyncStatus();
-  }, [checkSyncStatus]);
+    const interval = setInterval(checkSyncStatus, 600000); // Check status every 10 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     ...state,

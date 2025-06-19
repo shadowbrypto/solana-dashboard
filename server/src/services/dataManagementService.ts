@@ -8,9 +8,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const API_KEY = "C5OGjFaT3m3DFiExbTfMdkj1wtfKgvkH";
+const API_KEY = process.env.DUNE_API_KEY;
 const DATA_DIR = path.join(__dirname, '..', '..', 'public', 'data');
 const TABLE_NAME = "protocol_stats";
+
+// Validate API key is present
+if (!API_KEY) {
+  throw new Error('DUNE_API_KEY environment variable is not set');
+}
 
 // Protocol sources mapping
 const PROTOCOL_SOURCES = {

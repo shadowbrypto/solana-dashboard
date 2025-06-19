@@ -1,6 +1,29 @@
-# Getting Started with Create React App
+# Sol Analytics Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive analytics dashboard for Solana trading protocols.
+
+## Environment Setup
+
+### Backend Configuration
+
+1. Navigate to the server directory:
+   ```bash
+   cd server
+   ```
+
+2. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Update the `.env` file with your credentials:
+   - `DUNE_API_KEY`: Your Dune Analytics API key (get it from https://dune.com/settings/api)
+   - `REACT_APP_SUPABASE_URL`: Your Supabase project URL
+   - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+### Frontend Configuration
+
+The frontend automatically connects to the backend API running on port 3001.
 
 ## Available Scripts
 

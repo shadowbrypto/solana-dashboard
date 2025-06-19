@@ -36,4 +36,6 @@ yarn-debug.log*
 yarn-error.log*
 
 public/data/data.db
-.envserver/node_modules/
+.env
+server/.env
+server/node_modules/

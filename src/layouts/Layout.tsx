@@ -15,7 +15,7 @@ const protocols = [
 ];
 
 const overviewPages = [
-  { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights' }
+  // { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights', beta: true }
 ];
 
 const reports = [
@@ -85,7 +85,14 @@ export function Layout() {
                   onClick={() => handleReportChange(page.path)}
                 >
                   <Icon className="h-4 w-4" />
-                  {page.name}
+                  <span className="flex items-center gap-2">
+                    {page.name}
+                    {page.beta && (
+                      <span className="px-1.5 py-0 text-[8px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                        BETA
+                      </span>
+                    )}
+                  </span>
                 </Button>
               );
             })}

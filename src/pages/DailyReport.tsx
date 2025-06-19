@@ -62,8 +62,8 @@ export default function DailyReport() {
   }, [date, protocols]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Daily Report</h1>
+    <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
+      <h1 className="text-2xl sm:text-3xl font-bold">Daily Report</h1>
       <DailyMetricsTable protocols={protocols} />
     </div>
   );

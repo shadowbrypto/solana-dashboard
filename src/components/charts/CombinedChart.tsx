@@ -97,12 +97,12 @@ export function CombinedChart({
 
   return (
     <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between border-b">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0 p-3 sm:p-6">
         <div>
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+          <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
           <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
@@ -115,9 +115,9 @@ export function CombinedChart({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={400}>
-          <ComposedChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+      <CardContent className="pt-3 sm:pt-6 p-3 sm:p-6">
+        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+          <ComposedChart data={filteredData} margin={{ top: 10, right: 15, left: 0, bottom: 8 }} className="sm:m-[20px_30px_12px_0px]">
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -134,8 +134,9 @@ export function CombinedChart({
               dataKey="formattedDay"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              interval={Math.ceil(filteredData.length / 8) - 1}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              interval={Math.ceil(filteredData.length / 4) - 1}
+              className="sm:text-xs"
               tickFormatter={(value: string) => {
                 const [day, month, year] = value.split('-');
                 const date = new Date(`${year}-${month}-${day}`);
@@ -158,7 +159,8 @@ export function CombinedChart({
               }}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              className="sm:text-xs"
             />
             <YAxis
               yAxisId="right"
@@ -172,7 +174,8 @@ export function CombinedChart({
               }}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              className="sm:text-xs"
             />
             <Tooltip
               content={({ active, payload, label }: TooltipProps<number, string>) => {

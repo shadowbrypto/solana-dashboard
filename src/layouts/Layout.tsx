@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings } from 'lucide-react';
+import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings, Menu, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -31,10 +31,16 @@ export function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Only highlight protocol if we're on the main page
   const isMainPage = location.pathname === '/';
   const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'trojan') : '';
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname, searchParams]);
 
   const handleProtocolChange = (protocolId: string) => {
     // Debug logging
@@ -51,18 +57,47 @@ export function Layout() {
 
   return (
     <div className="h-screen bg-background flex">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border h-16 flex items-center justify-between px-4">
+        <span className="font-bold text-xl text-foreground">Trading Apps</span>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2"
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 z-40 bg-black/50" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/10 flex flex-col">
-        {/* Logo */}
-        <div className="p-4 flex items-center justify-between">
+      <aside className={cn(
+        "w-64 border-r bg-muted/10 flex flex-col transition-transform duration-300 ease-in-out",
+        "lg:translate-x-0 lg:static lg:z-auto",
+        "fixed inset-y-0 left-0 z-50",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        {/* Logo - Hidden on mobile since it's in the mobile header */}
+        <div className="p-4 flex items-center justify-between lg:flex hidden">
           <span className="font-bold text-xl text-foreground">Trading Apps</span>
           <ThemeSwitcher />
         </div>
 
-        <Separator className="bg-border" />
+        <Separator className="bg-border lg:block hidden" />
 
         {/* Protocol Selection */}
-        <nav className="flex-1 px-2 py-4 space-y-6 overflow-y-auto">
+        <nav className="flex-1 px-2 py-4 space-y-6 overflow-y-auto lg:pt-4 pt-2">
           {/* Overview Section */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>
@@ -202,8 +237,8 @@ export function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 bg-muted/20 overflow-y-auto">
-        <div className="p-8">
+      <main className="flex-1 bg-muted/20 overflow-y-auto lg:ml-0 ml-0">
+        <div className="lg:p-8 p-4 lg:pt-8 pt-20">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

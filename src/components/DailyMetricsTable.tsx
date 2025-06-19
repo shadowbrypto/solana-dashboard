@@ -321,23 +321,23 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6 shadow-sm">
-      <div className="flex items-center justify-between pb-4">
-        <h3 className="text-lg font-semibold text-foreground">Protocol Metrics</h3>
-        <div className="w-[240px]">
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Metrics</h3>
+        <div className="w-full sm:w-[240px] flex sm:justify-end">
           <DatePicker date={date} onDateChange={handleDateChange} />
         </div>
       </div>
 
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10">
-        <Table>
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[200px] py-0.5">Protocol</TableHead>
+              <TableHead className="w-[150px] sm:w-[200px] py-0.5 text-xs sm:text-sm">Protocol</TableHead>
               {orderedMetrics.map((metric, index) => (
                 <TableHead 
                   key={metric.key} 
-                  className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 ${
+                  className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 text-xs sm:text-sm ${
                     draggedColumn === index ? 'opacity-50' : ''
                   }`}
                   draggable
@@ -346,9 +346,9 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="flex items-center gap-2 justify-end">
-                    <span>{metric.label}</span>
-                    <GripVertical className="w-3 h-3 opacity-50" />
+                  <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                    <span className="truncate">{metric.label}</span>
+                    <GripVertical className="w-2 h-2 sm:w-3 sm:h-3 opacity-50 flex-shrink-0" />
                   </div>
                 </TableHead>
               ))}
@@ -406,20 +406,20 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                     className={cn("border-t cursor-pointer", getCategoryRowColor(category.name))}
                     onClick={toggleCollapse}
                   >
-                    <TableCell className="font-semibold text-sm tracking-wide py-4">
-                      <div className="flex items-center gap-2">
+                    <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <ChevronRight 
-                          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                          className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 ${
                             !isCollapsed ? 'rotate-90' : ''
                           }`}
                         />
-                        {category.name}
+                        <span className="truncate">{category.name}</span>
                       </div>
                     </TableCell>
                     {orderedMetrics.map((metric) => (
                       <TableCell 
                         key={metric.key} 
-                        className="text-right font-medium py-0.5"
+                        className="text-right font-medium py-0.5 text-xs sm:text-sm"
                       >
                         {metric.key === 'market_share'
                           ? metric.format(categoryTotals[metric.key] || 0)
@@ -447,15 +447,15 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                       onDrop={(e) => handleProtocolDrop(e, protocol, category.name)}
                       onDragEnd={handleProtocolDragEnd}
                     >
-                      <TableCell className="pl-6 text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 opacity-50" />
-                          <span>{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
+                      <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <GripVertical className="w-3 h-3 sm:w-4 sm:h-4 opacity-50 flex-shrink-0" />
+                          <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
                           {topProtocols.includes(protocol) && (
                             <Badge 
                               variant="secondary"
                               className={cn(
-                                "ml-2 h-5 px-2 text-xs font-medium",
+                                "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
                                 topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
                                 topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
                                 topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
@@ -469,7 +469,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
-                          className={`text-right py-0.5 ${metric.key === 'daily_growth'
+                          className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth'
                             ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0)
                             : !metric.skipGradient
                               ? getGradientColor(
@@ -506,7 +506,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
             {/* All Protocols Total Row */}
             <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
-              <TableCell className="font-medium">
+              <TableCell className="font-medium text-xs sm:text-sm">
                 All Protocols
               </TableCell>
               {orderedMetrics.map((metric) => {
@@ -529,7 +529,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                 return (
                   <TableCell 
                     key={metric.key} 
-                    className="text-right font-bold"
+                    className="text-right font-bold text-xs sm:text-sm"
                   >
                     {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total)}
                   </TableCell>

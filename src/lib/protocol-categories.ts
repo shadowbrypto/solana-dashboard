@@ -1,35 +1,26 @@
+import { generateProtocolCategories, protocolConfigs } from './protocol-config';
+
 export interface ProtocolCategory {
   name: string;
   protocols: string[];
 }
 
-export const protocolCategories: ProtocolCategory[] = [
-  {
-    name: 'Telegram Bots',
-    protocols: ['bonkbot', 'trojan', 'bloom', 'nova', 'soltradingbot', 'banana', 'maestro']
-  },
-  {
-    name: 'Trading Terminals',
-    protocols: ['photon', 'bullx', 'axiom', 'gmgnai', 'padre']
-  },
-  {
-    name: 'Mobile Apps',
-    protocols: ['moonshot', 'vector']
-  }
-];
+// Generate categories from the centralized protocol configuration
+export const protocolCategories: ProtocolCategory[] = generateProtocolCategories();
 
 export const getProtocolCategory = (protocolName: string): string => {
-  const category = protocolCategories.find(cat => 
-    cat.protocols.includes(protocolName.toLowerCase())
+  const protocol = protocolConfigs.find(p => 
+    p.id.toLowerCase() === protocolName.toLowerCase()
   );
-  return category ? category.name : 'Other';
+  return protocol ? protocol.category : 'Other';
 };
 
 export const getAllProtocols = (): string[] => {
-  return protocolCategories.reduce((acc, category) => [...acc, ...category.protocols], [] as string[]);
+  return protocolConfigs.map(p => p.id);
 };
 
 export const getCategoryProtocols = (categoryName: string): string[] => {
-  const category = protocolCategories.find(cat => cat.name === categoryName);
-  return category ? category.protocols : [];
+  return protocolConfigs
+    .filter(p => p.category === categoryName)
+    .map(p => p.id);
 };

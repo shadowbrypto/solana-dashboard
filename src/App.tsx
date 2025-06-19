@@ -26,6 +26,9 @@ import { StackedAreaChart } from "./components/charts/StackedAreaChart";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
+import { getAllProtocols } from "./lib/protocol-categories";
+import { getProtocolName } from "./lib/protocol-config";
+import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 
 interface DailyData {
   formattedDay: string;
@@ -122,7 +125,7 @@ const MainContent = (): JSX.Element => {
       setError(null);
       setInvalidProtocol(false);
 
-      const validProtocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "all", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+      const validProtocols = [...getAllProtocols(), "all"];
       if (!validProtocols.includes(selectedProtocol)) {
         setInvalidProtocol(true);
         setLoading(false);
@@ -179,151 +182,114 @@ const MainContent = (): JSX.Element => {
 
   const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => data[data.length - 1], [data]);
 
+  // Get all protocol IDs from centralized config
+  const allProtocolIds = useMemo(() => getAllProtocols(), []);
+
   // Memoize expensive dominance calculations
   const volumeDominanceData = useMemo(() => {
     return data.map(day => {
-      const totalVolume = [
-        "bullx_volume", "photon_volume", "trojan_volume", "axiom_volume",
-        "gmgnai_volume", "bloom_volume", "bonkbot_volume", "nova_volume",
-        "soltradingbot_volume", "maestro_volume", "banana_volume",
-        "padre_volume", "moonshot_volume", "vector_volume"
-      ].reduce((sum, key) => sum + (day[key] || 0), 0);
+      // Calculate total volume across all protocols
+      const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_volume`;
+        return sum + (day[key] || 0);
+      }, 0);
 
-      return {
-        formattedDay: day.formattedDay,
-        bullx_dominance: totalVolume > 0 ? day.bullx_volume / totalVolume : 0,
-        photon_dominance: totalVolume > 0 ? day.photon_volume / totalVolume : 0,
-        trojan_dominance: totalVolume > 0 ? day.trojan_volume / totalVolume : 0,
-        axiom_dominance: totalVolume > 0 ? day.axiom_volume / totalVolume : 0,
-        gmgnai_dominance: totalVolume > 0 ? day.gmgnai_volume / totalVolume : 0,
-        bloom_dominance: totalVolume > 0 ? day.bloom_volume / totalVolume : 0,
-        bonkbot_dominance: totalVolume > 0 ? day.bonkbot_volume / totalVolume : 0,
-        nova_dominance: totalVolume > 0 ? day.nova_volume / totalVolume : 0,
-        soltradingbot_dominance: totalVolume > 0 ? day.soltradingbot_volume / totalVolume : 0,
-        maestro_dominance: totalVolume > 0 ? day.maestro_volume / totalVolume : 0,
-        banana_dominance: totalVolume > 0 ? day.banana_volume / totalVolume : 0,
-        padre_dominance: totalVolume > 0 ? day.padre_volume / totalVolume : 0,
-        moonshot_dominance: totalVolume > 0 ? day.moonshot_volume / totalVolume : 0,
-        vector_dominance: totalVolume > 0 ? day.vector_volume / totalVolume : 0
-      };
+      // Calculate dominance for each protocol
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      allProtocolIds.forEach(protocolId => {
+        const normalizedId = protocolId.replace(/\s+/g, '_');
+        const volumeKey = `${normalizedId}_volume`;
+        const dominanceKey = `${normalizedId}_dominance`;
+        dominanceData[dominanceKey] = totalVolume > 0 ? (day[volumeKey] || 0) / totalVolume : 0;
+      });
+
+      return dominanceData;
     });
-  }, [data]);
+  }, [data, allProtocolIds]);
 
   const usersDominanceData = useMemo(() => {
     return data.map(day => {
-      const totalDAU = [
-        "bullx_users", "photon_users", "trojan_users", "axiom_users",
-        "gmgnai_users", "bloom_users", "bonkbot_users", "nova_users",
-        "soltradingbot_users", "maestro_users", "banana_users",
-        "padre_users", "moonshot_users", "vector_users"
-      ].reduce((sum, key) => sum + (day[key] || 0), 0);
+      // Calculate total DAU across all protocols
+      const totalDAU = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_users`;
+        return sum + (day[key] || 0);
+      }, 0);
 
-      return {
-        formattedDay: day.formattedDay,
-        bullx_dominance: totalDAU > 0 ? day.bullx_users / totalDAU : 0,
-        photon_dominance: totalDAU > 0 ? day.photon_users / totalDAU : 0,
-        trojan_dominance: totalDAU > 0 ? day.trojan_users / totalDAU : 0,
-        axiom_dominance: totalDAU > 0 ? day.axiom_users / totalDAU : 0,
-        gmgnai_dominance: totalDAU > 0 ? day.gmgnai_users / totalDAU : 0,
-        bloom_dominance: totalDAU > 0 ? day.bloom_users / totalDAU : 0,
-        bonkbot_dominance: totalDAU > 0 ? day.bonkbot_users / totalDAU : 0,
-        nova_dominance: totalDAU > 0 ? day.nova_users / totalDAU : 0,
-        soltradingbot_dominance: totalDAU > 0 ? day.soltradingbot_users / totalDAU : 0,
-        maestro_dominance: totalDAU > 0 ? day.maestro_users / totalDAU : 0,
-        banana_dominance: totalDAU > 0 ? day.banana_users / totalDAU : 0,
-        padre_dominance: totalDAU > 0 ? day.padre_users / totalDAU : 0,
-        moonshot_dominance: totalDAU > 0 ? day.moonshot_users / totalDAU : 0,
-        vector_dominance: totalDAU > 0 ? day.vector_users / totalDAU : 0
-      };
+      // Calculate dominance for each protocol
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      allProtocolIds.forEach(protocolId => {
+        const normalizedId = protocolId.replace(/\s+/g, '_');
+        const usersKey = `${normalizedId}_users`;
+        const dominanceKey = `${normalizedId}_dominance`;
+        dominanceData[dominanceKey] = totalDAU > 0 ? (day[usersKey] || 0) / totalDAU : 0;
+      });
+
+      return dominanceData;
     });
-  }, [data]);
+  }, [data, allProtocolIds]);
 
   const newUsersDominanceData = useMemo(() => {
     return data.map(day => {
-      const totalNewUsers = [
-        "bullx_new_users", "photon_new_users", "trojan_new_users", "axiom_new_users",
-        "gmgnai_new_users", "bloom_new_users", "bonkbot_new_users", "nova_new_users",
-        "soltradingbot_new_users", "maestro_new_users", "banana_new_users",
-        "padre_new_users", "moonshot_new_users", "vector_new_users"
-      ].reduce((sum, key) => sum + (day[key] || 0), 0);
+      // Calculate total new users across all protocols
+      const totalNewUsers = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_new_users`;
+        return sum + (day[key] || 0);
+      }, 0);
 
-      return {
-        formattedDay: day.formattedDay,
-        bullx_dominance: totalNewUsers > 0 ? day.bullx_new_users / totalNewUsers : 0,
-        photon_dominance: totalNewUsers > 0 ? day.photon_new_users / totalNewUsers : 0,
-        trojan_dominance: totalNewUsers > 0 ? day.trojan_new_users / totalNewUsers : 0,
-        axiom_dominance: totalNewUsers > 0 ? day.axiom_new_users / totalNewUsers : 0,
-        gmgnai_dominance: totalNewUsers > 0 ? day.gmgnai_new_users / totalNewUsers : 0,
-        bloom_dominance: totalNewUsers > 0 ? day.bloom_new_users / totalNewUsers : 0,
-        bonkbot_dominance: totalNewUsers > 0 ? day.bonkbot_new_users / totalNewUsers : 0,
-        nova_dominance: totalNewUsers > 0 ? day.nova_new_users / totalNewUsers : 0,
-        soltradingbot_dominance: totalNewUsers > 0 ? day.soltradingbot_new_users / totalNewUsers : 0,
-        maestro_dominance: totalNewUsers > 0 ? day.maestro_new_users / totalNewUsers : 0,
-        banana_dominance: totalNewUsers > 0 ? day.banana_new_users / totalNewUsers : 0,
-        padre_dominance: totalNewUsers > 0 ? day.padre_new_users / totalNewUsers : 0,
-        moonshot_dominance: totalNewUsers > 0 ? day.moonshot_new_users / totalNewUsers : 0,
-        vector_dominance: totalNewUsers > 0 ? day.vector_new_users / totalNewUsers : 0
-      };
+      // Calculate dominance for each protocol
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      allProtocolIds.forEach(protocolId => {
+        const normalizedId = protocolId.replace(/\s+/g, '_');
+        const newUsersKey = `${normalizedId}_new_users`;
+        const dominanceKey = `${normalizedId}_dominance`;
+        dominanceData[dominanceKey] = totalNewUsers > 0 ? (day[newUsersKey] || 0) / totalNewUsers : 0;
+      });
+
+      return dominanceData;
     });
-  }, [data]);
+  }, [data, allProtocolIds]);
 
   const tradesDominanceData = useMemo(() => {
     return data.map(day => {
-      const totalTrades = [
-        "bullx_trades", "photon_trades", "trojan_trades", "axiom_trades",
-        "gmgnai_trades", "bloom_trades", "bonkbot_trades", "nova_trades",
-        "soltradingbot_trades", "maestro_trades", "banana_trades",
-        "padre_trades", "moonshot_trades", "vector_trades"
-      ].reduce((sum, key) => sum + (day[key] || 0), 0);
+      // Calculate total trades across all protocols
+      const totalTrades = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_trades`;
+        return sum + (day[key] || 0);
+      }, 0);
 
-      return {
-        formattedDay: day.formattedDay,
-        bullx_dominance: totalTrades > 0 ? day.bullx_trades / totalTrades : 0,
-        photon_dominance: totalTrades > 0 ? day.photon_trades / totalTrades : 0,
-        trojan_dominance: totalTrades > 0 ? day.trojan_trades / totalTrades : 0,
-        axiom_dominance: totalTrades > 0 ? day.axiom_trades / totalTrades : 0,
-        gmgnai_dominance: totalTrades > 0 ? day.gmgnai_trades / totalTrades : 0,
-        bloom_dominance: totalTrades > 0 ? day.bloom_trades / totalTrades : 0,
-        bonkbot_dominance: totalTrades > 0 ? day.bonkbot_trades / totalTrades : 0,
-        nova_dominance: totalTrades > 0 ? day.nova_trades / totalTrades : 0,
-        soltradingbot_dominance: totalTrades > 0 ? day.soltradingbot_trades / totalTrades : 0,
-        maestro_dominance: totalTrades > 0 ? day.maestro_trades / totalTrades : 0,
-        banana_dominance: totalTrades > 0 ? day.banana_trades / totalTrades : 0,
-        padre_dominance: totalTrades > 0 ? day.padre_trades / totalTrades : 0,
-        moonshot_dominance: totalTrades > 0 ? day.moonshot_trades / totalTrades : 0,
-        vector_dominance: totalTrades > 0 ? day.vector_trades / totalTrades : 0
-      };
+      // Calculate dominance for each protocol
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      allProtocolIds.forEach(protocolId => {
+        const normalizedId = protocolId.replace(/\s+/g, '_');
+        const tradesKey = `${normalizedId}_trades`;
+        const dominanceKey = `${normalizedId}_dominance`;
+        dominanceData[dominanceKey] = totalTrades > 0 ? (day[tradesKey] || 0) / totalTrades : 0;
+      });
+
+      return dominanceData;
     });
-  }, [data]);
+  }, [data, allProtocolIds]);
 
   const feesDominanceData = useMemo(() => {
     return data.map(day => {
-      const totalFees = [
-        "bullx_fees", "photon_fees", "trojan_fees", "axiom_fees",
-        "gmgnai_fees", "bloom_fees", "bonkbot_fees", "nova_fees",
-        "soltradingbot_fees", "maestro_fees", "banana_fees",
-        "padre_fees", "moonshot_fees", "vector_fees"
-      ].reduce((sum, key) => sum + (day[key] || 0), 0);
+      // Calculate total fees across all protocols
+      const totalFees = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_fees`;
+        return sum + (day[key] || 0);
+      }, 0);
 
-      return {
-        formattedDay: day.formattedDay,
-        bullx_dominance: totalFees > 0 ? day.bullx_fees / totalFees : 0,
-        photon_dominance: totalFees > 0 ? day.photon_fees / totalFees : 0,
-        trojan_dominance: totalFees > 0 ? day.trojan_fees / totalFees : 0,
-        axiom_dominance: totalFees > 0 ? day.axiom_fees / totalFees : 0,
-        gmgnai_dominance: totalFees > 0 ? day.gmgnai_fees / totalFees : 0,
-        bloom_dominance: totalFees > 0 ? day.bloom_fees / totalFees : 0,
-        bonkbot_dominance: totalFees > 0 ? day.bonkbot_fees / totalFees : 0,
-        nova_dominance: totalFees > 0 ? day.nova_fees / totalFees : 0,
-        soltradingbot_dominance: totalFees > 0 ? day.soltradingbot_fees / totalFees : 0,
-        maestro_dominance: totalFees > 0 ? day.maestro_fees / totalFees : 0,
-        banana_dominance: totalFees > 0 ? day.banana_fees / totalFees : 0,
-        padre_dominance: totalFees > 0 ? day.padre_fees / totalFees : 0,
-        moonshot_dominance: totalFees > 0 ? day.moonshot_fees / totalFees : 0,
-        vector_dominance: totalFees > 0 ? day.vector_fees / totalFees : 0
-      };
+      // Calculate dominance for each protocol
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      allProtocolIds.forEach(protocolId => {
+        const normalizedId = protocolId.replace(/\s+/g, '_');
+        const feesKey = `${normalizedId}_fees`;
+        const dominanceKey = `${normalizedId}_dominance`;
+        dominanceData[dominanceKey] = totalFees > 0 ? (day[feesKey] || 0) / totalFees : 0;
+      });
+
+      return dominanceData;
     });
-  }, [data]);
+  }, [data, allProtocolIds]);
 
   if (invalidProtocol) {
     window.location.href = "/not-found";
@@ -353,7 +319,7 @@ const MainContent = (): JSX.Element => {
         <h1 className="text-3xl mb-8 text-white/90 text-center">
           {protocol === "all"
             ? "Overview"
-            : protocol.charAt(0).toUpperCase() + protocol.slice(1)}{" "}
+            : getProtocolName(protocol)}{" "}
           Dashboard
         </h1>
       )}
@@ -400,16 +366,14 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Volume by Protocol"
-                          data={[
-                            "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                          ].map(p => ({
-                            name: p.charAt(0).toUpperCase() + p.slice(1),
+                          data={allProtocolIds.map(protocolId => ({
+                            name: getProtocolName(protocolId),
                             values: data.map(item => ({
-                              value: item[`${p}_volume`] || 0,
+                              value: item[`${protocolId.replace(/\s+/g, '_')}_volume`] || 0,
                               date: item.date
                             })),
-                            value: data.reduce((sum, item) => sum + (item[`${p}_volume`] || 0), 0),
-                            color: getProtocolColor(p)
+                            value: data.reduce((sum, item) => sum + (item[`${protocolId.replace(/\s+/g, '_')}_volume`] || 0), 0),
+                            color: getProtocolColor(protocolId)
                           }))}
                           valueFormatter={(value) => {
                             if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -421,23 +385,8 @@ const MainContent = (): JSX.Element => {
                         <StackedBarChart
                           title="Volume by Protocol"
                           data={data}
-                          dataKeys={[
-                            "bullx_volume",
-                            "photon_volume",
-                            "trojan_volume",
-                            "axiom_volume",
-                            "gmgnai_volume",
-                            "bloom_volume",
-                            "bonkbot_volume",
-                            "nova_volume",
-                            "soltradingbot_volume",
-                            "maestro_volume",
-                            "banana_volume",
-                            "padre_volume",
-                            "moonshot_volume",
-                            "vector_volume",
-                          ]}
-                          labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                          dataKeys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_volume`)}
+                          labels={allProtocolIds.map(id => getProtocolName(id))}
                           colors={protocolColorsList}
                           valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
                           loading={loading}
@@ -445,22 +394,7 @@ const MainContent = (): JSX.Element => {
                         <StackedAreaChart
                           title="Volume Dominance by Protocol"
                           data={volumeDominanceData}
-                          keys={[
-                            "bullx_dominance",
-                            "photon_dominance",
-                            "trojan_dominance",
-                            "axiom_dominance",
-                            "gmgnai_dominance",
-                            "bloom_dominance",
-                            "bonkbot_dominance",
-                            "nova_dominance",
-                            "soltradingbot_dominance",
-                            "maestro_dominance",
-                            "banana_dominance",
-                            "padre_dominance",
-                            "moonshot_dominance",
-                            "vector_dominance"
-                          ]}
+                          keys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_dominance`)}
                           colors={protocolColorsList}
                           loading={loading}
                         />
@@ -499,45 +433,15 @@ const MainContent = (): JSX.Element => {
                         <StackedBarChart
                           title="Daily Active Users by Protocol"
                           data={data}
-                          dataKeys={[
-                            "bullx_users",
-                            "photon_users",
-                            "trojan_users",
-                            "axiom_users",
-                            "gmgnai_users",
-                            "bloom_users",
-                            "bonkbot_users",
-                            "nova_users",
-                            "soltradingbot_users",
-                            "maestro_users",
-                            "banana_users",
-                            "padre_users",
-                            "moonshot_users",
-                            "vector_users",
-                          ]}
-                          labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                          dataKeys={generateStackedBarChartConfig('users').dataKeys}
+                          labels={generateStackedBarChartConfig('users').labels}
                           colors={protocolColorsList}
                           valueFormatter={(value) => value.toFixed(0)}
                         />
                         <StackedAreaChart
                           title="DAU Dominance by Protocol"
                           data={usersDominanceData}
-                          keys={[
-                            "bullx_dominance",
-                            "photon_dominance",
-                            "trojan_dominance",
-                            "axiom_dominance",
-                            "gmgnai_dominance",
-                            "bloom_dominance",
-                            "bonkbot_dominance",
-                            "nova_dominance",
-                            "soltradingbot_dominance",
-                            "maestro_dominance",
-                            "banana_dominance",
-                            "padre_dominance",
-                            "moonshot_dominance",
-                            "vector_dominance"
-                          ]}
+                          keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
                           loading={loading}
                         />
@@ -575,60 +479,21 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Users by Protocol"
-                          data={[
-                            "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                          ].map(p => ({
-                            name: p.charAt(0).toUpperCase() + p.slice(1),
-                            values: data.map(item => ({
-                              value: item[`${p}_users`] || 0,
-                              date: item.date
-                            })),
-                            value: data.reduce((sum, item) => sum + (item[`${p}_users`] || 0), 0),
-                            color: getProtocolColor(p)
-                          }))}
+                          data={generateHorizontalBarChartData(data, 'users')}
+                          loading={loading}
                         />
                         <StackedBarChart
                           title="New Users by Protocol"
                           data={data}
-                          dataKeys={[
-                            "bullx_new_users",
-                            "photon_new_users",
-                            "trojan_new_users",
-                            "axiom_new_users",
-                            "gmgnai_new_users",
-                            "bloom_new_users",
-                            "bonkbot_new_users",
-                            "nova_new_users",
-                            "soltradingbot_new_users",
-                            "maestro_new_users",
-                            "banana_new_users",
-                            "padre_new_users",
-                            "moonshot_new_users",
-                            "vector_new_users",
-                          ]}
-                          labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                          dataKeys={generateStackedBarChartConfig('new_users').dataKeys}
+                          labels={generateStackedBarChartConfig('new_users').labels}
                           colors={protocolColorsList}
                           valueFormatter={(value) => value.toFixed(0)}
                         />
                         <StackedAreaChart
                           title="New Users Dominance by Protocol"
                           data={newUsersDominanceData}
-                          keys={[
-                            "bullx_dominance",
-                            "photon_dominance",
-                            "trojan_dominance",
-                            "axiom_dominance",
-                            "gmgnai_dominance",
-                            "bloom_dominance",
-                            "bonkbot_dominance",
-                            "nova_dominance",
-                            "soltradingbot_dominance",
-                            "maestro_dominance",
-                            "banana_dominance",
-                            "padre_dominance",
-                            "moonshot_dominance",
-                            "vector_dominance"
-                          ]}
+                          keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
                           loading={loading}
                         />
@@ -666,60 +531,22 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Trades by Protocol"
-                          data={[
-                            "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                          ].map(p => ({
-                            name: p.charAt(0).toUpperCase() + p.slice(1),
-                            values: data.map(item => ({
-                              value: item[`${p}_trades`] || 0,
-                              date: item.date
-                            })),
-                            value: data.reduce((sum, item) => sum + (item[`${p}_trades`] || 0), 0),
-                            color: getProtocolColor(p)
-                          }))}
+                          data={generateHorizontalBarChartData(data, 'trades')}
+                          loading={loading}
                         />
                         <StackedBarChart
                           title="Trades by Protocol"
                           data={data}
-                          dataKeys={[
-                            "bullx_trades",
-                            "photon_trades",
-                            "trojan_trades",
-                            "axiom_trades",
-                            "gmgnai_trades",
-                            "bloom_trades",
-                            "bonkbot_trades",
-                            "nova_trades",
-                            "soltradingbot_trades",
-                            "maestro_trades",
-                            "banana_trades",
-                            "padre_trades",
-                            "moonshot_trades",
-                            "vector_trades",
-                          ]}
-                          labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                          dataKeys={generateStackedBarChartConfig('trades').dataKeys}
+                          labels={generateStackedBarChartConfig('trades').labels}
                           colors={protocolColorsList}
                           valueFormatter={(value) => `${value.toFixed(0)}`}
+                          loading={loading}
                         />
                         <StackedAreaChart
                           title="Trades Dominance by Protocol"
                           data={tradesDominanceData}
-                          keys={[
-                            "bullx_dominance",
-                            "photon_dominance",
-                            "trojan_dominance",
-                            "axiom_dominance",
-                            "gmgnai_dominance",
-                            "bloom_dominance",
-                            "bonkbot_dominance",
-                            "nova_dominance",
-                            "soltradingbot_dominance",
-                            "maestro_dominance",
-                            "banana_dominance",
-                            "padre_dominance",
-                            "moonshot_dominance",
-                            "vector_dominance"
-                          ]}
+                          keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
                           loading={loading}
                         />
@@ -757,17 +584,7 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Fees by Protocol"
-                          data={[
-                            "bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"
-                          ].map(p => ({
-                            name: p.charAt(0).toUpperCase() + p.slice(1),
-                            values: data.map(item => ({
-                              value: item[`${p}_fees`] || 0,
-                              date: item.date
-                            })),
-                            value: data.reduce((sum, item) => sum + (item[`${p}_fees`] || 0), 0),
-                            color: getProtocolColor(p)
-                          }))}
+                          data={generateHorizontalBarChartData(data, 'fees')}
                           valueFormatter={(value) => {
                             if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
                             if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
@@ -778,23 +595,8 @@ const MainContent = (): JSX.Element => {
                         <StackedBarChart
                           title="Fees by Protocol"
                           data={data}
-                          dataKeys={[
-                            "bullx_fees",
-                            "photon_fees",
-                            "trojan_fees",
-                            "axiom_fees",
-                            "gmgnai_fees",
-                            "bloom_fees",
-                            "bonkbot_fees",
-                            "nova_fees",
-                            "soltradingbot_fees",
-                            "maestro_fees",
-                            "banana_fees",
-                            "padre_fees",
-                            "moonshot_fees",
-                            "vector_fees",
-                          ]}
-                          labels={["BullX", "Photon", "Trojan", "Axiom", "GmGnAi", "Bloom", "BonkBot", "Nova", "SolTradingBot", "Maestro", "Banana", "Padre", "Moonshot", "Vector"]}
+                          dataKeys={generateStackedBarChartConfig('fees').dataKeys}
+                          labels={generateStackedBarChartConfig('fees').labels}
                           colors={protocolColorsList}
                           valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
                           loading={loading}
@@ -802,22 +604,7 @@ const MainContent = (): JSX.Element => {
                         <StackedAreaChart
                           title="Fee Dominance by Protocol"
                           data={feesDominanceData}
-                          keys={[
-                            "bullx_dominance",
-                            "photon_dominance",
-                            "trojan_dominance",
-                            "axiom_dominance",
-                            "gmgnai_dominance",
-                            "bloom_dominance",
-                            "bonkbot_dominance",
-                            "nova_dominance",
-                            "soltradingbot_dominance",
-                            "maestro_dominance",
-                            "banana_dominance",
-                            "padre_dominance",
-                            "moonshot_dominance",
-                            "vector_dominance"
-                          ]}
+                          keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
                           loading={loading}
                         />

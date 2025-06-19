@@ -13,6 +13,9 @@ export const protocolColors: { [key: string]: string } = {
   padre: "hsl(346 84% 61%)",    // Rose
   moonshot: "hsl(15 72% 50%)",  // Orange
   vector: "hsl(172 66% 50%)",   // Teal
+  "nova terminal": "hsl(190 85% 50%)",     // Sky Blue
+  "bonkbot terminal": "hsl(39 96% 60%)",   // Amber
+  slingshot: "hsl(110 75% 45%)",           // Lime Green
 };
 
 export const protocolColorsList = Object.values(protocolColors);

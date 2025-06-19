@@ -8,6 +8,7 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import DailyReport from "./pages/DailyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
+import ProtocolAdmin from "./pages/ProtocolAdmin";
 
 // Set dark mode as default
 document.documentElement.classList.add("dark");
@@ -63,6 +64,25 @@ const router = createBrowserRouter([
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "admin",
+        children: [
+          {
+            path: "protocols",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <ProtocolAdmin />
+              </React.Suspense>
+            ),
+          },
+        ],
       },
       {
         path: "*",

@@ -175,9 +175,16 @@ const MainContent = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    const protocol = searchParams.get("protocol") || "all";
+    const protocol = searchParams.get("protocol") || "trojan";
+    
+    // If no protocol parameter exists, redirect to trojan
+    if (!searchParams.get("protocol")) {
+      setSearchParams({ protocol: "trojan" });
+      return;
+    }
+    
     loadData(protocol);
-  }, [searchParams, loadData]);
+  }, [searchParams, loadData, setSearchParams]);
 
 
   const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => data[data.length - 1], [data]);

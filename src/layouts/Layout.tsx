@@ -33,7 +33,7 @@ export function Layout() {
   
   // Only highlight protocol if we're on the main page
   const isMainPage = location.pathname === '/';
-  const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'all') : '';
+  const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'trojan') : '';
 
   const handleProtocolChange = (protocolId: string) => {
     navigate('/?protocol=' + protocolId);

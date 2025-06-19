@@ -2,6 +2,14 @@ import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Debug log for deployment troubleshooting
+console.log('Environment variables:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  API_BASE_URL,
+  mode: import.meta.env.MODE,
+  prod: import.meta.env.PROD
+});
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;

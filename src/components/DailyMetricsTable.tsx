@@ -9,11 +9,14 @@ import {
 } from "./ui/table";
 import { format } from "date-fns";
 import { GripVertical, ChevronRight } from "lucide-react";
+import { cn } from "../lib/utils";
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
 import { getDailyMetrics } from "../lib/protocol";
 import { protocolCategories } from "../lib/protocol-categories";
+import { Progress } from "./ui/progress";
+import { Badge } from "./ui/badge";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -55,7 +58,7 @@ const formatPercentage = (value: number): string => {
 };
 
 export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
-  const [maxVolumeProtocol, setMaxVolumeProtocol] = useState<Protocol | null>(null);
+  const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [date, setDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
@@ -77,21 +80,56 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     {
       key: "market_share",
       label: "Market Share",
-      format: formatPercentage,
+      format: (value: number) => {
+        const percentage = value * 100;
+        return (
+          <div className="flex items-center gap-2 justify-end">
+            <Progress value={percentage} className="h-3 w-20" />
+            <span className="text-sm font-medium w-[45px]">
+              {percentage.toFixed(2)}%
+            </span>
+          </div>
+        );
+      },
       getValue: (data) => (data?.total_volume_usd || 0) / (totalVolume || 1)
     },
     {
       key: "daily_growth" as MetricKey,
       label: "Daily Growth",
       format: (value, isCategory = false) => {
-        const formatted = formatPercentage(Math.abs(value));
+        const percentage = value * 100;
+        const absPercentage = Math.abs(percentage);
         const isPositive = value > 0;
-        const sign = isPositive ? '+' : '-';
+        const isNeutral = Math.abs(value) < 0.001;
+        
+        if (isNeutral) {
+          return (
+            <div className="flex items-center justify-end gap-1">
+              <span className="text-muted-foreground">—</span>
+            </div>
+          );
+        }
         
         return (
-          <span className={isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-            {sign}{formatted}
-          </span>
+          <div className="flex items-center justify-end gap-1">
+            <div className={cn(
+              "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+              isPositive 
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+            )}>
+              {isPositive ? (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                </svg>
+              ) : (
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                </svg>
+              )}
+              <span>{absPercentage.toFixed(1)}%</span>
+            </div>
+          </div>
         );
       },
       getValue: (data) => {
@@ -155,11 +193,11 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const getCategoryRowColor = (categoryName: string): string => {
     switch (categoryName) {
       case 'Telegram Bots':
-        return 'bg-blue-200 dark:bg-blue-800/60 hover:bg-blue-300 dark:hover:bg-blue-700/70';
+        return 'bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40';
       case 'Trading Terminals':
-        return 'bg-green-200 dark:bg-green-800/60 hover:bg-green-300 dark:hover:bg-green-700/70';
+        return 'bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/40';
       case 'Mobile Apps':
-        return 'bg-purple-200 dark:bg-purple-800/60 hover:bg-purple-300 dark:hover:bg-purple-700/70';
+        return 'bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/40';
       default:
         return 'hover:bg-muted/30';
     }
@@ -217,28 +255,23 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-      setMaxVolumeProtocol(null);
+      setTopProtocols([]);
       try {
         const [currentData, previousData] = await Promise.all([
           getDailyMetrics(date),
           getDailyMetrics(new Date(date.getTime() - 24 * 60 * 60 * 1000))
         ]);
-        // Sort protocols by volume to find the highest one
+        // Sort protocols by volume to find the top 3
         const sortedByVolume = Object.entries(currentData)
           .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
           .sort((a, b) => (b[1]?.total_volume_usd || 0) - (a[1]?.total_volume_usd || 0));
         
-        console.log('Sorted volumes:', sortedByVolume.map(([p, m]) => ({ protocol: p, volume: m.total_volume_usd })));
-        
         setDailyData(currentData);
         
-        if (sortedByVolume.length > 0) {
-          const topProtocol = sortedByVolume[0][0] as Protocol;
-          console.log('Setting max volume protocol:', topProtocol);
-          setMaxVolumeProtocol(topProtocol);
-        } else {
-          console.log('No protocols with volume found');
-        }
+        // Set top 3 protocols
+        const top3 = sortedByVolume.slice(0, 3).map(([protocol]) => protocol as Protocol);
+        setTopProtocols(top3);
+        
         setPreviousDayData(previousData);
       } catch (error) {
         console.error('Error fetching metrics:', error);
@@ -327,7 +360,12 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   const previousVolume = orderedProtocols
                     .reduce((sum, p) => sum + (previousDayData[p as Protocol]?.total_volume_usd || 0), 0);
                   acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
-                } else if (metric.key !== 'market_share') {
+                } else if (metric.key === 'market_share') {
+                  // Calculate category market share based on total volume
+                  const categoryVolume = orderedProtocols
+                    .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
+                  acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
+                } else {
                   acc[metric.key] = orderedProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
                 }
@@ -338,7 +376,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                 <React.Fragment key={category.name}>
                   {/* Category Header */}
                   <TableRow 
-                    className="bg-muted/50 border-t hover:bg-muted/60 cursor-pointer" 
+                    className={cn("border-t cursor-pointer", getCategoryRowColor(category.name))}
                     onClick={toggleCollapse}
                   >
                     <TableCell className="font-semibold text-sm tracking-wide py-4">
@@ -356,13 +394,15 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                         key={metric.key} 
                         className="text-right font-medium py-0.5"
                       >
-                        <span>
-                          {metric.key === 'daily_growth'
-                            ? metric.format(categoryTotals[metric.key])
-                            : metric.getValue
-                              ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics))
-                              : metric.format(categoryTotals[metric.key] || 0)}
-                        </span>
+                        {metric.key === 'market_share'
+                          ? metric.format(categoryTotals[metric.key] || 0)
+                          : metric.key === 'daily_trades'
+                          ? formatNumber(categoryTotals[metric.key] || 0)
+                          : metric.key === 'daily_growth'
+                          ? metric.format(categoryTotals[metric.key])
+                          : metric.getValue
+                            ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics))
+                            : metric.format(categoryTotals[metric.key] || 0)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -371,7 +411,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   {orderedProtocols.map((protocol) => (
                     <TableRow 
                       key={protocol} 
-                      className={`${isCollapsed ? 'hidden' : ''} transition-colors ${getCategoryRowColor(category.name)} ${
+                      className={`${isCollapsed ? 'hidden' : ''} transition-colors hover:bg-muted/30 ${
                         draggedProtocol?.protocol === protocol ? 'opacity-50' : ''
                       } cursor-move`}
                       draggable
@@ -383,7 +423,20 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                       <TableCell className="pl-6 text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <GripVertical className="w-4 h-4 opacity-50" />
-                          {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
+                          <span>{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
+                          {topProtocols.includes(protocol) && (
+                            <Badge 
+                              variant="secondary"
+                              className={cn(
+                                "ml-2 h-5 px-2 text-xs font-medium",
+                                topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                              )}
+                            >
+                              #{topProtocols.indexOf(protocol) + 1}
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                       {orderedMetrics.map((metric) => (
@@ -451,7 +504,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                     key={metric.key} 
                     className="text-right font-bold"
                   >
-                    {metric.format(total)}
+                    {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total)}
                   </TableCell>
                 );
               })}

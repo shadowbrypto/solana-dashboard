@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import protocolRoutes from './routes/protocolRoutes.js';
+import dataUpdateRoutes from './routes/dataUpdateRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/protocols', protocolRoutes);
+app.use('/api/data-update', dataUpdateRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -56,5 +58,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(PORT, () => {
   console.log(`🚀 Sol Analytics API server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔌 API endpoints: http://localhost:${PORT}/api/protocols`);
+  console.log(`🔌 API endpoints:`);
+  console.log(`   - Protocols: http://localhost:${PORT}/api/protocols`);
+  console.log(`   - Data Update: http://localhost:${PORT}/api/data-update`);
 });

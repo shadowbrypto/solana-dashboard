@@ -97,4 +97,28 @@ export const protocolApi = {
   }
 };
 
+export const dataSyncApi = {
+  // Sync data from Dune API to database
+  async syncData(): Promise<{ csvFilesFetched: number; timestamp: string }> {
+    return apiRequest<{ csvFilesFetched: number; timestamp: string }>('/data-update/sync', {
+      method: 'POST'
+    });
+  },
+
+  // Get sync status
+  async getSyncStatus(): Promise<{ 
+    lastSync: string | null; 
+    csvFilesCount: number; 
+    csvFiles: string[];
+    message?: string;
+  }> {
+    return apiRequest<{ 
+      lastSync: string | null; 
+      csvFilesCount: number; 
+      csvFiles: string[];
+      message?: string;
+    }>('/data-update/status');
+  }
+};
+
 export { ApiError };

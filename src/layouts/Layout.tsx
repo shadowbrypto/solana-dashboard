@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { Menu, BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight, ChevronDown, ChevronRight, Brain } from 'lucide-react';
+import { BarChart2, Zap, Sword, LayoutGrid, CalendarDays, CalendarClock, Aperture, Bot, Star, Rocket, Wand2, Banana, Cross, Moon, ArrowUpRight, ChevronDown, ChevronRight, Brain } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
+import { DataSyncButton } from '../components/DataSyncButton';
 
 const protocols = [
   { id: 'bullx', name: 'Bull X', icon: BarChart2 },
@@ -33,7 +34,6 @@ const reports = [
 ];
 
 export function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,47 +51,32 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={cn(
-        "border-r bg-muted/10 transition-all duration-300 flex flex-col",
-        sidebarOpen ? "w-64" : "w-16"
-      )}>
-        {/* Logo and toggle */}
-        <div className={cn(
-          "p-4 flex items-center",
-          sidebarOpen ? "justify-between" : "justify-center"
-        )}>
-          {sidebarOpen && <span className="font-bold text-xl text-foreground">Trading Apps</span>}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
+      <aside className="w-64 border-r bg-muted/10 flex flex-col">
+        {/* Logo */}
+        <div className="p-4 flex items-center">
+          <span className="font-bold text-xl text-foreground">Trading Apps</span>
         </div>
 
         <Separator className="bg-border" />
 
         {/* Protocol Selection */}
-        <nav className="flex-1 px-2 py-4 space-y-8">
+        <nav className="flex-1 px-2 py-4 space-y-6 overflow-y-auto">
           {/* Overview Section */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>}
+            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>
             <Button
               key="all"
               variant="ghost"
               className={cn(
-                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
-                sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                 currentProtocol === 'all' && "bg-muted text-foreground font-medium"
               )}
               onClick={() => handleProtocolChange('all')}
             >
               <LayoutGrid className="h-4 w-4" />
-              {sidebarOpen && 'All Protocols'}
+              All Protocols
             </Button>
             
             {overviewPages.map((page) => {
@@ -101,14 +86,13 @@ export function Layout() {
                   key={page.id}
                   variant="ghost"
                   className={cn(
-                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
-                    sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                     location.pathname === page.path && "bg-muted text-foreground font-medium"
                   )}
                   onClick={() => handleReportChange(page.path)}
                 >
                   <Icon className="h-4 w-4" />
-                  {sidebarOpen && page.name}
+                  {page.name}
                 </Button>
               );
             })}
@@ -116,27 +100,22 @@ export function Layout() {
 
           {/* Protocol Categories */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>}
+            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>
             {protocolCategories.map((category) => {
               const [isExpanded, setIsExpanded] = useState(false);
               return (
                 <div key={category.name} className="space-y-1">
                   <Button
                     variant="ghost"
-                    className={cn(
-                      "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
-                      sidebarOpen ? "justify-between px-2" : "justify-center"
-                    )}
-                    onClick={() => sidebarOpen && setIsExpanded(!isExpanded)}
+                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-between px-2"
+                    onClick={() => setIsExpanded(!isExpanded)}
                   >
                     <div className="flex items-center gap-3">
                       {category.name}
                     </div>
-                    {sidebarOpen && (
-                      isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
-                    )}
+                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </Button>
-                  {sidebarOpen && isExpanded && (
+                  {isExpanded && (
                     <div className="ml-4 space-y-1">
                       {category.protocols.map(protocolId => {
                         const protocol = protocols.find(p => p.id === protocolId);
@@ -147,8 +126,7 @@ export function Layout() {
                             key={protocol.id}
                             variant="ghost"
                             className={cn(
-                              "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
-                              "justify-start px-2 gap-3",
+                              "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                               currentProtocol === protocol.id && "bg-muted text-foreground font-medium"
                             )}
                             onClick={() => handleProtocolChange(protocol.id)}
@@ -165,8 +143,9 @@ export function Layout() {
             })}
           </div>
 
+          {/* Reports Section */}
           <div className="space-y-2">
-            {sidebarOpen && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>}
+            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>
             {reports.map((report) => {
               const Icon = report.icon;
               return (
@@ -174,25 +153,31 @@ export function Layout() {
                   key={report.id}
                   variant="ghost"
                   className={cn(
-                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
-                    sidebarOpen ? "justify-start px-2 gap-3" : "justify-center",
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                     location.pathname === report.path && "bg-muted text-foreground font-medium"
                   )}
                   onClick={() => handleReportChange(report.path)}
                 >
                   <Icon className="h-4 w-4" />
-                  {sidebarOpen && report.name}
+                  {report.name}
                 </Button>
               );
             })}
           </div>
         </nav>
+
+        {/* Data Sync Button */}
+        <div className="p-4 border-t border-border">
+          <DataSyncButton isCollapsed={false} />
+        </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 bg-muted/20">
-        <div className="max-w-7xl mx-auto">
-          <Outlet />
+      <main className="flex-1 bg-muted/20 overflow-y-auto">
+        <div className="p-8">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

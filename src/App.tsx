@@ -850,6 +850,8 @@ const MainContent = (): JSX.Element => {
                 )}
                 volumeKey="daily_users"
                 feesKey="new_users"
+                barChartLabel="Daily Users"
+                lineChartLabel="New Users"
                 colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
                 loading={loading}
               />

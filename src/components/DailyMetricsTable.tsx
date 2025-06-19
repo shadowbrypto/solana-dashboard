@@ -340,7 +340,15 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
           </TableHeader>
           <TableBody>
             {protocolCategories.map((category) => {
-              const orderedProtocols = categoryProtocolOrder[category.name] || category.protocols.filter(p => protocols.includes(p as Protocol));
+              const availableProtocols = categoryProtocolOrder[category.name] || category.protocols.filter(p => protocols.includes(p as Protocol));
+              
+              // Sort protocols by volume (highest to lowest)
+              const orderedProtocols = availableProtocols.sort((a, b) => {
+                const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
+                const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
+                return volumeB - volumeA; // Sort descending (highest first)
+              });
+              
               if (orderedProtocols.length === 0) return null;
               
               const isCollapsed = collapsedCategories.includes(category.name);

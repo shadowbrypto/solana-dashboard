@@ -67,6 +67,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
   const [draggedProtocol, setDraggedProtocol] = useState<{ protocol: string; category: string } | null>(null);
   const [categoryProtocolOrder, setCategoryProtocolOrder] = useState<Record<string, string[]>>({});
+  const [hasManualReordering, setHasManualReordering] = useState<Record<string, boolean>>({});
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -84,10 +85,13 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
         const percentage = value * 100;
         return (
           <div className="flex items-center gap-2 justify-end">
-            <Progress value={percentage} className="h-3 w-20" />
-            <span className="text-sm font-medium w-[45px]">
-              {percentage.toFixed(2)}%
-            </span>
+            <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-300"
+                style={{ width: `${Math.max(percentage, 2)}%` }}
+              />
+            </div>
+            <span className="font-medium text-sm min-w-[50px]">{percentage.toFixed(2)}%</span>
           </div>
         );
       },
@@ -180,14 +184,21 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   // Create ordered metrics based on column order
   const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
-  // Initialize category protocol order on mount
+  // Initialize category protocol order on mount with volume-based sorting
   useEffect(() => {
     const initialOrder: Record<string, string[]> = {};
     protocolCategories.forEach(category => {
-      initialOrder[category.name] = category.protocols.filter(p => protocols.includes(p as Protocol));
+      const categoryProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
+      // Sort by volume on initial load
+      const sortedProtocols = categoryProtocols.sort((a, b) => {
+        const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
+        const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
+        return volumeB - volumeA;
+      });
+      initialOrder[category.name] = sortedProtocols;
     });
     setCategoryProtocolOrder(initialOrder);
-  }, [protocols]);
+  }, [protocols, dailyData]);
 
   // Category-based bright coloring using shadcn theme colors
   const getCategoryRowColor = (categoryName: string): string => {
@@ -243,6 +254,12 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
       setCategoryProtocolOrder({
         ...categoryProtocolOrder,
         [targetCategory]: newOrder
+      });
+      
+      // Mark this category as having manual reordering
+      setHasManualReordering({
+        ...hasManualReordering,
+        [targetCategory]: true
       });
     }
 
@@ -342,12 +359,14 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
             {protocolCategories.map((category) => {
               const availableProtocols = categoryProtocolOrder[category.name] || category.protocols.filter(p => protocols.includes(p as Protocol));
               
-              // Sort protocols by volume (highest to lowest)
-              const orderedProtocols = availableProtocols.sort((a, b) => {
-                const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
-                const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
-                return volumeB - volumeA; // Sort descending (highest first)
-              });
+              // Sort protocols by volume (highest to lowest) unless manually reordered
+              const orderedProtocols = hasManualReordering[category.name] 
+                ? availableProtocols // Use manual order if it exists
+                : availableProtocols.sort((a, b) => {
+                    const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
+                    const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
+                    return volumeB - volumeA; // Sort descending (highest first)
+                  });
               
               if (orderedProtocols.length === 0) return null;
               

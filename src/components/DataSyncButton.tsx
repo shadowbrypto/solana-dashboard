@@ -47,27 +47,11 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     return <Clock className="h-4 w-4" />;
   };
 
-  const getButtonText = () => {
-    if (isLoading) return 'Refreshing...';
-    if (error) return 'Refresh Failed';
-    if (canSync) return 'Refresh Data';
-    if (hasCurrentData === true) return 'Data up-to-date';
-    return 'Data up-to-date';
-  };
 
   const getButtonVariant = () => {
     if (error) return 'destructive';
     if (canSync) return 'default';
     return 'secondary';
-  };
-
-  const getHelperText = () => {
-    if (error) return `Error: ${error}`;
-    if (isLoading) return 'Fetching latest data...';
-    if (canSync) return 'Ready to sync latest data';
-    if (hasCurrentData === true) return 'All data is current for today';
-    if (timeUntilNext) return `${timeUntilNext}`;
-    return 'Checking availability...';
   };
 
   const getProgressPercentage = () => {
@@ -98,23 +82,6 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
   };
 
-  const formatLastSync = () => {
-    if (!lastSyncTime) return 'Never';
-    
-    const now = new Date();
-    const diff = now.getTime() - lastSyncTime.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours === 0) {
-      return minutes === 0 ? 'Just now' : `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else {
-      const days = Math.floor(hours / 24);
-      return `${days}d ago`;
-    }
-  };
 
   if (isCollapsed) {
     return (
@@ -131,7 +98,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 "h-12 w-12 relative overflow-hidden",
                 canSync && "hover:scale-110 transition-all duration-200 shadow-lg"
               )}
-              title={`${canSync ? 'Available' : 'Waiting'} - ${getHelperText()}`}
+              title={`${canSync ? 'Available' : 'Waiting'}`}
             >
               {getButtonIcon()}
               
@@ -170,12 +137,6 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               </div>
             )}
             
-            {/* Last Sync */}
-            {lastSyncTime && (
-              <div className="text-xs text-muted-foreground">
-                {formatLastSync()}
-              </div>
-            )}
           </div>
           
           {/* Mini Progress Bar */}
@@ -212,51 +173,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="relative group">
-        <Button
-          variant={getButtonVariant() as any}
-          onClick={syncData}
-          disabled={!canSync || isLoading}
-          className={cn(
-            "w-full h-11 flex items-center justify-center gap-3 font-semibold text-sm relative overflow-hidden transition-all duration-300",
-            canSync && [
-              "bg-primary hover:bg-primary/90 shadow-lg",
-              "border border-primary/20 hover:border-primary/30",
-              "hover:scale-[1.02] active:scale-[0.98]",
-              "hover:shadow-xl"
-            ],
-            error && [
-              "bg-destructive hover:bg-destructive/90",
-              "border border-destructive/20",
-              "shadow-lg"
-            ],
-            !canSync && !error && [
-              "bg-muted text-muted-foreground",
-              "border border-muted-foreground/20",
-              "cursor-not-allowed"
-            ],
-            isLoading && [
-              "bg-primary/80",
-              "border border-primary/20",
-              "animate-pulse"
-            ]
-          )}
-        >
-          <div className="flex items-center gap-3 z-10 relative">
-            {getButtonIcon()}
-            <span className="font-semibold tracking-wide">
-              {getButtonText()}
-            </span>
-          </div>
-          
-          {/* Subtle shine effect when available */}
-          {canSync && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
-          )}
-        </Button>
-      </div>
-      
+    <div>
       {/* Status Card */}
       <div className={cn(
         "rounded-lg p-3 border transition-all duration-300",
@@ -278,11 +195,20 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               {canSync ? 'Available' : error ? 'Error' : 'Waiting'}
             </span>
           </div>
-          {lastSyncTime && (
-            <span className="text-xs text-muted-foreground">
-              {formatLastSync()}
-            </span>
-          )}
+          
+          {/* Refresh Button */}
+          <Button
+            variant={getButtonVariant() as any}
+            size="sm"
+            onClick={syncData}
+            disabled={!canSync || isLoading}
+            className={cn(
+              "h-8 px-3 text-xs font-medium transition-all duration-200",
+              canSync && "hover:scale-105 shadow-sm"
+            )}
+          >
+            Refresh
+          </Button>
         </div>
         
         {/* Progress Bar for Countdown */}

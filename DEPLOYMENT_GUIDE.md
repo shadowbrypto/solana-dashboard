@@ -51,7 +51,7 @@
    - Go to Site settings → Environment variables
    - Add:
      ```
-     REACT_APP_API_URL=https://your-railway-app.railway.app/api
+     VITE_API_URL=https://your-railway-app.railway.app/api
      ```
    - Replace `your-railway-app` with your actual Railway domain
 
@@ -105,7 +105,7 @@ After successful deployment:
    - Ensure `/server` directory is set as root
 
 2. **Frontend can't connect to API**:
-   - Check `REACT_APP_API_URL` environment variable
+   - Check `VITE_API_URL` environment variable
    - Verify Railway backend is running
    - Check CORS settings in backend
 

@@ -1,14 +1,54 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-
-const execAsync = promisify(exec);
+import { supabase } from '../lib/supabase.js';
+import { dataManagementService } from './dataManagementService.js';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// List of all protocols we expect to have data for
+const EXPECTED_PROTOCOLS = [
+  'axiom', 'banana', 'bloom', 'bonkbot', 'bullx', 'gmgnai', 
+  'maestro', 'moonshot', 'nova', 'padre', 'photon', 
+  'soltradingbot', 'trojan', 'vector'
+];
+
+// Check if we have current day data for all protocols in the database
+async function checkCurrentDataInDB(): Promise<{ hasCurrentData: boolean; missingProtocols: string[] }> {
+  try {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Query for today's data for all protocols
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name')
+      .eq('date', today)
+      .in('protocol_name', EXPECTED_PROTOCOLS);
+    
+    if (error) {
+      console.error('Error checking current data:', error);
+      return { hasCurrentData: false, missingProtocols: EXPECTED_PROTOCOLS };
+    }
+    
+    // Get list of protocols that have data for today
+    const protocolsWithData = data?.map(row => row.protocol_name) || [];
+    
+    // Find missing protocols
+    const missingProtocols = EXPECTED_PROTOCOLS.filter(
+      protocol => !protocolsWithData.includes(protocol)
+    );
+    
+    const hasCurrentData = missingProtocols.length === 0;
+    
+    return { hasCurrentData, missingProtocols };
+  } catch (error) {
+    console.error('Error checking current data in DB:', error);
+    return { hasCurrentData: false, missingProtocols: EXPECTED_PROTOCOLS };
+  }
+}
 
 interface SyncResult {
   success: boolean;
@@ -23,82 +63,46 @@ interface SyncStatus {
   csvFilesCount: number;
   csvFiles: string[];
   message?: string;
+  hasCurrentData: boolean;
+  missingProtocols?: string[];
 }
 
 export async function syncData(): Promise<SyncResult> {
-  const scriptsDir = path.join(__dirname, '..', '..', 'scripts');
-  
   try {
-    // Step 1: Run update.sh to fetch CSV data
-    console.log('Fetching CSV data from Dune API...');
-    const updateScriptPath = path.join(scriptsDir, 'update.sh');
+    console.log('Starting data sync process using API services...');
     
-    try {
-      const { stdout, stderr } = await execAsync(`bash "${updateScriptPath}"`, {
-        cwd: scriptsDir
-      });
-      
-      if (stderr) {
-        console.warn('Update script warnings:', stderr);
-      }
-      console.log('Update script output:', stdout);
-    } catch (error) {
-      console.error('Error running update script:', error);
-      return {
-        success: false,
-        error: 'Failed to fetch CSV data from Dune API',
-        step: 'fetch_csv'
-      };
-    }
+    // Use the new data management service for complete sync
+    const result = await dataManagementService.syncData();
     
-    // Step 2: Run import script
-    console.log('Importing CSV data to Supabase...');
-    const importScriptPath = path.join(scriptsDir, 'importCsvToSupabaseWithDelete.ts');
-    
-    try {
-      const { stdout, stderr } = await execAsync(
-        `npx tsx "${importScriptPath}"`,
-        {
-          cwd: path.join(__dirname, '..', '..')
-        }
-      );
-      
-      if (stderr) {
-        console.warn('Import script warnings:', stderr);
-      }
-      console.log('Import script output:', stdout);
-      
-      // Parse output to get CSV count
-      const lines = stdout.split('\n');
-      const csvFilesLine = lines.find(line => line.includes('Found') && line.includes('CSV files'));
-      const csvCount = csvFilesLine ? parseInt(csvFilesLine.match(/\d+/)?.[0] || '0') : 0;
-      
+    if (result.success) {
       return {
         success: true,
-        csvFilesFetched: csvCount,
-        timestamp: new Date().toISOString()
+        csvFilesFetched: result.csvFilesFetched,
+        timestamp: result.timestamp
       };
-    } catch (error) {
-      console.error('Error running import script:', error);
+    } else {
       return {
         success: false,
-        error: 'Failed to import CSV data to database',
-        step: 'import_to_db'
+        error: result.error || 'Data sync failed',
+        step: 'sync_process'
       };
     }
   } catch (error) {
     console.error('Unexpected error in data sync:', error);
     return {
       success: false,
-      error: 'Unexpected error during data sync'
+      error: error instanceof Error ? error.message : 'Unexpected error during data sync'
     };
   }
 }
 
 export async function getSyncStatus(): Promise<SyncStatus> {
-  const dataDir = path.join(__dirname, '..', '..', '..', '..', 'public', 'data');
+  const dataDir = path.join(__dirname, '..', '..', 'public', 'data');
   
   try {
+    // Check database for current data
+    const { hasCurrentData, missingProtocols } = await checkCurrentDataInDB();
+    
     const files = await fs.readdir(dataDir);
     const csvFiles = files.filter(f => f.endsWith('.csv'));
     
@@ -116,13 +120,20 @@ export async function getSyncStatus(): Promise<SyncStatus> {
       return {
         lastSync: mostRecent.toISOString(),
         csvFilesCount: csvFiles.length,
-        csvFiles: csvFiles.map(f => f.replace('.csv', ''))
+        csvFiles: csvFiles.map(f => f.replace('.csv', '')),
+        hasCurrentData,
+        missingProtocols: missingProtocols.length > 0 ? missingProtocols : undefined,
+        message: hasCurrentData 
+          ? 'All protocols have current data' 
+          : `Missing current data for: ${missingProtocols.join(', ')}`
       };
     } else {
       return {
         lastSync: null,
         csvFilesCount: 0,
         csvFiles: [],
+        hasCurrentData: false,
+        missingProtocols: EXPECTED_PROTOCOLS,
         message: 'No data has been synced yet'
       };
     }

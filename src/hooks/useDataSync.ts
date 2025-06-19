@@ -8,6 +8,8 @@ interface DataSyncState {
   nextAvailableTime: Date | null;
   timeUntilNext: string;
   error: string | null;
+  hasCurrentData: boolean;
+  missingProtocols: string[];
 }
 
 const STORAGE_KEY = 'sol-analytics-last-sync';
@@ -20,7 +22,9 @@ export function useDataSync() {
     lastSyncTime: null,
     nextAvailableTime: null,
     timeUntilNext: '',
-    error: null
+    error: null,
+    hasCurrentData: false,
+    missingProtocols: []
   });
 
   const getCETTime = useCallback(() => {
@@ -88,14 +92,15 @@ export function useDataSync() {
     const lastSyncStr = localStorage.getItem(STORAGE_KEY);
     const lastSync = lastSyncStr ? new Date(lastSyncStr) : null;
     const nextAvailable = getNextAvailableTime(lastSync);
-    const canSync = nextAvailable === null;
+    const timeBasedCanSync = nextAvailable === null;
     const timeUntilNext = formatTimeUntilNext(nextAvailable);
 
     setState(prev => ({
       ...prev,
       lastSyncTime: lastSync,
       nextAvailableTime: nextAvailable,
-      canSync: canSync && !prev.isLoading,
+      // Allow sync if time conditions are met AND we don't have current data
+      canSync: timeBasedCanSync && !(prev.hasCurrentData === true) && !prev.isLoading,
       timeUntilNext
     }));
   }, [getNextAvailableTime, formatTimeUntilNext]);
@@ -136,18 +141,32 @@ export function useDataSync() {
     try {
       const data = await dataSyncApi.getSyncStatus();
       
-      if (data.lastSync) {
+      // Update state with current data status
+      setState(prev => ({
+        ...prev,
+        hasCurrentData: data?.hasCurrentData ?? false,
+        missingProtocols: data?.missingProtocols || []
+      }));
+      
+      if (data?.lastSync) {
         const serverLastSync = new Date(data.lastSync);
         const localLastSync = state.lastSyncTime;
         
         // If server has more recent sync, update local storage
         if (!localLastSync || serverLastSync > localLastSync) {
           localStorage.setItem(STORAGE_KEY, serverLastSync.toISOString());
-          updateSyncState();
         }
       }
+      
+      // Update sync state after getting fresh data status
+      setTimeout(updateSyncState, 100);
     } catch (error) {
       console.warn('Failed to check sync status:', error);
+      setState(prev => ({
+        ...prev,
+        hasCurrentData: false,
+        missingProtocols: []
+      }));
     }
   }, [state.lastSyncTime, updateSyncState]);
 

@@ -1,5 +1,5 @@
 import { Button } from './ui/button';
-import { RefreshCw, Download, Clock, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { RefreshCw, Clock, AlertCircle, X } from 'lucide-react';
 import { useDataSync } from '../hooks/useDataSync';
 import { useToast } from '../hooks/useToast';
 import { Toast } from './ui/toast';
@@ -17,6 +17,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     lastSyncTime, 
     timeUntilNext, 
     error,
+    hasCurrentData = false,
+    missingProtocols = [],
     syncData 
   } = useDataSync();
   
@@ -41,15 +43,16 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
   const getButtonIcon = () => {
     if (isLoading) return <RefreshCw className="h-4 w-4 animate-spin" />;
     if (error) return <AlertCircle className="h-4 w-4" />;
-    if (canSync) return <Download className="h-4 w-4" />;
+    if (canSync) return <RefreshCw className="h-4 w-4" />;
     return <Clock className="h-4 w-4" />;
   };
 
   const getButtonText = () => {
-    if (isLoading) return 'Syncing...';
-    if (error) return 'Sync Failed';
-    if (canSync) return 'Sync Data';
-    return 'Sync Unavailable';
+    if (isLoading) return 'Refreshing...';
+    if (error) return 'Refresh Failed';
+    if (canSync) return 'Refresh Data';
+    if (hasCurrentData === true) return 'Data up-to-date';
+    return 'Data up-to-date';
   };
 
   const getButtonVariant = () => {
@@ -62,6 +65,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     if (error) return `Error: ${error}`;
     if (isLoading) return 'Fetching latest data...';
     if (canSync) return 'Ready to sync latest data';
+    if (hasCurrentData === true) return 'All data is current for today';
     if (timeUntilNext) return `${timeUntilNext}`;
     return 'Checking availability...';
   };
@@ -209,24 +213,49 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
 
   return (
     <div className="space-y-4">
-      <Button
-        variant={getButtonVariant() as any}
-        onClick={syncData}
-        disabled={!canSync || isLoading}
-        className={cn(
-          "w-full h-11 flex items-center gap-3 font-medium relative overflow-hidden",
-          canSync && "hover:scale-[1.02] transition-all duration-200 shadow-lg",
-          !canSync && !isLoading && "cursor-not-allowed"
-        )}
-      >
-        {getButtonIcon()}
-        {getButtonText()}
-        
-        {/* Pulse effect when available */}
-        {canSync && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-        )}
-      </Button>
+      <div className="relative group">
+        <Button
+          variant={getButtonVariant() as any}
+          onClick={syncData}
+          disabled={!canSync || isLoading}
+          className={cn(
+            "w-full h-11 flex items-center justify-center gap-3 font-semibold text-sm relative overflow-hidden transition-all duration-300",
+            canSync && [
+              "bg-primary hover:bg-primary/90 shadow-lg",
+              "border border-primary/20 hover:border-primary/30",
+              "hover:scale-[1.02] active:scale-[0.98]",
+              "hover:shadow-xl"
+            ],
+            error && [
+              "bg-destructive hover:bg-destructive/90",
+              "border border-destructive/20",
+              "shadow-lg"
+            ],
+            !canSync && !error && [
+              "bg-muted text-muted-foreground",
+              "border border-muted-foreground/20",
+              "cursor-not-allowed"
+            ],
+            isLoading && [
+              "bg-primary/80",
+              "border border-primary/20",
+              "animate-pulse"
+            ]
+          )}
+        >
+          <div className="flex items-center gap-3 z-10 relative">
+            {getButtonIcon()}
+            <span className="font-semibold tracking-wide">
+              {getButtonText()}
+            </span>
+          </div>
+          
+          {/* Subtle shine effect when available */}
+          {canSync && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+          )}
+        </Button>
+      </div>
       
       {/* Status Card */}
       <div className={cn(
@@ -260,7 +289,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
         {!canSync && !error && timeUntilNext && (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Next refresh available in</span>
+              <span className="text-xs text-muted-foreground">Next refresh in</span>
               <span className="text-xs font-mono font-medium text-foreground">
                 {timeUntilNext}
               </span>
@@ -277,7 +306,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
         {/* Status Message */}
         {canSync && (
           <p className="text-xs text-green-700 dark:text-green-400">
-            ✨ Ready to fetch latest protocol data
+            ✨ Ready to fetch latest data
           </p>
         )}
         

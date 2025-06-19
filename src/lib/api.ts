@@ -111,12 +111,16 @@ export const dataSyncApi = {
     csvFilesCount: number; 
     csvFiles: string[];
     message?: string;
+    hasCurrentData: boolean;
+    missingProtocols?: string[];
   }> {
     return apiRequest<{ 
       lastSync: string | null; 
       csvFilesCount: number; 
       csvFiles: string[];
       message?: string;
+      hasCurrentData: boolean;
+      missingProtocols?: string[];
     }>('/data-update/status');
   }
 };

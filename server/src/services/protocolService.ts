@@ -201,31 +201,47 @@ export async function getAggregatedProtocolStats() {
     return cachedData.data;
   }
 
-  console.log('Fetching aggregated protocol stats from database...');
+  console.log('Fetching aggregated protocol stats from database with pagination...');
 
-  // Single optimized query to get all protocol data
-  const { data, error } = await supabase
-    .from('protocol_stats')
-    .select('*')
-    .order('date', { ascending: false });
+  // Use pagination to ensure all data is retrieved
+  let allData: any[] = [];
+  let hasMore = true;
+  let page = 0;
+  const PAGE_SIZE = 1000;
 
-  if (error) {
-    console.error('Error fetching aggregated protocol stats:', error);
-    throw error;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('*')
+      .order('date', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (error) {
+      console.error('Error fetching aggregated protocol stats:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    page++;
+
+    console.log(`Fetched ${allData.length} total records for aggregation (page ${page})...`);
   }
 
-  if (!data || data.length === 0) {
+  if (allData.length === 0) {
     return [];
   }
 
-  console.log(`Fetched ${data.length} total records for aggregation`);
+  console.log(`Total records fetched for aggregation: ${allData.length}`);
 
   // Group data by date and aggregate all protocols
   const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
   const dataByDate = new Map();
 
   // Get all unique dates
-  const allDates = new Set(data.map(item => item.date));
+  const allDates = new Set(allData.map(item => item.date));
 
   // Initialize data structure for each date
   Array.from(allDates).forEach(date => {
@@ -247,7 +263,7 @@ export async function getAggregatedProtocolStats() {
   });
 
   // Fill in actual values
-  data.forEach(item => {
+  allData.forEach(item => {
     const dateEntry = dataByDate.get(item.date);
     if (dateEntry) {
       const protocol = item.protocol_name.toLowerCase();

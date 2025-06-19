@@ -54,32 +54,45 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 
 const MetricCards = ({
   totalMetrics,
+  loading = false,
 }: {
   totalMetrics: ProtocolMetrics;
+  loading?: boolean;
 }) => (
   <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-    <MetricCard
-      title="Volume"
-      type="volume"
-      value={totalMetrics.total_volume_usd ?? 0}
-      prefix="$"
-    />
-    <MetricCard
-      title="Daily Users"
-      type="users"
-      value={totalMetrics.numberOfNewUsers ?? 0}
-    />
-    <MetricCard
-      title="Trades"
-      type="trades"
-      value={totalMetrics.daily_trades ?? 0}
-    />
-    <MetricCard
-      title="Fees"
-      type="fees"
-      value={totalMetrics.total_fees_usd ?? 0}
-      prefix="$"
-    />
+    {loading ? (
+      <>
+        <MetricCardSkeleton />
+        <MetricCardSkeleton />
+        <MetricCardSkeleton />
+        <MetricCardSkeleton />
+      </>
+    ) : (
+      <>
+        <MetricCard
+          title="Volume"
+          type="volume"
+          value={totalMetrics.total_volume_usd ?? 0}
+          prefix="$"
+        />
+        <MetricCard
+          title="Daily Users"
+          type="users"
+          value={totalMetrics.numberOfNewUsers ?? 0}
+        />
+        <MetricCard
+          title="Trades"
+          type="trades"
+          value={totalMetrics.daily_trades ?? 0}
+        />
+        <MetricCard
+          title="Fees"
+          type="fees"
+          value={totalMetrics.total_fees_usd ?? 0}
+          prefix="$"
+        />
+      </>
+    )}
   </div>
 );
 
@@ -321,28 +334,6 @@ const MainContent = (): JSX.Element => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="text-3xl mb-8 text-white/90 text-center">
-          <Skeleton className="h-10 w-48 mx-auto" />
-        </div>
-        <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-        </div>
-        <div className="space-y-6">
-          <TimelineChartSkeleton />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <HorizontalBarChartSkeleton />
-            <StackedBarChartSkeleton />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -354,14 +345,20 @@ const MainContent = (): JSX.Element => {
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl mb-8 text-white/90 text-center">
-        {protocol === "all"
-          ? "Overview"
-          : protocol.charAt(0).toUpperCase() + protocol.slice(1)}{" "}
-        Dashboard
-      </h1>
+      {loading ? (
+        <div className="text-3xl mb-8 text-white/90 text-center">
+          <Skeleton className="h-10 w-48 mx-auto" />
+        </div>
+      ) : (
+        <h1 className="text-3xl mb-8 text-white/90 text-center">
+          {protocol === "all"
+            ? "Overview"
+            : protocol.charAt(0).toUpperCase() + protocol.slice(1)}{" "}
+          Dashboard
+        </h1>
+      )}
 
-      <MetricCards totalMetrics={totalMetrics} />
+      <MetricCards totalMetrics={totalMetrics} loading={loading} />
 
 
         <div className="space-y-6">
@@ -542,6 +539,7 @@ const MainContent = (): JSX.Element => {
                             "vector_dominance"
                           ]}
                           colors={protocolColorsList}
+                          loading={loading}
                         />
                       </>
                     )}
@@ -632,6 +630,7 @@ const MainContent = (): JSX.Element => {
                             "vector_dominance"
                           ]}
                           colors={protocolColorsList}
+                          loading={loading}
                         />
                       </>
                     )}
@@ -722,6 +721,7 @@ const MainContent = (): JSX.Element => {
                             "vector_dominance"
                           ]}
                           colors={protocolColorsList}
+                          loading={loading}
                         />
                       </>
                     )}

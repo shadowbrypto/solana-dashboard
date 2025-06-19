@@ -64,30 +64,36 @@ export function HorizontalBarChart({
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
 
   const filteredData = useMemo(() => {
+    if (timeframe === "all") {
+      return data
+        .filter(item => item.value > 0)
+        .sort((a, b) => b.value - a.value);
+    }
+
     const now = new Date();
-    const cutoffDate = new Date();
+    let daysToSubtract: number;
 
     switch (timeframe) {
       case "7d":
-        cutoffDate.setDate(now.getDate() - 7);
+        daysToSubtract = 7;
         break;
       case "30d":
-        cutoffDate.setDate(now.getDate() - 30);
+        daysToSubtract = 30;
         break;
       case "3m":
-        cutoffDate.setMonth(now.getMonth() - 3);
+        daysToSubtract = 90;
         break;
       case "6m":
-        cutoffDate.setMonth(now.getMonth() - 6);
+        daysToSubtract = 180;
         break;
       case "1y":
-        cutoffDate.setFullYear(now.getFullYear() - 1);
+        daysToSubtract = 365;
         break;
-      case "all":
-        return data
-          .filter(item => item.value > 0)
-          .sort((a, b) => b.value - a.value);
+      default:
+        daysToSubtract = 90;
     }
+
+    const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
     return data.map(item => {
       if (!item.values) return item;

@@ -7,6 +7,7 @@ import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
 import { protocolConfigs } from '../lib/protocol-config';
+import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 // Generate protocols array from centralized config
 const protocols = [
@@ -36,7 +37,12 @@ export function Layout() {
   const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'trojan') : '';
 
   const handleProtocolChange = (protocolId: string) => {
-    navigate('/?protocol=' + protocolId);
+    // Debug logging
+    console.log('Current location:', location.pathname, location.search);
+    console.log('Navigating to protocol:', protocolId);
+    
+    // Try using window.location.assign for now to confirm this works
+    window.location.assign(`/?protocol=${protocolId}`);
   };
 
   const handleReportChange = (path: string) => {
@@ -48,8 +54,9 @@ export function Layout() {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-muted/10 flex flex-col">
         {/* Logo */}
-        <div className="p-4 flex items-center">
+        <div className="p-4 flex items-center justify-between">
           <span className="font-bold text-xl text-foreground">Trading Apps</span>
+          <ThemeSwitcher />
         </div>
 
         <Separator className="bg-border" />

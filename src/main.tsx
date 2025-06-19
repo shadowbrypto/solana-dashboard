@@ -9,9 +9,16 @@ import NotFound from "./pages/NotFound";
 import DailyReport from "./pages/DailyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
+import { ThemeProvider } from "./lib/theme";
+import { useLocation } from "react-router-dom";
 
-// Set dark mode as default
-document.documentElement.classList.add("dark");
+// Wrapper component to force App remounting on route changes
+function AppWrapper() {
+  const location = useLocation();
+  // Use both pathname and search to create a unique key
+  const key = location.pathname + location.search;
+  return <App key={key} />;
+}
 
 // Create a router with our routes
 const router = createBrowserRouter([
@@ -21,7 +28,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <App />,
+        element: <AppWrapper />,
       },
       {
         path: "overview",
@@ -94,7 +101,9 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider defaultTheme="dark">
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </React.StrictMode>
 );
 

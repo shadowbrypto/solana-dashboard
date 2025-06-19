@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
@@ -107,11 +107,11 @@ const MainContent = (): JSX.Element => {
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
     document.body.classList.add("dark:bg-background");
   }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [protocolData, setProtocolData] = useState<ProtocolStats[]>([]);
   const [data, setData] = useState<any[]>([]);
   const [activeView, setActiveView] = useState<"charts" | "data">(

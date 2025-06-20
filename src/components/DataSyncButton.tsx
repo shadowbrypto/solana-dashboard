@@ -65,6 +65,15 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
       const timeSinceLastSync = now.getTime() - lastSyncTime.getTime();
       const totalCycle = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
       const progress = Math.max(0, Math.min(100, (timeSinceLastSync / totalCycle) * 100));
+      
+      // Debug logging
+      console.log('Progress calculation:', {
+        lastSyncTime: lastSyncTime.toISOString(),
+        now: now.toISOString(),
+        timeSinceLastSync: timeSinceLastSync / (1000 * 60 * 60), // hours
+        progress: progress
+      });
+      
       return progress;
     }
     
@@ -89,6 +98,18 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     const totalCycleDuration = cyclePeriod.end.getTime() - cyclePeriod.start.getTime();
     const elapsedTime = now.getTime() - cyclePeriod.start.getTime();
     const progress = Math.max(0, Math.min(100, (elapsedTime / totalCycleDuration) * 100));
+    
+    // Debug logging for fallback calculation
+    console.log('Fallback progress calculation:', {
+      cyclePeriod: {
+        start: cyclePeriod.start.toISOString(),
+        end: cyclePeriod.end.toISOString()
+      },
+      now: now.toISOString(),
+      elapsedHours: elapsedTime / (1000 * 60 * 60),
+      totalHours: totalCycleDuration / (1000 * 60 * 60),
+      progress: progress
+    });
     
     return progress;
   };
@@ -159,7 +180,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             <div className="w-full bg-muted rounded-full h-1 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-1000"
-                style={{ width: `${getProgressPercentage()}%` }}
+                style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
               />
             </div>
           )}
@@ -238,7 +259,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-1000 ease-out"
-                style={{ width: `${getProgressPercentage()}%` }}
+                style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
               />
             </div>
           </div>

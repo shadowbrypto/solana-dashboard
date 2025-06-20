@@ -36,7 +36,7 @@ const PROTOCOL_SOURCES = {
   "bonkbot terminal": 5212810,
   "nova terminal": 5196914,
   "slingshot": 4968360,
-  "tryFomo": 5315650
+  "fomo": 5315650
 };
 
 // CSV column mapping to database columns

@@ -176,8 +176,11 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const metrics: Record<Protocol, ProtocolMetrics> = {} as Record<Protocol, ProtocolMetrics>;
 
   data?.forEach((row) => {
-    const protocol = row.protocol_name as Protocol;
-    metrics[protocol] = {
+    // Normalize protocol name to handle case variations
+    let protocol = row.protocol_name as string;
+    
+    
+    metrics[protocol as Protocol] = {
       total_volume_usd: Number(row.volume_usd) || 0,
       daily_users: Number(row.daily_users) || 0,
       numberOfNewUsers: Number(row.new_users) || 0,
@@ -238,7 +241,7 @@ export async function getAggregatedProtocolStats() {
   console.log(`Total records fetched for aggregation: ${allData.length}`);
 
   // Group data by date and aggregate all protocols
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "tryFomo", "slingshot", "bonkbot terminal", "nova terminal"];
+  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "fomo", "slingshot", "bonkbot terminal", "nova terminal"];
   const dataByDate = new Map();
 
   // Get all unique dates
@@ -320,7 +323,7 @@ export async function generateWeeklyInsights() {
   const last7Days = sortedData.slice(0, 7);
   const previous7Days = sortedData.slice(7, 14);
 
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "tryFomo", "slingshot", "bonkbot terminal", "nova terminal"];
+  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "fomo", "slingshot", "bonkbot terminal", "nova terminal"];
   
   // Calculate weekly stats for each protocol
   const weeklyStats = protocols.map(protocol => {

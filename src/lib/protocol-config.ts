@@ -53,7 +53,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'moonshot', name: 'Moonshot', icon: Moon, category: 'Mobile Apps' },
   { id: 'vector', name: 'Vector', icon: ArrowUpRight, category: 'Mobile Apps' },
   { id: 'slingshot', name: 'Slingshot', icon: Crosshair, category: 'Mobile Apps' },
-  { id: 'tryfomo', name: 'TryFomo', icon: TrendingUp, category: 'Mobile Apps' },
+  { id: 'fomo', name: 'Fomo', icon: TrendingUp, category: 'Mobile Apps' },
 ];
 
 // Helper functions

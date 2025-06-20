@@ -3,10 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { protocolConfigs, getAllCategories } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { Code2, Copy, Check } from 'lucide-react';
+import { Code2, Copy, Check, RefreshCcw, AlertCircle, X } from 'lucide-react';
+import { dataSyncApi } from '../lib/api';
+import { useToast } from '../hooks/useToast';
+import { Toast } from './ui/toast';
 
 export function ProtocolManagement() {
   const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toasts, removeToast, success, error: showError } = useToast();
   const categories = getAllCategories();
 
   const generateNewProtocolTemplate = () => {
@@ -22,6 +27,20 @@ export function ProtocolManagement() {
     navigator.clipboard.writeText(generateNewProtocolTemplate());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleHardRefresh = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      const result = await dataSyncApi.syncData();
+      success(`Data refresh completed! Fetched ${result.csvFilesFetched} files.`);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to refresh data');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -139,6 +158,71 @@ export function ProtocolManagement() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Management</CardTitle>
+          <CardDescription>
+            Force refresh all protocol data from Dune Analytics
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+                    Hard Refresh Warning
+                  </p>
+                  <p className="text-sm text-orange-800 dark:text-orange-200">
+                    This will force a complete data refresh from Dune Analytics, bypassing all time restrictions. 
+                    Use this only when necessary as it may impact API rate limits.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <Button
+              onClick={handleHardRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              className="w-full"
+            >
+              {isRefreshing ? (
+                <>
+                  <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                  Refreshing Data...
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Force Refresh All Data
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Toast notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          variant={toast.variant}
+          className="flex items-center justify-between gap-2"
+        >
+          <span>{toast.message}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-4 w-4 p-0"
+            onClick={() => removeToast(toast.id)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </Toast>
+      ))}
     </div>
   );
 }

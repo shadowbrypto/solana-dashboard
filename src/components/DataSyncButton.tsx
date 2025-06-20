@@ -131,8 +131,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               onClick={syncData}
               disabled={!canSync || isLoading}
               className={cn(
-                "h-12 w-12 relative overflow-hidden",
-                canSync && "hover:scale-110 transition-all duration-200 shadow-lg"
+                "h-12 w-12 relative overflow-hidden shadow-md",
+                canSync && "hover:scale-110 transition-all duration-200 hover:shadow-lg"
               )}
               title={`${canSync ? 'Available' : 'Waiting'}`}
             >
@@ -141,9 +141,9 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               {/* Status indicator ring */}
               <div className={cn(
                 "absolute inset-0 rounded-full border-2 transition-all duration-300",
-                canSync ? "border-green-400 shadow-lg shadow-green-400/30" :
-                error ? "border-red-400" :
-                "border-orange-400"
+                canSync ? "border-green-400 shadow-lg shadow-green-400/50" :
+                error ? "border-destructive shadow-sm shadow-destructive/30" :
+                "border-amber-400 shadow-sm shadow-amber-400/30"
               )} />
               
               {/* Pulse effect when available */}
@@ -158,11 +158,11 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             {/* Status Dot */}
             <div className="flex justify-center">
               {canSync ? (
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50" />
               ) : error ? (
-                <div className="h-2 w-2 rounded-full bg-red-500" />
+                <div className="h-2 w-2 rounded-full bg-destructive shadow-sm shadow-destructive/50" />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-orange-500" />
+                <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
               )}
             </div>
             
@@ -177,9 +177,9 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
           
           {/* Mini Progress Bar */}
           {!canSync && !error && timeUntilNext && (
-            <div className="w-full bg-muted rounded-full h-1 overflow-hidden">
+            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden shadow-sm border border-border/50">
               <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-1000"
+                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 shadow-sm"
                 style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
               />
             </div>
@@ -212,20 +212,20 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     <div>
       {/* Status Card */}
       <div className={cn(
-        "rounded-lg p-3 border transition-all duration-300",
-        canSync ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30" :
-        error ? "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30" :
-        "border-border bg-muted/50"
+        "rounded-lg p-3 border transition-all duration-300 shadow-sm",
+        canSync ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30 shadow-green-100/50 dark:shadow-green-900/20" :
+        error ? "border-destructive/50 bg-destructive/5 dark:border-destructive dark:bg-destructive/10 shadow-red-100/50 dark:shadow-red-900/20" :
+        "border-border bg-card shadow-sm"
       )}>
         {/* Status Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {canSync ? (
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50" />
             ) : error ? (
-              <div className="h-2 w-2 rounded-full bg-red-500" />
+              <div className="h-2 w-2 rounded-full bg-destructive shadow-sm shadow-destructive/50" />
             ) : (
-              <div className="h-2 w-2 rounded-full bg-orange-500" />
+              <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
             )}
             <span className="text-xs font-medium text-foreground">
               {canSync ? 'Available' : error ? 'Error' : 'Waiting'}
@@ -239,8 +239,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             onClick={syncData}
             disabled={!canSync || isLoading}
             className={cn(
-              "h-8 px-3 text-xs font-medium transition-all duration-200",
-              canSync && "hover:scale-105 shadow-sm"
+              "h-8 px-3 text-xs font-medium transition-all duration-200 shadow-sm",
+              canSync && "hover:scale-105 hover:shadow-md"
             )}
           >
             Refresh
@@ -256,9 +256,9 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 {timeUntilNext}
               </span>
             </div>
-            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden shadow-sm border border-border/50">
               <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-1000 ease-out"
+                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 ease-out shadow-sm"
                 style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
               />
             </div>
@@ -267,13 +267,13 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
         
         {/* Status Message */}
         {canSync && (
-          <p className="text-xs text-green-700 dark:text-green-400">
+          <p className="text-xs text-green-700 dark:text-green-400 font-medium">
             ✨ Ready to fetch latest data
           </p>
         )}
         
         {error && (
-          <p className="text-xs text-red-700 dark:text-red-400">
+          <p className="text-xs text-destructive font-medium">
             ⚠️ {error}
           </p>
         )}

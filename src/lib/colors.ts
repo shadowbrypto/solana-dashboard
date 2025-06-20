@@ -16,6 +16,7 @@ export const protocolColors: { [key: string]: string } = {
   "nova terminal": "hsl(190 85% 50%)",     // Sky Blue
   "bonkbot terminal": "hsl(39 96% 60%)",   // Amber
   slingshot: "hsl(110 75% 45%)",           // Lime Green
+  tryfomo: "hsl(270 95% 60%)",             // Electric Purple
 };
 
 export const protocolColorsList = Object.values(protocolColors);

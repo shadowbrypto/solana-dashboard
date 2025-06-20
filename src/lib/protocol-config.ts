@@ -15,6 +15,7 @@ import {
   Terminal,
   BotMessageSquare,
   Crosshair,
+  TrendingUp,
   LucideIcon
 } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'moonshot', name: 'Moonshot', icon: Moon, category: 'Mobile Apps' },
   { id: 'vector', name: 'Vector', icon: ArrowUpRight, category: 'Mobile Apps' },
   { id: 'slingshot', name: 'Slingshot', icon: Crosshair, category: 'Mobile Apps' },
+  { id: 'tryFomo', name: 'TryFomo', icon: TrendingUp, category: 'Mobile Apps' },
 ];
 
 // Helper functions

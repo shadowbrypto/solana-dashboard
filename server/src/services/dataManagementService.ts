@@ -35,7 +35,8 @@ const PROTOCOL_SOURCES = {
   "vector": 4969231,
   "bonkbot terminal": 5212810,
   "nova terminal": 5196914,
-  "slingshot": 4968360
+  "slingshot": 4968360,
+  "tryFomo": 5315650
 };
 
 // CSV column mapping to database columns

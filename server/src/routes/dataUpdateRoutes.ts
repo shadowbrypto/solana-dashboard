@@ -15,7 +15,7 @@ router.post('/sync', async (req: Request, res: Response) => {
       res.json({
         success: true,
         message: 'Data sync completed successfully',
-        details: {
+        data: {
           csvFilesFetched: result.csvFilesFetched,
           timestamp: result.timestamp
         }
@@ -44,7 +44,7 @@ router.get('/status', async (req: Request, res: Response) => {
     const status = await getSyncStatus();
     res.json({
       success: true,
-      ...status
+      data: status
     });
   } catch (error) {
     console.error('Error checking sync status:', error);

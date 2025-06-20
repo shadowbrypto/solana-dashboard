@@ -57,23 +57,38 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
   const getProgressPercentage = () => {
     if (!timeUntilNext || canSync) return 0;
     
-    // Calculate progress based on time until next sync
+    // Calculate progress based on a 24-hour cycle
     const now = getCETDate();
+    
+    // If we have lastSyncTime, calculate from that point
+    if (lastSyncTime) {
+      const timeSinceLastSync = now.getTime() - lastSyncTime.getTime();
+      const totalCycle = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      const progress = Math.max(0, Math.min(100, (timeSinceLastSync / totalCycle) * 100));
+      return progress;
+    }
+    
+    // Fallback: calculate based on current time position in 24-hour cycle
     const todayAt10AM = new Date(now);
     todayAt10AM.setHours(10, 0, 0, 0);
     
-    // If it's past 10 AM today but we can't sync, next is tomorrow
-    let nextSync: Date;
+    let cyclePeriod: { start: Date; end: Date };
+    
     if (now >= todayAt10AM) {
-      nextSync = new Date(todayAt10AM);
-      nextSync.setDate(nextSync.getDate() + 1);
+      // We're past 10 AM today, so cycle is from today 10 AM to tomorrow 10 AM
+      const tomorrowAt10AM = new Date(todayAt10AM);
+      tomorrowAt10AM.setDate(tomorrowAt10AM.getDate() + 1);
+      cyclePeriod = { start: todayAt10AM, end: tomorrowAt10AM };
     } else {
-      nextSync = todayAt10AM;
+      // We're before 10 AM today, so cycle is from yesterday 10 AM to today 10 AM
+      const yesterdayAt10AM = new Date(todayAt10AM);
+      yesterdayAt10AM.setDate(yesterdayAt10AM.getDate() - 1);
+      cyclePeriod = { start: yesterdayAt10AM, end: todayAt10AM };
     }
     
-    const totalWait = nextSync.getTime() - (lastSyncTime?.getTime() || (now.getTime() - 24 * 60 * 60 * 1000));
-    const remaining = nextSync.getTime() - now.getTime();
-    const progress = Math.max(0, Math.min(100, ((totalWait - remaining) / totalWait) * 100));
+    const totalCycleDuration = cyclePeriod.end.getTime() - cyclePeriod.start.getTime();
+    const elapsedTime = now.getTime() - cyclePeriod.start.getTime();
+    const progress = Math.max(0, Math.min(100, (elapsedTime / totalCycleDuration) * 100));
     
     return progress;
   };

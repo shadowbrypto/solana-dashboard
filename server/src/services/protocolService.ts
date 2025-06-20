@@ -47,11 +47,12 @@ export async function getProtocolStats(protocolName?: string | string[]) {
     
     if (protocolName) {
       if (Array.isArray(protocolName)) {
-        const normalizedProtocols = protocolName.map(p => p.toLowerCase());
-        query = query.in('protocol_name', normalizedProtocols);
+        // For arrays, use case-insensitive matching with ilike
+        const protocolFilters = protocolName.map(p => `protocol_name.ilike.${p}`).join(',');
+        query = query.or(protocolFilters);
       } else {
-        const normalizedProtocol = protocolName.toLowerCase();
-        query = query.eq('protocol_name', normalizedProtocol);
+        // For single protocol, use case-insensitive matching
+        query = query.ilike('protocol_name', protocolName);
       }
     }
 
@@ -110,7 +111,7 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (protocolName) {
-      query.eq('protocol_name', protocolName);
+      query.ilike('protocol_name', protocolName);
     }
 
     const { data, error } = await query;
@@ -237,7 +238,7 @@ export async function getAggregatedProtocolStats() {
   console.log(`Total records fetched for aggregation: ${allData.length}`);
 
   // Group data by date and aggregate all protocols
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "tryFomo", "slingshot", "bonkbot terminal", "nova terminal"];
   const dataByDate = new Map();
 
   // Get all unique dates
@@ -252,11 +253,12 @@ export async function getAggregatedProtocolStats() {
 
     // Initialize all protocol metrics to 0
     protocols.forEach(protocol => {
-      entry[`${protocol}_volume`] = 0;
-      entry[`${protocol}_users`] = 0;
-      entry[`${protocol}_new_users`] = 0;
-      entry[`${protocol}_trades`] = 0;
-      entry[`${protocol}_fees`] = 0;
+      const protocolKey = protocol.replace(/\s+/g, '_').toLowerCase();
+      entry[`${protocolKey}_volume`] = 0;
+      entry[`${protocolKey}_users`] = 0;
+      entry[`${protocolKey}_new_users`] = 0;
+      entry[`${protocolKey}_trades`] = 0;
+      entry[`${protocolKey}_fees`] = 0;
     });
 
     dataByDate.set(date, entry);
@@ -266,13 +268,16 @@ export async function getAggregatedProtocolStats() {
   allData.forEach(item => {
     const dateEntry = dataByDate.get(item.date);
     if (dateEntry) {
-      const protocol = item.protocol_name.toLowerCase();
-      if (protocols.includes(protocol)) {
-        dateEntry[`${protocol}_volume`] = Number(item.volume_usd) || 0;
-        dateEntry[`${protocol}_users`] = Number(item.daily_users) || 0;
-        dateEntry[`${protocol}_new_users`] = Number(item.new_users) || 0;
-        dateEntry[`${protocol}_trades`] = Number(item.trades) || 0;
-        dateEntry[`${protocol}_fees`] = Number(item.fees_usd) || 0;
+      const protocol = item.protocol_name;
+      // Find matching protocol (case-insensitive)
+      const matchingProtocol = protocols.find(p => p.toLowerCase() === protocol.toLowerCase());
+      if (matchingProtocol) {
+        const protocolKey = matchingProtocol.replace(/\s+/g, '_').toLowerCase();
+        dateEntry[`${protocolKey}_volume`] = Number(item.volume_usd) || 0;
+        dateEntry[`${protocolKey}_users`] = Number(item.daily_users) || 0;
+        dateEntry[`${protocolKey}_new_users`] = Number(item.new_users) || 0;
+        dateEntry[`${protocolKey}_trades`] = Number(item.trades) || 0;
+        dateEntry[`${protocolKey}_fees`] = Number(item.fees_usd) || 0;
       }
     }
   });
@@ -315,29 +320,36 @@ export async function generateWeeklyInsights() {
   const last7Days = sortedData.slice(0, 7);
   const previous7Days = sortedData.slice(7, 14);
 
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "tryFomo", "slingshot", "bonkbot terminal", "nova terminal"];
   
   // Calculate weekly stats for each protocol
   const weeklyStats = protocols.map(protocol => {
+    const protocolKey = protocol.replace(/\s+/g, '_').toLowerCase();
     const currentWeekTotals = last7Days.reduce((acc, day) => ({
-      volume: acc.volume + (day[`${protocol}_volume`] || 0),
-      users: acc.users + (day[`${protocol}_users`] || 0),
-      trades: acc.trades + (day[`${protocol}_trades`] || 0),
-      fees: acc.fees + (day[`${protocol}_fees`] || 0)
+      volume: acc.volume + (day[`${protocolKey}_volume`] || 0),
+      users: acc.users + (day[`${protocolKey}_users`] || 0),
+      trades: acc.trades + (day[`${protocolKey}_trades`] || 0),
+      fees: acc.fees + (day[`${protocolKey}_fees`] || 0)
     }), { volume: 0, users: 0, trades: 0, fees: 0 });
 
     const previousWeekTotals = previous7Days.reduce((acc, day) => ({
-      volume: acc.volume + (day[`${protocol}_volume`] || 0),
-      users: acc.users + (day[`${protocol}_users`] || 0),
-      trades: acc.trades + (day[`${protocol}_trades`] || 0),
-      fees: acc.fees + (day[`${protocol}_fees`] || 0)
+      volume: acc.volume + (day[`${protocolKey}_volume`] || 0),
+      users: acc.users + (day[`${protocolKey}_users`] || 0),
+      trades: acc.trades + (day[`${protocolKey}_trades`] || 0),
+      fees: acc.fees + (day[`${protocolKey}_fees`] || 0)
     }), { volume: 0, users: 0, trades: 0, fees: 0 });
 
     // Calculate total market for market share
     const totalMarketVolume = last7Days.reduce((acc, day) => 
-      acc + protocols.reduce((sum, p) => sum + (day[`${p}_volume`] || 0), 0), 0);
+      acc + protocols.reduce((sum, p) => {
+        const pKey = p.replace(/\s+/g, '_').toLowerCase();
+        return sum + (day[`${pKey}_volume`] || 0);
+      }, 0), 0);
     const totalMarketUsers = last7Days.reduce((acc, day) => 
-      acc + protocols.reduce((sum, p) => sum + (day[`${p}_users`] || 0), 0), 0);
+      acc + protocols.reduce((sum, p) => {
+        const pKey = p.replace(/\s+/g, '_').toLowerCase();
+        return sum + (day[`${pKey}_users`] || 0);
+      }, 0), 0);
 
     return {
       protocol,

@@ -1,4 +1,4 @@
-export type Protocol = "axiom" | "bullx" | "photon" | "trojan" | "gmgnai" | "bloom" | "all" | "bonkbot" | "nova" | "soltradingbot" | "maestro" | "banana" | "padre" | "moonshot" | "vector" | "nova terminal" | "bonkbot terminal" | "slingshot" | "tryFomo";
+export type Protocol = "axiom" | "bullx" | "photon" | "trojan" | "gmgnai" | "bloom" | "all" | "bonkbot" | "nova" | "soltradingbot" | "maestro" | "banana" | "padre" | "moonshot" | "vector" | "nova terminal" | "bonkbot terminal" | "slingshot" | "tryfomo";
 
 export interface ProtocolStats {
   protocol_name: Protocol;

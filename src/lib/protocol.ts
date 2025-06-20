@@ -155,7 +155,7 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
     
     // Fallback to the old method if the new endpoint fails
     try {
-      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "tryFomo", "slingshot", "bonkbot terminal", "nova terminal"];
       const allData = await getProtocolStats(protocols);
 
       // Transform the data to match the aggregated format
@@ -169,11 +169,12 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
         };
 
         protocols.forEach(protocol => {
-          entry[`${protocol}_volume`] = 0;
-          entry[`${protocol}_users`] = 0;
-          entry[`${protocol}_new_users`] = 0;
-          entry[`${protocol}_trades`] = 0;
-          entry[`${protocol}_fees`] = 0;
+          const protocolKey = protocol.replace(/\s+/g, '_').toLowerCase();
+          entry[`${protocolKey}_volume`] = 0;
+          entry[`${protocolKey}_users`] = 0;
+          entry[`${protocolKey}_new_users`] = 0;
+          entry[`${protocolKey}_trades`] = 0;
+          entry[`${protocolKey}_fees`] = 0;
         });
 
         dataByDate.set(date, entry);
@@ -182,13 +183,16 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
       allData.forEach(item => {
         const dateEntry = dataByDate.get(item.date);
         if (dateEntry) {
-          const protocol = item.protocol_name.toLowerCase();
-          if (protocols.includes(protocol)) {
-            dateEntry[`${protocol}_volume`] = Number(item.volume_usd) || 0;
-            dateEntry[`${protocol}_users`] = Number(item.daily_users) || 0;
-            dateEntry[`${protocol}_new_users`] = Number(item.new_users) || 0;
-            dateEntry[`${protocol}_trades`] = Number(item.trades) || 0;
-            dateEntry[`${protocol}_fees`] = Number(item.fees_usd) || 0;
+          const protocol = item.protocol_name;
+          // Find matching protocol (case-insensitive)
+          const matchingProtocol = protocols.find(p => p.toLowerCase() === protocol.toLowerCase());
+          if (matchingProtocol) {
+            const protocolKey = matchingProtocol.replace(/\s+/g, '_').toLowerCase();
+            dateEntry[`${protocolKey}_volume`] = Number(item.volume_usd) || 0;
+            dateEntry[`${protocolKey}_users`] = Number(item.daily_users) || 0;
+            dateEntry[`${protocolKey}_new_users`] = Number(item.new_users) || 0;
+            dateEntry[`${protocolKey}_trades`] = Number(item.trades) || 0;
+            dateEntry[`${protocolKey}_fees`] = Number(item.fees_usd) || 0;
           }
         }
       });

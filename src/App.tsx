@@ -175,7 +175,7 @@ const MainContent = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    const protocol = searchParams.get("protocol") || "trojan";
+    const protocol = searchParams.get("protocol")?.toLowerCase() || "trojan";
     
     // If no protocol parameter exists, redirect to trojan
     if (!searchParams.get("protocol")) {

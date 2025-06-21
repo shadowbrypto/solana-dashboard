@@ -12,12 +12,13 @@ import ProtocolAdmin from "./pages/ProtocolAdmin";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
-// Wrapper component to force App remounting on route changes
+// Wrapper component to handle protocol changes efficiently
 function AppWrapper() {
   const location = useLocation();
-  // Use both pathname and search to create a unique key
-  const key = location.pathname + location.search;
-  return <App key={key} />;
+  // Only force remount when protocol changes, not on all search param changes
+  const searchParams = new URLSearchParams(location.search);
+  const protocol = searchParams.get('protocol') || 'trojan';
+  return <App key={protocol} />;
 }
 
 // Create a router with our routes

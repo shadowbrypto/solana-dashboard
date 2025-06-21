@@ -47,8 +47,8 @@ export function Layout() {
     console.log('Current location:', location.pathname, location.search);
     console.log('Navigating to protocol:', protocolId);
     
-    // Try using window.location.assign for now to confirm this works
-    window.location.assign(`/?protocol=${protocolId}`);
+    // Use React Router navigation instead of window.location
+    navigate(`/?protocol=${protocolId}`);
   };
 
   const handleReportChange = (path: string) => {

@@ -66,13 +66,6 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
       const totalCycle = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
       const progress = Math.max(0, Math.min(100, (timeSinceLastSync / totalCycle) * 100));
       
-      // Debug logging
-      console.log('Progress calculation:', {
-        lastSyncTime: lastSyncTime.toISOString(),
-        now: now.toISOString(),
-        timeSinceLastSync: timeSinceLastSync / (1000 * 60 * 60), // hours
-        progress: progress
-      });
       
       return progress;
     }

@@ -8,8 +8,10 @@ import {
   TableRow,
 } from "./ui/table";
 import { format } from "date-fns";
-import { GripVertical, ChevronRight } from "lucide-react";
+import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
+// @ts-ignore
+import domtoimage from "dom-to-image";
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
@@ -65,9 +67,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
-  const [draggedProtocol, setDraggedProtocol] = useState<{ protocol: string; category: string } | null>(null);
-  const [categoryProtocolOrder, setCategoryProtocolOrder] = useState<Record<string, string[]>>({});
-  const [hasManualReordering, setHasManualReordering] = useState<Record<string, boolean>>({});
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -184,21 +184,6 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
   // Create ordered metrics based on column order
   const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
-  // Initialize category protocol order on mount with volume-based sorting
-  useEffect(() => {
-    const initialOrder: Record<string, string[]> = {};
-    protocolCategories.forEach(category => {
-      const categoryProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
-      // Sort by volume on initial load
-      const sortedProtocols = categoryProtocols.sort((a, b) => {
-        const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
-        const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
-        return volumeB - volumeA;
-      });
-      initialOrder[category.name] = sortedProtocols;
-    });
-    setCategoryProtocolOrder(initialOrder);
-  }, [protocols, dailyData]);
 
   // Category-based bright coloring using shadcn theme colors
   const getCategoryRowColor = (categoryName: string): string => {
@@ -214,61 +199,6 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     }
   };
 
-  // Protocol row drag handlers
-  const handleProtocolDragStart = (e: React.DragEvent, protocol: string, category: string) => {
-    setDraggedProtocol({ protocol, category });
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleProtocolDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (draggedProtocol) {
-      e.dataTransfer.dropEffect = 'move';
-    }
-  };
-
-  const handleProtocolDrop = (e: React.DragEvent, targetProtocol: string, targetCategory: string) => {
-    e.preventDefault();
-    
-    if (!draggedProtocol || draggedProtocol.category !== targetCategory) {
-      // Don't allow dropping in different categories
-      setDraggedProtocol(null);
-      return;
-    }
-
-    if (draggedProtocol.protocol === targetProtocol) {
-      setDraggedProtocol(null);
-      return;
-    }
-
-    const newOrder = [...(categoryProtocolOrder[targetCategory] || [])];
-    const draggedIndex = newOrder.indexOf(draggedProtocol.protocol);
-    const targetIndex = newOrder.indexOf(targetProtocol);
-
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      // Remove dragged item
-      newOrder.splice(draggedIndex, 1);
-      // Insert at new position
-      newOrder.splice(targetIndex, 0, draggedProtocol.protocol);
-      
-      setCategoryProtocolOrder({
-        ...categoryProtocolOrder,
-        [targetCategory]: newOrder
-      });
-      
-      // Mark this category as having manual reordering
-      setHasManualReordering({
-        ...hasManualReordering,
-        [targetCategory]: true
-      });
-    }
-
-    setDraggedProtocol(null);
-  };
-
-  const handleProtocolDragEnd = () => {
-    setDraggedProtocol(null);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -320,16 +250,178 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
     );
   };
 
+  const toggleProtocolVisibility = (protocol: string) => {
+    setHiddenProtocols(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(protocol)) {
+        newSet.delete(protocol);
+      } else {
+        newSet.add(protocol);
+      }
+      return newSet;
+    });
+  };
+
+  const showAllProtocols = () => {
+    setHiddenProtocols(new Set());
+  };
+
+  const hideAllProtocols = () => {
+    const allProtocols = new Set<string>();
+    protocolCategories.forEach(category => {
+      category.protocols.forEach(protocol => {
+        if (protocols.includes(protocol as Protocol)) {
+          allProtocols.add(protocol);
+        }
+      });
+    });
+    setHiddenProtocols(allProtocols);
+  };
+
+  const downloadReport = async () => {
+    console.log('Download report clicked');
+    const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
+    console.log('Table element found:', !!tableElement);
+    
+    if (tableElement) {
+      // Check element dimensions
+      const rect = tableElement.getBoundingClientRect();
+      console.log('Table dimensions:', rect.width, 'x', rect.height);
+      
+      if (rect.width === 0 || rect.height === 0) {
+        console.error('Table element has zero dimensions');
+        return;
+      }
+      
+      try {
+        console.log('Generating image with dom-to-image...');
+        console.log('Element scroll dimensions:', tableElement.scrollWidth, 'x', tableElement.scrollHeight);
+        const dataUrl = await Promise.race([
+          domtoimage.toPng(tableElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 40,
+            style: {
+              transform: 'scale(1)',
+              transformOrigin: 'top left',
+              overflow: 'visible',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
+          )
+        ]) as string;
+        console.log('Image generated successfully, data URL length:', dataUrl.length);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `Daily Report - ${format(date, 'dd.MM')}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('Download triggered');
+      } catch (error) {
+        console.error('Error generating screenshot:', error);
+      }
+    } else {
+      console.error('Table element not found');
+    }
+  };
+
+  const copyToClipboard = async () => {
+    console.log('Copy to clipboard clicked');
+    const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
+    console.log('Table element found for copy:', !!tableElement);
+    
+    if (tableElement) {
+      // Check element dimensions
+      const rect = tableElement.getBoundingClientRect();
+      console.log('Table dimensions for copy:', rect.width, 'x', rect.height);
+      
+      if (rect.width === 0 || rect.height === 0) {
+        console.error('Table element has zero dimensions for copy');
+        return;
+      }
+      
+      try {
+        console.log('Generating image for copy...');
+        console.log('Element scroll dimensions for copy:', tableElement.scrollWidth, 'x', tableElement.scrollHeight);
+        const dataUrl = await Promise.race([
+          domtoimage.toPng(tableElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 40,
+            style: {
+              transform: 'scale(1)',
+              transformOrigin: 'top left',
+              overflow: 'visible',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
+          )
+        ]) as string;
+        console.log('Image generated for copy, data URL length:', dataUrl.length);
+        
+        // Convert data URL to blob
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        
+        if (blob) {
+          try {
+            console.log('Attempting to write to clipboard...');
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'image/png': blob
+              })
+            ]);
+            console.log('Report copied to clipboard!');
+          } catch (error) {
+            console.error('Error copying to clipboard:', error);
+          }
+        } else {
+          console.error('Failed to generate blob');
+        }
+      } catch (error) {
+        console.error('Error generating image for clipboard:', error);
+      }
+    } else {
+      console.error('Table element not found for copy');
+    }
+  };
+
   return (
     <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Metrics</h3>
+      <div data-table="daily-metrics" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
+        <div className="flex items-center gap-4">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Metrics</h3>
+          <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+            <button
+              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+            >
+              {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+            </button>
+          </div>
+        </div>
         <div className="w-full sm:w-[240px] flex sm:justify-end">
           <DatePicker date={date} onDateChange={handleDateChange} />
         </div>
       </div>
 
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -357,16 +449,14 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
           </TableHeader>
           <TableBody>
             {protocolCategories.map((category) => {
-              const availableProtocols = categoryProtocolOrder[category.name] || category.protocols.filter(p => protocols.includes(p as Protocol));
+              const availableProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
               
-              // Sort protocols by volume (highest to lowest) unless manually reordered
-              const orderedProtocols = hasManualReordering[category.name] 
-                ? availableProtocols // Use manual order if it exists
-                : availableProtocols.sort((a, b) => {
-                    const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
-                    const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
-                    return volumeB - volumeA; // Sort descending (highest first)
-                  });
+              // Sort protocols by volume (highest to lowest)
+              const orderedProtocols = availableProtocols.sort((a, b) => {
+                const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
+                const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
+                return volumeB - volumeA; // Sort descending (highest first)
+              });
               
               if (orderedProtocols.length === 0) return null;
               
@@ -379,21 +469,22 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                 );
               };
 
-              // Calculate category totals for current day
+              // Calculate category totals for current day (excluding hidden protocols)
+              const visibleProtocols = orderedProtocols.filter(p => !hiddenProtocols.has(p));
               const categoryTotals = orderedMetrics.reduce((acc, metric) => {
                 if (metric.key === 'daily_growth') {
-                  const currentVolume = orderedProtocols
+                  const currentVolume = visibleProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
-                  const previousVolume = orderedProtocols
+                  const previousVolume = visibleProtocols
                     .reduce((sum, p) => sum + (previousDayData[p as Protocol]?.total_volume_usd || 0), 0);
                   acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
                 } else if (metric.key === 'market_share') {
                   // Calculate category market share based on total volume
-                  const categoryVolume = orderedProtocols
+                  const categoryVolume = visibleProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
                   acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
                 } else {
-                  acc[metric.key] = orderedProtocols
+                  acc[metric.key] = visibleProtocols
                     .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
                 }
                 return acc;
@@ -435,37 +526,43 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                   </TableRow>
                   
                   {/* Protocol Rows */}
-                  {orderedProtocols.map((protocol) => (
-                    <TableRow 
-                      key={protocol} 
-                      className={`${isCollapsed ? 'hidden' : ''} transition-colors hover:bg-muted/30 ${
-                        draggedProtocol?.protocol === protocol ? 'opacity-50' : ''
-                      } cursor-move`}
-                      draggable
-                      onDragStart={(e) => handleProtocolDragStart(e, protocol, category.name)}
-                      onDragOver={handleProtocolDragOver}
-                      onDrop={(e) => handleProtocolDrop(e, protocol, category.name)}
-                      onDragEnd={handleProtocolDragEnd}
-                    >
-                      <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <GripVertical className="w-3 h-3 sm:w-4 sm:h-4 opacity-50 flex-shrink-0" />
-                          <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
-                          {topProtocols.includes(protocol) && (
-                            <Badge 
-                              variant="secondary"
-                              className={cn(
-                                "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
-                                topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                              )}
+                  {orderedProtocols.map((protocol) => {
+                    const isHidden = hiddenProtocols.has(protocol);
+                    return (
+                      <TableRow 
+                        key={protocol} 
+                        className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                      >
+                        <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProtocolVisibility(protocol);
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDragStart={(e) => e.preventDefault()}
+                              className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                              title={isHidden ? "Show protocol" : "Hide protocol"}
                             >
-                              #{topProtocols.indexOf(protocol) + 1}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
+                              {isHidden ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
+                            </button>
+                            <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
+                            {topProtocols.includes(protocol) && (
+                              <Badge 
+                                variant="secondary"
+                                className={cn(
+                                  "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
+                                  topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                  topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                  topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                )}
+                              >
+                                #{topProtocols.indexOf(protocol) + 1}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
@@ -499,7 +596,8 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                         </TableCell>
                       ))}
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </React.Fragment>
               );
             })}
@@ -538,6 +636,24 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
             </TableRow>
           </TableBody>
         </Table>
+        </div>
+      </div>
+      
+      <div className="flex justify-center gap-3 pt-4">
+        <button
+          onClick={downloadReport}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          Download Report
+        </button>
+        <button
+          onClick={copyToClipboard}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        >
+          <Copy className="h-4 w-4" />
+          Copy to Clipboard
+        </button>
       </div>
     </div>
   );

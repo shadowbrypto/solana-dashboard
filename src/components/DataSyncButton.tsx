@@ -55,61 +55,26 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
   };
 
   const getProgressPercentage = () => {
-    if (!timeUntilNext || canSync) return 0;
+    if (!timeUntilNext || canSync) return 100; // Show full when ready to sync
     
-    // Calculate progress based on a 24-hour cycle
-    const now = getCETDate();
+    // Parse the timeUntilNext string to get remaining milliseconds
+    const timeMatch = timeUntilNext.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
+    if (!timeMatch) return 0;
     
-    // If we have lastSyncTime, calculate from that point
-    if (lastSyncTime) {
-      const timeSinceLastSync = now.getTime() - lastSyncTime.getTime();
-      const totalCycle = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-      const progress = Math.max(0, Math.min(100, (timeSinceLastSync / totalCycle) * 100));
-      
-      
-      return progress;
-    }
+    const hours = parseInt(timeMatch[1], 10);
+    const minutes = parseInt(timeMatch[2], 10);
+    const seconds = parseInt(timeMatch[3], 10);
     
-    // Fallback: calculate based on current time position in 24-hour cycle
-    const todayAt10AM = new Date(now);
-    todayAt10AM.setHours(10, 0, 0, 0);
+    const remainingMs = (hours * 60 * 60 + minutes * 60 + seconds) * 1000;
+    const totalCycleMs = 24 * 60 * 60 * 1000; // 24 hours
     
-    let cyclePeriod: { start: Date; end: Date };
-    
-    if (now >= todayAt10AM) {
-      // We're past 10 AM today, so cycle is from today 10 AM to tomorrow 10 AM
-      const tomorrowAt10AM = new Date(todayAt10AM);
-      tomorrowAt10AM.setDate(tomorrowAt10AM.getDate() + 1);
-      cyclePeriod = { start: todayAt10AM, end: tomorrowAt10AM };
-    } else {
-      // We're before 10 AM today, so cycle is from yesterday 10 AM to today 10 AM
-      const yesterdayAt10AM = new Date(todayAt10AM);
-      yesterdayAt10AM.setDate(yesterdayAt10AM.getDate() - 1);
-      cyclePeriod = { start: yesterdayAt10AM, end: todayAt10AM };
-    }
-    
-    const totalCycleDuration = cyclePeriod.end.getTime() - cyclePeriod.start.getTime();
-    const elapsedTime = now.getTime() - cyclePeriod.start.getTime();
-    const progress = Math.max(0, Math.min(100, (elapsedTime / totalCycleDuration) * 100));
-    
-    // Debug logging for fallback calculation
-    console.log('Fallback progress calculation:', {
-      cyclePeriod: {
-        start: cyclePeriod.start.toISOString(),
-        end: cyclePeriod.end.toISOString()
-      },
-      now: now.toISOString(),
-      elapsedHours: elapsedTime / (1000 * 60 * 60),
-      totalHours: totalCycleDuration / (1000 * 60 * 60),
-      progress: progress
-    });
+    // Progress = elapsed time / total time = (total - remaining) / total
+    const elapsedMs = totalCycleMs - remainingMs;
+    const progress = Math.max(0, Math.min(100, (elapsedMs / totalCycleMs) * 100));
     
     return progress;
   };
 
-  const getCETDate = () => {
-    return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-  };
 
 
   if (isCollapsed) {

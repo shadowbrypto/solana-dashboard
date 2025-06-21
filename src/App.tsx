@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
@@ -112,6 +112,7 @@ const MainContent = (): JSX.Element => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [protocolData, setProtocolData] = useState<ProtocolStats[]>([]);
   const [data, setData] = useState<any[]>([]);
   const [activeView, setActiveView] = useState<"charts" | "data">(
@@ -176,15 +177,8 @@ const MainContent = (): JSX.Element => {
 
   useEffect(() => {
     const protocol = searchParams.get("protocol")?.toLowerCase() || "trojan";
-    
-    // If no protocol parameter exists, redirect to trojan
-    if (!searchParams.get("protocol")) {
-      setSearchParams({ protocol: "trojan" });
-      return;
-    }
-    
     loadData(protocol);
-  }, [searchParams, loadData, setSearchParams]);
+  }, [searchParams, loadData]);
 
 
   const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => data[data.length - 1], [data]);
@@ -299,7 +293,7 @@ const MainContent = (): JSX.Element => {
   }, [data, allProtocolIds]);
 
   if (invalidProtocol) {
-    window.location.href = "/not-found";
+    navigate("/not-found");
     return (
       <div className="flex items-center justify-center min-h-screen">
         Redirecting...

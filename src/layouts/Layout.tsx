@@ -83,9 +83,9 @@ export function Layout() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "w-64 border-r bg-muted/10 flex flex-col transition-transform duration-300 ease-in-out",
-        "lg:translate-x-0 lg:static lg:z-auto",
-        "fixed inset-y-0 left-0 z-50",
+        "w-64 border-r flex flex-col transition-transform duration-300 ease-in-out",
+        "lg:bg-muted/10 lg:translate-x-0 lg:static lg:z-auto",
+        "fixed inset-y-0 left-0 z-50 bg-background shadow-lg",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Logo - Hidden on mobile since it's in the mobile header */}

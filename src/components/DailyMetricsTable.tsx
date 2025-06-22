@@ -639,20 +639,20 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
         </div>
       </div>
       
-      <div className="flex justify-center gap-3 pt-4">
+      <div className="flex justify-end gap-2 pt-4">
         <button
           onClick={downloadReport}
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         >
           <Download className="h-4 w-4" />
-          Download Report
+          Download
         </button>
         <button
           onClick={copyToClipboard}
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         >
           <Copy className="h-4 w-4" />
-          Copy to Clipboard
+          Copy
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import protocolRoutes from './routes/protocolRoutes.js';
 import dataUpdateRoutes from './routes/dataUpdateRoutes.js';
+import protocolConfigRoutes from './routes/protocolConfigRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/protocols', protocolRoutes);
 app.use('/api/data-update', dataUpdateRoutes);
+app.use('/api/protocol-config', protocolConfigRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -64,4 +66,5 @@ app.listen(PORT, () => {
   console.log(`🔌 API endpoints:`);
   console.log(`   - Protocols: http://localhost:${PORT}/api/protocols`);
   console.log(`   - Data Update: http://localhost:${PORT}/api/data-update`);
+  console.log(`   - Protocol Config: http://localhost:${PORT}/api/protocol-config`);
 });

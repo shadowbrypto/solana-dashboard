@@ -1,5 +1,64 @@
 # Sol Analytics API Endpoints
 
+## Protocol Configuration Endpoints
+
+### GET `/api/protocol-config`
+Get all protocol configurations from the database.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "protocol_id": "bonkbot",
+      "category": "Telegram Bots",
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### POST `/api/protocol-config`
+Save multiple protocol configurations to the database.
+
+**Request Body:**
+```json
+{
+  "configurations": [
+    {
+      "protocol_id": "bonkbot",
+      "category": "Telegram Bots"
+    },
+    {
+      "protocol_id": "photon",
+      "category": "Trading Terminals"
+    }
+  ]
+}
+```
+
+### PUT `/api/protocol-config/:protocolId`
+Save a single protocol configuration.
+
+**Request Body:**
+```json
+{
+  "category": "Telegram Bots"
+}
+```
+
+### DELETE `/api/protocol-config/:protocolId`
+Delete a single protocol configuration (reset to default).
+
+### DELETE `/api/protocol-config`
+Reset all protocol configurations.
+
+### GET `/api/protocol-config/health`
+Health check for protocol configuration API.
+
 ## Data Update Endpoints
 
 ### POST `/api/data-update/sync`

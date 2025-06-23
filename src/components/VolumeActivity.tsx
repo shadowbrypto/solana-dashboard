@@ -245,7 +245,7 @@ export function VolumeActivity({
                   {week.map((day, dayIndex) => (
                     <div
                       key={`${weekIndex}-${dayIndex}`}
-                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 group relative cursor-pointer ${
+                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                         !day.isCurrentYear || day.intensity === 0 ? 'bg-transparent' :
                         day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' :
                         day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' :
@@ -260,10 +260,10 @@ export function VolumeActivity({
                           weekIndex < 5 ? 'left-0' : weekIndex > 47 ? 'right-0' : 'left-1/2 transform -translate-x-1/2'
                         }`}>
                           <div className="space-y-1">
-                            <div className="text-sm font-medium">
+                            <div className="text-xs font-medium">
                               {day.volume > 0 ? formatCurrency(day.volume) : 'No trading activity'}
                             </div>
-                            <div className="text-sm text-gray-300">
+                            <div className="text-xs text-gray-300">
                               {formatTooltipDate(day.date)}
                             </div>
                           </div>
@@ -309,9 +309,6 @@ export function VolumeActivity({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Past year trading activity
-            </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
@@ -357,7 +354,7 @@ export function VolumeActivity({
                   {week.map((day, dayIndex) => (
                     <div
                       key={`${weekIndex}-${dayIndex}`}
-                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 group relative cursor-pointer ${
+                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                         !day.isCurrentYear || day.intensity === 0 ? 'bg-transparent' :
                         day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' :
                         day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' :
@@ -372,10 +369,10 @@ export function VolumeActivity({
                           weekIndex < 5 ? 'left-0' : weekIndex > 47 ? 'right-0' : 'left-1/2 transform -translate-x-1/2'
                         }`}>
                           <div className="space-y-1">
-                            <div className="text-sm font-medium">
+                            <div className="text-xs font-medium">
                               {day.volume > 0 ? formatCurrency(day.volume) : 'No trading activity'}
                             </div>
-                            <div className="text-sm text-gray-300">
+                            <div className="text-xs text-gray-300">
                               {formatTooltipDate(day.date)}
                             </div>
                           </div>

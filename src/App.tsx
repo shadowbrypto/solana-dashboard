@@ -93,7 +93,7 @@ const MetricCards = ({
           prefix="$"
         />
         <MetricCard
-          title="Daily Users"
+          title="Users"
           type="users"
           value={totalMetrics.numberOfNewUsers ?? 0}
         />

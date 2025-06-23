@@ -104,7 +104,7 @@ export function StackedBarChart({
 
   return (
     <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between border-b">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
           {subtitle && (
@@ -112,7 +112,7 @@ export function StackedBarChart({
           )}
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+          <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
           <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
@@ -126,7 +126,7 @@ export function StackedBarChart({
         </Select>
       </CardHeader>
       <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
           <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -138,7 +138,7 @@ export function StackedBarChart({
               dataKey={xAxisKey}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               tickFormatter={(value) => {
                 const [day, month] = value.split('-');
                 const date = new Date(2025, parseInt(month) - 1, parseInt(day));
@@ -148,7 +148,7 @@ export function StackedBarChart({
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               tickFormatter={(value) => formatNumberWithSuffix(value)}
             />
             <Tooltip

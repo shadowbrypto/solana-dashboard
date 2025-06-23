@@ -159,7 +159,7 @@ export function CategoryHorizontalBarChart({
 
   return (
     <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between border-b">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             {title} - {metricLabels[selectedMetric]}
@@ -168,9 +168,9 @@ export function CategoryHorizontalBarChart({
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
-            <SelectTrigger className="w-[120px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+            <SelectTrigger className="w-full sm:w-[120px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
               <SelectValue placeholder="Select metric" />
             </SelectTrigger>
             <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
@@ -181,7 +181,7 @@ export function CategoryHorizontalBarChart({
             </SelectContent>
           </Select>
           <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-            <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+            <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
               <SelectValue placeholder="Select timeframe" />
             </SelectTrigger>
             <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
@@ -218,7 +218,7 @@ export function CategoryHorizontalBarChart({
               type="number"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               tickFormatter={metricFormatters[selectedMetric]}
             />
             <YAxis
@@ -226,7 +226,7 @@ export function CategoryHorizontalBarChart({
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
               width={140}
             />
             <Tooltip

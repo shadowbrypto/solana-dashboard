@@ -858,7 +858,7 @@ const MainContent = (): JSX.Element => {
           ) : (
             <>
               <ProtocolHighlights
-                title="Trojan Highlights"
+                title={`${getProtocolName(protocol)} Highlights`}
                 data={data}
                 protocolColor={getProtocolColor(protocol)}
                 loading={loading}

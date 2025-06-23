@@ -23,7 +23,7 @@ type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 import { StackedAreaChartSkeleton } from "./StackedAreaChartSkeleton";
 
-interface StackedAreaChartProps {
+interface MultiAreaChartProps {
   title: string;
   data: any[];
   keys: string[];
@@ -34,27 +34,20 @@ interface StackedAreaChartProps {
   loading?: boolean;
 }
 
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toFixed(0);
-}
-
-export function StackedAreaChart({ 
+export function MultiAreaChart({ 
   title, 
   data,
   keys,
   labels,
   colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"],
   xAxisKey = "formattedDay",
-  valueFormatter = (value: number) => `${(value * 100).toFixed(2)}%`,
+  valueFormatter = (value: number) => `${value.toFixed(1)}%`,
   loading
-}: StackedAreaChartProps) {
+}: MultiAreaChartProps) {
   if (loading) {
     return <StackedAreaChartSkeleton />;
   }
+  
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 
@@ -96,53 +89,13 @@ export function StackedAreaChart({
       });
     }
 
-    // Detect if we're dealing with percentage values (0-100) or normalized values (0-1)
-    const isPercentageData = (() => {
-      if (timeFilteredData.length === 0 || keys.length === 0) return false;
-      
-      // Check a sample of data points to see if values are > 1 (indicating percentages)
-      const sampleData = timeFilteredData.slice(0, Math.min(5, timeFilteredData.length));
-      for (const item of sampleData) {
-        for (const key of keys) {
-          if (item[key] && item[key] > 1) {
-            return true;
-          }
-        }
-      }
-      return false;
-    })();
-
-    // For percentage data (market share), don't recalculate shares - just disable/enable
-    if (isPercentageData) {
-      return timeFilteredData.map(item => {
-        const newItem = { ...item };
-        
-        // For percentage data, just set disabled keys to 0, keep enabled ones as-is
-        keys.forEach(key => {
-          if (disabledKeys.includes(key)) {
-            newItem[key] = 0;
-          }
-        });
-        
-        return newItem;
-      });
-    }
-
-    // For normalized data (dominance), recalculate shares based on enabled protocols
+    // For multi-area chart, just hide disabled keys, don't recalculate
     return timeFilteredData.map(item => {
       const newItem = { ...item };
-      const enabledKeys = keys.filter(key => !disabledKeys.includes(key));
       
-      // Calculate total of enabled protocols
-      const enabledTotal = enabledKeys.reduce((sum, key) => sum + item[key], 0);
-      
-      // Set disabled protocols to 0 and adjust shares of enabled ones
       keys.forEach(key => {
         if (disabledKeys.includes(key)) {
           newItem[key] = 0;
-        } else if (enabledTotal > 0) {
-          // Recalculate share as a proportion of enabled total
-          newItem[key] = item[key] / enabledTotal;
         }
       });
       
@@ -155,22 +108,6 @@ export function StackedAreaChart({
     const protocol = key.replace('_dominance', '').replace('_share', '');
     return protocol.charAt(0).toUpperCase() + protocol.slice(1);
   });
-
-  // Detect if we're dealing with percentage values (0-100) or normalized values (0-1)
-  const isPercentageData = useMemo(() => {
-    if (filteredData.length === 0 || keys.length === 0) return false;
-    
-    // Check a sample of data points to see if values are > 1 (indicating percentages)
-    const sampleData = filteredData.slice(0, Math.min(5, filteredData.length));
-    for (const item of sampleData) {
-      for (const key of keys) {
-        if (item[key] && item[key] > 1) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }, [filteredData, keys]);
 
   return (
     <Card className="bg-card border-border rounded-xl">
@@ -216,8 +153,8 @@ export function StackedAreaChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickFormatter={(value) => isPercentageData ? `${value.toFixed(0)}%` : `${(value * 100).toFixed(0)}%`}
-              domain={isPercentageData ? [0, 100] : [0, 1]}
+              tickFormatter={(value) => `${value.toFixed(0)}%`}
+              domain={[0, 'dataMax']}
             />
             <Tooltip
               content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -266,10 +203,9 @@ export function StackedAreaChart({
                 <Area
                   key={key}
                   dataKey={key}
-                  stackId="1"
                   stroke={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
                   fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
-                  fillOpacity={disabledKeys.includes(key) ? 0.2 : 0.85}
+                  fillOpacity={disabledKeys.includes(key) ? 0.1 : 0.3}
                   strokeWidth={2}
                   name={displayLabels[index]}
                 />

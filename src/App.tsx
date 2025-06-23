@@ -23,11 +23,12 @@ import { CombinedChart } from "./components/charts/CombinedChart";
 import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { StackedAreaChart } from "./components/charts/StackedAreaChart";
+import { MultiAreaChart } from "./components/charts/MultiAreaChart";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 import { getAllProtocols } from "./lib/protocol-categories";
-import { getProtocolName } from "./lib/protocol-config";
+import { getProtocolName, getAllCategories, getProtocolsByCategory } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 
 interface DailyData {
@@ -104,7 +105,7 @@ const MainContent = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [invalidProtocol, setInvalidProtocol] = useState(false);
   const [totalMetrics, setTotalMetrics] = useState<ProtocolMetrics>({total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0});
-  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>([]);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(["categories"]);
 
   useEffect(() => {
     document.body.classList.add("dark:bg-background");
@@ -292,6 +293,81 @@ const MainContent = (): JSX.Element => {
     });
   }, [data, allProtocolIds]);
 
+  // Category aggregation for volume
+  const categoryVolumeData = useMemo(() => {
+    const categories = getAllCategories();
+    return data.map(day => {
+      const categoryData: any = { formattedDay: day.formattedDay };
+      
+      categories.forEach(category => {
+        const protocolsInCategory = getProtocolsByCategory(category);
+        const categoryVolume = protocolsInCategory.reduce((sum, protocol) => {
+          const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
+          return sum + (day[key] || 0);
+        }, 0);
+        categoryData[`${category.replace(/\s+/g, '_')}_volume`] = categoryVolume;
+      });
+      
+      return categoryData;
+    });
+  }, [data]);
+
+  // Category dominance calculation
+  const categoryDominanceData = useMemo(() => {
+    const categories = getAllCategories();
+    return data.map(day => {
+      // Calculate total volume across all categories
+      const totalVolume = categories.reduce((sum, category) => {
+        const protocolsInCategory = getProtocolsByCategory(category);
+        const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
+          const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
+          return categorySum + (day[key] || 0);
+        }, 0);
+        return sum + categoryVolume;
+      }, 0);
+
+      // Calculate dominance for each category
+      const dominanceData: any = { formattedDay: day.formattedDay };
+      categories.forEach(category => {
+        const protocolsInCategory = getProtocolsByCategory(category);
+        const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
+          const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
+          return categorySum + (day[key] || 0);
+        }, 0);
+        const dominanceKey = `${category.replace(/\s+/g, '_')}_dominance`;
+        dominanceData[dominanceKey] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
+      });
+
+      return dominanceData;
+    });
+  }, [data]);
+
+  // Category market share calculation (percentage shares for stacked areas)
+  const categoryMarketShareData = useMemo(() => {
+    const categories = getAllCategories();
+    return data.map(day => {
+      // Calculate total volume across ALL protocols (not just categorized ones)
+      const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
+        const key = `${protocolId.replace(/\s+/g, '_')}_volume`;
+        return sum + (day[key] || 0);
+      }, 0);
+
+      // Calculate percentage share for each category relative to ALL protocols
+      const marketShareData: any = { formattedDay: day.formattedDay };
+      categories.forEach(category => {
+        const protocolsInCategory = getProtocolsByCategory(category);
+        const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
+          const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
+          return categorySum + (day[key] || 0);
+        }, 0);
+        const shareKey = `${category.replace(/\s+/g, '_')}_share`;
+        marketShareData[shareKey] = totalVolume > 0 ? (categoryVolume / totalVolume) * 100 : 0;
+      });
+
+      return marketShareData;
+    });
+  }, [data, allProtocolIds]);
+
   if (invalidProtocol) {
     navigate("/not-found");
     return (
@@ -337,6 +413,86 @@ const MainContent = (): JSX.Element => {
                 onValueChange={setOpenAccordionItems}
                 className="w-full space-y-3 lg:space-y-4 rounded-xl overflow-hidden"
               >
+                {/* Category Metrics */}
+                <AccordionItem value="categories" className="border rounded-xl overflow-hidden transition-all duration-200 bg-gradient-to-b from-background to-muted/10 hover:bg-gradient-to-b hover:from-background hover:to-muted/20 data-[state=open]:bg-gradient-to-b data-[state=open]:from-background data-[state=open]:to-muted/30">
+                  <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4 hover:bg-muted/50 rounded-xl group">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-primary/80 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+
+                      <span className="text-base sm:text-lg font-semibold flex-1 text-left">Category Metrics</span>
+                      <svg
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 lg:px-6 pt-2 pb-4 sm:pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                    {openAccordionItems.includes("categories") && (
+                      <>
+                        <StackedBarChart
+                          title="Volume by Category"
+                          data={categoryVolumeData}
+                          dataKeys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
+                          labels={getAllCategories()}
+                          colors={getAllCategories().map((category, index) => {
+                            const categoryColors = [
+                              "hsl(210 100% 50%)", // Blue for Trading Terminals
+                              "hsl(120 100% 40%)", // Green for Telegram Bots  
+                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                            ];
+                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                          })}
+                          valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
+                          loading={loading}
+                        />
+                        <StackedAreaChart
+                          title="Volume Dominance by Category"
+                          data={categoryDominanceData}
+                          keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
+                          labels={getAllCategories()}
+                          colors={getAllCategories().map((category, index) => {
+                            const categoryColors = [
+                              "hsl(210 100% 50%)", // Blue for Trading Terminals
+                              "hsl(120 100% 40%)", // Green for Telegram Bots  
+                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                            ];
+                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                          })}
+                          loading={loading}
+                        />
+                        <MultiAreaChart
+                          title="Market Share by Category"
+                          data={categoryMarketShareData}
+                          keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
+                          labels={getAllCategories()}
+                          colors={getAllCategories().map((category, index) => {
+                            const categoryColors = [
+                              "hsl(210 100% 50%)", // Blue for Trading Terminals
+                              "hsl(120 100% 40%)", // Green for Telegram Bots  
+                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                            ];
+                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                          })}
+                          valueFormatter={(value) => `${value.toFixed(1)}%`}
+                          loading={loading}
+                        />
+                      </>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* Volume Metrics */}
                 <AccordionItem value="volume" className="border rounded-xl overflow-hidden transition-all duration-200 bg-gradient-to-b from-background to-muted/10 hover:bg-gradient-to-b hover:from-background hover:to-muted/20 data-[state=open]:bg-gradient-to-b data-[state=open]:from-background data-[state=open]:to-muted/30">
                   <AccordionTrigger className="w-full hover:no-underline data-[state=open]:rounded-b-none transition-all duration-200">
@@ -388,7 +544,7 @@ const MainContent = (): JSX.Element => {
                           data={data}
                           dataKeys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_volume`)}
                           labels={allProtocolIds.map(id => getProtocolName(id))}
-                          colors={protocolColorsList}
+                          colors={allProtocolIds.map(id => getProtocolColor(id))}
                           valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
                           loading={loading}
                         />
@@ -396,7 +552,7 @@ const MainContent = (): JSX.Element => {
                           title="Volume Dominance by Protocol"
                           data={volumeDominanceData}
                           keys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_dominance`)}
-                          colors={protocolColorsList}
+                          colors={allProtocolIds.map(id => getProtocolColor(id))}
                           loading={loading}
                         />
                       </>

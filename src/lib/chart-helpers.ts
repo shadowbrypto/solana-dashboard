@@ -5,15 +5,17 @@ import { getProtocolColor } from './colors';
 // Helper functions for chart data generation
 
 export const generateHorizontalBarChartData = (data: any[], metric: string) => {
+  if (!data || data.length === 0) return [];
+  
   const allProtocolIds = getAllProtocols();
   
   return allProtocolIds.map(protocolId => ({
     name: getProtocolName(protocolId),
-    values: data.map(item => ({
+    values: data.filter(item => item).map(item => ({
       value: item[`${protocolId.replace(/\s+/g, '_')}_${metric}`] || 0,
-      date: item.date
+      date: item.date || item.formattedDay
     })),
-    value: data.reduce((sum, item) => sum + (item[`${protocolId.replace(/\s+/g, '_')}_${metric}`] || 0), 0),
+    value: data.reduce((sum, item) => sum + (item ? (item[`${protocolId.replace(/\s+/g, '_')}_${metric}`] || 0) : 0), 0),
     color: getProtocolColor(protocolId)
   }));
 };

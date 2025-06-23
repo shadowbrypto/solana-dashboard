@@ -28,6 +28,8 @@ import { CategoryStackedBarChartSkeleton, CategoryStackedAreaChartSkeleton, Cate
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
+import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizontalBarChart";
+import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { getAllProtocols } from "./lib/protocol-categories";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
@@ -50,12 +52,20 @@ type ProtocolStatsWithDay = ProtocolStats & DailyData & {
   fees_usd: number;
 };
 
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div className="p-4 text-red-600">
-    <h2 className="text-lg font-bold">Something went wrong:</h2>
-    <pre className="mt-2">{error.message}</pre>
-  </div>
-);
+const ErrorFallback = ({ error }: { error: Error }) => {
+  console.error('Error caught by boundary:', error);
+  console.error('Error stack:', error.stack);
+  return (
+    <div className="p-4 text-red-600">
+      <h2 className="text-lg font-bold">Something went wrong:</h2>
+      <pre className="mt-2 text-sm">{error.message}</pre>
+      <details className="mt-4">
+        <summary className="cursor-pointer">Stack trace</summary>
+        <pre className="mt-2 text-xs overflow-auto">{error.stack}</pre>
+      </details>
+    </div>
+  );
+};
 
 const MetricCards = ({
   totalMetrics,
@@ -122,6 +132,13 @@ const MainContent = (): JSX.Element => {
   );
   const protocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
 
+  // Debug logging
+  console.log('=== App Component Debug ===');
+  console.log('Protocol:', protocol);
+  console.log('Data length:', data?.length || 0);
+  console.log('Data sample:', data?.[0]);
+  console.log('Loading:', loading);
+
   const loadData = useCallback(async (selectedProtocol: string) => {
     try {
       setLoading(true);
@@ -183,35 +200,57 @@ const MainContent = (): JSX.Element => {
   }, [searchParams, loadData]);
 
 
-  const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => data[data.length - 1], [data]);
+  const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => {
+    try {
+      console.log('Computing latestData...');
+      return data && data.length > 0 ? data[data.length - 1] : undefined;
+    } catch (error) {
+      console.error('Error in latestData:', error);
+      return undefined;
+    }
+  }, [data]);
 
   // Get all protocol IDs from centralized config
   const allProtocolIds = useMemo(() => getAllProtocols(), []);
 
   // Memoize expensive dominance calculations
   const volumeDominanceData = useMemo(() => {
-    return data.map(day => {
-      // Calculate total volume across all protocols
-      const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
-        const key = `${protocolId.replace(/\s+/g, '_')}_volume`;
-        return sum + (day[key] || 0);
-      }, 0);
+    try {
+      console.log('Computing volumeDominanceData...');
+      if (!data || data.length === 0) return [];
+      
+      return data.map(day => {
+        if (!day) return null;
+        
+        // Calculate total volume across all protocols
+        const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
+          const key = `${protocolId.replace(/\s+/g, '_')}_volume`;
+          return sum + (day[key] || 0);
+        }, 0);
 
-      // Calculate dominance for each protocol
-      const dominanceData: any = { formattedDay: day.formattedDay };
-      allProtocolIds.forEach(protocolId => {
-        const normalizedId = protocolId.replace(/\s+/g, '_');
-        const volumeKey = `${normalizedId}_volume`;
-        const dominanceKey = `${normalizedId}_dominance`;
-        dominanceData[dominanceKey] = totalVolume > 0 ? (day[volumeKey] || 0) / totalVolume : 0;
-      });
+        // Calculate dominance for each protocol
+        const dominanceData: any = { formattedDay: day.formattedDay || day.date };
+        allProtocolIds.forEach(protocolId => {
+          const normalizedId = protocolId.replace(/\s+/g, '_');
+          const volumeKey = `${normalizedId}_volume`;
+          const dominanceKey = `${normalizedId}_dominance`;
+          dominanceData[dominanceKey] = totalVolume > 0 ? (day[volumeKey] || 0) / totalVolume : 0;
+        });
 
-      return dominanceData;
-    });
+        return dominanceData;
+      }).filter(Boolean);
+    } catch (error) {
+      console.error('Error in volumeDominanceData:', error);
+      return [];
+    }
   }, [data, allProtocolIds]);
 
   const usersDominanceData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total DAU across all protocols
       const totalDAU = allProtocolIds.reduce((sum, protocolId) => {
         const key = `${protocolId.replace(/\s+/g, '_')}_users`;
@@ -219,7 +258,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate dominance for each protocol
-      const dominanceData: any = { formattedDay: day.formattedDay };
+      const dominanceData: any = { formattedDay: day.formattedDay || day.date };
       allProtocolIds.forEach(protocolId => {
         const normalizedId = protocolId.replace(/\s+/g, '_');
         const usersKey = `${normalizedId}_users`;
@@ -228,11 +267,15 @@ const MainContent = (): JSX.Element => {
       });
 
       return dominanceData;
-    });
+    }).filter(Boolean);
   }, [data, allProtocolIds]);
 
   const newUsersDominanceData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total new users across all protocols
       const totalNewUsers = allProtocolIds.reduce((sum, protocolId) => {
         const key = `${protocolId.replace(/\s+/g, '_')}_new_users`;
@@ -240,7 +283,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate dominance for each protocol
-      const dominanceData: any = { formattedDay: day.formattedDay };
+      const dominanceData: any = { formattedDay: day.formattedDay || day.date };
       allProtocolIds.forEach(protocolId => {
         const normalizedId = protocolId.replace(/\s+/g, '_');
         const newUsersKey = `${normalizedId}_new_users`;
@@ -249,11 +292,15 @@ const MainContent = (): JSX.Element => {
       });
 
       return dominanceData;
-    });
+    }).filter(Boolean);
   }, [data, allProtocolIds]);
 
   const tradesDominanceData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total trades across all protocols
       const totalTrades = allProtocolIds.reduce((sum, protocolId) => {
         const key = `${protocolId.replace(/\s+/g, '_')}_trades`;
@@ -261,7 +308,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate dominance for each protocol
-      const dominanceData: any = { formattedDay: day.formattedDay };
+      const dominanceData: any = { formattedDay: day.formattedDay || day.date };
       allProtocolIds.forEach(protocolId => {
         const normalizedId = protocolId.replace(/\s+/g, '_');
         const tradesKey = `${normalizedId}_trades`;
@@ -270,11 +317,15 @@ const MainContent = (): JSX.Element => {
       });
 
       return dominanceData;
-    });
+    }).filter(Boolean);
   }, [data, allProtocolIds]);
 
   const feesDominanceData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total fees across all protocols
       const totalFees = allProtocolIds.reduce((sum, protocolId) => {
         const key = `${protocolId.replace(/\s+/g, '_')}_fees`;
@@ -282,7 +333,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate dominance for each protocol
-      const dominanceData: any = { formattedDay: day.formattedDay };
+      const dominanceData: any = { formattedDay: day.formattedDay || day.date };
       allProtocolIds.forEach(protocolId => {
         const normalizedId = protocolId.replace(/\s+/g, '_');
         const feesKey = `${normalizedId}_fees`;
@@ -291,14 +342,18 @@ const MainContent = (): JSX.Element => {
       });
 
       return dominanceData;
-    });
+    }).filter(Boolean);
   }, [data, allProtocolIds]);
 
   // Category aggregation for volume
   const categoryVolumeData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const categories = getMutableAllCategories();
     return data.map(day => {
-      const categoryData: any = { formattedDay: day.formattedDay };
+      if (!day) return null;
+      
+      const categoryData: any = { formattedDay: day.formattedDay || day.date };
       
       categories.forEach(category => {
         const protocolsInCategory = getMutableProtocolsByCategory(category);
@@ -310,13 +365,17 @@ const MainContent = (): JSX.Element => {
       });
       
       return categoryData;
-    });
+    }).filter(Boolean);
   }, [data]);
 
   // Category dominance calculation
   const categoryDominanceData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const categories = getMutableAllCategories();
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total volume across all categories
       const totalVolume = categories.reduce((sum, category) => {
         const protocolsInCategory = getMutableProtocolsByCategory(category);
@@ -328,7 +387,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate dominance for each category
-      const dominanceData: any = { formattedDay: day.formattedDay };
+      const dominanceData: any = { formattedDay: day.formattedDay || day.date };
       categories.forEach(category => {
         const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
@@ -340,13 +399,17 @@ const MainContent = (): JSX.Element => {
       });
 
       return dominanceData;
-    });
+    }).filter(Boolean);
   }, [data]);
 
   // Category market share calculation (percentage shares for stacked areas)
   const categoryMarketShareData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     const categories = getMutableAllCategories();
     return data.map(day => {
+      if (!day) return null;
+      
       // Calculate total volume across ALL protocols (not just categorized ones)
       const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
         const key = `${protocolId.replace(/\s+/g, '_')}_volume`;
@@ -354,7 +417,7 @@ const MainContent = (): JSX.Element => {
       }, 0);
 
       // Calculate percentage share for each category relative to ALL protocols
-      const marketShareData: any = { formattedDay: day.formattedDay };
+      const marketShareData: any = { formattedDay: day.formattedDay || day.date };
       categories.forEach(category => {
         const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
@@ -366,7 +429,7 @@ const MainContent = (): JSX.Element => {
       });
 
       return marketShareData;
-    });
+    }).filter(Boolean);
   }, [data, allProtocolIds]);
 
   if (invalidProtocol) {
@@ -442,6 +505,13 @@ const MainContent = (): JSX.Element => {
                   <AccordionContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 lg:px-6 pt-2 pb-4 sm:pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     {openAccordionItems.includes("categories") && (
                       <>
+                        {!loading && data.length > 0 && (
+                          <CategoryHorizontalBarChart
+                            title="Total Metrics by Category"
+                            data={data}
+                            loading={loading}
+                          />
+                        )}
                         {loading ? (
                           <CategoryStackedBarChartSkeleton />
                         ) : (
@@ -786,6 +856,14 @@ const MainContent = (): JSX.Element => {
             </>
           ) : (
             <>
+              {!loading && data.length > 0 && (
+                <VolumeMilestoneChart
+                  title="Volume Milestones Timeline"
+                  data={data}
+                  protocolColor={getProtocolColor(protocol)}
+                  loading={loading}
+                />
+              )}
               <CombinedChart
                 title="Volume & Fees"
                 data={data.filter(

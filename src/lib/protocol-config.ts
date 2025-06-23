@@ -95,8 +95,39 @@ export const generateProtocolCategories = () => {
   }));
 };
 
+// Storage key for saved configurations
+const SAVED_PROTOCOL_CONFIG_KEY = 'saved_protocol_configurations';
+
+// Load saved configurations from localStorage or use defaults
+const loadSavedConfigurations = (): ProtocolConfigMutable[] => {
+  try {
+    const saved = localStorage.getItem(SAVED_PROTOCOL_CONFIG_KEY);
+    if (saved) {
+      const savedConfigs = JSON.parse(saved);
+      // Merge with current configs to handle new protocols that might have been added
+      const mergedConfigs = [...protocolConfigs];
+      
+      // Update categories for existing protocols based on saved data
+      savedConfigs.forEach((savedProtocol: ProtocolConfigMutable) => {
+        const existingIndex = mergedConfigs.findIndex(p => p.id === savedProtocol.id);
+        if (existingIndex !== -1) {
+          mergedConfigs[existingIndex] = {
+            ...mergedConfigs[existingIndex],
+            category: savedProtocol.category
+          };
+        }
+      });
+      
+      return mergedConfigs;
+    }
+  } catch (error) {
+    console.error('Error loading saved protocol configurations:', error);
+  }
+  return [...protocolConfigs];
+};
+
 // Mutable version of protocol configs for drag-and-drop
-let mutableProtocolConfigs: ProtocolConfigMutable[] = [...protocolConfigs];
+let mutableProtocolConfigs: ProtocolConfigMutable[] = loadSavedConfigurations();
 
 export const getMutableProtocolConfigs = (): ProtocolConfigMutable[] => {
   return mutableProtocolConfigs;
@@ -118,4 +149,41 @@ export const getMutableProtocolsByCategory = (category: string): ProtocolConfigM
 
 export const getMutableAllCategories = (): string[] => {
   return Array.from(new Set(mutableProtocolConfigs.map(p => p.category)));
+};
+
+// Save current configurations to localStorage
+export const saveProtocolConfigurations = (): void => {
+  try {
+    localStorage.setItem(SAVED_PROTOCOL_CONFIG_KEY, JSON.stringify(mutableProtocolConfigs));
+  } catch (error) {
+    console.error('Error saving protocol configurations:', error);
+    throw new Error('Failed to save configurations');
+  }
+};
+
+// Reset configurations to defaults
+export const resetProtocolConfigurations = (): void => {
+  mutableProtocolConfigs = [...protocolConfigs];
+  try {
+    localStorage.removeItem(SAVED_PROTOCOL_CONFIG_KEY);
+  } catch (error) {
+    console.error('Error removing saved configurations:', error);
+  }
+};
+
+// Check if current configurations differ from saved ones
+export const hasUnsavedChanges = (): boolean => {
+  try {
+    const saved = localStorage.getItem(SAVED_PROTOCOL_CONFIG_KEY);
+    if (!saved) {
+      // No saved config, check if current differs from defaults
+      return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(protocolConfigs);
+    }
+    
+    const savedConfigs = JSON.parse(saved);
+    return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(savedConfigs);
+  } catch (error) {
+    console.error('Error checking for unsaved changes:', error);
+    return false;
+  }
 };

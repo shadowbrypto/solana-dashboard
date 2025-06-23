@@ -16,7 +16,7 @@ import domtoimage from "dom-to-image";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
 import { getDailyMetrics } from "../lib/protocol";
-import { protocolCategories } from "../lib/protocol-categories";
+import { getMutableAllCategories, getMutableProtocolsByCategory } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 
@@ -268,10 +268,12 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
   const hideAllProtocols = () => {
     const allProtocols = new Set<string>();
-    protocolCategories.forEach(category => {
-      category.protocols.forEach(protocol => {
-        if (protocols.includes(protocol as Protocol)) {
-          allProtocols.add(protocol);
+    const categories = getMutableAllCategories();
+    categories.forEach(categoryName => {
+      const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+      categoryProtocols.forEach(protocol => {
+        if (protocols.includes(protocol.id as Protocol)) {
+          allProtocols.add(protocol.id);
         }
       });
     });
@@ -448,8 +450,9 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
           </TableHeader>
           <TableBody>
-            {protocolCategories.map((category) => {
-              const availableProtocols = category.protocols.filter(p => protocols.includes(p as Protocol));
+            {getMutableAllCategories().map((categoryName) => {
+              const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+              const availableProtocols = categoryProtocols.map(p => p.id).filter(p => protocols.includes(p as Protocol));
               
               // Sort protocols by volume (highest to lowest)
               const orderedProtocols = availableProtocols.sort((a, b) => {
@@ -460,12 +463,12 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               
               if (orderedProtocols.length === 0) return null;
               
-              const isCollapsed = collapsedCategories.includes(category.name);
+              const isCollapsed = collapsedCategories.includes(categoryName);
               const toggleCollapse = () => {
                 setCollapsedCategories(prev =>
-                  prev.includes(category.name)
-                    ? prev.filter(c => c !== category.name)
-                    : [...prev, category.name]
+                  prev.includes(categoryName)
+                    ? prev.filter(c => c !== categoryName)
+                    : [...prev, categoryName]
                 );
               };
 
@@ -491,10 +494,10 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
               }, {} as Record<MetricKey, number>);
 
               return (
-                <React.Fragment key={category.name}>
+                <React.Fragment key={categoryName}>
                   {/* Category Header */}
                   <TableRow 
-                    className={cn("border-t cursor-pointer", getCategoryRowColor(category.name))}
+                    className={cn("border-t cursor-pointer", getCategoryRowColor(categoryName))}
                     onClick={toggleCollapse}
                   >
                     <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4">
@@ -504,7 +507,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
                             !isCollapsed ? 'rotate-90' : ''
                           }`}
                         />
-                        <span className="truncate">{category.name}</span>
+                        <span className="truncate">{categoryName}</span>
                       </div>
                     </TableCell>
                     {orderedMetrics.map((metric) => (

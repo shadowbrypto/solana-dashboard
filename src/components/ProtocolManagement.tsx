@@ -5,10 +5,13 @@ import {
   getMutableProtocolConfigs, 
   getMutableAllCategories, 
   getMutableProtocolsByCategory,
-  updateProtocolCategory 
+  updateProtocolCategory,
+  saveProtocolConfigurations,
+  resetProtocolConfigurations,
+  hasUnsavedChanges
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { Code2, Copy, Check, RefreshCcw, AlertCircle, X, GripVertical } from 'lucide-react';
+import { Code2, Copy, Check, RefreshCcw, AlertCircle, X, GripVertical, Save, RotateCcw } from 'lucide-react';
 import { dataSyncApi } from '../lib/api';
 import { useToast } from '../hooks/useToast';
 import { Toast } from './ui/toast';
@@ -117,6 +120,8 @@ export function ProtocolManagement() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const { toasts, removeToast, success, error: showError } = useToast();
   
   const categories = getMutableAllCategories();
@@ -172,6 +177,36 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleSaveConfigurations = async () => {
+    if (isSaving) return;
+    
+    setIsSaving(true);
+    try {
+      saveProtocolConfigurations();
+      success('Protocol configurations saved successfully!');
+      setForceRender(prev => prev + 1); // Trigger re-render to update unsaved changes indicator
+    } catch (error) {
+      showError('Failed to save configurations');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetConfigurations = async () => {
+    if (isResetting) return;
+    
+    setIsResetting(true);
+    try {
+      resetProtocolConfigurations();
+      success('Protocol configurations reset to defaults!');
+      setForceRender(prev => prev + 1); // Trigger re-render to show reset changes
+    } catch (error) {
+      showError('Failed to reset configurations');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const activeProtocol = activeId ? getMutableProtocolConfigs().find(p => p.id === activeId) : null;
 
   return (
@@ -213,6 +248,68 @@ export function ProtocolManagement() {
               ) : null}
             </DragOverlay>
           </DndContext>
+        </CardContent>
+      </Card>
+
+      {/* Save/Reset Configuration Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuration Management</CardTitle>
+          <CardDescription>
+            Save your protocol category changes permanently or reset to defaults
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/40">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {hasUnsavedChanges() ? 'You have unsaved changes' : 'All changes are saved'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {hasUnsavedChanges() 
+                  ? 'Save your protocol category changes to make them permanent across page reloads.'
+                  : 'Your protocol configurations are up to date.'
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleResetConfigurations}
+                disabled={isResetting || isSaving}
+                variant="outline"
+                size="sm"
+              >
+                {isResetting ? (
+                  <>
+                    <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleSaveConfigurations}
+                disabled={isSaving || isResetting || !hasUnsavedChanges()}
+                size="sm"
+              >
+                {isSaving ? (
+                  <>
+                    <Save className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

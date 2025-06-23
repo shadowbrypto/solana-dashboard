@@ -26,6 +26,13 @@ export interface ProtocolConfig {
   category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps';
 }
 
+export interface ProtocolConfigMutable {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+  category: string;
+}
+
 // Centralized protocol configuration
 // To add a new protocol:
 // 1. Add an entry to this array with id, name, icon, and category
@@ -66,7 +73,7 @@ export const getProtocolsByCategory = (category: string): ProtocolConfig[] => {
 };
 
 export const getAllCategories = (): string[] => {
-  return [...new Set(protocolConfigs.map(p => p.category))];
+  return Array.from(new Set(protocolConfigs.map(p => p.category)));
 };
 
 export const getProtocolIcon = (protocolId: string): LucideIcon | null => {
@@ -86,4 +93,29 @@ export const generateProtocolCategories = () => {
     name: categoryName,
     protocols: getProtocolsByCategory(categoryName).map(p => p.id)
   }));
+};
+
+// Mutable version of protocol configs for drag-and-drop
+let mutableProtocolConfigs: ProtocolConfigMutable[] = [...protocolConfigs];
+
+export const getMutableProtocolConfigs = (): ProtocolConfigMutable[] => {
+  return mutableProtocolConfigs;
+};
+
+export const updateProtocolCategory = (protocolId: string, newCategory: string): void => {
+  const protocolIndex = mutableProtocolConfigs.findIndex(p => p.id === protocolId);
+  if (protocolIndex !== -1) {
+    mutableProtocolConfigs[protocolIndex] = {
+      ...mutableProtocolConfigs[protocolIndex],
+      category: newCategory
+    };
+  }
+};
+
+export const getMutableProtocolsByCategory = (category: string): ProtocolConfigMutable[] => {
+  return mutableProtocolConfigs.filter(p => p.category === category);
+};
+
+export const getMutableAllCategories = (): string[] => {
+  return Array.from(new Set(mutableProtocolConfigs.map(p => p.category)));
 };

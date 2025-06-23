@@ -1,18 +1,147 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { protocolConfigs, getAllCategories } from '../lib/protocol-config';
+import { 
+  getMutableProtocolConfigs, 
+  getMutableAllCategories, 
+  getMutableProtocolsByCategory,
+  updateProtocolCategory 
+} from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { Code2, Copy, Check, RefreshCcw, AlertCircle, X } from 'lucide-react';
+import { Code2, Copy, Check, RefreshCcw, AlertCircle, X, GripVertical } from 'lucide-react';
 import { dataSyncApi } from '../lib/api';
 import { useToast } from '../hooks/useToast';
 import { Toast } from './ui/toast';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SortableProtocolProps {
+  protocol: any;
+  isDragging?: boolean;
+}
+
+interface DroppableCategoryProps {
+  category: string;
+  protocols: any[];
+}
+
+function DroppableCategory({ category, protocols }: DroppableCategoryProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `category-${category}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[100px] p-4 border-2 border-dashed rounded-lg transition-all duration-200 ${
+        isOver 
+          ? 'border-primary bg-primary/10 shadow-md' 
+          : 'border-muted-foreground/25 bg-muted/40 hover:bg-muted/60 hover:border-muted-foreground/40'
+      }`}
+    >
+      <SortableContext items={protocols.map(p => p.id)} strategy={verticalListSortingStrategy}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {protocols.map(protocol => (
+            <SortableProtocol key={protocol.id} protocol={protocol} />
+          ))}
+        </div>
+      </SortableContext>
+      {protocols.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-sm font-medium mb-1">
+            Drop protocols here
+          </p>
+          <p className="text-muted-foreground/70 text-xs">
+            Drag and drop protocols to organize them
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortableProtocol({ protocol, isDragging }: SortableProtocolProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: sortableIsDragging,
+  } = useSortable({ id: protocol.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: sortableIsDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-200 ${
+        sortableIsDragging 
+          ? 'shadow-lg z-50 ring-2 ring-primary/50 bg-card scale-105' 
+          : 'bg-card border-border hover:bg-accent hover:shadow-sm hover:border-border/80'
+      }`}
+      {...attributes}
+    >
+      <div {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-accent p-1.5 rounded transition-colors">
+        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+      </div>
+      <protocol.icon className="h-5 w-5 text-muted-foreground" />
+      <div className="flex-1">
+        <p className="font-medium text-foreground">{protocol.name}</p>
+        <p className="text-sm text-muted-foreground">{protocol.id}</p>
+      </div>
+    </div>
+  );
+}
 
 export function ProtocolManagement() {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [forceRender, setForceRender] = useState(0);
   const { toasts, removeToast, success, error: showError } = useToast();
-  const categories = getAllCategories();
+  
+  const categories = getMutableAllCategories();
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    if (overId.startsWith('category-')) {
+      const newCategory = overId.replace('category-', '');
+      updateProtocolCategory(activeId, newCategory);
+      setForceRender(prev => prev + 1);
+      success(`Protocol moved to ${newCategory}`);
+    }
+  };
 
   const generateNewProtocolTemplate = () => {
     return `{ 
@@ -43,37 +172,47 @@ export function ProtocolManagement() {
     }
   };
 
+  const activeProtocol = activeId ? getMutableProtocolConfigs().find(p => p.id === activeId) : null;
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Protocol Configuration</CardTitle>
           <CardDescription>
-            Current protocols organized by category. To add a new protocol, update the protocol-config.ts file.
+            Current protocols organized by category. Drag protocols between categories to reorganize them.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {categories.map(category => {
-              const categoryProtocols = protocolConfigs.filter(p => p.category === category);
-              return (
-                <div key={category}>
-                  <h3 className="text-lg font-semibold mb-3">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {categoryProtocols.map(protocol => (
-                      <div key={protocol.id} className="flex items-center gap-2 p-3 border rounded-lg">
-                        <protocol.icon className="h-5 w-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium">{protocol.name}</p>
-                          <p className="text-sm text-muted-foreground">{protocol.id}</p>
-                        </div>
-                      </div>
-                    ))}
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-6">
+              {categories.map(category => {
+                const categoryProtocols = getMutableProtocolsByCategory(category);
+                return (
+                  <div key={category}>
+                    <h3 className="text-lg font-semibold mb-3">{category}</h3>
+                    <DroppableCategory category={category} protocols={categoryProtocols} />
+                  </div>
+                );
+              })}
+            </div>
+            
+            <DragOverlay>
+              {activeProtocol ? (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-card border-border shadow-2xl ring-2 ring-primary/50 backdrop-blur-sm transform rotate-1">
+                  <activeProtocol.icon className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{activeProtocol.name}</p>
+                    <p className="text-sm text-muted-foreground">{activeProtocol.id}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </CardContent>
       </Card>
 

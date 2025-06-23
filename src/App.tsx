@@ -29,7 +29,7 @@ import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 import { getAllProtocols } from "./lib/protocol-categories";
-import { getProtocolName, getAllCategories, getProtocolsByCategory } from "./lib/protocol-config";
+import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 
 interface DailyData {
@@ -296,12 +296,12 @@ const MainContent = (): JSX.Element => {
 
   // Category aggregation for volume
   const categoryVolumeData = useMemo(() => {
-    const categories = getAllCategories();
+    const categories = getMutableAllCategories();
     return data.map(day => {
       const categoryData: any = { formattedDay: day.formattedDay };
       
       categories.forEach(category => {
-        const protocolsInCategory = getProtocolsByCategory(category);
+        const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((sum, protocol) => {
           const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
           return sum + (day[key] || 0);
@@ -315,11 +315,11 @@ const MainContent = (): JSX.Element => {
 
   // Category dominance calculation
   const categoryDominanceData = useMemo(() => {
-    const categories = getAllCategories();
+    const categories = getMutableAllCategories();
     return data.map(day => {
       // Calculate total volume across all categories
       const totalVolume = categories.reduce((sum, category) => {
-        const protocolsInCategory = getProtocolsByCategory(category);
+        const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
           const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
           return categorySum + (day[key] || 0);
@@ -330,7 +330,7 @@ const MainContent = (): JSX.Element => {
       // Calculate dominance for each category
       const dominanceData: any = { formattedDay: day.formattedDay };
       categories.forEach(category => {
-        const protocolsInCategory = getProtocolsByCategory(category);
+        const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
           const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
           return categorySum + (day[key] || 0);
@@ -345,7 +345,7 @@ const MainContent = (): JSX.Element => {
 
   // Category market share calculation (percentage shares for stacked areas)
   const categoryMarketShareData = useMemo(() => {
-    const categories = getAllCategories();
+    const categories = getMutableAllCategories();
     return data.map(day => {
       // Calculate total volume across ALL protocols (not just categorized ones)
       const totalVolume = allProtocolIds.reduce((sum, protocolId) => {
@@ -356,7 +356,7 @@ const MainContent = (): JSX.Element => {
       // Calculate percentage share for each category relative to ALL protocols
       const marketShareData: any = { formattedDay: day.formattedDay };
       categories.forEach(category => {
-        const protocolsInCategory = getProtocolsByCategory(category);
+        const protocolsInCategory = getMutableProtocolsByCategory(category);
         const categoryVolume = protocolsInCategory.reduce((categorySum, protocol) => {
           const key = `${protocol.id.replace(/\s+/g, '_')}_volume`;
           return categorySum + (day[key] || 0);
@@ -448,9 +448,9 @@ const MainContent = (): JSX.Element => {
                           <StackedBarChart
                             title="Volume by Category"
                             data={categoryVolumeData}
-                            dataKeys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
-                            labels={getAllCategories()}
-                            colors={getAllCategories().map((category, index) => {
+                            dataKeys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
+                            labels={getMutableAllCategories()}
+                            colors={getMutableAllCategories().map((category, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  
@@ -468,9 +468,9 @@ const MainContent = (): JSX.Element => {
                           <StackedAreaChart
                             title="Volume Dominance by Category"
                             data={categoryDominanceData}
-                            keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
-                            labels={getAllCategories()}
-                            colors={getAllCategories().map((category, index) => {
+                            keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
+                            labels={getMutableAllCategories()}
+                            colors={getMutableAllCategories().map((category, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  
@@ -487,9 +487,9 @@ const MainContent = (): JSX.Element => {
                           <MultiAreaChart
                             title="Market Share by Category"
                             data={categoryMarketShareData}
-                            keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
-                            labels={getAllCategories()}
-                            colors={getAllCategories().map((category, index) => {
+                            keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
+                            labels={getMutableAllCategories()}
+                            colors={getMutableAllCategories().map((category, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  

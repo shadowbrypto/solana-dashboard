@@ -6,12 +6,12 @@ import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
-import { protocolConfigs } from '../lib/protocol-config';
+import { getMutableProtocolConfigs } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 // Generate protocols array from centralized config
 const protocols = [
-  ...protocolConfigs,
+  ...getMutableProtocolConfigs(),
   { id: 'all', name: 'All Protocols', icon: LayoutGrid, category: 'Overview' as const }
 ];
 

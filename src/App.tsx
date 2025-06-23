@@ -30,6 +30,7 @@ import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProto
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizontalBarChart";
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
+import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { getAllProtocols } from "./lib/protocol-categories";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
@@ -856,6 +857,12 @@ const MainContent = (): JSX.Element => {
             </>
           ) : (
             <>
+              <ProtocolHighlights
+                title="Trojan Highlights"
+                data={data}
+                protocolColor={getProtocolColor(protocol)}
+                loading={loading}
+              />
               {!loading && data.length > 0 && (
                 <VolumeMilestoneChart
                   title="Volume Milestones Timeline"

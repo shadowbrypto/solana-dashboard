@@ -8,30 +8,23 @@ export interface ProtocolConfiguration {
   updated_at?: string;
 }
 
-// Create the protocol_configurations table if it doesn't exist
-export async function initializeProtocolConfigTable(): Promise<void> {
+// Verify the protocol_configurations table exists and is accessible
+export async function verifyProtocolConfigTable(): Promise<void> {
   try {
-    // Check if table exists by trying to select from it
-    const { error: selectError } = await supabase
+    // Simple check to ensure table exists and is accessible
+    const { error } = await supabase
       .from('protocol_configurations')
       .select('id')
       .limit(1);
 
-    // If table doesn't exist, create it
-    if (selectError && selectError.message.includes('relation "protocol_configurations" does not exist')) {
-      console.log('Creating protocol_configurations table...');
-      
-      const { error: createError } = await supabase.rpc('create_protocol_configurations_table');
-      
-      if (createError) {
-        console.error('Error creating table:', createError);
-        throw createError;
-      }
-      
-      console.log('protocol_configurations table created successfully');
+    if (error) {
+      console.error('Error accessing protocol_configurations table:', error);
+      throw new Error(`Database table not accessible: ${error.message}`);
     }
+    
+    console.log('protocol_configurations table verified successfully');
   } catch (error) {
-    console.error('Error initializing protocol_configurations table:', error);
+    console.error('Error verifying protocol_configurations table:', error);
     throw error;
   }
 }

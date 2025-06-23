@@ -95,21 +95,23 @@ export const generateProtocolCategories = () => {
   }));
 };
 
-// Storage key for saved configurations
-const SAVED_PROTOCOL_CONFIG_KEY = 'saved_protocol_configurations';
+import { 
+  fetchProtocolConfigurations, 
+  saveProtocolConfigurationsToDb, 
+  resetProtocolConfigurationsInDb 
+} from './protocol-config-api';
 
-// Load saved configurations from localStorage or use defaults
-const loadSavedConfigurations = (): ProtocolConfigMutable[] => {
+// Load saved configurations from database or use defaults
+const loadSavedConfigurations = async (): Promise<ProtocolConfigMutable[]> => {
   try {
-    const saved = localStorage.getItem(SAVED_PROTOCOL_CONFIG_KEY);
-    if (saved) {
-      const savedConfigs = JSON.parse(saved);
+    const savedConfigs = await fetchProtocolConfigurations();
+    if (savedConfigs.length > 0) {
       // Merge with current configs to handle new protocols that might have been added
       const mergedConfigs = [...protocolConfigs];
       
       // Update categories for existing protocols based on saved data
-      savedConfigs.forEach((savedProtocol: ProtocolConfigMutable) => {
-        const existingIndex = mergedConfigs.findIndex(p => p.id === savedProtocol.id);
+      savedConfigs.forEach((savedProtocol) => {
+        const existingIndex = mergedConfigs.findIndex(p => p.id === savedProtocol.protocol_id);
         if (existingIndex !== -1) {
           mergedConfigs[existingIndex] = {
             ...mergedConfigs[existingIndex],
@@ -121,13 +123,50 @@ const loadSavedConfigurations = (): ProtocolConfigMutable[] => {
       return mergedConfigs;
     }
   } catch (error) {
-    console.error('Error loading saved protocol configurations:', error);
+    console.error('Error loading saved protocol configurations from database:', error);
+    // Fallback to localStorage for backward compatibility
+    try {
+      const saved = localStorage.getItem('saved_protocol_configurations');
+      if (saved) {
+        const savedConfigs = JSON.parse(saved);
+        const mergedConfigs = [...protocolConfigs];
+        
+        savedConfigs.forEach((savedProtocol: ProtocolConfigMutable) => {
+          const existingIndex = mergedConfigs.findIndex(p => p.id === savedProtocol.id);
+          if (existingIndex !== -1) {
+            mergedConfigs[existingIndex] = {
+              ...mergedConfigs[existingIndex],
+              category: savedProtocol.category
+            };
+          }
+        });
+        
+        return mergedConfigs;
+      }
+    } catch (localStorageError) {
+      console.error('Error loading from localStorage fallback:', localStorageError);
+    }
   }
   return [...protocolConfigs];
 };
 
 // Mutable version of protocol configs for drag-and-drop
-let mutableProtocolConfigs: ProtocolConfigMutable[] = loadSavedConfigurations();
+let mutableProtocolConfigs: ProtocolConfigMutable[] = [...protocolConfigs];
+let isLoaded = false;
+
+// Initialize configurations from database
+const initializeConfigurations = async (): Promise<void> => {
+  if (isLoaded) return;
+  
+  try {
+    mutableProtocolConfigs = await loadSavedConfigurations();
+    isLoaded = true;
+  } catch (error) {
+    console.error('Error initializing configurations:', error);
+    mutableProtocolConfigs = [...protocolConfigs];
+    isLoaded = true;
+  }
+};
 
 export const getMutableProtocolConfigs = (): ProtocolConfigMutable[] => {
   return mutableProtocolConfigs;
@@ -151,10 +190,23 @@ export const getMutableAllCategories = (): string[] => {
   return Array.from(new Set(mutableProtocolConfigs.map(p => p.category)));
 };
 
-// Save current configurations to localStorage
-export const saveProtocolConfigurations = (): void => {
+// Save current configurations to database
+export const saveProtocolConfigurations = async (): Promise<void> => {
   try {
-    localStorage.setItem(SAVED_PROTOCOL_CONFIG_KEY, JSON.stringify(mutableProtocolConfigs));
+    // Prepare configurations for database
+    const configurations = mutableProtocolConfigs.map(config => ({
+      protocol_id: config.id,
+      category: config.category
+    }));
+    
+    await saveProtocolConfigurationsToDb(configurations);
+    
+    // Also save to localStorage as backup
+    try {
+      localStorage.setItem('saved_protocol_configurations', JSON.stringify(mutableProtocolConfigs));
+    } catch (localStorageError) {
+      console.warn('Could not save to localStorage:', localStorageError);
+    }
   } catch (error) {
     console.error('Error saving protocol configurations:', error);
     throw new Error('Failed to save configurations');
@@ -162,28 +214,34 @@ export const saveProtocolConfigurations = (): void => {
 };
 
 // Reset configurations to defaults
-export const resetProtocolConfigurations = (): void => {
-  mutableProtocolConfigs = [...protocolConfigs];
+export const resetProtocolConfigurations = async (): Promise<void> => {
   try {
-    localStorage.removeItem(SAVED_PROTOCOL_CONFIG_KEY);
+    await resetProtocolConfigurationsInDb();
+    mutableProtocolConfigs = [...protocolConfigs];
+    
+    // Also clear localStorage
+    try {
+      localStorage.removeItem('saved_protocol_configurations');
+    } catch (localStorageError) {
+      console.warn('Could not clear localStorage:', localStorageError);
+    }
   } catch (error) {
-    console.error('Error removing saved configurations:', error);
+    console.error('Error resetting configurations:', error);
+    throw new Error('Failed to reset configurations');
   }
 };
 
-// Check if current configurations differ from saved ones
+// Check if current configurations differ from defaults
 export const hasUnsavedChanges = (): boolean => {
   try {
-    const saved = localStorage.getItem(SAVED_PROTOCOL_CONFIG_KEY);
-    if (!saved) {
-      // No saved config, check if current differs from defaults
-      return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(protocolConfigs);
-    }
-    
-    const savedConfigs = JSON.parse(saved);
-    return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(savedConfigs);
+    return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(protocolConfigs);
   } catch (error) {
     console.error('Error checking for unsaved changes:', error);
     return false;
   }
+};
+
+// Load configurations from database
+export const loadProtocolConfigurations = async (): Promise<void> => {
+  await initializeConfigurations();
 };

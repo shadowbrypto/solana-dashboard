@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { 
@@ -8,7 +8,8 @@ import {
   updateProtocolCategory,
   saveProtocolConfigurations,
   resetProtocolConfigurations,
-  hasUnsavedChanges
+  hasUnsavedChanges,
+  loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
 import { Code2, Copy, Check, RefreshCcw, AlertCircle, X, GripVertical, Save, RotateCcw } from 'lucide-react';
@@ -127,6 +128,21 @@ export function ProtocolManagement() {
   const categories = getMutableAllCategories();
   const sensors = useSensors(useSensor(PointerSensor));
 
+  // Load configurations from database on component mount
+  useEffect(() => {
+    const loadConfigs = async () => {
+      try {
+        await loadProtocolConfigurations();
+        setForceRender(prev => prev + 1); // Trigger re-render after loading
+      } catch (error) {
+        console.error('Failed to load protocol configurations:', error);
+        showError('Failed to load saved configurations');
+      }
+    };
+    
+    loadConfigs();
+  }, []);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -182,11 +198,11 @@ export function ProtocolManagement() {
     
     setIsSaving(true);
     try {
-      saveProtocolConfigurations();
-      success('Protocol configurations saved successfully!');
+      await saveProtocolConfigurations();
+      success('Protocol configurations saved to database successfully!');
       setForceRender(prev => prev + 1); // Trigger re-render to update unsaved changes indicator
     } catch (error) {
-      showError('Failed to save configurations');
+      showError(error instanceof Error ? error.message : 'Failed to save configurations');
     } finally {
       setIsSaving(false);
     }
@@ -197,11 +213,11 @@ export function ProtocolManagement() {
     
     setIsResetting(true);
     try {
-      resetProtocolConfigurations();
+      await resetProtocolConfigurations();
       success('Protocol configurations reset to defaults!');
       setForceRender(prev => prev + 1); // Trigger re-render to show reset changes
     } catch (error) {
-      showError('Failed to reset configurations');
+      showError(error instanceof Error ? error.message : 'Failed to reset configurations');
     } finally {
       setIsResetting(false);
     }
@@ -256,7 +272,7 @@ export function ProtocolManagement() {
         <CardHeader>
           <CardTitle>Configuration Management</CardTitle>
           <CardDescription>
-            Save your protocol category changes permanently or reset to defaults
+            Save your protocol category changes to the database permanently or reset to defaults
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -267,8 +283,8 @@ export function ProtocolManagement() {
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasUnsavedChanges() 
-                  ? 'Save your protocol category changes to make them permanent across page reloads.'
-                  : 'Your protocol configurations are up to date.'
+                  ? 'Save your protocol category changes to the database to make them permanent across all environments.'
+                  : 'Your protocol configurations are saved in the database.'
                 }
               </p>
             </div>

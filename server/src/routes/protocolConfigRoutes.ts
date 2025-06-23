@@ -5,13 +5,13 @@ import {
   saveProtocolConfigurations,
   deleteProtocolConfiguration,
   resetAllProtocolConfigurations,
-  initializeProtocolConfigTable
+  verifyProtocolConfigTable
 } from '../services/protocolConfigService.js';
 
 const router = Router();
 
-// Initialize the table on server start
-initializeProtocolConfigTable().catch(console.error);
+// Verify the table exists on server start
+verifyProtocolConfigTable().catch(console.error);
 
 // GET /api/protocol-config
 // Get all protocol configurations

@@ -24,6 +24,7 @@ import { ProtocolDataTable } from "./components/ProtocolDataTable";
 import { StackedBarChart } from "./components/charts/StackedBarChart";
 import { StackedAreaChart } from "./components/charts/StackedAreaChart";
 import { MultiAreaChart } from "./components/charts/MultiAreaChart";
+import { CategoryStackedBarChartSkeleton, CategoryStackedAreaChartSkeleton, CategoryMultiAreaChartSkeleton } from "./components/charts/CategoryMetricsSkeletons";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
@@ -441,53 +442,65 @@ const MainContent = (): JSX.Element => {
                   <AccordionContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 lg:px-6 pt-2 pb-4 sm:pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     {openAccordionItems.includes("categories") && (
                       <>
-                        <StackedBarChart
-                          title="Volume by Category"
-                          data={categoryVolumeData}
-                          dataKeys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
-                          labels={getAllCategories()}
-                          colors={getAllCategories().map((category, index) => {
-                            const categoryColors = [
-                              "hsl(210 100% 50%)", // Blue for Trading Terminals
-                              "hsl(120 100% 40%)", // Green for Telegram Bots  
-                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
-                            ];
-                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
-                          })}
-                          valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
-                          loading={loading}
-                        />
-                        <StackedAreaChart
-                          title="Volume Dominance by Category"
-                          data={categoryDominanceData}
-                          keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
-                          labels={getAllCategories()}
-                          colors={getAllCategories().map((category, index) => {
-                            const categoryColors = [
-                              "hsl(210 100% 50%)", // Blue for Trading Terminals
-                              "hsl(120 100% 40%)", // Green for Telegram Bots  
-                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
-                            ];
-                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
-                          })}
-                          loading={loading}
-                        />
-                        <MultiAreaChart
-                          title="Market Share by Category"
-                          data={categoryMarketShareData}
-                          keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
-                          labels={getAllCategories()}
-                          colors={getAllCategories().map((category, index) => {
-                            const categoryColors = [
-                              "hsl(210 100% 50%)", // Blue for Trading Terminals
-                              "hsl(120 100% 40%)", // Green for Telegram Bots  
-                              "hsl(45 100% 50%)"   // Yellow for Mobile Apps
-                            ];
-                            return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
-                          })}
-                          valueFormatter={(value) => `${value.toFixed(1)}%`}
-                          loading={loading}
-                        />
+                        {loading ? (
+                          <CategoryStackedBarChartSkeleton />
+                        ) : (
+                          <StackedBarChart
+                            title="Volume by Category"
+                            data={categoryVolumeData}
+                            dataKeys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
+                            labels={getAllCategories()}
+                            colors={getAllCategories().map((category, index) => {
+                              const categoryColors = [
+                                "hsl(210 100% 50%)", // Blue for Trading Terminals
+                                "hsl(120 100% 40%)", // Green for Telegram Bots  
+                                "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                              ];
+                              return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                            })}
+                            valueFormatter={(value) => `$${(value / 1e6).toFixed(2)}M`}
+                            loading={false}
+                          />
+                        )}
+                        {loading ? (
+                          <CategoryStackedAreaChartSkeleton />
+                        ) : (
+                          <StackedAreaChart
+                            title="Volume Dominance by Category"
+                            data={categoryDominanceData}
+                            keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
+                            labels={getAllCategories()}
+                            colors={getAllCategories().map((category, index) => {
+                              const categoryColors = [
+                                "hsl(210 100% 50%)", // Blue for Trading Terminals
+                                "hsl(120 100% 40%)", // Green for Telegram Bots  
+                                "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                              ];
+                              return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                            })}
+                            loading={false}
+                          />
+                        )}
+                        {loading ? (
+                          <CategoryMultiAreaChartSkeleton />
+                        ) : (
+                          <MultiAreaChart
+                            title="Market Share by Category"
+                            data={categoryMarketShareData}
+                            keys={getAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
+                            labels={getAllCategories()}
+                            colors={getAllCategories().map((category, index) => {
+                              const categoryColors = [
+                                "hsl(210 100% 50%)", // Blue for Trading Terminals
+                                "hsl(120 100% 40%)", // Green for Telegram Bots  
+                                "hsl(45 100% 50%)"   // Yellow for Mobile Apps
+                              ];
+                              return categoryColors[index] || `hsl(${index * 120} 70% 50%)`;
+                            })}
+                            valueFormatter={(value) => `${value.toFixed(1)}%`}
+                            loading={false}
+                          />
+                        )}
                       </>
                     )}
                   </AccordionContent>

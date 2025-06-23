@@ -21,7 +21,7 @@ import { useState, useMemo } from "react";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
-import { StackedAreaChartSkeleton } from "./StackedAreaChartSkeleton";
+import { CategoryMultiAreaChartSkeleton } from "./CategoryMetricsSkeletons";
 
 interface MultiAreaChartProps {
   title: string;
@@ -45,7 +45,7 @@ export function MultiAreaChart({
   loading
 }: MultiAreaChartProps) {
   if (loading) {
-    return <StackedAreaChartSkeleton />;
+    return <CategoryMultiAreaChartSkeleton />;
   }
   
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");

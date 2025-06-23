@@ -31,6 +31,7 @@ import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizontalBarChart";
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
+import { VolumeActivity } from "./components/VolumeActivity";
 import { getAllProtocols } from "./lib/protocol-categories";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
@@ -859,6 +860,12 @@ const MainContent = (): JSX.Element => {
             <>
               <ProtocolHighlights
                 title={`${getProtocolName(protocol)} Highlights`}
+                data={data}
+                protocolColor={getProtocolColor(protocol)}
+                loading={loading}
+              />
+              <VolumeActivity
+                title="Volume Activity"
                 data={data}
                 protocolColor={getProtocolColor(protocol)}
                 loading={loading}

@@ -15,6 +15,7 @@ import { CalendarDays, TrendingUp, Clock } from "lucide-react";
 
 interface VolumeMilestoneChartProps {
   title: string;
+  subtitle?: string;
   data: {
     date: string;
     volume_usd: number;
@@ -60,6 +61,7 @@ const calculateDaysBetween = (date1: string, date2: string): number => {
 
 export function VolumeMilestoneChart({ 
   title, 
+  subtitle,
   data,
   protocolColor = "hsl(var(--primary))",
   loading
@@ -182,7 +184,12 @@ export function VolumeMilestoneChart({
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="border-b">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
+            )}
+          </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full border">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

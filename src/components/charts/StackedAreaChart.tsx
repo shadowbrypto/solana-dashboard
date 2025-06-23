@@ -25,6 +25,7 @@ import { StackedAreaChartSkeleton } from "./StackedAreaChartSkeleton";
 
 interface StackedAreaChartProps {
   title: string;
+  subtitle?: string;
   data: any[];
   keys: string[];
   labels?: string[];
@@ -44,6 +45,7 @@ function formatNumberWithSuffix(value: number): string {
 
 export function StackedAreaChart({ 
   title, 
+  subtitle,
   data,
   keys,
   labels,
@@ -175,8 +177,11 @@ export function StackedAreaChart({
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          )}
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
           <SelectTrigger className="w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">

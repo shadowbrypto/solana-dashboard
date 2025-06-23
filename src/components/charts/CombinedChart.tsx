@@ -27,6 +27,7 @@ import { CombinedChartSkeleton } from "./CombinedChartSkeleton";
 
 interface CombinedChartProps {
   title: string;
+  subtitle?: string;
   data: any[];
   volumeKey: string;
   feesKey: string;
@@ -40,6 +41,7 @@ interface CombinedChartProps {
 
 export function CombinedChart({ 
   title, 
+  subtitle,
   data,
   volumeKey,
   feesKey,
@@ -98,8 +100,11 @@ export function CombinedChart({
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0 p-3 sm:p-6">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          )}
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
           <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">

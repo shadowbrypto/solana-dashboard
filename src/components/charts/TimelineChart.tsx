@@ -32,6 +32,7 @@ import { TimelineChartSkeleton } from "./TimelineChartSkeleton";
 
 interface TimelineChartProps {
   title: string;
+  subtitle?: string;
   data: Array<ProtocolStats & { formattedDay: string }>;
   dataKey: string;
   multipleDataKeys?: Record<string, string>;
@@ -57,6 +58,7 @@ const MIDNIGHT_THEME = {
 
 export function TimelineChart({
   title,
+  subtitle,
   data,
   dataKey,
   multipleDataKeys,
@@ -142,10 +144,13 @@ export function TimelineChart({
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             {title}
           </CardTitle>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          )}
         </div>
         <Select
           value={timeframe}

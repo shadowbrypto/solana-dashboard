@@ -5,10 +5,11 @@ export function CategoryStackedBarChartSkeleton() {
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             <Skeleton className="h-6 w-32" />
           </CardTitle>
+          <Skeleton className="h-3 w-20" />
         </div>
         <Skeleton className="h-9 w-[140px] rounded-xl" />
       </CardHeader>
@@ -32,10 +33,11 @@ export function CategoryStackedAreaChartSkeleton() {
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             <Skeleton className="h-6 w-32" />
           </CardTitle>
+          <Skeleton className="h-3 w-20" />
         </div>
         <Skeleton className="h-9 w-[140px] rounded-xl" />
       </CardHeader>
@@ -43,7 +45,7 @@ export function CategoryStackedAreaChartSkeleton() {
         <div className="h-[400px] relative">
           {/* Area chart skeleton */}
           <div className="absolute inset-0">
-            <div className="w-full h-full bg-gradient-to-t from-muted/20 via-muted/10 to-transparent" />
+            <div className="w-full h-full bg-gradient-to-t from-muted/50 via-muted/20 to-transparent animate-pulse" />
           </div>
           
           {/* Legend skeleton - 3 categories */}
@@ -65,10 +67,11 @@ export function CategoryMultiAreaChartSkeleton() {
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             <Skeleton className="h-6 w-32" />
           </CardTitle>
+          <Skeleton className="h-3 w-20" />
         </div>
         <Skeleton className="h-9 w-[140px] rounded-xl" />
       </CardHeader>
@@ -78,9 +81,9 @@ export function CategoryMultiAreaChartSkeleton() {
           <div className="absolute inset-0">
             <div className="w-full h-full relative">
               {/* Multiple overlapping area gradients */}
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 via-blue-500/5 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-green-500/10 via-green-500/5 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/10 via-yellow-500/5 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-muted/40 via-muted/15 to-transparent animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-t from-muted/30 via-muted/10 to-transparent animate-pulse" style={{animationDelay: '0.2s'}} />
+              <div className="absolute inset-0 bg-gradient-to-t from-muted/20 via-muted/5 to-transparent animate-pulse" style={{animationDelay: '0.4s'}} />
             </div>
           </div>
           

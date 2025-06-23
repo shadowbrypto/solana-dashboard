@@ -18,6 +18,7 @@ import {
 
 interface ProtocolHighlightsProps {
   title: string;
+  subtitle?: string;
   data: {
     date: string;
     volume_usd: number;
@@ -122,6 +123,7 @@ const calculateMonthlyData = (data: any[]) => {
 
 export function ProtocolHighlights({ 
   title, 
+  subtitle,
   data,
   protocolColor = "hsl(var(--primary))",
   loading
@@ -320,9 +322,13 @@ export function ProtocolHighlights({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="text-base font-medium">{title}</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Key metrics and achievements
-            </p>
+            {subtitle ? (
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Key metrics and achievements
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="h-5 text-xs">

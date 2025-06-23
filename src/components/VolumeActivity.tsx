@@ -5,6 +5,7 @@ import { Activity, TrendingUp } from 'lucide-react';
 
 interface VolumeActivityProps {
   title: string;
+  subtitle?: string;
   data: {
     date: string;
     volume_usd: number;
@@ -69,8 +70,30 @@ const getIntensityLevel = (value: number, max: number): number => {
   return 4;
 };
 
+const getProtocolIntensityColors = (protocolColor: string, intensity: number): string => {
+  // Extract hue from protocol color (assuming format like "hsl(210, 100%, 50%)")
+  const hueMatch = protocolColor.match(/hsl\((\d+)/);
+  const hue = hueMatch ? hueMatch[1] : '210'; // Default to blue if can't parse
+  
+  switch (intensity) {
+    case 0:
+      return 'bg-transparent';
+    case 1:
+      return `bg-[hsl(${hue},50%,85%)] dark:bg-[hsl(${hue},50%,15%)]`;
+    case 2:
+      return `bg-[hsl(${hue},60%,65%)] dark:bg-[hsl(${hue},60%,25%)]`;
+    case 3:
+      return `bg-[hsl(${hue},70%,50%)] dark:bg-[hsl(${hue},70%,35%)]`;
+    case 4:
+      return `bg-[hsl(${hue},80%,40%)] dark:bg-[hsl(${hue},80%,45%)]`;
+    default:
+      return 'bg-transparent';
+  }
+};
+
 export function VolumeActivity({ 
   title, 
+  subtitle,
   data,
   protocolColor = "hsl(var(--primary))",
   loading
@@ -163,17 +186,58 @@ export function VolumeActivity({
     return (
       <Card className="bg-card border-border rounded-xl">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+              {subtitle && (
+                <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+              </div>
+              <div className="w-24 h-8 bg-muted animate-pulse rounded-xl" />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-3">
-            {[...Array(15)].map((_, i) => (
-              <div key={i} className="flex space-x-1">
-                {[...Array(7)].map((_, j) => (
-                  <div key={j} className="w-3 h-3 bg-muted animate-pulse rounded-sm" />
+        <CardContent className="pt-4">
+          {/* Month headers skeleton */}
+          <div className="relative w-full mb-4">
+            <div className="grid grid-cols-12 gap-1 w-full">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="h-3 w-6 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          </div>
+          
+          {/* GitHub-style contribution graph skeleton - horizontal layout */}
+          <div className="relative">
+            <div className="w-full overflow-x-auto">
+              <div className="flex gap-1 min-w-full">
+                {[...Array(53)].map((_, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col gap-1">
+                    {[...Array(7)].map((_, dayIndex) => (
+                      <div key={dayIndex} className="w-4 h-4 bg-muted animate-pulse rounded-sm" />
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
+            
+            {/* Legend skeleton */}
+            <div className="flex items-center justify-end text-xs mt-4">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-8 bg-muted animate-pulse rounded" />
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-4 h-4 bg-muted animate-pulse rounded-sm" />
+                  ))}
+                </div>
+                <div className="h-3 w-8 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -246,11 +310,7 @@ export function VolumeActivity({
                     <div
                       key={`${weekIndex}-${dayIndex}`}
                       className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
-                        !day.isCurrentYear || day.intensity === 0 ? 'bg-transparent' :
-                        day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' :
-                        day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' :
-                        day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' :
-                        'bg-green-800 dark:bg-green-500'
+                        !day.isCurrentYear ? 'bg-transparent' : day.intensity === 0 ? 'bg-transparent' : day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' : day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' : day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' : 'bg-green-800 dark:bg-green-500'
                       }`}
                     >
                       {day.isCurrentYear && day.volume > 0 && (
@@ -309,6 +369,9 @@ export function VolumeActivity({
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
+            )}
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
@@ -355,11 +418,7 @@ export function VolumeActivity({
                     <div
                       key={`${weekIndex}-${dayIndex}`}
                       className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
-                        !day.isCurrentYear || day.intensity === 0 ? 'bg-transparent' :
-                        day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' :
-                        day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' :
-                        day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' :
-                        'bg-green-800 dark:bg-green-500'
+                        !day.isCurrentYear ? 'bg-transparent' : day.intensity === 0 ? 'bg-transparent' : day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' : day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' : day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' : 'bg-green-800 dark:bg-green-500'
                       }`}
                     >
                       {day.isCurrentYear && day.volume > 0 && (

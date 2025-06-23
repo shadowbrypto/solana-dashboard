@@ -510,6 +510,7 @@ const MainContent = (): JSX.Element => {
                         {!loading && data.length > 0 && (
                           <CategoryHorizontalBarChart
                             title="Total Metrics by Category"
+                            subtitle="All Protocols"
                             data={data}
                             loading={loading}
                           />
@@ -519,6 +520,7 @@ const MainContent = (): JSX.Element => {
                         ) : (
                           <StackedBarChart
                             title="Volume by Category"
+                            subtitle="All Protocols"
                             data={categoryVolumeData}
                             dataKeys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
                             labels={getMutableAllCategories()}
@@ -539,6 +541,7 @@ const MainContent = (): JSX.Element => {
                         ) : (
                           <StackedAreaChart
                             title="Volume Dominance by Category"
+                            subtitle="All Protocols"
                             data={categoryDominanceData}
                             keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
                             labels={getMutableAllCategories()}
@@ -558,6 +561,7 @@ const MainContent = (): JSX.Element => {
                         ) : (
                           <MultiAreaChart
                             title="Market Share by Category"
+                            subtitle="All Protocols"
                             data={categoryMarketShareData}
                             keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
                             labels={getMutableAllCategories()}
@@ -608,6 +612,7 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Volume by Protocol"
+                          subtitle="All Protocols"
                           data={allProtocolIds.map(protocolId => ({
                             name: getProtocolName(protocolId),
                             values: data.map(item => ({
@@ -626,6 +631,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedBarChart
                           title="Volume by Protocol"
+                          subtitle="All Protocols"
                           data={data}
                           dataKeys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_volume`)}
                           labels={allProtocolIds.map(id => getProtocolName(id))}
@@ -635,6 +641,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedAreaChart
                           title="Volume Dominance by Protocol"
+                          subtitle="All Protocols"
                           data={volumeDominanceData}
                           keys={allProtocolIds.map(id => `${id.replace(/\s+/g, '_')}_dominance`)}
                           colors={allProtocolIds.map(id => getProtocolColor(id))}
@@ -674,6 +681,7 @@ const MainContent = (): JSX.Element => {
                       <>
                         <StackedBarChart
                           title="Daily Active Users by Protocol"
+                          subtitle="All Protocols"
                           data={data}
                           dataKeys={generateStackedBarChartConfig('users').dataKeys}
                           labels={generateStackedBarChartConfig('users').labels}
@@ -682,6 +690,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedAreaChart
                           title="DAU Dominance by Protocol"
+                          subtitle="All Protocols"
                           data={usersDominanceData}
                           keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
@@ -721,11 +730,13 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Users by Protocol"
+                          subtitle="All Protocols"
                           data={generateHorizontalBarChartData(data, 'users')}
                           loading={loading}
                         />
                         <StackedBarChart
                           title="New Users by Protocol"
+                          subtitle="All Protocols"
                           data={data}
                           dataKeys={generateStackedBarChartConfig('new_users').dataKeys}
                           labels={generateStackedBarChartConfig('new_users').labels}
@@ -734,6 +745,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedAreaChart
                           title="New Users Dominance by Protocol"
+                          subtitle="All Protocols"
                           data={newUsersDominanceData}
                           keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
@@ -773,11 +785,13 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Trades by Protocol"
+                          subtitle="All Protocols"
                           data={generateHorizontalBarChartData(data, 'trades')}
                           loading={loading}
                         />
                         <StackedBarChart
                           title="Trades by Protocol"
+                          subtitle="All Protocols"
                           data={data}
                           dataKeys={generateStackedBarChartConfig('trades').dataKeys}
                           labels={generateStackedBarChartConfig('trades').labels}
@@ -787,6 +801,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedAreaChart
                           title="Trades Dominance by Protocol"
+                          subtitle="All Protocols"
                           data={tradesDominanceData}
                           keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
@@ -826,6 +841,7 @@ const MainContent = (): JSX.Element => {
                       <>
                         <HorizontalBarChart
                           title="Total Fees by Protocol"
+                          subtitle="All Protocols"
                           data={generateHorizontalBarChartData(data, 'fees')}
                           valueFormatter={(value) => {
                             if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -836,6 +852,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedBarChart
                           title="Fees by Protocol"
+                          subtitle="All Protocols"
                           data={data}
                           dataKeys={generateStackedBarChartConfig('fees').dataKeys}
                           labels={generateStackedBarChartConfig('fees').labels}
@@ -845,6 +862,7 @@ const MainContent = (): JSX.Element => {
                         />
                         <StackedAreaChart
                           title="Fee Dominance by Protocol"
+                          subtitle="All Protocols"
                           data={feesDominanceData}
                           keys={generateStackedAreaChartKeys('dominance')}
                           colors={protocolColorsList}
@@ -859,13 +877,15 @@ const MainContent = (): JSX.Element => {
           ) : (
             <>
               <ProtocolHighlights
-                title={`${getProtocolName(protocol)} Highlights`}
+                title="Protocol Highlights"
+                subtitle={getProtocolName(protocol)}
                 data={data}
                 protocolColor={getProtocolColor(protocol)}
                 loading={loading}
               />
               <VolumeActivity
                 title="Volume Activity"
+                subtitle={getProtocolName(protocol)}
                 data={data}
                 protocolColor={getProtocolColor(protocol)}
                 loading={loading}
@@ -873,6 +893,7 @@ const MainContent = (): JSX.Element => {
               {!loading && data.length > 0 && (
                 <VolumeMilestoneChart
                   title="Volume Milestones Timeline"
+                  subtitle={getProtocolName(protocol)}
                   data={data}
                   protocolColor={getProtocolColor(protocol)}
                   loading={loading}
@@ -880,6 +901,7 @@ const MainContent = (): JSX.Element => {
               )}
               <CombinedChart
                 title="Volume & Fees"
+                subtitle={getProtocolName(protocol)}
                 data={data.filter(
                   (d) =>
                     d.volume_usd !== undefined &&
@@ -892,6 +914,7 @@ const MainContent = (): JSX.Element => {
               />
               <CombinedChart
                 title="Daily Users"
+                subtitle={getProtocolName(protocol)}
                 data={data.filter(
                   (d) =>
                     d.daily_users !== undefined &&
@@ -906,6 +929,7 @@ const MainContent = (): JSX.Element => {
               />
               <TimelineChart
                 title="Trades"
+                subtitle={getProtocolName(protocol)}
                 data={data.filter((d) => d.trades !== undefined)}
                 dataKey="trades"
                 color={getProtocolColor(protocol)}

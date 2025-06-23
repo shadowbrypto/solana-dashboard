@@ -25,6 +25,7 @@ type MetricType = "volume" | "new_users" | "trades" | "fees";
 
 interface CategoryHorizontalBarChartProps {
   title: string;
+  subtitle?: string;
   data: any[];
   loading?: boolean;
 }
@@ -61,6 +62,7 @@ const categoryColors = [
 
 export function CategoryHorizontalBarChart({ 
   title, 
+  subtitle,
   data,
   loading
 }: CategoryHorizontalBarChartProps) {
@@ -158,10 +160,13 @@ export function CategoryHorizontalBarChart({
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-row items-center justify-between border-b">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
             {title} - {metricLabels[selectedMetric]}
           </CardTitle>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          )}
         </div>
         <div className="flex gap-2">
           <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>

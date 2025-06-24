@@ -12,16 +12,15 @@ import ProtocolAdmin from "./pages/ProtocolAdmin";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
-// Wrapper component to handle protocol changes efficiently
+// Simple wrapper - exactly like it was originally
 function AppWrapper() {
   const location = useLocation();
-  // Only force remount when protocol changes, not on all search param changes
   const searchParams = new URLSearchParams(location.search);
   const protocol = searchParams.get('protocol') || 'trojan';
   return <App key={protocol} />;
 }
 
-// Create a router with our routes
+// Back to the ORIGINAL working router structure
 const router = createBrowserRouter([
   {
     path: "/",
@@ -107,4 +106,3 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </ThemeProvider>
   </React.StrictMode>
 );
-

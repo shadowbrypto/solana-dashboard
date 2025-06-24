@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings, Menu, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -28,27 +28,32 @@ const adminPages = [
 ];
 
 export function Layout() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Initialize all categories as expanded for better navigation
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
+    protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
+  );
   
-  // Only highlight protocol if we're on the main page
-  const isMainPage = location.pathname === '/';
-  const currentProtocol = isMainPage ? (searchParams.get('protocol')?.toLowerCase() || 'trojan') : '';
+  // Check if we're on a protocol page (root)
+  const isProtocolPage = location.pathname === '/';
+  const searchParams = new URLSearchParams(location.search);
+  const currentProtocol = isProtocolPage ? (searchParams.get('protocol')?.toLowerCase() || 'all') : '';
 
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
-  }, [location.pathname, searchParams]);
+  }, [location.pathname]);
 
   const handleProtocolChange = (protocolId: string) => {
-    // Debug logging
-    console.log('Current location:', location.pathname, location.search);
-    console.log('Navigating to protocol:', protocolId);
-    
-    // Use React Router navigation instead of window.location
-    navigate(`/?protocol=${protocolId}`);
+    // Navigate using query parameters to match the router structure
+    if (protocolId === 'all') {
+      navigate('/');
+    } else {
+      navigate(`/?protocol=${protocolId}`);
+    }
   };
 
   const handleReportChange = (path: string) => {
@@ -106,7 +111,7 @@ export function Layout() {
               variant="ghost"
               className={cn(
                 "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                currentProtocol === 'all' && "bg-muted text-foreground font-medium"
+                currentProtocol === 'all' && isProtocolPage && "bg-muted text-foreground font-medium"
               )}
               onClick={() => handleProtocolChange('all')}
             >
@@ -144,13 +149,13 @@ export function Layout() {
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>
             {protocolCategories.map((category) => {
-              const [isExpanded, setIsExpanded] = useState(false);
+              const isExpanded = expandedCategories[category.name] || false;
               return (
                 <div key={category.name} className="space-y-1">
                   <Button
                     variant="ghost"
                     className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-between px-2"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setExpandedCategories(prev => ({ ...prev, [category.name]: !isExpanded }))}
                   >
                     <div className="flex items-center gap-3">
                       {category.name}
@@ -169,7 +174,7 @@ export function Layout() {
                             variant="ghost"
                             className={cn(
                               "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                              currentProtocol === protocol.id && "bg-muted text-foreground font-medium"
+                              currentProtocol === protocol.id && isProtocolPage && "bg-muted text-foreground font-medium"
                             )}
                             onClick={() => handleProtocolChange(protocol.id)}
                           >

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
@@ -124,15 +124,15 @@ const MainContent = (): JSX.Element => {
     document.body.classList.add("dark:bg-background");
   }, []);
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [protocolData, setProtocolData] = useState<ProtocolStats[]>([]);
   const [data, setData] = useState<any[]>([]);
-  const [activeView, setActiveView] = useState<"charts" | "data">(
-    searchParams.get("view") === "data" ? "data" : "charts"
-  );
-  const protocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
+  const [activeView, setActiveView] = useState<"charts" | "data">("charts");
+  
+  // Get protocol from URL params, fallback to 'all' for root route
+  const protocol = params.protocolId?.toLowerCase() || "all";
 
   // Debug logging
   console.log('=== App Component Debug ===');
@@ -197,9 +197,8 @@ const MainContent = (): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    const protocol = searchParams.get("protocol")?.toLowerCase() || "trojan";
     loadData(protocol);
-  }, [searchParams, loadData]);
+  }, [protocol, loadData]);
 
 
   const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => {

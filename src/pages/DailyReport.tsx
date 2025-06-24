@@ -5,6 +5,9 @@ import { DailyMetricsTable } from "../components/DailyMetricsTable";
 import { getAllProtocols } from "../lib/protocol-categories";
 
 export default function DailyReport() {
+  // Simple daily report - no query parameters needed
+  const reportType = 'daily';
+  
   const [date, setDate] = useState<Date>(new Date());
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>

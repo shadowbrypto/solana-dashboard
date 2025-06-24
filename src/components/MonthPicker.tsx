@@ -55,10 +55,10 @@ export function MonthPicker({ date, onDateChange }: MonthPickerProps) {
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[240px] p-3" align="start">
-        <div className="grid grid-cols-2 gap-2">
+      <PopoverContent className="w-[180px] p-2" align="start">
+        <div className="grid grid-cols-2 gap-1">
           <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
@@ -71,7 +71,7 @@ export function MonthPicker({ date, onDateChange }: MonthPickerProps) {
           </Select>
           
           <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>

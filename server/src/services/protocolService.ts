@@ -78,7 +78,16 @@ export async function getProtocolStats(protocolName?: string | string[]) {
 
   console.log(`Total protocol stats records fetched: ${allData.length}`);
 
-  const formattedData = allData.map((row: ProtocolStats) => ({
+  // Sort by date and remove the most recent date
+  const sortedData = allData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  // Find the most recent date and filter it out
+  const mostRecentDate = sortedData.length > 0 ? sortedData[0].date : null;
+  const filteredData = mostRecentDate 
+    ? sortedData.filter(row => row.date !== mostRecentDate)
+    : sortedData;
+
+  const formattedData = filteredData.map((row: ProtocolStats) => ({
     ...row,
     formattedDay: formatDate(row.date)
   }));
@@ -161,6 +170,30 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const cachedData = dailyMetricsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
     return cachedData.data;
+  }
+
+  // Check if requested date is the most recent date in the database
+  const { data: latestDateData, error: latestDateError } = await supabase
+    .from('protocol_stats')
+    .select('date')
+    .order('date', { ascending: false })
+    .limit(1);
+
+  if (latestDateError) {
+    console.error('Error fetching latest date:', latestDateError);
+    throw latestDateError;
+  }
+
+  const latestDate = latestDateData?.[0]?.date;
+  
+  // If the requested date is the latest date, return empty metrics
+  if (latestDate && formattedDate === latestDate) {
+    const emptyMetrics: Record<Protocol, ProtocolMetrics> = {} as Record<Protocol, ProtocolMetrics>;
+    dailyMetricsCache.set(cacheKey, {
+      data: emptyMetrics,
+      timestamp: Date.now()
+    });
+    return emptyMetrics;
   }
 
   const { data, error } = await supabase
@@ -289,15 +322,18 @@ export async function getAggregatedProtocolStats() {
   const aggregatedData = Array.from(dataByDate.values())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  console.log(`Aggregated data for ${aggregatedData.length} unique dates`);
+  // Remove the most recent date
+  const filteredAggregatedData = aggregatedData.length > 0 ? aggregatedData.slice(1) : aggregatedData;
+
+  console.log(`Aggregated data for ${filteredAggregatedData.length} unique dates (excluding latest date)`);
 
   // Cache the result
   aggregatedStatsCache.set(cacheKey, {
-    data: aggregatedData,
+    data: filteredAggregatedData,
     timestamp: Date.now()
   });
 
-  return aggregatedData;
+  return filteredAggregatedData;
 }
 
 export async function generateWeeklyInsights() {

@@ -320,13 +320,26 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
   const getInsightBadgeColor = (type: Insight['type']) => {
     switch (type) {
       case 'success':
-        return 'bg-gradient-to-br from-emerald-50 to-green-100 text-emerald-700 dark:from-emerald-950/50 dark:to-green-900/30 dark:text-emerald-400';
+        return 'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20';
       case 'warning':
-        return 'bg-gradient-to-br from-amber-50 to-yellow-100 text-amber-700 dark:from-amber-950/50 dark:to-yellow-900/30 dark:text-amber-400';
+        return 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20';
       case 'alert':
-        return 'bg-gradient-to-br from-red-50 to-rose-100 text-red-700 dark:from-red-950/50 dark:to-rose-900/30 dark:text-red-400';
+        return 'bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20';
       default:
-        return 'bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-700 dark:from-blue-950/50 dark:to-indigo-900/30 dark:text-blue-400';
+        return 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20';
+    }
+  };
+
+  const getInsightIconColor = (type: Insight['type']) => {
+    switch (type) {
+      case 'success':
+        return 'text-emerald-600 dark:text-emerald-400';
+      case 'warning':
+        return 'text-amber-600 dark:text-amber-400';
+      case 'alert':
+        return 'text-red-600 dark:text-red-400';
+      default:
+        return 'text-blue-600 dark:text-blue-400';
     }
   };
 
@@ -353,39 +366,52 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
 
   if (loading) {
     return (
-      <Card className="mb-8 shadow-sm border-0 bg-gradient-to-br from-background via-background to-muted/20">
-        <CardHeader className="pb-4">
+      <Card className="overflow-hidden">
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-semibold flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
-                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-pulse" />
-              </div>
-              <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                Daily Insights
-              </span>
-            </CardTitle>
-            <Badge variant="secondary" className="px-3 py-1.5 text-xs font-medium bg-muted/60 text-muted-foreground border-0">
-              {format(date, 'MMM dd, yyyy')}
-            </Badge>
+            <div className="space-y-1">
+              <CardTitle className="text-base font-medium">Daily Insights</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Key trends and performance highlights
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="h-5 text-xs">
+                <Activity className="w-2.5 h-2.5 mr-1 animate-pulse" />
+                {format(date, 'MMM dd')}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl bg-gradient-to-br from-background to-muted/30 p-5 animate-pulse">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-muted/50 rounded-xl flex-shrink-0"></div>
-                  <div className="flex-1 space-y-3">
-                    <div className="space-y-2">
-                      <div className="h-4 bg-muted/50 rounded-lg w-3/4"></div>
-                      <div className="h-3 bg-muted/30 rounded-lg w-full"></div>
-                      <div className="h-3 bg-muted/30 rounded-lg w-2/3"></div>
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => {
+              const isRightColumn = (i + 1) % 2 === 0;
+              const isBottomRow = i >= 2;
+              
+              return (
+                <div 
+                  key={i}
+                  className={`p-4 animate-pulse ${
+                    !isRightColumn ? 'border-r' : ''
+                  } ${
+                    !isBottomRow ? 'border-b' : ''
+                  }`}
+                >
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="w-7 h-7 bg-muted rounded-lg"></div>
+                      <div className="w-16 h-4 bg-muted rounded"></div>
                     </div>
-                    <div className="h-6 bg-muted/40 rounded-lg w-20"></div>
+                    <div className="space-y-2">
+                      <div className="w-20 h-3 bg-muted rounded"></div>
+                      <div className="w-full h-4 bg-muted rounded"></div>
+                      <div className="w-24 h-3 bg-muted rounded"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -393,84 +419,84 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
   }
 
   return (
-    <Card className="mb-8 shadow-sm border-0 bg-gradient-to-br from-background via-background to-muted/20">
-      <CardHeader className="pb-4">
+    <Card className="overflow-hidden">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
-              <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-              Daily Insights
-            </span>
-          </CardTitle>
-          <Badge variant="secondary" className="px-3 py-1.5 text-xs font-medium bg-muted/60 text-muted-foreground border-0">
-            {format(date, 'MMM dd, yyyy')}
-          </Badge>
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium">Daily Insights</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Key trends and performance highlights
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="h-5 text-xs">
+              <Activity className="w-2.5 h-2.5 mr-1" />
+              {format(date, 'MMM dd')}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="p-0">
         {insights.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="p-4 rounded-full bg-muted/30 mb-4">
-              <Info className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground font-medium">No significant insights available</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Try selecting a different date</p>
+          <div className="text-center text-muted-foreground py-8">
+            <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>No significant insights for this date</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {insights.slice(0, 4).map((insight, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "group relative overflow-hidden rounded-xl border-0 bg-gradient-to-br from-background to-muted/30",
-                  "hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20",
-                  "transition-all duration-300 hover:-translate-y-0.5",
-                  "p-5"
-                )}
-              >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-current to-transparent" />
-                </div>
-                
-                <div className="relative flex items-start gap-4">
-                  <div className={cn(
-                    "p-3 rounded-xl flex-shrink-0 shadow-sm",
-                    "border border-white/10 dark:border-black/10",
-                    getInsightBadgeColor(insight.type)
-                  )}>
-                    {insight.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <h4 className="font-semibold text-base leading-tight text-foreground">
-                        {insight.title}
-                      </h4>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {insights.slice(0, 4).map((insight, index) => {
+              const isRightColumn = (index + 1) % 2 === 0;
+              const isBottomRow = index >= 2;
+              
+              return (
+                <div 
+                  key={index}
+                  className={`relative group p-4 transition-colors hover:bg-muted/50 ${
+                    !isRightColumn ? 'border-r' : ''
+                  } ${
+                    !isBottomRow ? 'border-b' : ''
+                  }`}
+                >
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className={cn(
+                        "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                        getInsightBadgeColor(insight.type)
+                      )}>
+                        {React.cloneElement(insight.icon as React.ReactElement, {
+                          className: cn("h-3.5 w-3.5", getInsightIconColor(insight.type))
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1.5">
                         {insight.protocol && (
-                          <Badge variant="outline" className="text-xs px-2 py-0.5 bg-background/50 border-border/50">
+                          <Badge variant="outline" className="h-4 text-xs font-medium">
                             {insight.protocol.charAt(0).toUpperCase() + insight.protocol.slice(1)}
                           </Badge>
                         )}
                         {getTrendBadge(insight.trend)}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-2">
-                      {insight.description}
-                    </p>
-                    {insight.value && (
-                      <div className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs font-mono text-foreground/90 font-medium">
+                    
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-medium leading-none text-muted-foreground">
+                        {insight.title}
+                      </h4>
+                      <p className="text-sm font-semibold tracking-tight leading-tight">
+                        {insight.description}
+                      </p>
+                      {insight.value && (
+                        <p className="text-xs text-muted-foreground/70">
                           {insight.value}
                         </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Subtle hover effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

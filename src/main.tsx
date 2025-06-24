@@ -7,6 +7,7 @@ import { Layout } from "./layouts/Layout";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import DailyReport from "./pages/DailyReport";
+import MonthlyReport from "./pages/MonthlyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
 import { ThemeProvider } from "./lib/theme";
@@ -63,6 +64,20 @@ const router = createBrowserRouter([
                 }
               >
                 <DailyReport />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "monthly",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <MonthlyReport />
               </React.Suspense>
             ),
           },

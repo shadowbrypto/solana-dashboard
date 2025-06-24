@@ -187,30 +187,38 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 4. Stable Market Leader (consistently top performer)
-        const topPerformers = performances
-          .filter(p => p.current.total_volume_usd > 1000000) // Min $1M daily volume
-          .sort((a, b) => b.current.total_volume_usd - a.current.total_volume_usd)
-          .slice(0, 3); // Top 3 by current volume
+        // 4. Stable Market Leader (intelligently determined thresholds)
+        const totalMarketVolume = performances.reduce((sum, p) => sum + p.current.total_volume_usd, 0);
+        const sortedByVolume = performances
+          .filter(p => p.current.total_volume_usd > 0)
+          .sort((a, b) => b.current.total_volume_usd - a.current.total_volume_usd);
 
-        if (topPerformers.length > 0) {
-          const stableLeader = topPerformers.find(p => {
-            // Check if this protocol has been consistently performing well
-            const daysAbove1M = p.previous7d.filter(d => d.total_volume_usd > 1000000).length;
-            const hasStableGrowth = p.trends.volume7d > -0.1; // Not declining significantly
-            return daysAbove1M >= 5 && hasStableGrowth; // 5+ days above $1M and not declining
-          });
-
-          if (stableLeader && topPerformers.indexOf(stableLeader) === 0) {
-            const daysAbove1M = stableLeader.previous7d.filter(d => d.total_volume_usd > 1000000).length;
-            generatedInsights.push({
-              type: 'success',
-              title: 'Stable Market Leader',
-              description: `Maintains #1 position with ${daysAbove1M}/7 days above $1M volume, showing market dominance`,
-              protocol: stableLeader.protocol,
-              value: `${daysAbove1M}/7 strong days`,
-              icon: <Award className="h-4 w-4" />
-            });
+        if (sortedByVolume.length > 0 && totalMarketVolume > 0) {
+          const marketLeader = sortedByVolume[0];
+          const leaderMarketShare = marketLeader.current.total_volume_usd / totalMarketVolume;
+          
+          // Calculate dynamic volume threshold: top 20% of market or minimum 25% market share
+          const top20PercentileVolume = sortedByVolume[Math.floor(sortedByVolume.length * 0.2)]?.current.total_volume_usd || 0;
+          const marketShareThreshold = 0.25; // Must have 25%+ market share
+          const volumeThreshold = Math.max(top20PercentileVolume, totalMarketVolume * 0.1); // At least 10% of total market
+          
+          // Only consider true market leaders: 25%+ market share AND top-tier volume
+          if (leaderMarketShare >= marketShareThreshold && marketLeader.current.total_volume_usd >= volumeThreshold) {
+            // Check consistency using dynamic threshold based on their own performance
+            const leaderAvg7d = marketLeader.previous7d.reduce((sum, d) => sum + d.total_volume_usd, 0) / Math.max(marketLeader.previous7d.length, 1);
+            const consistentDays = marketLeader.previous7d.filter(d => d.total_volume_usd >= leaderAvg7d * 0.7).length; // Within 70% of their average
+            const hasStableGrowth = marketLeader.trends.volume7d > -0.15; // Not declining more than 15%
+            
+            if (consistentDays >= 5 && hasStableGrowth) {
+              generatedInsights.push({
+                type: 'success',
+                title: 'Dominant Market Leader',
+                description: `Commands ${(leaderMarketShare * 100).toFixed(1)}% market share with ${consistentDays}/7 consistent days, showing true market dominance`,
+                protocol: marketLeader.protocol,
+                value: `${(leaderMarketShare * 100).toFixed(1)}% market share`,
+                icon: <Award className="h-4 w-4" />
+              });
+            }
           }
         }
 

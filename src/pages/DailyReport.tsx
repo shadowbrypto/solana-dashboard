@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
+import { DailyHighlights } from "../components/DailyHighlights";
 import { getAllProtocols } from "../lib/protocol-categories";
 
 export default function DailyReport() {
@@ -67,6 +68,7 @@ export default function DailyReport() {
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
       <h1 className="text-2xl sm:text-3xl font-bold">Daily Report</h1>
+      <DailyHighlights date={date} />
       <DailyMetricsTable protocols={protocols} />
     </div>
   );

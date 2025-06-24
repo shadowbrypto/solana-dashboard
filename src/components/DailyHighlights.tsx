@@ -101,10 +101,12 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           const trades1d = yesterday?.daily_trades ? 
             (current.daily_trades - yesterday.daily_trades) / yesterday.daily_trades : 0;
 
-          // Calculate consistency (lower standard deviation = more consistent)
+          // Calculate reliability score (high volume + low volatility)
           const volumeVariance = previous7d.length > 1 ? 
             previous7d.reduce((sum, d) => sum + Math.pow(d.total_volume_usd - avg7dVolume, 2), 0) / previous7d.length : 0;
-          const consistency = volumeVariance > 0 ? 1 / (1 + Math.sqrt(volumeVariance) / avg7dVolume) : 1;
+          const coefficientOfVariation = avg7dVolume > 0 ? Math.sqrt(volumeVariance) / avg7dVolume : 1;
+          // Reliability = high volume * low volatility (lower CV = more reliable)
+          const reliability = avg7dVolume * (1 / (1 + coefficientOfVariation));
 
           performances.push({
             protocol,
@@ -118,7 +120,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
               users1d,
               users7d,
               trades1d,
-              consistency
+              consistency: reliability
             }
           });
         }
@@ -160,23 +162,59 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 3. Most Consistent Performer
-        const mostConsistent = performances.reduce((best, current) => 
-          current.trends.consistency > best.trends.consistency ? current : best
-        );
+        // 3. Most Reliable High Performer (high volume + low volatility)
+        const reliablePerformers = performances
+          .filter(p => p.current.total_volume_usd > 500000) // Min $500K daily volume
+          .filter(p => p.previous7d.length >= 5); // Need at least 5 days of data
+        
+        if (reliablePerformers.length > 0) {
+          const mostReliable = reliablePerformers.reduce((best, current) => 
+            current.trends.consistency > best.trends.consistency ? current : best
+          );
 
-        if (mostConsistent.trends.consistency > 0.7) {
+          const avg7dVolume = mostReliable.previous7d.reduce((sum, d) => sum + d.total_volume_usd, 0) / mostReliable.previous7d.length;
+          const volumeRange = Math.max(...mostReliable.previous7d.map(d => d.total_volume_usd)) - 
+                             Math.min(...mostReliable.previous7d.map(d => d.total_volume_usd));
+          const volatilityPercent = (volumeRange / avg7dVolume) * 100;
+
           generatedInsights.push({
             type: 'info',
-            title: 'Reliable Performer',
-            description: `Shows excellent consistency with stable daily volumes over the past week`,
-            protocol: mostConsistent.protocol,
-            value: `${(mostConsistent.trends.consistency * 100).toFixed(0)}% consistency`,
+            title: 'Reliable High Performer',
+            description: `Maintains strong ${formatCurrency(avg7dVolume)} average daily volume with only ${volatilityPercent.toFixed(1)}% volatility`,
+            protocol: mostReliable.protocol,
+            value: `${formatCurrency(avg7dVolume)} avg volume`,
             icon: <Target className="h-4 w-4" />
           });
         }
 
-        // 4. User Growth Champion
+        // 4. Stable Market Leader (consistently top performer)
+        const topPerformers = performances
+          .filter(p => p.current.total_volume_usd > 1000000) // Min $1M daily volume
+          .sort((a, b) => b.current.total_volume_usd - a.current.total_volume_usd)
+          .slice(0, 3); // Top 3 by current volume
+
+        if (topPerformers.length > 0) {
+          const stableLeader = topPerformers.find(p => {
+            // Check if this protocol has been consistently performing well
+            const daysAbove1M = p.previous7d.filter(d => d.total_volume_usd > 1000000).length;
+            const hasStableGrowth = p.trends.volume7d > -0.1; // Not declining significantly
+            return daysAbove1M >= 5 && hasStableGrowth; // 5+ days above $1M and not declining
+          });
+
+          if (stableLeader && topPerformers.indexOf(stableLeader) === 0) {
+            const daysAbove1M = stableLeader.previous7d.filter(d => d.total_volume_usd > 1000000).length;
+            generatedInsights.push({
+              type: 'success',
+              title: 'Stable Market Leader',
+              description: `Maintains #1 position with ${daysAbove1M}/7 days above $1M volume, showing market dominance`,
+              protocol: stableLeader.protocol,
+              value: `${daysAbove1M}/7 strong days`,
+              icon: <Award className="h-4 w-4" />
+            });
+          }
+        }
+
+        // 5. User Growth Champion
         const userGrowthLeader = performances
           .filter(p => p.trends.users7d > 0)
           .reduce((best, current) => 
@@ -195,7 +233,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 5. Underperformer Alert
+        // 6. Underperformer Alert
         const underperformer = performances
           .filter(p => p.current.total_volume_usd > 100000) // Only consider protocols with meaningful volume
           .filter(p => p.trends.volume7d < -0.2) // > 20% decline
@@ -215,7 +253,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 6. Trading Activity Insights
+        // 7. Trading Activity Insights
         const totalVolume = performances.reduce((sum, p) => sum + p.current.total_volume_usd, 0);
         const totalTrades = performances.reduce((sum, p) => sum + p.current.daily_trades, 0);
         const avgTradeSize = totalTrades > 0 ? totalVolume / totalTrades : 0;
@@ -230,7 +268,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 7. Market Share Concentration
+        // 8. Market Share Concentration
         const marketLeaderShare = topByVolume.current.total_volume_usd / totalVolume;
         if (marketLeaderShare > 0.4) {
           generatedInsights.push({
@@ -243,7 +281,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 8. New User Acquisition Analysis
+        // 9. New User Acquisition Analysis
         const totalNewUsers = performances.reduce((sum, p) => sum + p.current.numberOfNewUsers, 0);
         const totalUsers = performances.reduce((sum, p) => sum + p.current.daily_users, 0);
         const newUserRate = totalUsers > 0 ? totalNewUsers / totalUsers : 0;

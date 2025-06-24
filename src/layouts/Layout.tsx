@@ -113,7 +113,11 @@ export function Layout() {
                 "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                 currentProtocol === 'all' && isProtocolPage && "bg-muted text-foreground font-medium"
               )}
-              onClick={() => handleProtocolChange('all')}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleProtocolChange('all');
+              }}
             >
               <LayoutGrid className="h-4 w-4" />
               All Protocols
@@ -176,7 +180,11 @@ export function Layout() {
                               "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                               currentProtocol === protocol.id && isProtocolPage && "bg-muted text-foreground font-medium"
                             )}
-                            onClick={() => handleProtocolChange(protocol.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleProtocolChange(protocol.id);
+                            }}
                           >
                             <Icon className="h-4 w-4" />
                             {protocol.name}

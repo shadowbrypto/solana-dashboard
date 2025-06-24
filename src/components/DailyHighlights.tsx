@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { format, subDays } from "date-fns";
-import { TrendingUp, TrendingDown, Award, Target, AlertTriangle, Info, Activity, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, Award, Target, AlertTriangle, Info, Activity, Users, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -377,7 +377,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="h-5 text-xs">
-                <Activity className="w-2.5 h-2.5 mr-1 animate-pulse" />
+                <Calendar className="w-2.5 h-2.5 mr-1 animate-pulse" />
                 {format(date, 'MMM dd')}
               </Badge>
             </div>
@@ -430,7 +430,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="h-5 text-xs">
-              <Activity className="w-2.5 h-2.5 mr-1" />
+              <Calendar className="w-2.5 h-2.5 mr-1" />
               {format(date, 'MMM dd')}
             </Badge>
           </div>

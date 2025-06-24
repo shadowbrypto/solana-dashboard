@@ -353,7 +353,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
       <Badge 
         variant="secondary" 
         className={cn(
-          "text-xs px-2 py-0.5 font-medium border-0 shadow-sm",
+          "text-xs px-2 py-1 font-medium border-0 shadow-sm",
           isPositive 
             ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-400"
             : "bg-gradient-to-r from-red-100 to-rose-100 text-red-700 dark:from-red-900/30 dark:to-rose-900/30 dark:text-red-400"

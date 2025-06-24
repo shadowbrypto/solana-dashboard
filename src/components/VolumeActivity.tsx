@@ -61,34 +61,38 @@ const formatCurrency = (value: number): string => {
 };
 
 const getIntensityLevel = (value: number, max: number): number => {
-  if (max === 0) return 0;
+  if (max === 0 || value === 0) return 0;
   const ratio = value / max;
-  if (ratio === 0) return 0;
-  if (ratio <= 0.25) return 1;
-  if (ratio <= 0.5) return 2;
-  if (ratio <= 0.75) return 3;
-  return 4;
+  
+  // Create 9 levels for better granular visualization
+  if (ratio <= 0.11) return 1;
+  if (ratio <= 0.22) return 2;
+  if (ratio <= 0.33) return 3;
+  if (ratio <= 0.44) return 4;
+  if (ratio <= 0.55) return 5;
+  if (ratio <= 0.66) return 6;
+  if (ratio <= 0.77) return 7;
+  if (ratio <= 0.88) return 8;
+  return 9;
 };
 
-const getProtocolIntensityColors = (protocolColor: string, intensity: number): string => {
-  // Extract hue from protocol color (assuming format like "hsl(210, 100%, 50%)")
-  const hueMatch = protocolColor.match(/hsl\((\d+)/);
-  const hue = hueMatch ? hueMatch[1] : '210'; // Default to blue if can't parse
+const getGreenColorClass = (intensity: number): string => {
+  if (intensity === 0) return 'bg-transparent';
   
-  switch (intensity) {
-    case 0:
-      return 'bg-transparent';
-    case 1:
-      return `bg-[hsl(${hue},50%,85%)] dark:bg-[hsl(${hue},50%,15%)]`;
-    case 2:
-      return `bg-[hsl(${hue},60%,65%)] dark:bg-[hsl(${hue},60%,25%)]`;
-    case 3:
-      return `bg-[hsl(${hue},70%,50%)] dark:bg-[hsl(${hue},70%,35%)]`;
-    case 4:
-      return `bg-[hsl(${hue},80%,40%)] dark:bg-[hsl(${hue},80%,45%)]`;
-    default:
-      return 'bg-transparent';
-  }
+  // 9 color shades for optimal visualization
+  const colorMap: Record<number, string> = {
+    1: 'bg-green-100 dark:bg-green-950/20',
+    2: 'bg-green-200 dark:bg-green-900/30',
+    3: 'bg-green-300 dark:bg-green-800/40',
+    4: 'bg-green-400 dark:bg-green-700/50',
+    5: 'bg-green-500 dark:bg-green-600/60',
+    6: 'bg-green-600 dark:bg-green-500/70',
+    7: 'bg-green-700 dark:bg-green-400/80',
+    8: 'bg-green-800 dark:bg-green-300/90',
+    9: 'bg-green-900 dark:bg-green-200'
+  };
+  
+  return colorMap[intensity] || 'bg-green-900 dark:bg-green-200';
 };
 
 export function VolumeActivity({ 
@@ -310,7 +314,7 @@ export function VolumeActivity({
                     <div
                       key={`${weekIndex}-${dayIndex}`}
                       className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
-                        !day.isCurrentYear ? 'bg-transparent' : day.intensity === 0 ? 'bg-transparent' : day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' : day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' : day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' : 'bg-green-800 dark:bg-green-500'
+                        !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                       }`}
                     >
                       {day.isCurrentYear && day.volume > 0 && (
@@ -350,10 +354,9 @@ export function VolumeActivity({
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-1">
                 <div className="w-4 h-4 bg-muted rounded-sm" />
-                <div className="w-4 h-4 bg-green-200 dark:bg-green-900/30 rounded-sm" />
-                <div className="w-4 h-4 bg-green-400 dark:bg-green-700/50 rounded-sm" />
-                <div className="w-4 h-4 bg-green-600 dark:bg-green-600/70 rounded-sm" />
-                <div className="w-4 h-4 bg-green-800 dark:bg-green-500 rounded-sm" />
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+                  <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                ))}
               </div>
               <span className="text-muted-foreground">More</span>
             </div>
@@ -418,7 +421,7 @@ export function VolumeActivity({
                     <div
                       key={`${weekIndex}-${dayIndex}`}
                       className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
-                        !day.isCurrentYear ? 'bg-transparent' : day.intensity === 0 ? 'bg-transparent' : day.intensity === 1 ? 'bg-green-200 dark:bg-green-900/30' : day.intensity === 2 ? 'bg-green-400 dark:bg-green-700/50' : day.intensity === 3 ? 'bg-green-600 dark:bg-green-600/70' : 'bg-green-800 dark:bg-green-500'
+                        !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                       }`}
                     >
                       {day.isCurrentYear && day.volume > 0 && (
@@ -458,10 +461,9 @@ export function VolumeActivity({
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-1">
                 <div className="w-4 h-4 bg-muted rounded-sm" />
-                <div className="w-4 h-4 bg-green-200 dark:bg-green-900/30 rounded-sm" />
-                <div className="w-4 h-4 bg-green-400 dark:bg-green-700/50 rounded-sm" />
-                <div className="w-4 h-4 bg-green-600 dark:bg-green-600/70 rounded-sm" />
-                <div className="w-4 h-4 bg-green-800 dark:bg-green-500 rounded-sm" />
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+                  <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                ))}
               </div>
               <span className="text-muted-foreground">More</span>
             </div>

@@ -10,6 +10,8 @@ interface PasswordProtectionProps {
   isAuthenticated: boolean;
 }
 
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'shadow';
+
 export function PasswordProtection({ children, onAuthenticated, isAuthenticated }: PasswordProtectionProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,7 +20,7 @@ export function PasswordProtection({ children, onAuthenticated, isAuthenticated 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password === 'shadow') {
+    if (password === ADMIN_PASSWORD) {
       setError('');
       onAuthenticated();
     } else {

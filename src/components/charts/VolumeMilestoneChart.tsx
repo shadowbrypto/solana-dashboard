@@ -159,7 +159,6 @@ export function VolumeMilestoneChart({
 
       return milestones;
     } catch (error) {
-      console.error('Error calculating milestone data:', error);
       return [];
     }
   }, [data]);

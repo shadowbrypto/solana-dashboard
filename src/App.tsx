@@ -55,8 +55,6 @@ type ProtocolStatsWithDay = ProtocolStats & DailyData & {
 };
 
 const ErrorFallback = ({ error }: { error: Error }) => {
-  console.error('Error caught by boundary:', error);
-  console.error('Error stack:', error.stack);
   return (
     <div className="p-4 text-red-600">
       <h2 className="text-lg font-bold">Something went wrong:</h2>
@@ -454,11 +452,11 @@ const MainContent = (): JSX.Element => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       {loading ? (
-        <div className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-white/90 text-center">
+        <div className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-center">
           <Skeleton className="h-8 sm:h-10 w-40 sm:w-48 mx-auto" />
         </div>
       ) : (
-        <h1 className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-white/90 text-center">
+        <h1 className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
           {protocol === "all"
             ? "Overview"
             : getProtocolName(protocol)}{" "}

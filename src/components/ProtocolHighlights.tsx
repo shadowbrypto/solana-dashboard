@@ -274,7 +274,6 @@ export function ProtocolHighlights({
 
       return highlightsList.slice(0, 9); // Show top 9 highlights
     } catch (error) {
-      console.error('Error calculating highlights:', error);
       return [];
     }
   }, [data]);

@@ -45,11 +45,8 @@ export async function getProtocolStats(protocolName?: string | string[]) {
 
     return stats;
   } catch (error) {
-    console.error('Error fetching protocol stats from API:', error);
-    
     // Return cached data if available, even if expired
     if (cachedData) {
-      console.warn('Returning expired cached data due to API error');
       return cachedData.data;
     }
     
@@ -77,11 +74,10 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
 
     return totalStats;
   } catch (error) {
-    console.error('Error fetching total protocol stats from API:', error);
+    // Handle error silently
     
     // Return cached data if available, even if expired
     if (cachedData) {
-      console.warn('Returning expired cached data due to API error');
       return cachedData.data;
     }
     
@@ -119,11 +115,10 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
 
     return dailyMetrics;
   } catch (error) {
-    console.error('Error fetching daily metrics from API:', error);
+    // Handle error silently
     
     // Return cached data if available, even if expired
     if (cachedData) {
-      console.warn('Returning expired cached data due to API error');
       return cachedData.data;
     }
     
@@ -151,7 +146,7 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
 
     return aggregatedStats;
   } catch (error) {
-    console.warn('Aggregated endpoint failed, falling back to individual protocol fetching:', error);
+    // Aggregated endpoint failed, falling back to individual protocol fetching
     
     // Fallback to the old method if the new endpoint fails
     try {
@@ -208,11 +203,8 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
 
       return fallbackData;
     } catch (fallbackError) {
-      console.error('Both aggregated and fallback methods failed:', fallbackError);
-      
       // Return cached data if available, even if expired
       if (cachedData) {
-        console.warn('Returning expired cached data due to all API errors');
         return cachedData.data;
       }
       

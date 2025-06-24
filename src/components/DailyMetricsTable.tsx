@@ -222,7 +222,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         
         setPreviousDayData(previousData);
       } catch (error) {
-        console.error('Error fetching metrics:', error);
         setDailyData({});
         setPreviousDayData({});
       }
@@ -282,23 +281,17 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   const downloadReport = async () => {
-    console.log('Download report clicked');
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
-    console.log('Table element found:', !!tableElement);
     
     if (tableElement) {
       // Check element dimensions
       const rect = tableElement.getBoundingClientRect();
-      console.log('Table dimensions:', rect.width, 'x', rect.height);
       
       if (rect.width === 0 || rect.height === 0) {
-        console.error('Table element has zero dimensions');
         return;
       }
       
       try {
-        console.log('Generating image with dom-to-image...');
-        console.log('Element scroll dimensions:', tableElement.scrollWidth, 'x', tableElement.scrollHeight);
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
@@ -318,7 +311,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
           )
         ]) as string;
-        console.log('Image generated successfully, data URL length:', dataUrl.length);
         
         // Create download link
         const link = document.createElement('a');
@@ -327,33 +319,24 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('Download triggered');
       } catch (error) {
-        console.error('Error generating screenshot:', error);
+        // Handle error silently or show user-friendly message
       }
-    } else {
-      console.error('Table element not found');
     }
   };
 
   const copyToClipboard = async () => {
-    console.log('Copy to clipboard clicked');
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
-    console.log('Table element found for copy:', !!tableElement);
     
     if (tableElement) {
       // Check element dimensions
       const rect = tableElement.getBoundingClientRect();
-      console.log('Table dimensions for copy:', rect.width, 'x', rect.height);
       
       if (rect.width === 0 || rect.height === 0) {
-        console.error('Table element has zero dimensions for copy');
         return;
       }
       
       try {
-        console.log('Generating image for copy...');
-        console.log('Element scroll dimensions for copy:', tableElement.scrollWidth, 'x', tableElement.scrollHeight);
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
@@ -373,7 +356,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
           )
         ]) as string;
-        console.log('Image generated for copy, data URL length:', dataUrl.length);
         
         // Convert data URL to blob
         const response = await fetch(dataUrl);
@@ -381,24 +363,18 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         
         if (blob) {
           try {
-            console.log('Attempting to write to clipboard...');
             await navigator.clipboard.write([
               new ClipboardItem({
                 'image/png': blob
               })
             ]);
-            console.log('Report copied to clipboard!');
           } catch (error) {
-            console.error('Error copying to clipboard:', error);
+            // Handle error silently or show user-friendly message
           }
-        } else {
-          console.error('Failed to generate blob');
         }
       } catch (error) {
-        console.error('Error generating image for clipboard:', error);
+        // Handle error silently or show user-friendly message
       }
-    } else {
-      console.error('Table element not found for copy');
     }
   };
 

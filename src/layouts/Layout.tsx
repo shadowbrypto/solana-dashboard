@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings, Menu, X } from 'lucide-react';
+import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -16,6 +16,7 @@ const protocols = [
 ];
 
 const overviewPages = [
+  { id: 'comparison', name: 'Protocol Comparison', icon: GitCompare, path: '/overview/comparison' },
   // { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights', beta: true }
 ];
 

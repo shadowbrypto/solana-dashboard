@@ -393,7 +393,6 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
 
         setInsights(generatedInsights.slice(0, 4)); // Show top 4 insights for 2x2 grid
       } catch (error) {
-        console.error('Error analyzing daily highlights:', error);
         setInsights([]);
       } finally {
         setLoading(false);

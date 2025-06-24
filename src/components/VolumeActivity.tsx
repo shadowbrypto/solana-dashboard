@@ -169,7 +169,6 @@ export function VolumeActivity({
 
       return { weeks, months, maxVolume };
     } catch (error) {
-      console.error('Error processing volume activity data:', error);
       return { weeks: [], months: [], maxVolume: 0 };
     }
   }, [data, selectedYear]);

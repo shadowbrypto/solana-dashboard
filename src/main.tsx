@@ -10,6 +10,7 @@ import DailyReport from "./pages/DailyReport";
 import MonthlyReport from "./pages/MonthlyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
+import OneVsOne from "./pages/OneVsOne";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
@@ -34,6 +35,20 @@ const router = createBrowserRouter([
       {
         path: "overview",
         children: [
+          {
+            path: "comparison",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <OneVsOne />
+              </React.Suspense>
+            ),
+          },
           {
             path: "weekly-insights",
             element: (

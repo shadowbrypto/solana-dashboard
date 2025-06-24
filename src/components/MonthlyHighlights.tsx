@@ -264,7 +264,6 @@ export function MonthlyHighlights({ date }: MonthlyHighlightsProps) {
 
         setInsights(generatedInsights.slice(0, 4)); // Show top 4 insights for 2x2 grid
       } catch (error) {
-        console.error('Error analyzing monthly highlights:', error);
         setInsights([]);
       } finally {
         setLoading(false);

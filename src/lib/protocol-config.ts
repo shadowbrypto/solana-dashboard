@@ -123,7 +123,6 @@ const loadSavedConfigurations = async (): Promise<ProtocolConfigMutable[]> => {
       return mergedConfigs;
     }
   } catch (error) {
-    console.error('Error loading saved protocol configurations from database:', error);
     // Fallback to localStorage for backward compatibility
     try {
       const saved = localStorage.getItem('saved_protocol_configurations');
@@ -144,7 +143,7 @@ const loadSavedConfigurations = async (): Promise<ProtocolConfigMutable[]> => {
         return mergedConfigs;
       }
     } catch (localStorageError) {
-      console.error('Error loading from localStorage fallback:', localStorageError);
+      // Silent fallback failure
     }
   }
   return [...protocolConfigs];
@@ -162,7 +161,6 @@ const initializeConfigurations = async (): Promise<void> => {
     mutableProtocolConfigs = await loadSavedConfigurations();
     isLoaded = true;
   } catch (error) {
-    console.error('Error initializing configurations:', error);
     mutableProtocolConfigs = [...protocolConfigs];
     isLoaded = true;
   }
@@ -205,10 +203,9 @@ export const saveProtocolConfigurations = async (): Promise<void> => {
     try {
       localStorage.setItem('saved_protocol_configurations', JSON.stringify(mutableProtocolConfigs));
     } catch (localStorageError) {
-      console.warn('Could not save to localStorage:', localStorageError);
+      // Silent localStorage failure
     }
   } catch (error) {
-    console.error('Error saving protocol configurations:', error);
     throw new Error('Failed to save configurations');
   }
 };
@@ -223,10 +220,9 @@ export const resetProtocolConfigurations = async (): Promise<void> => {
     try {
       localStorage.removeItem('saved_protocol_configurations');
     } catch (localStorageError) {
-      console.warn('Could not clear localStorage:', localStorageError);
+      // Silent localStorage failure
     }
   } catch (error) {
-    console.error('Error resetting configurations:', error);
     throw new Error('Failed to reset configurations');
   }
 };
@@ -236,7 +232,6 @@ export const hasUnsavedChanges = (): boolean => {
   try {
     return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(protocolConfigs);
   } catch (error) {
-    console.error('Error checking for unsaved changes:', error);
     return false;
   }
 };

@@ -258,7 +258,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        setInsights(generatedInsights.slice(0, 6)); // Show top 6 insights
+        setInsights(generatedInsights.slice(0, 4)); // Show top 4 insights for 2x2 grid
       } catch (error) {
         console.error('Error analyzing daily highlights:', error);
         setInsights([]);
@@ -326,12 +326,13 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg border animate-pulse">
-                <div className="w-8 h-8 bg-muted rounded-md"></div>
+              <div key={i} className="flex items-start gap-3 p-4 rounded-lg border animate-pulse">
+                <div className="w-8 h-8 bg-muted rounded-md flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-full"></div>
                   <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
               </div>
@@ -357,23 +358,23 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
         {insights.length === 0 ? (
           <p className="text-muted-foreground">No significant insights for this date.</p>
         ) : (
-          <div className="space-y-4">
-            {insights.map((insight, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {insights.slice(0, 4).map((insight, index) => (
               <div
                 key={index}
                 className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg border",
+                  "flex items-start gap-3 p-4 rounded-lg border",
                   "hover:bg-muted/30 transition-colors"
                 )}
               >
                 <div className={cn(
-                  "p-2 rounded-md",
+                  "p-2 rounded-md flex-shrink-0",
                   getInsightBadgeColor(insight.type)
                 )}>
                   {insight.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h4 className="font-medium text-sm">{insight.title}</h4>
                     {insight.protocol && (
                       <Badge variant="outline" className="text-xs">
@@ -382,11 +383,11 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
                     )}
                     {getTrendBadge(insight.trend)}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {insight.description}
                   </p>
                   {insight.value && (
-                    <p className="text-xs font-mono text-foreground mt-1">
+                    <p className="text-xs font-mono text-foreground mt-2">
                       {insight.value}
                     </p>
                   )}

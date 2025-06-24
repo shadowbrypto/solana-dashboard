@@ -44,48 +44,44 @@ export function MonthPicker({ date, onDateChange }: MonthPickerProps) {
         <Button
           variant={"outline"}
           className={cn(
-            "w-full sm:w-[240px] justify-start text-left font-normal",
+            "w-full sm:w-[180px] justify-between text-left font-normal h-9",
             !date && "text-muted-foreground"
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "MMMM yyyy") : <span>Pick a month</span>}
-          <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
+          <span className="flex items-center">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date ? format(date, "MMM yyyy") : "Select month"}
+          </span>
+          <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-4" align="start">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Month</label>
-            <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month, index) => (
-                  <SelectItem key={index} value={index.toString()}>
-                    {month}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <PopoverContent className="w-[240px] p-3" align="start">
+        <div className="grid grid-cols-2 gap-2">
+          <Select value={selectedMonth.toString()} onValueChange={handleMonthChange}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {month.slice(0, 3)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Year</label>
-            <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </PopoverContent>
     </Popover>

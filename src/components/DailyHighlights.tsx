@@ -214,7 +214,94 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           }
         }
 
-        // 5. User Growth Champion
+        // 5. Market Momentum Shift (coordinated growth across multiple metrics)
+        const momentumCandidates = performances
+          .filter(p => p.current.total_volume_usd > 200000) // Min $200K volume
+          .filter(p => p.previous7d.length >= 5) // Need sufficient data
+          .map(p => {
+            // Calculate 5-day momentum across volume, users, and trades
+            const recent5Days = p.previous7d.slice(-5);
+            const early5Days = p.previous7d.slice(0, 5);
+            
+            if (recent5Days.length < 3 || early5Days.length < 3) return null;
+            
+            const recentAvgVolume = recent5Days.reduce((sum, d) => sum + d.total_volume_usd, 0) / recent5Days.length;
+            const earlyAvgVolume = early5Days.reduce((sum, d) => sum + d.total_volume_usd, 0) / early5Days.length;
+            const volumeMomentum = earlyAvgVolume > 0 ? (recentAvgVolume - earlyAvgVolume) / earlyAvgVolume : 0;
+            
+            const recentAvgUsers = recent5Days.reduce((sum, d) => sum + d.daily_users, 0) / recent5Days.length;
+            const earlyAvgUsers = early5Days.reduce((sum, d) => sum + d.daily_users, 0) / early5Days.length;
+            const usersMomentum = earlyAvgUsers > 0 ? (recentAvgUsers - earlyAvgUsers) / earlyAvgUsers : 0;
+            
+            const recentAvgTrades = recent5Days.reduce((sum, d) => sum + d.daily_trades, 0) / recent5Days.length;
+            const earlyAvgTrades = early5Days.reduce((sum, d) => sum + d.daily_trades, 0) / early5Days.length;
+            const tradesMomentum = earlyAvgTrades > 0 ? (recentAvgTrades - earlyAvgTrades) / earlyAvgTrades : 0;
+            
+            // All three metrics must be positive for coordinated growth
+            const coordinatedGrowth = volumeMomentum > 0.1 && usersMomentum > 0.05 && tradesMomentum > 0.1;
+            const momentumScore = coordinatedGrowth ? (volumeMomentum + usersMomentum + tradesMomentum) / 3 : 0;
+            
+            return {
+              protocol: p.protocol,
+              momentumScore,
+              volumeMomentum,
+              usersMomentum,
+              tradesMomentum,
+              coordinatedGrowth
+            };
+          })
+          .filter(p => p && p.coordinatedGrowth)
+          .sort((a, b) => b!.momentumScore - a!.momentumScore);
+
+        if (momentumCandidates.length > 0) {
+          const topMomentum = momentumCandidates[0]!;
+          generatedInsights.push({
+            type: 'success',
+            title: 'Market Momentum Shift',
+            description: `Shows coordinated growth: volume +${(topMomentum.volumeMomentum * 100).toFixed(0)}%, users +${(topMomentum.usersMomentum * 100).toFixed(0)}%, trades +${(topMomentum.tradesMomentum * 100).toFixed(0)}% over 5 days`,
+            protocol: topMomentum.protocol,
+            value: 'Genuine ecosystem expansion',
+            icon: <TrendingUp className="h-4 w-4" />
+          });
+        }
+
+        // 6. Efficiency Champion (highest volume per user)
+        const efficiencyCandidates = performances
+          .filter(p => p.current.total_volume_usd > 100000) // Min $100K volume
+          .filter(p => p.current.daily_users > 10) // Min 10 users for meaningful ratio
+          .map(p => {
+            const volumePerUser = p.current.total_volume_usd / p.current.daily_users;
+            return {
+              protocol: p.protocol,
+              volumePerUser,
+              totalVolume: p.current.total_volume_usd,
+              totalUsers: p.current.daily_users
+            };
+          })
+          .sort((a, b) => b.volumePerUser - a.volumePerUser);
+
+        if (efficiencyCandidates.length > 0) {
+          const efficiencyChampion = efficiencyCandidates[0];
+          const marketAvgVolumePerUser = performances
+            .filter(p => p.current.daily_users > 0)
+            .reduce((sum, p) => sum + (p.current.total_volume_usd / p.current.daily_users), 0) / 
+            performances.filter(p => p.current.daily_users > 0).length;
+          
+          const efficiencyMultiplier = efficiencyChampion.volumePerUser / marketAvgVolumePerUser;
+          
+          if (efficiencyMultiplier > 1.5) { // At least 50% above market average
+            generatedInsights.push({
+              type: 'info',
+              title: 'Efficiency Champion',
+              description: `Achieves ${formatCurrency(efficiencyChampion.volumePerUser)} per user, ${efficiencyMultiplier.toFixed(1)}x market average - attracting high-value traders`,
+              protocol: efficiencyChampion.protocol,
+              value: `${formatCurrency(efficiencyChampion.volumePerUser)} per user`,
+              icon: <Target className="h-4 w-4" />
+            });
+          }
+        }
+
+        // 7. User Growth Champion
         const userGrowthLeader = performances
           .filter(p => p.trends.users7d > 0)
           .reduce((best, current) => 
@@ -233,7 +320,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 6. Underperformer Alert
+        // 8. Underperformer Alert
         const underperformer = performances
           .filter(p => p.current.total_volume_usd > 100000) // Only consider protocols with meaningful volume
           .filter(p => p.trends.volume7d < -0.2) // > 20% decline
@@ -253,7 +340,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 7. Trading Activity Insights
+        // 9. Trading Activity Insights
         const totalVolume = performances.reduce((sum, p) => sum + p.current.total_volume_usd, 0);
         const totalTrades = performances.reduce((sum, p) => sum + p.current.daily_trades, 0);
         const avgTradeSize = totalTrades > 0 ? totalVolume / totalTrades : 0;
@@ -268,7 +355,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 8. Market Share Concentration
+        // 10. Market Share Concentration
         const marketLeaderShare = topByVolume.current.total_volume_usd / totalVolume;
         if (marketLeaderShare > 0.4) {
           generatedInsights.push({
@@ -281,7 +368,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           });
         }
 
-        // 9. New User Acquisition Analysis
+        // 11. New User Acquisition Analysis
         const totalNewUsers = performances.reduce((sum, p) => sum + p.current.numberOfNewUsers, 0);
         const totalUsers = performances.reduce((sum, p) => sum + p.current.daily_users, 0);
         const newUserRate = totalUsers > 0 ? totalNewUsers / totalUsers : 0;

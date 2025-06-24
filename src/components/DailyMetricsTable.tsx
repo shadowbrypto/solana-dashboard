@@ -22,6 +22,8 @@ import { Badge } from "./ui/badge";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
+  date: Date;
+  onDateChange: (date: Date) => void;
 }
 
 type MetricKey = keyof ProtocolMetrics | 'market_share';
@@ -59,10 +61,9 @@ const formatPercentage = (value: number): string => {
   return `${(value * 100).toFixed(2)}%`;
 };
 
-export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
+export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
-  const [date, setDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
@@ -231,7 +232,7 @@ export function DailyMetricsTable({ protocols }: DailyMetricsTableProps) {
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
-      setDate(newDate);
+      onDateChange(newDate);
     }
   };
 

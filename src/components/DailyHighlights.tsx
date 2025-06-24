@@ -317,14 +317,23 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
     return (
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-lg">Daily Highlights</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Activity className="h-5 w-5 animate-pulse" />
+            Daily Highlights
+            <Badge variant="outline" className="ml-auto text-xs">
+              {format(date, 'MMM dd, yyyy')}
+            </Badge>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
+              <div key={i} className="flex items-start gap-3 p-3 rounded-lg border animate-pulse">
+                <div className="w-8 h-8 bg-muted rounded-md"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
               </div>
             ))}
           </div>
@@ -340,7 +349,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           <Activity className="h-5 w-5" />
           Daily Highlights
           <Badge variant="outline" className="ml-auto text-xs">
-            {format(date, 'MMM dd')}
+            {format(date, 'MMM dd, yyyy')}
           </Badge>
         </CardTitle>
       </CardHeader>

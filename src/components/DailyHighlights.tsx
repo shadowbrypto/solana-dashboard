@@ -469,7 +469,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {insight.protocol && (
-                          <Badge variant="outline" className="h-4 text-xs font-medium">
+                          <Badge variant="outline" className="h-4 text-xs font-medium px-2">
                             {insight.protocol.charAt(0).toUpperCase() + insight.protocol.slice(1)}
                           </Badge>
                         )}

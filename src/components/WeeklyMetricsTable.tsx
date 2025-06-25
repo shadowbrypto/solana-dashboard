@@ -336,7 +336,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3">Protocol</TableHead>
+              <TableHead className="w-[220px] sticky left-0 z-20 bg-background py-3">Protocol</TableHead>
               {weekDays.map((day) => (
                 <TableHead key={day.toISOString()} className="text-center min-w-[110px] px-3 py-3">
                   <div className="flex flex-col items-center">

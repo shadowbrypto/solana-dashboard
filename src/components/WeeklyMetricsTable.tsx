@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isAfter, isBefore } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isAfter, isBefore, subDays, addDays } from "date-fns";
 import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
@@ -24,8 +24,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface WeeklyMetricsTableProps {
   protocols: Protocol[];
-  weekStart: Date;
-  onWeekChange: (date: Date) => void;
+  endDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
 type MetricKey = 'total_volume_usd' | 'daily_users' | 'numberOfNewUsers' | 'daily_trades';
@@ -47,13 +47,13 @@ const formatNumber = (value: number): string => {
   return value.toLocaleString();
 };
 
-export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: WeeklyMetricsTableProps) {
+export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyMetricsTableProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<DailyData>({});
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
-  const [weekDays, setWeekDays] = useState<Date[]>([]);
+  const [last7Days, setLast7Days] = useState<Date[]>([]);
 
   const metricOptions = [
     { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
@@ -70,13 +70,13 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
   
   // Check if navigation is allowed
   const canNavigatePrev = () => {
-    const prevWeek = subWeeks(weekStart, 1);
-    return !isBefore(prevWeek, MIN_DATE);
+    const prev7Days = subDays(endDate, 7);
+    return !isBefore(prev7Days, MIN_DATE);
   };
   
   const canNavigateNext = () => {
-    const nextWeek = addWeeks(weekStart, 1);
-    return !isAfter(nextWeek, MAX_DATE);
+    const next7Days = addDays(endDate, 7);
+    return !isAfter(next7Days, MAX_DATE);
   };
 
 
@@ -95,12 +95,13 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
   };
 
   useEffect(() => {
-    const fetchWeeklyData = async () => {
+    const fetchLast7DaysData = async () => {
       setLoading(true);
       try {
-        const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-        const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-        setWeekDays(days);
+        // Generate last 7 days ending with endDate
+        const startDate = subDays(endDate, 6); // 6 days before endDate gives us 7 days total
+        const days = eachDayOfInterval({ start: startDate, end: endDate });
+        setLast7Days(days);
         
         // Fetch data for each day
         const dailyPromises = days.map(day => getDailyMetrics(day));
@@ -125,22 +126,22 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         setDailyData(organizedData);
         
       } catch (error) {
-        console.error('Error fetching weekly data:', error);
+        console.error('Error fetching last 7 days data:', error);
         setDailyData({});
       } finally {
         setLoading(false);
       }
     };
     
-    fetchWeeklyData();
-  }, [weekStart, protocols, selectedMetric]);
+    fetchLast7DaysData();
+  }, [endDate, protocols, selectedMetric]);
 
-  const handleWeekChange = (direction: 'prev' | 'next') => {
+  const handleDateChange = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && !canNavigatePrev()) return;
     if (direction === 'next' && !canNavigateNext()) return;
     
-    const newWeek = direction === 'prev' ? subWeeks(weekStart, 1) : addWeeks(weekStart, 1);
-    onWeekChange(newWeek);
+    const newDate = direction === 'prev' ? subDays(endDate, 7) : addDays(endDate, 7);
+    onDateChange(newDate);
   };
 
   const formatValue = (value: number) => {
@@ -263,7 +264,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
     }
   };
 
-  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+  const startDate = subDays(endDate, 6);
 
   return (
     <div className="space-y-3">
@@ -272,9 +273,9 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
           <Button
             variant="outline"
             size="icon"
-            onClick={() => handleWeekChange('prev')}
+            onClick={() => handleDateChange('prev')}
             disabled={!canNavigatePrev()}
-            title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous week'}
+            title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous 7 days'}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -282,16 +283,16 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
           <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">
-              {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+              {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
             </span>
           </div>
           
           <Button
             variant="outline"
             size="icon"
-            onClick={() => handleWeekChange('next')}
+            onClick={() => handleDateChange('next')}
             disabled={!canNavigateNext()}
-            title={!canNavigateNext() ? 'Cannot go beyond current week' : 'Next week'}
+            title={!canNavigateNext() ? 'Cannot go beyond current date' : 'Next 7 days'}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -337,7 +338,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
           <TableHeader>
             <TableRow>
               <TableHead className="w-[220px] sticky left-0 z-20 bg-background py-3">Protocol</TableHead>
-              {weekDays.map((day) => (
+              {last7Days.map((day) => (
                 <TableHead key={day.toISOString()} className="text-center min-w-[110px] px-3 py-3">
                   <div className="flex flex-col items-center">
                     <span className="text-xs text-muted-foreground">{format(day, 'EEE')}</span>
@@ -350,7 +351,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={weekDays.length + 1} className="text-center py-8">
+                <TableCell colSpan={last7Days.length + 1} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <span className="text-muted-foreground">Loading weekly data...</span>
@@ -387,7 +388,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                           <span className="font-semibold">{categoryName}</span>
                         </div>
                       </TableCell>
-                      {weekDays.map(day => {
+                      {last7Days.map(day => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
                           const protocolData = dailyData[protocol.id];
@@ -437,7 +438,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                               </span>
                             </div>
                           </TableCell>
-                          {weekDays.map(day => {
+                          {last7Days.map(day => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const value = protocolData[dateKey] || 0;
                             
@@ -461,7 +462,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                 <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-3 px-4 transition-colors">
                   Total
                 </TableCell>
-                {weekDays.map(day => {
+                {last7Days.map(day => {
                   const dateKey = format(day, 'yyyy-MM-dd');
                   const dailyTotal = protocols.reduce((sum, protocol) => {
                     const protocolData = dailyData[protocol];

@@ -5,7 +5,7 @@ import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent } from '../components/ui/card';
 import { CalendarIcon } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks, subDays } from 'date-fns';
 
 export default function WeeklyReport() {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function WeeklyReport() {
     return maxDate;
   };
   
-  const [selectedWeek, setSelectedWeek] = useState(getValidInitialDate());
+  const [selectedEndDate, setSelectedEndDate] = useState(getValidInitialDate());
 
   // Get all protocols for the table
   const protocols: Protocol[] = [];
@@ -43,20 +43,20 @@ export default function WeeklyReport() {
     });
   });
 
-  const handleWeekChange = (newWeek: Date) => {
+  const handleDateChange = (newEndDate: Date) => {
     const minDate = new Date('2024-01-01');
     const maxDate = new Date();
     
-    // Validate the new week is within acceptable range
-    if (isBefore(newWeek, minDate) || isAfter(newWeek, maxDate)) {
+    // Validate the new date is within acceptable range
+    if (isBefore(newEndDate, minDate) || isAfter(newEndDate, maxDate)) {
       return; // Don't allow invalid dates
     }
     
-    setSelectedWeek(newWeek);
+    setSelectedEndDate(newEndDate);
   };
 
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
+  const startDate = subDays(selectedEndDate, 6);
+  const endDate = selectedEndDate;
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
@@ -66,7 +66,7 @@ export default function WeeklyReport() {
           Weekly Report
         </h1>
         <p className="text-center text-muted-foreground mt-2">
-          {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+          {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
         </p>
       </div>
 
@@ -83,8 +83,8 @@ export default function WeeklyReport() {
       ) : (
         <WeeklyMetricsTable 
           protocols={protocols} 
-          weekStart={weekStart}
-          onWeekChange={handleWeekChange}
+          endDate={endDate}
+          onDateChange={handleDateChange}
         />
       )}
     </div>

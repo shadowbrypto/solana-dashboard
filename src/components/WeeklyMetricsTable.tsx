@@ -86,13 +86,26 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const getCategoryRowColor = (categoryName: string): string => {
     switch (categoryName) {
       case 'Telegram Bots':
-        return 'bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40';
+        return 'bg-blue-100 dark:bg-blue-900/30';
       case 'Trading Terminals':
-        return 'bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/40';
+        return 'bg-green-100 dark:bg-green-900/30';
       case 'Mobile Apps':
-        return 'bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/40';
+        return 'bg-purple-100 dark:bg-purple-900/30';
       default:
-        return 'hover:bg-muted/30';
+        return '';
+    }
+  };
+  
+  const getCategoryHoverColor = (categoryName: string): string => {
+    switch (categoryName) {
+      case 'Telegram Bots':
+        return 'group-hover:bg-blue-200 dark:group-hover:bg-blue-900/40';
+      case 'Trading Terminals':
+        return 'group-hover:bg-green-200 dark:group-hover:bg-green-900/40';
+      case 'Mobile Apps':
+        return 'group-hover:bg-purple-200 dark:group-hover:bg-purple-900/40';
+      default:
+        return 'group-hover:bg-muted/30';
     }
   };
 
@@ -221,7 +234,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         ]) as string;
         
         const link = document.createElement('a');
-        link.download = `weekly-metrics-${format(weekStart, 'yyyy-MM-dd')}.png`;
+        link.download = `weekly-metrics-${format(startDate, 'yyyy-MM-dd')}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -289,20 +302,20 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
-          <TabsList className="grid w-full grid-cols-4">
-            {metricOptions.map((option) => (
-              <TabsTrigger key={option.key} value={option.key} className="text-sm">
-                {option.key === 'total_volume_usd' ? 'Volume' :
-                 option.key === 'daily_users' ? 'DAUs' :
-                 option.key === 'numberOfNewUsers' ? 'New Users' :
-                 'Trades'}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group">
+          <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
+            <TabsList className="grid w-full grid-cols-4">
+              {metricOptions.map((option) => (
+                <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                  {option.key === 'total_volume_usd' ? 'Volume' :
+                   option.key === 'daily_users' ? 'DAUs' :
+                   option.key === 'numberOfNewUsers' ? 'New Users' :
+                   'Trades'}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          
           <Button
             variant="outline"
             size="sm"
@@ -318,6 +331,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               }
             }}
             title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
             {hiddenProtocols.size > 0 ? (
               <Eye className="h-4 w-4 mr-2" />
@@ -326,7 +340,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             )}
             {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
           </Button>
-          
+        </div>
+        
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
@@ -408,11 +424,12 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       className={cn(
                         "cursor-pointer font-medium group",
                         getCategoryRowColor(categoryName),
+                        getCategoryHoverColor(categoryName),
                         "transition-all duration-200"
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className={cn("sticky left-0 z-10 py-3 px-4", getCategoryRowColor(categoryName))}>
+                      <TableCell className={cn("sticky left-0 z-10 py-3 px-4 transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                         <div className="flex items-center gap-2">
                           <ChevronRight 
                             className={cn(
@@ -434,7 +451,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 px-3 transition-colors", getCategoryRowColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 px-3 transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );

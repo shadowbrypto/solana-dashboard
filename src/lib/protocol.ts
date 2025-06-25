@@ -13,7 +13,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds (shorter since backend has its own cache)
+const CACHE_EXPIRY = 0; // Temporarily disable cache to see latest data filtering
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();

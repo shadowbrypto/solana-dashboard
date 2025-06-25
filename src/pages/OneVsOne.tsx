@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap } from 'lucide-react';
+import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone } from 'lucide-react';
 import { protocolConfigs } from '../lib/protocol-config';
 import { getProtocolStats, getTotalProtocolStats } from '../lib/protocol';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
@@ -100,7 +100,7 @@ export default function OneVsOne() {
   const presets = [
     { name: 'Top Telegram Bots', protocols: ['trojan', 'bonkbot', 'maestro'] },
     { name: 'Trading Terminals', protocols: ['photon', 'bullx'] },
-    { name: 'Mobile vs Bots', protocols: ['trojan', 'photon', 'jupiter'] }
+    { name: 'Mobile Apps', protocols: ['moonshot', 'vector', 'slingshot', 'fomo'] }
   ];
 
   const loadPreset = useCallback(async (protocolIds: string[]) => {
@@ -198,25 +198,27 @@ export default function OneVsOne() {
   }, [protocolData, timeframe]);
 
   return (
-    <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
+    <div className="p-2 sm:p-4 lg:p-6">
       {/* Header */}
-      <h1 className="text-2xl sm:text-3xl font-bold text-center">Protocol Comparison</h1>
+      <h1 className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+        Protocol Comparison
+      </h1>
 
       {/* Protocol Selection */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-background via-background to-muted/5">
-        <CardHeader className="pb-4">
+      <Card>
+        <CardHeader>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">Select Protocols for Detailed Comparison</h2>
+          </div>
           <div className="flex items-center justify-between">
-            <div className="w-full max-w-md">
-              <Select value="" onValueChange={addProtocol}>
-                <SelectTrigger className="h-12 bg-muted/50 border-2 hover:border-primary/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-muted-foreground" />
-                    <SelectValue placeholder="Add protocol to compare" />
-                  </div>
-                </SelectTrigger>
+            <Select value="" onValueChange={addProtocol}>
+              <SelectTrigger className="w-[280px]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add protocol to compare
+              </SelectTrigger>
               <SelectContent>
                 {filteredProtocols.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground">
+                  <div className="p-4 text-center text-sm text-muted-foreground">
                     {selectedProtocols.length >= 6 
                       ? "Maximum 6 protocols can be compared"
                       : "No protocols found"
@@ -226,12 +228,15 @@ export default function OneVsOne() {
                   filteredProtocols.map(protocol => {
                     const Icon = protocol.icon;
                     return (
-                      <SelectItem key={protocol.id} value={protocol.id} className="relative">
-                        <div className="flex items-center gap-2 pr-20">
+                      <SelectItem key={protocol.id} value={protocol.id} className="relative pr-36">
+                        <div className="flex items-center gap-2">
                           <Icon className="w-4 h-4" />
                           <span>{protocol.name}</span>
                         </div>
-                        <Badge variant="outline" className={`text-xs absolute right-2 top-1/2 transform -translate-y-1/2 ${getCategoryBadgeStyle(protocol.category)}`}>
+                        <Badge 
+                          variant="outline" 
+                          className={`absolute right-2 top-1/2 -translate-y-1/2 ${getCategoryBadgeStyle(protocol.category)}`}
+                        >
                           {protocol.category}
                         </Badge>
                       </SelectItem>
@@ -240,44 +245,65 @@ export default function OneVsOne() {
                 )}
               </SelectContent>
             </Select>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="px-3 py-1 font-medium">
-                {selectedProtocols.length}/6 selected
-              </Badge>
+            
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{selectedProtocols.length}</span> / 6 selected
+              </div>
               {selectedProtocols.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={clearAll}
-                  className="text-muted-foreground hover:text-foreground hover:border-destructive hover:text-destructive"
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
                   Clear All
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent>
 
           {/* Quick Presets */}
           {selectedProtocols.length === 0 && (
             <div className="space-y-4">
-              <Separator className="my-6" />
-              <div className="text-center">
-                <div className="flex flex-wrap justify-center gap-3">
-                  {presets.map(preset => (
-                    <Button
-                      key={preset.name}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadPreset(preset.protocols)}
-                      className="h-9 px-4 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {preset.name}
-                    </Button>
-                  ))}
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center justify-center gap-2">
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium">Quick Comparisons</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {presets.map((preset, index) => {
+                    const icons = [
+                      <MessageSquare className="h-4 w-4" />,
+                      <Monitor className="h-4 w-4" />,
+                      <Smartphone className="h-4 w-4" />
+                    ];
+                    const descriptions = [
+                      "Compare top performing Telegram trading bots",
+                      "Analyze desktop trading terminal platforms",
+                      "Compare leading mobile trading applications"
+                    ];
+                    return (
+                      <Card 
+                        key={preset.name}
+                        className="cursor-pointer transition-all hover:shadow-md hover:border-primary/50 group"
+                        onClick={() => loadPreset(preset.protocols)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded bg-muted group-hover:bg-primary/10 transition-colors">
+                              {icons[index]}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <h4 className="text-sm font-medium leading-none">{preset.name}</h4>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -285,83 +311,59 @@ export default function OneVsOne() {
 
           {/* Selected Protocols */}
           {selectedProtocols.length > 0 && (
-            <div className="space-y-4">
-              <Separator className="my-6" />
+            <div className="space-y-4 mb-6">
+              <Separator />
+              
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-primary/10 rounded-md">
-                    <BarChart3 className="w-4 h-4 text-primary" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground">Selected Protocols</h3>
-                  <Badge variant="outline" className="ml-2 text-xs">
-                    {selectedProtocols.length} protocol{selectedProtocols.length !== 1 ? 's' : ''}
-                  </Badge>
-                </div>
+                <h3 className="text-sm font-medium">Selected Protocols</h3>
                 <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-                  <SelectTrigger className="w-[160px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors">
+                  <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select timeframe" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border-border text-foreground">
-                    <SelectItem value="7d" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      Last 7 days
-                    </SelectItem>
-                    <SelectItem value="30d" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      Last 30 days
-                    </SelectItem>
-                    <SelectItem value="3m" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      Last 3 months
-                    </SelectItem>
-                    <SelectItem value="6m" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      Last 6 months
-                    </SelectItem>
-                    <SelectItem value="1y" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      Last 1 year
-                    </SelectItem>
-                    <SelectItem value="all" className="text-foreground hover:bg-muted/50 focus:bg-muted/50">
-                      All time
-                    </SelectItem>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="3m">Last 3 months</SelectItem>
+                    <SelectItem value="6m">Last 6 months</SelectItem>
+                    <SelectItem value="1y">Last 1 year</SelectItem>
+                    <SelectItem value="all">All time</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {selectedProtocols.map(protocolId => {
                   const Icon = getProtocolIcon(protocolId);
                   const isLoading = loadingProtocols.has(protocolId);
                   const data = protocolData.get(protocolId);
                   
                   return (
-                    <div
-                      key={protocolId}
-                      className="p-4 bg-gradient-to-r from-background via-muted/10 to-background rounded-xl border-2 border-muted/50 hover:border-primary/30 group hover:shadow-md transition-all duration-200 relative"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 pr-24">
-                        {Icon && (
-                          <div className="p-2 bg-primary/10 rounded-lg">
-                            <Icon className="w-5 h-5 text-primary flex-shrink-0" />
+                    <Card key={protocolId} className="group">
+                      <CardContent className="p-3">
+                        <div className="flex items-center gap-2">
+                          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                          <h4 className="font-medium text-sm flex-1">{data?.name || protocolId}</h4>
+                          <Badge variant="outline" className={`text-xs ${getCategoryBadgeStyle(getProtocolCategory(protocolId) || '')}`}>
+                            {getProtocolCategory(protocolId)}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeProtocol(protocolId)}
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity -mr-2"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
+                        {isLoading && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="h-2 w-2 border border-primary border-t-transparent rounded-full animate-spin" />
+                            <span className="text-xs text-muted-foreground">Loading...</span>
                           </div>
                         )}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-sm truncate">{data?.name || protocolId}</div>
-                          {isLoading && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                              <span className="text-xs text-muted-foreground">Loading...</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className={`text-xs absolute right-12 top-1/2 transform -translate-y-1/2 font-medium ${getCategoryBadgeStyle(getProtocolCategory(protocolId) || '')}`}>
-                        {getProtocolCategory(protocolId)}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeProtocol(protocolId)}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-destructive/20 hover:text-destructive rounded-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
@@ -372,7 +374,7 @@ export default function OneVsOne() {
 
       {/* Comparison Results */}
       {selectedProtocols.length >= 2 && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {/* Metric Comparison Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MultiComparisonMetricCard
@@ -441,33 +443,25 @@ export default function OneVsOne() {
 
       {/* Empty/Instruction State */}
       {selectedProtocols.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className="p-4 bg-muted rounded-full">
-              <BarChart3 className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Select Protocols to Compare</h3>
-              <p className="text-muted-foreground max-w-md">
-                Search and add multiple protocols using the dropdown above to see a comprehensive comparison across all metrics.
-              </p>
-            </div>
+        <Card className="border-dashed mt-6">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No protocols selected</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Select protocols from the dropdown above to compare their performance metrics.
+            </p>
           </CardContent>
         </Card>
       )}
 
       {selectedProtocols.length === 1 && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <div className="p-4 bg-muted rounded-full">
-              <Plus className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Add More Protocols</h3>
-              <p className="text-muted-foreground max-w-md">
-                Add at least one more protocol to start comparing. You can compare up to 6 protocols simultaneously.
-              </p>
-            </div>
+        <Card className="border-dashed mt-6">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <GitCompare className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Add another protocol</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Select at least one more protocol to start comparing metrics.
+            </p>
           </CardContent>
         </Card>
       )}

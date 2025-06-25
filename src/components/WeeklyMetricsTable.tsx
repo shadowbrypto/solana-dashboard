@@ -182,22 +182,22 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
   
   const getHeatMapColor = (value: number, maxValue: number): { bg: string; text: string } => {
-    if (value === 0) return { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-muted-foreground' };
+    if (value === 0) return { bg: 'bg-gray-50 dark:bg-gray-900', text: 'text-gray-400 dark:text-gray-600' };
     
     const intensity = Math.min(value / maxValue, 1);
-    const level = Math.floor(intensity * 9);
+    const level = Math.floor(intensity * 8);
     
+    // Green-Yellow-Red heat map (inspired by GitHub contributions)
     const colors = [
-      { bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-900 dark:text-blue-100' },
-      { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-900 dark:text-blue-100' },
-      { bg: 'bg-blue-200 dark:bg-blue-900/40', text: 'text-blue-900 dark:text-blue-100' },
-      { bg: 'bg-blue-300 dark:bg-blue-900/50', text: 'text-blue-900 dark:text-blue-100' },
-      { bg: 'bg-blue-400 dark:bg-blue-800/60', text: 'text-white' },
-      { bg: 'bg-blue-500 dark:bg-blue-800/70', text: 'text-white' },
-      { bg: 'bg-blue-600 dark:bg-blue-700/80', text: 'text-white' },
-      { bg: 'bg-blue-700 dark:bg-blue-700/90', text: 'text-white' },
-      { bg: 'bg-blue-800 dark:bg-blue-600', text: 'text-white' },
-      { bg: 'bg-blue-900 dark:bg-blue-500', text: 'text-white' }
+      { bg: 'bg-green-100 dark:bg-green-950/30', text: 'text-green-800 dark:text-green-200' },
+      { bg: 'bg-green-200 dark:bg-green-900/50', text: 'text-green-900 dark:text-green-100' },
+      { bg: 'bg-green-400 dark:bg-green-800/70', text: 'text-white' },
+      { bg: 'bg-green-600 dark:bg-green-700/80', text: 'text-white' },
+      { bg: 'bg-yellow-500 dark:bg-yellow-600/80', text: 'text-yellow-950 dark:text-yellow-50' },
+      { bg: 'bg-orange-500 dark:bg-orange-600/80', text: 'text-white' },
+      { bg: 'bg-red-500 dark:bg-red-600/80', text: 'text-white' },
+      { bg: 'bg-red-700 dark:bg-red-700/90', text: 'text-white' },
+      { bg: 'bg-red-900 dark:bg-red-800', text: 'text-white' }
     ];
     
     return colors[level] || colors[0];

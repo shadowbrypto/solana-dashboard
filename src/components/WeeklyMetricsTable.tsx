@@ -54,6 +54,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const [loading, setLoading] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
   const [last7Days, setLast7Days] = useState<Date[]>([]);
+  const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
 
   const metricOptions = [
     { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
@@ -125,9 +126,27 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         
         setDailyData(organizedData);
         
+        // Calculate protocol totals for the selected metric and sort for ranking
+        const protocolTotals = protocols.map(protocol => {
+          const total = days.reduce((sum, day) => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            return sum + (organizedData[protocol]?.[dateKey] || 0);
+          }, 0);
+          return { protocol, total };
+        });
+        
+        // Sort by total (highest first) and get top 3
+        const sortedProtocols = protocolTotals
+          .filter(p => p.total > 0)
+          .sort((a, b) => b.total - a.total);
+        
+        const top3 = sortedProtocols.slice(0, 3).map(p => p.protocol as Protocol);
+        setTopProtocols(top3);
+        
       } catch (error) {
         console.error('Error fetching last 7 days data:', error);
         setDailyData({});
+        setTopProtocols([]);
       } finally {
         setLoading(false);
       }
@@ -387,9 +406,22 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 const categoryProtocols = getMutableProtocolsByCategory(categoryName);
                 const isCollapsed = collapsedCategories.includes(categoryName);
                 
-                // Filter out hidden protocols
+                // Filter out hidden protocols and sort by metric total
                 const visibleCategoryProtocols = categoryProtocols
                   .filter(p => !hiddenProtocols.has(p.id));
+                
+                // Sort protocols within category by their total for the selected metric
+                const sortedCategoryProtocols = categoryProtocols.sort((a, b) => {
+                  const totalA = last7Days.reduce((sum, day) => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    return sum + (dailyData[a.id]?.[dateKey] || 0);
+                  }, 0);
+                  const totalB = last7Days.reduce((sum, day) => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    return sum + (dailyData[b.id]?.[dateKey] || 0);
+                  }, 0);
+                  return totalB - totalA; // Sort descending (highest first)
+                });
 
                 return (
                   <React.Fragment key={categoryName}>
@@ -430,7 +462,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       })}
                     </TableRow>
                     
-                    {!isCollapsed && categoryProtocols.map(protocol => {
+                    {!isCollapsed && sortedCategoryProtocols.map(protocol => {
                       const isHidden = hiddenProtocols.has(protocol.id);
                       const protocolData = dailyData[protocol.id] || {};
                       
@@ -456,6 +488,19 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               <span>
                                 {protocol.name}
                               </span>
+                              {topProtocols.includes(protocol.id as Protocol) && (
+                                <Badge 
+                                  variant="secondary"
+                                  className={cn(
+                                    "ml-2 h-5 px-2 text-xs font-medium flex-shrink-0",
+                                    topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                    topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                    topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                  )}
+                                >
+                                  #{topProtocols.indexOf(protocol.id as Protocol) + 1}
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                           {last7Days.map(day => {

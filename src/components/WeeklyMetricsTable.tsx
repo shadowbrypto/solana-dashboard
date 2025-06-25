@@ -48,6 +48,7 @@ const formatNumber = (value: number): string => {
 };
 
 export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: WeeklyMetricsTableProps) {
+  const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<DailyData>({});
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -126,6 +127,14 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
 
   const formatValue = (value: number) => {
     return selectedMetricOption.format(value);
+  };
+
+  const toggleCollapse = (categoryName: string) => {
+    setCollapsedCategories(prev =>
+      prev.includes(categoryName)
+        ? prev.filter(c => c !== categoryName)
+        : [...prev, categoryName]
+    );
   };
 
   const toggleProtocolVisibility = (protocol: string) => {
@@ -305,46 +314,21 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[120px] sticky left-0 z-20 bg-background">Date</TableHead>
-              {getMutableAllCategories().map(categoryName => {
-                const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-                const visibleCategoryProtocols = categoryProtocols.filter(p => !hiddenProtocols.has(p.id));
-                
-                return (
-                  <React.Fragment key={categoryName}>
-                    <TableHead className={cn("text-center font-semibold px-2", getCategoryRowColor(categoryName))}>
-                      {categoryName}
-                    </TableHead>
-                    {visibleCategoryProtocols.map((protocol) => (
-                      <TableHead key={protocol.id} className="text-center min-w-[100px] px-2">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-xs font-medium truncate">{protocol.name}</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleProtocolVisibility(protocol.id);
-                            }}
-                            className="opacity-50 hover:opacity-100 transition-opacity"
-                          >
-                            {hiddenProtocols.has(protocol.id) ? (
-                              <EyeOff className="h-3 w-3 text-muted-foreground" />
-                            ) : (
-                              <Eye className="h-3 w-3 text-muted-foreground" />
-                            )}
-                          </button>
-                        </div>
-                      </TableHead>
-                    ))}
-                  </React.Fragment>
-                );
-              })}
-              <TableHead className="text-center font-semibold bg-primary/10">Total</TableHead>
+              <TableHead className="w-[200px] sticky left-0 z-20 bg-background">Protocol</TableHead>
+              {weekDays.map((day) => (
+                <TableHead key={day.toISOString()} className="text-center min-w-[120px]">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground">{format(day, 'EEE')}</span>
+                    <span className="font-medium">{format(day, 'MMM d')}</span>
+                  </div>
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={protocols.length + getMutableAllCategories().length + 2} className="text-center py-8">
+                <TableCell colSpan={weekDays.length + 1} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <span className="text-muted-foreground">Loading weekly data...</span>
@@ -352,73 +336,126 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                 </TableCell>
               </TableRow>
             ) : (
-              weekDays.map(day => {
-                const dateKey = format(day, 'yyyy-MM-dd');
+              getMutableAllCategories().map(categoryName => {
+                const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+                const isCollapsed = collapsedCategories.includes(categoryName);
                 
+                // Filter out hidden protocols
+                const visibleCategoryProtocols = categoryProtocols
+                  .filter(p => !hiddenProtocols.has(p.id));
+
                 return (
-                  <TableRow key={dateKey} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="sticky left-0 z-10 bg-background font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-sm">{format(day, 'EEE')}</span>
-                        <span className="text-xs text-muted-foreground">{format(day, 'MMM d')}</span>
-                      </div>
-                    </TableCell>
-                    
-                    {getMutableAllCategories().map(categoryName => {
-                      const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-                      const visibleCategoryProtocols = categoryProtocols.filter(p => !hiddenProtocols.has(p.id));
-                      
-                      // Calculate category total for this day
-                      const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
-                        const protocolData = dailyData[protocol.id];
-                        if (protocolData && protocolData[dateKey] !== undefined) {
-                          return sum + protocolData[dateKey];
-                        }
-                        return sum;
-                      }, 0);
-                      
-                      return (
-                        <React.Fragment key={categoryName}>
-                          <TableCell className={cn("text-center font-semibold", getCategoryRowColor(categoryName))}>
-                            {formatValue(categoryTotal)}
-                          </TableCell>
-                          {visibleCategoryProtocols.map((protocol) => {
-                            const protocolData = dailyData[protocol.id] || {};
-                            const value = protocolData[dateKey] || 0;
-                            const isHidden = hiddenProtocols.has(protocol.id);
-                            
-                            return (
-                              <TableCell 
-                                key={protocol.id} 
-                                className={cn(
-                                  "text-center",
-                                  isHidden && "opacity-50 line-through"
-                                )}
-                              >
-                                {formatValue(value)}
-                              </TableCell>
-                            );
-                          })}
-                        </React.Fragment>
-                      );
-                    })}
-                    
-                    {/* Daily total */}
-                    <TableCell className="text-center font-bold bg-primary/10">
-                      {(() => {
-                        const dailyTotal = protocols.reduce((sum, protocol) => {
-                          const protocolData = dailyData[protocol];
+                  <React.Fragment key={categoryName}>
+                    <TableRow 
+                      className={cn(
+                        "cursor-pointer font-medium",
+                        getCategoryRowColor(categoryName),
+                        "transition-all duration-200"
+                      )}
+                      onClick={() => toggleCollapse(categoryName)}
+                    >
+                      <TableCell className={cn("sticky left-0 z-10", getCategoryRowColor(categoryName))}>
+                        <div className="flex items-center gap-2">
+                          <ChevronRight 
+                            className={cn(
+                              "h-4 w-4 transition-transform",
+                              !isCollapsed && "rotate-90"
+                            )}
+                          />
+                          <span className="font-semibold">{categoryName}</span>
+                        </div>
+                      </TableCell>
+                      {weekDays.map(day => {
+                        const dateKey = format(day, 'yyyy-MM-dd');
+                        const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                          const protocolData = dailyData[protocol.id];
                           if (protocolData && protocolData[dateKey] !== undefined) {
                             return sum + protocolData[dateKey];
                           }
                           return sum;
                         }, 0);
-                        return formatValue(dailyTotal);
-                      })()}
-                    </TableCell>
-                  </TableRow>
+                        
+                        return (
+                          <TableCell key={dateKey} className={cn("text-center font-semibold", getCategoryRowColor(categoryName))}>
+                            {formatValue(categoryTotal)}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                    
+                    {!isCollapsed && categoryProtocols.map(protocol => {
+                      const isHidden = hiddenProtocols.has(protocol.id);
+                      const protocolData = dailyData[protocol.id] || {};
+                      
+                      return (
+                        <TableRow 
+                          key={protocol.id}
+                          className={cn(
+                            "hover:bg-muted/30 transition-colors",
+                            isHidden && "opacity-50"
+                          )}
+                        >
+                          <TableCell className="sticky left-0 z-10 bg-background">
+                            <div className="flex items-center gap-2 pl-6">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProtocolVisibility(protocol.id);
+                                }}
+                                className="p-1 hover:bg-muted rounded transition-colors"
+                              >
+                                {isHidden ? (
+                                  <EyeOff className="h-3 w-3 text-muted-foreground" />
+                                ) : (
+                                  <Eye className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </button>
+                              <span className={cn(isHidden && "line-through")}>
+                                {protocol.name}
+                              </span>
+                            </div>
+                          </TableCell>
+                          {weekDays.map(day => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            const value = protocolData[dateKey] || 0;
+                            
+                            return (
+                              <TableCell key={dateKey} className="text-center">
+                                {formatValue(value)}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })
+            )}
+            
+            {/* Total Row */}
+            {!loading && (
+              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold">
+                <TableCell className="sticky left-0 z-10 bg-primary/10 font-bold">
+                  Total
+                </TableCell>
+                {weekDays.map(day => {
+                  const dateKey = format(day, 'yyyy-MM-dd');
+                  const dailyTotal = protocols.reduce((sum, protocol) => {
+                    const protocolData = dailyData[protocol];
+                    if (protocolData && protocolData[dateKey] !== undefined) {
+                      return sum + protocolData[dateKey];
+                    }
+                    return sum;
+                  }, 0);
+                  
+                  return (
+                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10">
+                      {formatValue(dailyTotal)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
             )}
           </TableBody>
         </Table>

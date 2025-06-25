@@ -28,24 +28,10 @@ interface WeeklyMetricsTableProps {
   onWeekChange: (date: Date) => void;
 }
 
-type MetricKey = keyof ProtocolMetrics | 'market_share' | 'weekly_growth';
+type MetricKey = 'total_volume_usd' | 'daily_users' | 'numberOfNewUsers' | 'daily_trades';
 
-interface MetricDefinition {
-  key: MetricKey;
-  label: string;
-  format: (value: number, isCategory?: boolean) => React.ReactNode;
-  getValue?: (data: ProtocolMetrics) => number;
-  skipGradient?: boolean;
-}
-
-interface WeeklyData {
-  [protocol: string]: {
-    total_volume_usd: number;
-    daily_users: number;
-    numberOfNewUsers: number;
-    daily_trades: number;
-    total_fees_usd: number;
-  };
+interface DailyData {
+  [protocol: string]: Record<string, number>; // date -> value
 }
 
 const formatCurrency = (value: number): string => {
@@ -62,129 +48,22 @@ const formatNumber = (value: number): string => {
 };
 
 export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: WeeklyMetricsTableProps) {
-  const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
-  const [weeklyData, setWeeklyData] = useState<WeeklyData>({});
-  const [previousWeekData, setPreviousWeekData] = useState<WeeklyData>({});
-  const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
-  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "weekly_growth"]);
+  const [dailyData, setDailyData] = useState<DailyData>({});
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
+  const [weekDays, setWeekDays] = useState<Date[]>([]);
 
-  // Calculate total volume for market share
-  const totalVolume = Object.values(weeklyData)
-    .reduce((sum, protocol) => sum + (protocol?.total_volume_usd || 0), 0);
-
-  const metrics: MetricDefinition[] = [
-    { key: "total_volume_usd", label: "Total Volume", format: formatCurrency },
-    { key: "daily_users", label: "Avg Daily Users", format: formatNumber },
-    { key: "numberOfNewUsers", label: "Total New Users", format: formatNumber },
-    { key: "daily_trades", label: "Total Trades", format: formatNumber },
-    {
-      key: "market_share",
-      label: "Market Share",
-      format: (value: number) => {
-        const percentage = value * 100;
-        return (
-          <div className="flex items-center gap-2 justify-end">
-            <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-300"
-                style={{ width: `${Math.max(percentage, 2)}%` }}
-              />
-            </div>
-            <span className="font-medium text-sm min-w-[50px]">{percentage.toFixed(2)}%</span>
-          </div>
-        );
-      },
-      getValue: (data) => (data?.total_volume_usd || 0) / (totalVolume || 1)
-    },
-    {
-      key: "weekly_growth" as MetricKey,
-      label: "Weekly Growth",
-      format: (value, isCategory = false) => {
-        const percentage = value * 100;
-        const absPercentage = Math.abs(percentage);
-        const isPositive = value > 0;
-        const isNeutral = Math.abs(value) < 0.001;
-        
-        if (isNeutral) {
-          return (
-            <div className="flex items-center justify-end gap-1">
-              <span className="text-muted-foreground">—</span>
-            </div>
-          );
-        }
-        
-        return (
-          <div className="flex items-center justify-end gap-1">
-            <div className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-              isPositive 
-                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            )}>
-              {isPositive ? (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-              ) : (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                </svg>
-              )}
-              <span>{absPercentage.toFixed(1)}%</span>
-            </div>
-          </div>
-        );
-      },
-      getValue: (data) => {
-        const currentVolume = data?.total_volume_usd || 0;
-        const protocol = Object.keys(weeklyData).find(key => weeklyData[key] === data) as Protocol;
-        const previousVolume = protocol ? (previousWeekData[protocol]?.total_volume_usd || 0) : 0;
-        if (previousVolume === 0) return 0;
-        return (currentVolume - previousVolume) / previousVolume;
-      }
-    },
+  const metricOptions = [
+    { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
+    { key: 'daily_users' as MetricKey, label: 'Daily Active Users', format: formatNumber },
+    { key: 'numberOfNewUsers' as MetricKey, label: 'New Users', format: formatNumber },
+    { key: 'daily_trades' as MetricKey, label: 'Daily Trades', format: formatNumber },
   ];
 
-  const handleDragStart = (e: React.DragEvent, columnIndex: number) => {
-    setDraggedColumn(columnIndex);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const selectedMetricOption = metricOptions.find(m => m.key === selectedMetric) || metricOptions[0];
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    
-    if (draggedColumn === null || draggedColumn === dropIndex) {
-      setDraggedColumn(null);
-      return;
-    }
-
-    const newOrder = [...columnOrder];
-    const draggedItem = newOrder[draggedColumn];
-    
-    // Remove the dragged item
-    newOrder.splice(draggedColumn, 1);
-    
-    // Insert at new position
-    newOrder.splice(dropIndex, 0, draggedItem);
-    
-    setColumnOrder(newOrder);
-    setDraggedColumn(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedColumn(null);
-  };
-
-  // Create ordered metrics based on column order
-  const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
   // Category-based bright coloring using shadcn theme colors
   const getCategoryRowColor = (categoryName: string): string => {
@@ -206,100 +85,48 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
       try {
         const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
         const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+        setWeekDays(days);
         
-        // Fetch data for current week
-        const currentWeekPromises = days.map(day => getDailyMetrics(day));
-        const currentWeekResults = await Promise.all(currentWeekPromises);
+        // Fetch data for each day
+        const dailyPromises = days.map(day => getDailyMetrics(day));
+        const dailyResults = await Promise.all(dailyPromises);
         
-        // Fetch data for previous week
-        const previousWeekStart = subWeeks(weekStart, 1);
-        const previousWeekEnd = endOfWeek(previousWeekStart, { weekStartsOn: 1 });
-        const previousDays = eachDayOfInterval({ start: previousWeekStart, end: previousWeekEnd });
-        const previousWeekPromises = previousDays.map(day => getDailyMetrics(day));
-        const previousWeekResults = await Promise.all(previousWeekPromises);
-        
-        // Aggregate weekly data
-        const aggregatedData: WeeklyData = {};
-        const previousAggregatedData: WeeklyData = {};
+        // Organize data by protocol
+        const organizedData: DailyData = {};
         
         protocols.forEach(protocol => {
-          aggregatedData[protocol] = {
-            total_volume_usd: 0,
-            daily_users: 0,
-            numberOfNewUsers: 0,
-            daily_trades: 0,
-            total_fees_usd: 0
-          };
+          organizedData[protocol] = {};
           
-          previousAggregatedData[protocol] = {
-            total_volume_usd: 0,
-            daily_users: 0,
-            numberOfNewUsers: 0,
-            daily_trades: 0,
-            total_fees_usd: 0
-          };
-          
-          // Aggregate current week
-          currentWeekResults.forEach((dayData, index) => {
+          dailyResults.forEach((dayData, index) => {
+            const dateKey = format(days[index], 'yyyy-MM-dd');
             if (dayData[protocol]) {
-              aggregatedData[protocol].total_volume_usd += dayData[protocol].total_volume_usd || 0;
-              aggregatedData[protocol].daily_users += dayData[protocol].daily_users || 0;
-              aggregatedData[protocol].numberOfNewUsers += dayData[protocol].numberOfNewUsers || 0;
-              aggregatedData[protocol].daily_trades += dayData[protocol].daily_trades || 0;
-              aggregatedData[protocol].total_fees_usd += dayData[protocol].total_fees_usd || 0;
+              organizedData[protocol][dateKey] = dayData[protocol][selectedMetric] || 0;
+            } else {
+              organizedData[protocol][dateKey] = 0;
             }
           });
-          
-          // Calculate average daily users
-          aggregatedData[protocol].daily_users = Math.round(aggregatedData[protocol].daily_users / days.length);
-          
-          // Aggregate previous week
-          previousWeekResults.forEach((dayData) => {
-            if (dayData[protocol]) {
-              previousAggregatedData[protocol].total_volume_usd += dayData[protocol].total_volume_usd || 0;
-              previousAggregatedData[protocol].daily_users += dayData[protocol].daily_users || 0;
-              previousAggregatedData[protocol].numberOfNewUsers += dayData[protocol].numberOfNewUsers || 0;
-              previousAggregatedData[protocol].daily_trades += dayData[protocol].daily_trades || 0;
-              previousAggregatedData[protocol].total_fees_usd += dayData[protocol].total_fees_usd || 0;
-            }
-          });
-          
-          // Calculate average daily users for previous week
-          previousAggregatedData[protocol].daily_users = Math.round(previousAggregatedData[protocol].daily_users / previousDays.length);
         });
         
-        setWeeklyData(aggregatedData);
-        setPreviousWeekData(previousAggregatedData);
-        
-        // Sort protocols by volume to find the top 3
-        const sortedByVolume = Object.entries(aggregatedData)
-          .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
-          .sort((a, b) => (b[1]?.total_volume_usd || 0) - (a[1]?.total_volume_usd || 0));
-        
-        // Set top 3 protocols
-        const top3 = sortedByVolume.slice(0, 3).map(([protocol]) => protocol as Protocol);
-        setTopProtocols(top3);
+        setDailyData(organizedData);
         
       } catch (error) {
         console.error('Error fetching weekly data:', error);
-        setWeeklyData({});
-        setPreviousWeekData({});
+        setDailyData({});
       } finally {
         setLoading(false);
       }
     };
     
     fetchWeeklyData();
-  }, [weekStart, protocols]);
+  }, [weekStart, protocols, selectedMetric]);
 
   const handleWeekChange = (direction: 'prev' | 'next') => {
     const newWeek = direction === 'prev' ? subWeeks(weekStart, 1) : addWeeks(weekStart, 1);
     onWeekChange(newWeek);
   };
 
-  const formatValue = (metric: MetricDefinition, value: number, isCategory = false) => {
-    if (isCategory && metric.key === 'market_share') return '—';
-    return metric.format(value, isCategory);
+  const formatValue = (value: number) => {
+    return selectedMetricOption.format(value);
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -310,8 +137,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
     );
   };
 
-  const handleProtocolVisibility = (e: React.MouseEvent, protocol: string) => {
-    e.stopPropagation();
+  const toggleProtocolVisibility = (protocol: string) => {
     setHiddenProtocols(prev => {
       const newSet = new Set(prev);
       if (newSet.has(protocol)) {
@@ -450,6 +276,19 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         </div>
         
         <div className="flex items-center gap-2">
+          <Select value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {metricOptions.map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Button
             variant="outline"
             size="sm"
@@ -475,23 +314,12 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[250px] sticky left-0 z-20 bg-background">Protocol</TableHead>
-              {orderedMetrics.map((metric, index) => (
-                <TableHead
-                  key={metric.key}
-                  className={cn(
-                    "relative cursor-move hover:bg-muted/50 transition-colors text-center",
-                    draggedColumn === index && "opacity-50"
-                  )}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    <GripVertical className="h-3 w-3 text-muted-foreground" />
-                    <span>{metric.label}</span>
+              <TableHead className="w-[200px] sticky left-0 z-20 bg-background">Protocol</TableHead>
+              {weekDays.map((day) => (
+                <TableHead key={day.toISOString()} className="text-center min-w-[120px]">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground">{format(day, 'EEE')}</span>
+                    <span className="font-medium">{format(day, 'MMM d')}</span>
                   </div>
                 </TableHead>
               ))}
@@ -500,7 +328,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={orderedMetrics.length + 1} className="text-center py-8">
+                <TableCell colSpan={weekDays.length + 1} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <span className="text-muted-foreground">Loading weekly data...</span>
@@ -515,23 +343,6 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                 // Filter out hidden protocols
                 const visibleCategoryProtocols = categoryProtocols
                   .filter(p => !hiddenProtocols.has(p.id));
-                
-                // Calculate category totals only for visible protocols
-                const categoryTotals = orderedMetrics.reduce((acc, metric) => {
-                  if (metric.key === 'weekly_growth' || metric.key === 'market_share') {
-                    acc[metric.key] = 0;
-                  } else {
-                    acc[metric.key] = visibleCategoryProtocols.reduce((sum, protocol) => {
-                      const data = weeklyData[protocol.id];
-                      if (data) {
-                        const value = metric.getValue ? metric.getValue(data as ProtocolMetrics) : data[metric.key as keyof WeeklyData] || 0;
-                        return sum + value;
-                      }
-                      return sum;
-                    }, 0);
-                  }
-                  return acc;
-                }, {} as Record<MetricKey, number>);
 
                 return (
                   <React.Fragment key={categoryName}>
@@ -543,7 +354,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className="sticky left-0 z-10">
+                      <TableCell className="sticky left-0 z-10 bg-background">
                         <div className="flex items-center gap-2">
                           <ChevronRight 
                             className={cn(
@@ -557,31 +368,43 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                           </Badge>
                         </div>
                       </TableCell>
-                      {orderedMetrics.map(metric => (
-                        <TableCell key={metric.key} className="text-right font-semibold">
-                          {formatValue(metric, categoryTotals[metric.key] || 0, true)}
-                        </TableCell>
-                      ))}
+                      {weekDays.map(day => {
+                        const dateKey = format(day, 'yyyy-MM-dd');
+                        const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                          const protocolData = dailyData[protocol.id];
+                          if (protocolData && protocolData[dateKey] !== undefined) {
+                            return sum + protocolData[dateKey];
+                          }
+                          return sum;
+                        }, 0);
+                        
+                        return (
+                          <TableCell key={dateKey} className="text-center font-semibold">
+                            {formatValue(categoryTotal)}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                     
                     {!isCollapsed && categoryProtocols.map(protocol => {
-                      const protocolData = weeklyData[protocol.id];
                       const isHidden = hiddenProtocols.has(protocol.id);
-                      const isTopProtocol = topProtocols.includes(protocol.id as Protocol);
+                      const protocolData = dailyData[protocol.id] || {};
                       
                       return (
                         <TableRow 
                           key={protocol.id}
                           className={cn(
                             "hover:bg-muted/30 transition-colors",
-                            isHidden && "opacity-50",
-                            isTopProtocol && "bg-yellow-50 dark:bg-yellow-900/10"
+                            isHidden && "opacity-50"
                           )}
                         >
                           <TableCell className="sticky left-0 z-10 bg-background">
                             <div className="flex items-center gap-2 pl-6">
                               <button
-                                onClick={(e) => handleProtocolVisibility(e, protocol.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProtocolVisibility(protocol.id);
+                                }}
                                 className="p-1 hover:bg-muted rounded transition-colors"
                               >
                                 {isHidden ? (
@@ -593,21 +416,15 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                               <span className={cn(isHidden && "line-through")}>
                                 {protocol.name}
                               </span>
-                              {isTopProtocol && (
-                                <Badge variant="outline" className="ml-2 text-xs bg-yellow-100 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
-                                  Top 3
-                                </Badge>
-                              )}
                             </div>
                           </TableCell>
-                          {orderedMetrics.map(metric => {
-                            const value = protocolData 
-                              ? (metric.getValue ? metric.getValue(protocolData as ProtocolMetrics) : protocolData[metric.key as keyof WeeklyData] || 0)
-                              : 0;
+                          {weekDays.map(day => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            const value = protocolData[dateKey] || 0;
                             
                             return (
-                              <TableCell key={metric.key} className="text-right">
-                                {formatValue(metric, value)}
+                              <TableCell key={dateKey} className="text-center">
+                                {formatValue(value)}
                               </TableCell>
                             );
                           })}

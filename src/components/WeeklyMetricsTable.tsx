@@ -409,13 +409,13 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                       const isHidden = hiddenProtocols.has(protocol.id);
                       const protocolData = dailyData[protocol.id] || {};
                       
+                      // Don't render hidden protocols at all
+                      if (isHidden) return null;
+                      
                       return (
                         <TableRow 
                           key={protocol.id}
-                          className={cn(
-                            "hover:bg-muted/30 transition-colors",
-                            isHidden && "opacity-50"
-                          )}
+                          className="hover:bg-muted/30 transition-colors"
                         >
                           <TableCell className="sticky left-0 z-10 bg-background py-2 px-4">
                             <div className="flex items-center gap-2 pl-5">
@@ -432,7 +432,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                                   <Eye className="h-3 w-3 text-muted-foreground" />
                                 )}
                               </button>
-                              <span className={cn(isHidden && "line-through")}>
+                              <span>
                                 {protocol.name}
                               </span>
                             </div>

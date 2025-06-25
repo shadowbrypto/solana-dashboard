@@ -311,7 +311,7 @@ export default function OneVsOne() {
 
           {/* Selected Protocols */}
           {selectedProtocols.length > 0 && (
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
               <Separator />
               
               <div className="flex items-center justify-between">

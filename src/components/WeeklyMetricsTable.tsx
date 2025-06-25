@@ -12,6 +12,7 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -35,6 +36,10 @@ interface DailyData {
   [protocol: string]: Record<string, number>; // date -> value
 }
 
+interface VolumeData {
+  [protocol: string]: Record<string, number>; // date -> volume value
+}
+
 const formatCurrency = (value: number): string => {
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(2)}M`;
@@ -51,6 +56,7 @@ const formatNumber = (value: number): string => {
 export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyMetricsTableProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<DailyData>({});
+  const [volumeData, setVolumeData] = useState<VolumeData>({});
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
@@ -124,21 +130,26 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         
         // Organize data by protocol
         const organizedData: DailyData = {};
+        const organizedVolumeData: VolumeData = {};
         
         protocols.forEach(protocol => {
           organizedData[protocol] = {};
+          organizedVolumeData[protocol] = {};
           
           dailyResults.forEach((dayData, index) => {
             const dateKey = format(days[index], 'yyyy-MM-dd');
             if (dayData[protocol]) {
               organizedData[protocol][dateKey] = dayData[protocol][selectedMetric] || 0;
+              organizedVolumeData[protocol][dateKey] = dayData[protocol]['total_volume_usd'] || 0;
             } else {
               organizedData[protocol][dateKey] = 0;
+              organizedVolumeData[protocol][dateKey] = 0;
             }
           });
         });
         
         setDailyData(organizedData);
+        setVolumeData(organizedVolumeData);
         
         // Calculate protocol totals for the selected metric and sort for ranking
         const protocolTotals = protocols.map(protocol => {
@@ -187,17 +198,17 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     const intensity = Math.min(value / maxValue, 1);
     const level = Math.floor(intensity * 8);
     
-    // Green-Yellow-Orange heat map with subtle extremes
+    // Very subtle heat map progression
     const colors = [
-      { bg: 'bg-green-100 dark:bg-green-950/30', text: 'text-green-800 dark:text-green-200' },
-      { bg: 'bg-green-200 dark:bg-green-900/50', text: 'text-green-900 dark:text-green-100' },
-      { bg: 'bg-green-300 dark:bg-green-800/60', text: 'text-green-900 dark:text-green-100' },
-      { bg: 'bg-green-500 dark:bg-green-700/70', text: 'text-white' },
-      { bg: 'bg-yellow-400 dark:bg-yellow-600/70', text: 'text-yellow-950 dark:text-yellow-50' },
-      { bg: 'bg-orange-400 dark:bg-orange-600/70', text: 'text-orange-950 dark:text-orange-50' },
-      { bg: 'bg-orange-500 dark:bg-orange-500/80', text: 'text-white' },
-      { bg: 'bg-red-400 dark:bg-red-600/70', text: 'text-red-950 dark:text-red-50' },
-      { bg: 'bg-red-500 dark:bg-red-500/80', text: 'text-white' }
+      { bg: 'bg-green-50 dark:bg-green-950/20', text: 'text-green-700 dark:text-green-300' },
+      { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200' },
+      { bg: 'bg-green-200 dark:bg-green-800/40', text: 'text-green-900 dark:text-green-100' },
+      { bg: 'bg-green-300 dark:bg-green-700/50', text: 'text-green-900 dark:text-green-100' },
+      { bg: 'bg-yellow-200 dark:bg-yellow-800/50', text: 'text-yellow-900 dark:text-yellow-100' },
+      { bg: 'bg-yellow-300 dark:bg-yellow-700/60', text: 'text-yellow-900 dark:text-yellow-100' },
+      { bg: 'bg-orange-200 dark:bg-orange-800/50', text: 'text-orange-900 dark:text-orange-100' },
+      { bg: 'bg-orange-300 dark:bg-orange-700/60', text: 'text-orange-900 dark:text-orange-100' },
+      { bg: 'bg-red-200 dark:bg-red-800/50', text: 'text-red-900 dark:text-red-100' }
     ];
     
     return colors[level] || colors[0];
@@ -211,6 +222,69 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       });
     });
     return max;
+  };
+  
+  const getWeeklyVolumeData = (protocolId: string) => {
+    const protocolVolumeData = volumeData[protocolId];
+    if (!protocolVolumeData) return [];
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return {
+        day: index,
+        value: protocolVolumeData[dateKey] || 0
+      };
+    });
+  };
+  
+  const getVolumetrend = (protocolId: string): 'up' | 'down' | 'neutral' => {
+    const data = getWeeklyVolumeData(protocolId);
+    if (data.length < 2) return 'neutral';
+    
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+    
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    
+    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+    return 'neutral';
+  };
+  
+  const getCategoryVolumeData = (categoryName: string) => {
+    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dailyTotal = categoryProtocols.reduce((sum, protocol) => {
+        const protocolVolumeData = volumeData[protocol.id];
+        if (protocolVolumeData && protocolVolumeData[dateKey] !== undefined) {
+          return sum + protocolVolumeData[dateKey];
+        }
+        return sum;
+      }, 0);
+      
+      return {
+        day: index,
+        value: dailyTotal
+      };
+    });
+  };
+  
+  const getCategoryVolumeTrend = (categoryName: string): 'up' | 'down' | 'neutral' => {
+    const data = getCategoryVolumeData(categoryName);
+    if (data.length < 2) return 'neutral';
+    
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+    
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    
+    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+    return 'neutral';
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -462,14 +536,39 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       onClick={() => toggleCollapse(categoryName)}
                     >
                       <TableCell className={cn("sticky left-0 z-10 py-3 px-4 transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                        <div className="flex items-center gap-2">
-                          <ChevronRight 
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              !isCollapsed && "rotate-90"
-                            )}
-                          />
-                          <span className="font-semibold">{categoryName}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight 
+                              className={cn(
+                                "h-4 w-4 transition-transform",
+                                !isCollapsed && "rotate-90"
+                              )}
+                            />
+                            <span className="font-semibold whitespace-nowrap">{categoryName}</span>
+                          </div>
+                          <div className="w-[60px] h-[20px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={getCategoryVolumeData(categoryName)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke={
+                                    getCategoryVolumeTrend(categoryName) === 'up' ? "#22c55e" :
+                                    getCategoryVolumeTrend(categoryName) === 'down' ? "#ef4444" :
+                                    "#6b7280"
+                                  }
+                                  strokeWidth={1.5}
+                                  fill={
+                                    getCategoryVolumeTrend(categoryName) === 'up' ? "#22c55e" :
+                                    getCategoryVolumeTrend(categoryName) === 'down' ? "#ef4444" :
+                                    "#6b7280"
+                                  }
+                                  fillOpacity={0.2}
+                                  dot={false}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                       </TableCell>
                       {last7Days.map(day => {
@@ -503,7 +602,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           className="hover:bg-muted/50 transition-colors group"
                         >
                           <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-2 px-4 transition-colors">
-                            <div className="flex items-center gap-2 pl-5">
+                            <div className="flex items-center gap-2">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -513,22 +612,49 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               >
                                 <Eye className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <span>
-                                {protocol.name}
-                              </span>
-                              {topProtocols.includes(protocol.id as Protocol) && (
-                                <Badge 
-                                  variant="secondary"
-                                  className={cn(
-                                    "ml-2 h-5 px-2 text-xs font-medium flex-shrink-0",
-                                    topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                    topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                    topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                                  )}
-                                >
-                                  #{topProtocols.indexOf(protocol.id as Protocol) + 1}
-                                </Badge>
-                              )}
+                              <div className="w-8 flex justify-start">
+                                {topProtocols.includes(protocol.id as Protocol) && (
+                                  <Badge 
+                                    variant="secondary"
+                                    className={cn(
+                                      "h-5 px-2 text-xs font-medium flex-shrink-0",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    )}
+                                  >
+                                    #{topProtocols.indexOf(protocol.id as Protocol) + 1}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="min-w-[100px]">
+                                  {protocol.name}
+                                </span>
+                                <div className="w-[60px] h-[20px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={getWeeklyVolumeData(protocol.id)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                                      <Area 
+                                        type="monotone" 
+                                        dataKey="value" 
+                                        stroke={
+                                          getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
+                                          getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
+                                          "#6b7280"
+                                        }
+                                        strokeWidth={1.5}
+                                        fill={
+                                          getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
+                                          getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
+                                          "#6b7280"
+                                        }
+                                        fillOpacity={0.2}
+                                        dot={false}
+                                      />
+                                    </AreaChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
                             </div>
                           </TableCell>
                           {last7Days.map(day => {
@@ -587,26 +713,48 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         </Table>
       </div>
       
-      {/* Download and Copy buttons at bottom right */}
-      <div className="flex justify-end gap-2 pt-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={downloadReport}
-          className="no-screenshot"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={copyToClipboard}
-          className="no-screenshot"
-        >
-          <Copy className="h-4 w-4 mr-2" />
-          Copy
-        </Button>
+      <div className="flex justify-between items-end pt-4">
+        {/* Download and Copy buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadReport}
+            className="no-screenshot"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyToClipboard}
+            className="no-screenshot"
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy
+          </Button>
+        </div>
+        
+        {/* Heat Map Legend */}
+        <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2 border">
+          <span className="text-xs text-muted-foreground font-medium">Heat Map</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">Low</span>
+            <div className="flex rounded-md overflow-hidden border">
+              <div className="w-3 h-3 bg-green-50 dark:bg-green-950/20"></div>
+              <div className="w-3 h-3 bg-green-100 dark:bg-green-900/30"></div>
+              <div className="w-3 h-3 bg-green-200 dark:bg-green-800/40"></div>
+              <div className="w-3 h-3 bg-green-300 dark:bg-green-700/50"></div>
+              <div className="w-3 h-3 bg-yellow-200 dark:bg-yellow-800/50"></div>
+              <div className="w-3 h-3 bg-yellow-300 dark:bg-yellow-700/60"></div>
+              <div className="w-3 h-3 bg-orange-200 dark:bg-orange-800/50"></div>
+              <div className="w-3 h-3 bg-orange-300 dark:bg-orange-700/60"></div>
+              <div className="w-3 h-3 bg-red-200 dark:bg-red-800/50"></div>
+            </div>
+            <span className="text-xs text-muted-foreground">High</span>
+          </div>
+        </div>
       </div>
     </div>
   );

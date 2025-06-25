@@ -7,11 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format } from "date-fns";
+import { format, subDays, eachDayOfInterval } from "date-fns";
 import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DatePicker } from "./DatePicker";
@@ -31,7 +32,7 @@ type MetricKey = keyof ProtocolMetrics | 'market_share';
 interface MetricDefinition {
   key: MetricKey;
   label: string;
-  format: (value: number, isCategory?: boolean) => React.ReactNode;
+  format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => React.ReactNode;
   getValue?: (data: ProtocolMetrics) => number;
   skipGradient?: boolean;
 }
@@ -66,6 +67,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
+  const [weeklyVolumeData, setWeeklyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
@@ -73,6 +75,40 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
     .reduce((sum, protocol) => sum + (protocol?.total_volume_usd || 0), 0);
+
+  // Weekly trend functions
+  const getWeeklyVolumeChart = (protocolId: Protocol) => {
+    const protocolWeeklyData = weeklyVolumeData[protocolId];
+    if (!protocolWeeklyData) return [];
+    
+    const last7Days = eachDayOfInterval({
+      start: subDays(date, 6),
+      end: date
+    });
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return {
+        day: index,
+        value: protocolWeeklyData[dateKey] || 0
+      };
+    });
+  };
+  
+  const getVolumeTrend = (protocolId: Protocol): 'up' | 'down' | 'neutral' => {
+    const data = getWeeklyVolumeChart(protocolId);
+    if (data.length < 2) return 'neutral';
+    
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+    
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    
+    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+    return 'neutral';
+  };
 
   const metrics: MetricDefinition[] = [
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
@@ -101,13 +137,98 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     {
       key: "daily_growth" as MetricKey,
       label: "Daily Growth",
-      format: (value, isCategory = false) => {
+      format: (value, isCategory = false, protocol, categoryName?: string) => {
         const percentage = value * 100;
         const absPercentage = Math.abs(percentage);
         const isPositive = value > 0;
         const isNeutral = Math.abs(value) < 0.001;
         
-        if (isNeutral) {
+        if (isCategory && categoryName) {
+          // Get protocols in this category and calculate aggregated trend
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName).map(p => p.id as Protocol);
+          const aggregatedData: { day: number; value: number }[] = [];
+          
+          // Create aggregated weekly data for the category
+          const last7Days = eachDayOfInterval({
+            start: subDays(date, 6),
+            end: date
+          });
+          
+          last7Days.forEach((day, index) => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const totalVolume = categoryProtocols.reduce((sum, protocolId) => {
+              return sum + (weeklyVolumeData[protocolId]?.[dateKey] || 0);
+            }, 0);
+            aggregatedData.push({ day: index, value: totalVolume });
+          });
+          
+          // Calculate trend for category
+          const getCategoryTrend = (): 'up' | 'down' | 'neutral' => {
+            if (aggregatedData.length < 2) return 'neutral';
+            
+            const firstHalf = aggregatedData.slice(0, Math.floor(aggregatedData.length / 2));
+            const secondHalf = aggregatedData.slice(Math.floor(aggregatedData.length / 2));
+            
+            const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+            const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+            
+            if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+            if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+            return 'neutral';
+          };
+          
+          const categoryTrend = getCategoryTrend();
+          const isNeutralCategory = Math.abs(value) < 0.001;
+          
+          return (
+            <div className="flex items-center justify-between w-full">
+              <div className="w-[50px] h-[20px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={aggregatedData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke={
+                        categoryTrend === 'up' ? "#22c55e" :
+                        categoryTrend === 'down' ? "#ef4444" :
+                        "#6b7280"
+                      }
+                      strokeWidth={1.5}
+                      fill={
+                        categoryTrend === 'up' ? "#22c55e" :
+                        categoryTrend === 'down' ? "#ef4444" :
+                        "#6b7280"
+                      }
+                      fillOpacity={0.2}
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              {!isNeutralCategory && (
+                <div className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                  isPositive 
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                )}>
+                  {isPositive ? (
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                    </svg>
+                  )}
+                  <span>{absPercentage.toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        if (!protocol) {
           return (
             <div className="flex items-center justify-end gap-1">
               <span className="text-muted-foreground">—</span>
@@ -116,24 +237,49 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         }
         
         return (
-          <div className="flex items-center justify-end gap-1">
-            <div className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-              isPositive 
-                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            )}>
-              {isPositive ? (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-              ) : (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                </svg>
-              )}
-              <span>{absPercentage.toFixed(1)}%</span>
+          <div className="flex items-center justify-between w-full">
+            <div className="w-[50px] h-[20px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={getWeeklyVolumeChart(protocol)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke={
+                      getVolumeTrend(protocol) === 'up' ? "#22c55e" :
+                      getVolumeTrend(protocol) === 'down' ? "#ef4444" :
+                      "#6b7280"
+                    }
+                    strokeWidth={1.5}
+                    fill={
+                      getVolumeTrend(protocol) === 'up' ? "#22c55e" :
+                      getVolumeTrend(protocol) === 'down' ? "#ef4444" :
+                      "#6b7280"
+                    }
+                    fillOpacity={0.2}
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
+            {!isNeutral && (
+              <div className={cn(
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                isPositive 
+                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              )}>
+                {isPositive ? (
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                  </svg>
+                ) : (
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                  </svg>
+                )}
+                <span>{absPercentage.toFixed(1)}%</span>
+              </div>
+            )}
           </div>
         );
       },
@@ -205,10 +351,37 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     const fetchData = async () => {
       setTopProtocols([]);
       try {
+        // Fetch current and previous day data
         const [currentData, previousData] = await Promise.all([
           getDailyMetrics(date),
           getDailyMetrics(new Date(date.getTime() - 24 * 60 * 60 * 1000))
         ]);
+
+        // Fetch weekly volume data for trend charts
+        const last7Days = eachDayOfInterval({
+          start: subDays(date, 6),
+          end: date
+        });
+        
+        const weeklyPromises = last7Days.map(day => getDailyMetrics(day));
+        const weeklyResults = await Promise.all(weeklyPromises);
+        
+        // Organize weekly volume data by protocol
+        const organizedWeeklyData: Record<Protocol, Record<string, number>> = {};
+        protocols.forEach(protocol => {
+          organizedWeeklyData[protocol] = {};
+          weeklyResults.forEach((dayData, index) => {
+            const dateKey = format(last7Days[index], 'yyyy-MM-dd');
+            if (dayData[protocol]) {
+              organizedWeeklyData[protocol][dateKey] = dayData[protocol].total_volume_usd || 0;
+            } else {
+              organizedWeeklyData[protocol][dateKey] = 0;
+            }
+          });
+        });
+
+        setWeeklyVolumeData(organizedWeeklyData);
+        
         // Sort protocols by volume to find the top 3
         const sortedByVolume = Object.entries(currentData)
           .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
@@ -224,6 +397,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       } catch (error) {
         setDailyData({});
         setPreviousDayData({});
+        setWeeklyVolumeData({});
       }
     };
     fetchData();
@@ -493,14 +667,14 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         className="text-right font-medium py-0.5 text-xs sm:text-sm"
                       >
                         {metric.key === 'market_share'
-                          ? metric.format(categoryTotals[metric.key] || 0)
+                          ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
                           : metric.key === 'daily_trades'
                           ? formatNumber(categoryTotals[metric.key] || 0)
                           : metric.key === 'daily_growth'
-                          ? metric.format(categoryTotals[metric.key])
+                          ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
                           : metric.getValue
-                            ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics))
-                            : metric.format(categoryTotals[metric.key] || 0)}
+                            ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics), true, undefined, categoryName)
+                            : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -570,8 +744,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         >
                           <span>
                             {metric.getValue
-                              ? metric.format(metric.getValue(dailyData[protocol] || {} as ProtocolMetrics))
-                              : metric.format(dailyData[protocol]?.[metric.key] || 0)}
+                              ? metric.format(metric.getValue(dailyData[protocol] || {} as ProtocolMetrics), false, protocol)
+                              : metric.format(dailyData[protocol]?.[metric.key] || 0, false, protocol)}
                           </span>
                         </TableCell>
                       ))}

@@ -266,7 +266,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
@@ -336,12 +336,12 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px] sticky left-0 z-20 bg-background">Protocol</TableHead>
+              <TableHead className="w-[160px] sticky left-0 z-20 bg-background py-2">Protocol</TableHead>
               {weekDays.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[120px]">
+                <TableHead key={day.toISOString()} className="text-center min-w-[100px] px-2 py-2">
                   <div className="flex flex-col items-center">
                     <span className="text-xs text-muted-foreground">{format(day, 'EEE')}</span>
-                    <span className="font-medium">{format(day, 'MMM d')}</span>
+                    <span className="font-medium text-sm">{format(day, 'MMM d')}</span>
                   </div>
                 </TableHead>
               ))}
@@ -376,15 +376,15 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className={cn("sticky left-0 z-10", getCategoryRowColor(categoryName))}>
+                      <TableCell className={cn("sticky left-0 z-10 py-2 px-3", getCategoryRowColor(categoryName))}>
                         <div className="flex items-center gap-2">
                           <ChevronRight 
                             className={cn(
-                              "h-4 w-4 transition-transform",
+                              "h-3 w-3 transition-transform",
                               !isCollapsed && "rotate-90"
                             )}
                           />
-                          <span className="font-semibold">{categoryName}</span>
+                          <span className="font-semibold text-sm">{categoryName}</span>
                         </div>
                       </TableCell>
                       {weekDays.map(day => {
@@ -398,7 +398,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold", getCategoryRowColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-2 px-2 text-sm", getCategoryRowColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );
@@ -417,14 +417,14 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                             isHidden && "opacity-50"
                           )}
                         >
-                          <TableCell className="sticky left-0 z-10 bg-background">
-                            <div className="flex items-center gap-2 pl-6">
+                          <TableCell className="sticky left-0 z-10 bg-background py-1 px-3">
+                            <div className="flex items-center gap-2 pl-4">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleProtocolVisibility(protocol.id);
                                 }}
-                                className="p-1 hover:bg-muted rounded transition-colors"
+                                className="p-0.5 hover:bg-muted rounded transition-colors"
                               >
                                 {isHidden ? (
                                   <EyeOff className="h-3 w-3 text-muted-foreground" />
@@ -432,7 +432,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                                   <Eye className="h-3 w-3 text-muted-foreground" />
                                 )}
                               </button>
-                              <span className={cn(isHidden && "line-through")}>
+                              <span className={cn("text-sm", isHidden && "line-through")}>
                                 {protocol.name}
                               </span>
                             </div>
@@ -442,7 +442,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                             const value = protocolData[dateKey] || 0;
                             
                             return (
-                              <TableCell key={dateKey} className="text-center">
+                              <TableCell key={dateKey} className="text-center py-1 px-2 text-sm">
                                 {formatValue(value)}
                               </TableCell>
                             );
@@ -458,7 +458,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
             {/* Total Row */}
             {!loading && (
               <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold">
-                <TableCell className="sticky left-0 z-10 bg-primary/10 font-bold">
+                <TableCell className="sticky left-0 z-10 bg-primary/10 font-bold py-2 px-3 text-sm">
                   Total
                 </TableCell>
                 {weekDays.map(day => {
@@ -472,7 +472,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                   }, 0);
                   
                   return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10">
+                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 py-2 px-2 text-sm">
                       {formatValue(dailyTotal)}
                     </TableCell>
                   );

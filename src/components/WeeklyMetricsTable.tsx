@@ -363,9 +363,6 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                             )}
                           />
                           <span className="font-semibold">{categoryName}</span>
-                          <Badge variant="secondary" className="ml-2 text-xs">
-                            {visibleCategoryProtocols.length} protocols
-                          </Badge>
                         </div>
                       </TableCell>
                       {weekDays.map(day => {

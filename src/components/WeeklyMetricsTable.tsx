@@ -355,24 +355,6 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
           </Button>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadReport}
-            className="no-screenshot"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copyToClipboard}
-            className="no-screenshot"
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            Copy
-          </Button>
         </div>
       </div>
       
@@ -547,6 +529,28 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             )}
           </TableBody>
         </Table>
+      </div>
+      
+      {/* Download and Copy buttons at bottom right */}
+      <div className="flex justify-end gap-2 pt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={downloadReport}
+          className="no-screenshot"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={copyToClipboard}
+          className="no-screenshot"
+        >
+          <Copy className="h-4 w-4 mr-2" />
+          Copy
+        </Button>
       </div>
     </div>
   );

@@ -187,17 +187,17 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     const intensity = Math.min(value / maxValue, 1);
     const level = Math.floor(intensity * 8);
     
-    // Green-Yellow-Red heat map (inspired by GitHub contributions)
+    // Green-Yellow-Orange heat map with subtle extremes
     const colors = [
       { bg: 'bg-green-100 dark:bg-green-950/30', text: 'text-green-800 dark:text-green-200' },
       { bg: 'bg-green-200 dark:bg-green-900/50', text: 'text-green-900 dark:text-green-100' },
-      { bg: 'bg-green-400 dark:bg-green-800/70', text: 'text-white' },
-      { bg: 'bg-green-600 dark:bg-green-700/80', text: 'text-white' },
-      { bg: 'bg-yellow-500 dark:bg-yellow-600/80', text: 'text-yellow-950 dark:text-yellow-50' },
-      { bg: 'bg-orange-500 dark:bg-orange-600/80', text: 'text-white' },
-      { bg: 'bg-red-500 dark:bg-red-600/80', text: 'text-white' },
-      { bg: 'bg-red-700 dark:bg-red-700/90', text: 'text-white' },
-      { bg: 'bg-red-900 dark:bg-red-800', text: 'text-white' }
+      { bg: 'bg-green-300 dark:bg-green-800/60', text: 'text-green-900 dark:text-green-100' },
+      { bg: 'bg-green-500 dark:bg-green-700/70', text: 'text-white' },
+      { bg: 'bg-yellow-400 dark:bg-yellow-600/70', text: 'text-yellow-950 dark:text-yellow-50' },
+      { bg: 'bg-orange-400 dark:bg-orange-600/70', text: 'text-orange-950 dark:text-orange-50' },
+      { bg: 'bg-orange-500 dark:bg-orange-500/80', text: 'text-white' },
+      { bg: 'bg-red-400 dark:bg-red-600/70', text: 'text-red-950 dark:text-red-50' },
+      { bg: 'bg-red-500 dark:bg-red-500/80', text: 'text-white' }
     ];
     
     return colors[level] || colors[0];

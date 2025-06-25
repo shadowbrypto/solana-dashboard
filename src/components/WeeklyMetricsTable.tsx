@@ -364,11 +364,10 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             <TableRow>
               <TableHead className="w-[220px] sticky left-0 z-20 bg-background py-3">Protocol</TableHead>
               {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[110px] px-3 py-3">
-                  <div className="flex flex-col items-center">
-                    <span className="text-xs text-muted-foreground">{format(day, 'EEE')}</span>
-                    <span className="font-medium">{format(day, 'MMM d')}</span>
-                  </div>
+                <TableHead key={day.toISOString()} className="text-center min-w-[120px] px-3 py-3">
+                  <span className="font-medium">
+                    {format(day, 'EEE, MMM d')}
+                  </span>
                 </TableHead>
               ))}
             </TableRow>

@@ -315,6 +315,30 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           <Button
             variant="outline"
             size="sm"
+            onClick={() => {
+              if (hiddenProtocols.size > 0) {
+                setHiddenProtocols(new Set());
+              } else {
+                const allProtocols = new Set<string>();
+                protocols.forEach(protocol => {
+                  allProtocols.add(protocol);
+                });
+                setHiddenProtocols(allProtocols);
+              }
+            }}
+            title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+          >
+            {hiddenProtocols.size > 0 ? (
+              <Eye className="h-4 w-4 mr-2" />
+            ) : (
+              <EyeOff className="h-4 w-4 mr-2" />
+            )}
+            {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
             onClick={downloadReport}
             className="no-screenshot"
           >
@@ -425,13 +449,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                   e.stopPropagation();
                                   toggleProtocolVisibility(protocol.id);
                                 }}
-                                className="p-1 hover:bg-muted rounded transition-colors"
+                                className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
                               >
-                                {isHidden ? (
-                                  <EyeOff className="h-3 w-3 text-muted-foreground" />
-                                ) : (
-                                  <Eye className="h-3 w-3 text-muted-foreground" />
-                                )}
+                                <Eye className="h-3 w-3 text-muted-foreground" />
                               </button>
                               <span>
                                 {protocol.name}

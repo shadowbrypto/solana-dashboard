@@ -354,7 +354,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className="sticky left-0 z-10 bg-background">
+                      <TableCell className={cn("sticky left-0 z-10", getCategoryRowColor(categoryName))}>
                         <div className="flex items-center gap-2">
                           <ChevronRight 
                             className={cn(
@@ -376,7 +376,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className="text-center font-semibold">
+                          <TableCell key={dateKey} className={cn("text-center font-semibold", getCategoryRowColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );

@@ -370,7 +370,7 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                   <React.Fragment key={categoryName}>
                     <TableRow 
                       className={cn(
-                        "cursor-pointer font-medium",
+                        "cursor-pointer font-medium group",
                         getCategoryRowColor(categoryName),
                         "transition-all duration-200"
                       )}
@@ -415,9 +415,9 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                       return (
                         <TableRow 
                           key={protocol.id}
-                          className="hover:bg-muted/30 transition-colors"
+                          className="hover:bg-muted/50 transition-colors group"
                         >
-                          <TableCell className="sticky left-0 z-10 bg-background py-2 px-4">
+                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-2 px-4 transition-colors">
                             <div className="flex items-center gap-2 pl-5">
                               <button
                                 onClick={(e) => {
@@ -457,8 +457,8 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
             
             {/* Total Row */}
             {!loading && (
-              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold">
-                <TableCell className="sticky left-0 z-10 bg-primary/10 font-bold py-3 px-4">
+              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold group transition-colors">
+                <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-3 px-4 transition-colors">
                   Total
                 </TableCell>
                 {weekDays.map(day => {

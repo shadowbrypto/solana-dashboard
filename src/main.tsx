@@ -8,6 +8,7 @@ import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import DailyReport from "./pages/DailyReport";
 import MonthlyReport from "./pages/MonthlyReport";
+import WeeklyReport from "./pages/WeeklyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
 import OneVsOne from "./pages/OneVsOne";
@@ -79,6 +80,20 @@ const router = createBrowserRouter([
                 }
               >
                 <DailyReport />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "weekly",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <WeeklyReport />
               </React.Suspense>
             ),
           },

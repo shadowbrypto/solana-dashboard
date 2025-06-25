@@ -22,6 +22,7 @@ const overviewPages = [
 
 const reports = [
   { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
+  { id: 'weekly', name: 'Weekly Report', icon: CalendarDays, path: '/reports/weekly' },
   { id: 'monthly', name: 'Monthly Report', icon: CalendarDays, path: '/reports/monthly' }
 ];
 

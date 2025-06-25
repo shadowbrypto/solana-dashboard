@@ -12,7 +12,6 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
-import { BarChart, Bar, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -182,17 +181,36 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     return selectedMetricOption.format(value);
   };
   
-  const getSparklineData = (protocolId: string) => {
-    const protocolData = dailyData[protocolId];
-    if (!protocolData) return [];
+  const getHeatMapColor = (value: number, maxValue: number): { bg: string; text: string } => {
+    if (value === 0) return { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-muted-foreground' };
     
-    return last7Days.map((day, index) => {
-      const dateKey = format(day, 'yyyy-MM-dd');
-      return {
-        day: index,
-        value: protocolData[dateKey] || 0
-      };
+    const intensity = Math.min(value / maxValue, 1);
+    const level = Math.floor(intensity * 9);
+    
+    const colors = [
+      { bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-900 dark:text-blue-100' },
+      { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-900 dark:text-blue-100' },
+      { bg: 'bg-blue-200 dark:bg-blue-900/40', text: 'text-blue-900 dark:text-blue-100' },
+      { bg: 'bg-blue-300 dark:bg-blue-900/50', text: 'text-blue-900 dark:text-blue-100' },
+      { bg: 'bg-blue-400 dark:bg-blue-800/60', text: 'text-white' },
+      { bg: 'bg-blue-500 dark:bg-blue-800/70', text: 'text-white' },
+      { bg: 'bg-blue-600 dark:bg-blue-700/80', text: 'text-white' },
+      { bg: 'bg-blue-700 dark:bg-blue-700/90', text: 'text-white' },
+      { bg: 'bg-blue-800 dark:bg-blue-600', text: 'text-white' },
+      { bg: 'bg-blue-900 dark:bg-blue-500', text: 'text-white' }
+    ];
+    
+    return colors[level] || colors[0];
+  };
+  
+  const getMaxValue = (): number => {
+    let max = 0;
+    Object.values(dailyData).forEach(protocolData => {
+      Object.values(protocolData).forEach(value => {
+        if (value > max) max = value;
+      });
     });
+    return max;
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -495,27 +513,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               >
                                 <Eye className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <div className="flex items-center gap-3 flex-1">
-                                <span className="min-w-[120px]">
-                                  {protocol.name}
-                                </span>
-                                <div className="w-[80px] h-[20px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={getSparklineData(protocol.id)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                                      <Bar 
-                                        dataKey="value" 
-                                        fill={
-                                          topProtocols.indexOf(protocol.id as Protocol) === 0 ? "#facc15" :
-                                          topProtocols.indexOf(protocol.id as Protocol) === 1 ? "#9ca3af" :
-                                          topProtocols.indexOf(protocol.id as Protocol) === 2 ? "#fb923c" :
-                                          "#60a5fa"
-                                        }
-                                        barSize={4}
-                                      />
-                                    </BarChart>
-                                  </ResponsiveContainer>
-                                </div>
-                              </div>
+                              <span>
+                                {protocol.name}
+                              </span>
                               {topProtocols.includes(protocol.id as Protocol) && (
                                 <Badge 
                                   variant="secondary"
@@ -534,9 +534,19 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           {last7Days.map(day => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const value = protocolData[dateKey] || 0;
+                            const maxValue = getMaxValue();
+                            
+                            const heatMapColor = getHeatMapColor(value, maxValue);
                             
                             return (
-                              <TableCell key={dateKey} className="text-center py-2 px-3 group-hover:bg-muted/50 transition-colors">
+                              <TableCell 
+                                key={dateKey} 
+                                className={cn(
+                                  "text-center py-2 px-3 transition-all relative font-medium",
+                                  heatMapColor.bg,
+                                  heatMapColor.text
+                                )}
+                              >
                                 {formatValue(value)}
                               </TableCell>
                             );
@@ -566,7 +576,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   }, 0);
                   
                   return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 py-3 px-3">
+                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 group-hover:bg-primary/20 py-3 px-3 transition-colors">
                       {formatValue(dailyTotal)}
                     </TableCell>
                   );

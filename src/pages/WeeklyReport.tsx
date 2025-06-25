@@ -70,7 +70,7 @@ export default function WeeklyReport() {
         </p>
       </div>
 
-      {/* Weekly Metrics Table */}
+      {/* Weekly Metrics Table with integrated heat map */}
       {isLoading ? (
         <Card>
           <CardContent className="p-6">

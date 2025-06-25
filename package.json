@@ -49,7 +49,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^5.0.0",
-    "recharts": "^2.15.2",
+    "recharts": "^2.15.4",
     "typescript": "^4.9.5"
   },
   "devDependencies": {

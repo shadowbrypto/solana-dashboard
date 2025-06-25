@@ -12,6 +12,7 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -179,6 +180,19 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   const formatValue = (value: number) => {
     return selectedMetricOption.format(value);
+  };
+  
+  const getSparklineData = (protocolId: string) => {
+    const protocolData = dailyData[protocolId];
+    if (!protocolData) return [];
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return {
+        day: index,
+        value: protocolData[dateKey] || 0
+      };
+    });
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -481,9 +495,29 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               >
                                 <Eye className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <span>
-                                {protocol.name}
-                              </span>
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="min-w-[120px]">
+                                  {protocol.name}
+                                </span>
+                                <div className="w-[80px] h-[20px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={getSparklineData(protocol.id)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                      <Line 
+                                        type="monotone" 
+                                        dataKey="value" 
+                                        stroke={
+                                          topProtocols.indexOf(protocol.id as Protocol) === 0 ? "#facc15" :
+                                          topProtocols.indexOf(protocol.id as Protocol) === 1 ? "#9ca3af" :
+                                          topProtocols.indexOf(protocol.id as Protocol) === 2 ? "#fb923c" :
+                                          "#60a5fa"
+                                        }
+                                        strokeWidth={1.5}
+                                        dot={false}
+                                      />
+                                    </LineChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
                               {topProtocols.includes(protocol.id as Protocol) && (
                                 <Badge 
                                   variant="secondary"

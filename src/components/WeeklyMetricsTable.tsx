@@ -12,7 +12,7 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -501,20 +501,18 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 </span>
                                 <div className="w-[80px] h-[20px]">
                                   <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={getSparklineData(protocol.id)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                                      <Line 
-                                        type="monotone" 
+                                    <BarChart data={getSparklineData(protocol.id)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                      <Bar 
                                         dataKey="value" 
-                                        stroke={
+                                        fill={
                                           topProtocols.indexOf(protocol.id as Protocol) === 0 ? "#facc15" :
                                           topProtocols.indexOf(protocol.id as Protocol) === 1 ? "#9ca3af" :
                                           topProtocols.indexOf(protocol.id as Protocol) === 2 ? "#fb923c" :
                                           "#60a5fa"
                                         }
-                                        strokeWidth={1.5}
-                                        dot={false}
+                                        barSize={4}
                                       />
-                                    </LineChart>
+                                    </BarChart>
                                   </ResponsiveContainer>
                                 </div>
                               </div>

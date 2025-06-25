@@ -432,6 +432,31 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
                 );
               })
             )}
+            
+            {/* Total Row */}
+            {!loading && (
+              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold">
+                <TableCell className="sticky left-0 z-10 bg-primary/10 font-bold">
+                  Total
+                </TableCell>
+                {weekDays.map(day => {
+                  const dateKey = format(day, 'yyyy-MM-dd');
+                  const dailyTotal = protocols.reduce((sum, protocol) => {
+                    const protocolData = dailyData[protocol];
+                    if (protocolData && protocolData[dateKey] !== undefined) {
+                      return sum + protocolData[dateKey];
+                    }
+                    return sum;
+                  }, 0);
+                  
+                  return (
+                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10">
+                      {formatValue(dailyTotal)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

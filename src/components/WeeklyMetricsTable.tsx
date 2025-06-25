@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isAfter, isBefore } from "date-fns";
 import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
@@ -63,6 +63,21 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
   ];
 
   const selectedMetricOption = metricOptions.find(m => m.key === selectedMetric) || metricOptions[0];
+
+  // Date validation constants
+  const MIN_DATE = new Date('2024-01-01'); // Earliest allowed date
+  const MAX_DATE = new Date(); // Current date (no future dates allowed)
+  
+  // Check if navigation is allowed
+  const canNavigatePrev = () => {
+    const prevWeek = subWeeks(weekStart, 1);
+    return !isBefore(prevWeek, MIN_DATE);
+  };
+  
+  const canNavigateNext = () => {
+    const nextWeek = addWeeks(weekStart, 1);
+    return !isAfter(nextWeek, MAX_DATE);
+  };
 
 
   // Category-based bright coloring using shadcn theme colors
@@ -121,6 +136,9 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
   }, [weekStart, protocols, selectedMetric]);
 
   const handleWeekChange = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && !canNavigatePrev()) return;
+    if (direction === 'next' && !canNavigateNext()) return;
+    
     const newWeek = direction === 'prev' ? subWeeks(weekStart, 1) : addWeeks(weekStart, 1);
     onWeekChange(newWeek);
   };
@@ -255,6 +273,8 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
             variant="outline"
             size="icon"
             onClick={() => handleWeekChange('prev')}
+            disabled={!canNavigatePrev()}
+            title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous week'}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -270,6 +290,8 @@ export function WeeklyMetricsTable({ protocols, weekStart, onWeekChange }: Weekl
             variant="outline"
             size="icon"
             onClick={() => handleWeekChange('next')}
+            disabled={!canNavigateNext()}
+            title={!canNavigateNext() ? 'Cannot go beyond current week' : 'Next week'}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

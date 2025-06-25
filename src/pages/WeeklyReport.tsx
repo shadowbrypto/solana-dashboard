@@ -5,11 +5,32 @@ import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent } from '../components/ui/card';
 import { CalendarIcon } from 'lucide-react';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks } from 'date-fns';
 
 export default function WeeklyReport() {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
+  
+  // Date validation - ensure we start with a valid week
+  const getValidInitialDate = () => {
+    const today = new Date();
+    const minDate = new Date('2024-01-01');
+    const maxDate = new Date();
+    
+    // If today is valid, use it
+    if (!isBefore(today, minDate) && !isAfter(today, maxDate)) {
+      return today;
+    }
+    
+    // If today is too early, use min date
+    if (isBefore(today, minDate)) {
+      return minDate;
+    }
+    
+    // If today is too late (shouldn't happen), use current week
+    return maxDate;
+  };
+  
+  const [selectedWeek, setSelectedWeek] = useState(getValidInitialDate());
 
   // Get all protocols for the table
   const protocols: Protocol[] = [];
@@ -21,6 +42,18 @@ export default function WeeklyReport() {
       }
     });
   });
+
+  const handleWeekChange = (newWeek: Date) => {
+    const minDate = new Date('2024-01-01');
+    const maxDate = new Date();
+    
+    // Validate the new week is within acceptable range
+    if (isBefore(newWeek, minDate) || isAfter(newWeek, maxDate)) {
+      return; // Don't allow invalid dates
+    }
+    
+    setSelectedWeek(newWeek);
+  };
 
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
@@ -51,7 +84,7 @@ export default function WeeklyReport() {
         <WeeklyMetricsTable 
           protocols={protocols} 
           weekStart={weekStart}
-          onWeekChange={setSelectedWeek}
+          onWeekChange={handleWeekChange}
         />
       )}
     </div>

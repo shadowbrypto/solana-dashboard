@@ -21,6 +21,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface WeeklyMetricsTableProps {
   protocols: Protocol[];
@@ -288,7 +289,44 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
+        <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
+          <TabsList className="grid w-full grid-cols-4">
+            {metricOptions.map((option) => (
+              <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                {option.key === 'total_volume_usd' ? 'Volume' :
+                 option.key === 'daily_users' ? 'DAUs' :
+                 option.key === 'numberOfNewUsers' ? 'New Users' :
+                 'Trades'}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (hiddenProtocols.size > 0) {
+                setHiddenProtocols(new Set());
+              } else {
+                const allProtocols = new Set<string>();
+                protocols.forEach(protocol => {
+                  allProtocols.add(protocol);
+                });
+                setHiddenProtocols(allProtocols);
+              }
+            }}
+            title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+          >
+            {hiddenProtocols.size > 0 ? (
+              <Eye className="h-4 w-4 mr-2" />
+            ) : (
+              <EyeOff className="h-4 w-4 mr-2" />
+            )}
+            {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+          </Button>
+          
           <Button
             variant="outline"
             size="icon"
@@ -315,46 +353,6 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Select value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {metricOptions.map((option) => (
-                <SelectItem key={option.key} value={option.key}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (hiddenProtocols.size > 0) {
-                setHiddenProtocols(new Set());
-              } else {
-                const allProtocols = new Set<string>();
-                protocols.forEach(protocol => {
-                  allProtocols.add(protocol);
-                });
-                setHiddenProtocols(allProtocols);
-              }
-            }}
-            title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-          >
-            {hiddenProtocols.size > 0 ? (
-              <Eye className="h-4 w-4 mr-2" />
-            ) : (
-              <EyeOff className="h-4 w-4 mr-2" />
-            )}
-            {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-          </Button>
-          
         </div>
       </div>
       
@@ -436,7 +434,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 px-3", getCategoryRowColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 px-3 transition-colors", getCategoryRowColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );
@@ -489,7 +487,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             const value = protocolData[dateKey] || 0;
                             
                             return (
-                              <TableCell key={dateKey} className="text-center py-2 px-3">
+                              <TableCell key={dateKey} className="text-center py-2 px-3 group-hover:bg-muted/50 transition-colors">
                                 {formatValue(value)}
                               </TableCell>
                             );

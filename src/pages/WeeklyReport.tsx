@@ -10,23 +10,23 @@ import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks, subDays } 
 export default function WeeklyReport() {
   const [isLoading, setIsLoading] = useState(false);
   
-  // Date validation - ensure we start with a valid week
+  // Date validation - ensure we start with a valid date (excluding today)
   const getValidInitialDate = () => {
-    const today = new Date();
+    const yesterday = subDays(new Date(), 1); // Start with yesterday since today is excluded
     const minDate = new Date('2024-01-01');
-    const maxDate = new Date();
+    const maxDate = subDays(new Date(), 1); // Yesterday is the latest allowed date
     
-    // If today is valid, use it
-    if (!isBefore(today, minDate) && !isAfter(today, maxDate)) {
-      return today;
+    // If yesterday is valid, use it
+    if (!isBefore(yesterday, minDate) && !isAfter(yesterday, maxDate)) {
+      return yesterday;
     }
     
-    // If today is too early, use min date
-    if (isBefore(today, minDate)) {
+    // If yesterday is too early, use min date
+    if (isBefore(yesterday, minDate)) {
       return minDate;
     }
     
-    // If today is too late (shouldn't happen), use current week
+    // If yesterday is too late (shouldn't happen), use max date
     return maxDate;
   };
   
@@ -45,7 +45,7 @@ export default function WeeklyReport() {
 
   const handleDateChange = (newEndDate: Date) => {
     const minDate = new Date('2024-01-01');
-    const maxDate = new Date();
+    const maxDate = subDays(new Date(), 1); // Yesterday is the latest allowed date
     
     // Validate the new date is within acceptable range
     if (isBefore(newEndDate, minDate) || isAfter(newEndDate, maxDate)) {

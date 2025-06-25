@@ -66,7 +66,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   // Date validation constants
   const MIN_DATE = new Date('2024-01-01'); // Earliest allowed date
-  const MAX_DATE = new Date(); // Current date (no future dates allowed)
+  const MAX_DATE = subDays(new Date(), 1); // Yesterday (exclude today due to backend filtering)
   
   // Check if navigation is allowed
   const canNavigatePrev = () => {
@@ -292,7 +292,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             size="icon"
             onClick={() => handleDateChange('next')}
             disabled={!canNavigateNext()}
-            title={!canNavigateNext() ? 'Cannot go beyond current date' : 'Next 7 days'}
+            title={!canNavigateNext() ? 'Cannot go beyond yesterday (today excluded due to incomplete data)' : 'Next 7 days'}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

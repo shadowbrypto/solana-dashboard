@@ -478,13 +478,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         </div>
       </div>
       
-      <div className="rounded-md border bg-card" data-table="weekly-metrics">
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto" data-table="weekly-metrics">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[220px] sticky left-0 z-20 bg-background py-3">Protocol</TableHead>
+              <TableHead className="w-[280px] sticky left-0 z-20 bg-background py-4 text-xs sm:text-sm">Protocol</TableHead>
               {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[120px] px-3 py-3">
+                <TableHead key={day.toISOString()} className="text-center min-w-[120px] px-3 py-4 text-xs sm:text-sm">
                   <span className="font-medium">
                     {format(day, 'EEE, MMM d')}
                   </span>
@@ -535,7 +535,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className={cn("sticky left-0 z-10 py-3 px-4 transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                      <TableCell className={cn("sticky left-0 z-10 py-4 sm:py-5 px-3 sm:px-6 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <ChevronRight 
@@ -582,7 +582,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 px-3 transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-4 sm:py-5 px-3 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );
@@ -601,59 +601,59 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           key={protocol.id}
                           className="hover:bg-muted/50 transition-colors group"
                         >
-                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-2 px-4 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleProtocolVisibility(protocol.id);
-                                }}
-                                className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
-                              >
-                                <Eye className="h-3 w-3 text-muted-foreground" />
-                              </button>
-                              <div className="w-8 flex justify-start">
-                                {topProtocols.includes(protocol.id as Protocol) && (
-                                  <Badge 
-                                    variant="secondary"
-                                    className={cn(
-                                      "h-5 px-2 text-xs font-medium flex-shrink-0",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                                    )}
-                                  >
-                                    #{topProtocols.indexOf(protocol.id as Protocol) + 1}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 flex-1">
-                                <span className="min-w-[100px]">
-                                  {protocol.name}
-                                </span>
-                                <div className="w-[60px] h-[20px]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={getWeeklyVolumeData(protocol.id)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                                      <Area 
-                                        type="monotone" 
-                                        dataKey="value" 
-                                        stroke={
-                                          getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
-                                          getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
-                                          "#6b7280"
-                                        }
-                                        strokeWidth={1.5}
-                                        fill={
-                                          getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
-                                          getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
-                                          "#6b7280"
-                                        }
-                                        fillOpacity={0.2}
-                                        dot={false}
-                                      />
-                                    </AreaChart>
-                                  </ResponsiveContainer>
+                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 px-3 sm:px-6 text-xs sm:text-sm transition-colors">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProtocolVisibility(protocol.id);
+                                  }}
+                                  className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <Eye className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                                <div className="flex items-center">
+                                  <span className="truncate">
+                                    {protocol.name}
+                                  </span>
+                                  {topProtocols.includes(protocol.id as Protocol) && (
+                                    <Badge 
+                                      variant="secondary"
+                                      className={cn(
+                                        "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                      )}
+                                    >
+                                      #{topProtocols.indexOf(protocol.id as Protocol) + 1}
+                                    </Badge>
+                                  )}
                                 </div>
+                              </div>
+                              <div className="w-[60px] h-[20px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={getWeeklyVolumeData(protocol.id)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                                    <Area 
+                                      type="monotone" 
+                                      dataKey="value" 
+                                      stroke={
+                                        getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
+                                        getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
+                                        "#6b7280"
+                                      }
+                                      strokeWidth={1.5}
+                                      fill={
+                                        getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
+                                        getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
+                                        "#6b7280"
+                                      }
+                                      fillOpacity={0.2}
+                                      dot={false}
+                                    />
+                                  </AreaChart>
+                                </ResponsiveContainer>
                               </div>
                             </div>
                           </TableCell>
@@ -668,7 +668,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               <TableCell 
                                 key={dateKey} 
                                 className={cn(
-                                  "text-center py-2 px-3 transition-all relative font-medium",
+                                  "text-center py-3 px-3 transition-all relative font-medium text-xs sm:text-sm",
                                   heatMapColor.bg,
                                   heatMapColor.text
                                 )}
@@ -688,7 +688,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             {/* Total Row */}
             {!loading && (
               <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold group transition-colors">
-                <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-3 px-4 transition-colors">
+                <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-4 px-3 sm:px-6 text-xs sm:text-sm transition-colors">
                   Total
                 </TableCell>
                 {last7Days.map(day => {
@@ -702,7 +702,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   }, 0);
                   
                   return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 group-hover:bg-primary/20 py-3 px-3 transition-colors">
+                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 group-hover:bg-primary/20 py-4 px-3 text-xs sm:text-sm transition-colors">
                       {formatValue(dailyTotal)}
                     </TableCell>
                   );

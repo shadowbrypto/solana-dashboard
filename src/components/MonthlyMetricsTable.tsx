@@ -7,11 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, eachMonthOfInterval } from "date-fns";
 import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { MonthPicker } from "./MonthPicker";
@@ -31,7 +32,7 @@ type MetricKey = keyof ProtocolMetrics | 'market_share';
 interface MetricDefinition {
   key: MetricKey;
   label: string;
-  format: (value: number, isCategory?: boolean) => React.ReactNode;
+  format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => React.ReactNode;
   getValue?: (data: ProtocolMetrics) => number;
   skipGradient?: boolean;
 }
@@ -75,6 +76,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [monthlyData, setMonthlyData] = useState<Record<Protocol, MonthlyData>>({});
   const [previousMonthData, setPreviousMonthData] = useState<Record<Protocol, MonthlyData>>({});
+  const [monthlyVolumeData, setMonthlyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "numberOfNewUsers", "daily_trades", "market_share", "monthly_growth" as MetricKey]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
@@ -82,6 +84,40 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
   // Calculate total volume for market share
   const totalVolume = Object.values(monthlyData)
     .reduce((sum, protocol) => sum + (protocol?.total_volume_usd || 0), 0);
+
+  // Monthly trend functions
+  const getMonthlyVolumeChart = (protocolId: Protocol) => {
+    const protocolMonthlyData = monthlyVolumeData[protocolId];
+    if (!protocolMonthlyData) return [];
+    
+    const last6Months = eachMonthOfInterval({
+      start: subMonths(date, 5),
+      end: date
+    });
+    
+    return last6Months.map((month, index) => {
+      const monthKey = format(month, 'yyyy-MM');
+      return {
+        month: index,
+        value: protocolMonthlyData[monthKey] || 0
+      };
+    });
+  };
+  
+  const getMonthlyVolumeTrend = (protocolId: Protocol): 'up' | 'down' | 'neutral' => {
+    const data = getMonthlyVolumeChart(protocolId);
+    if (data.length < 2) return 'neutral';
+    
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+    
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    
+    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+    return 'neutral';
+  };
 
   const metrics: MetricDefinition[] = [
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
@@ -109,13 +145,98 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
     {
       key: "monthly_growth" as MetricKey,
       label: "Monthly Growth",
-      format: (value, isCategory = false) => {
+      format: (value, isCategory = false, protocol, categoryName?: string) => {
         const percentage = value * 100;
         const absPercentage = Math.abs(percentage);
         const isPositive = value > 0;
         const isNeutral = Math.abs(value) < 0.001;
         
-        if (isNeutral) {
+        if (isCategory && categoryName) {
+          // Get protocols in this category and calculate aggregated trend
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName).map(p => p.id as Protocol);
+          const aggregatedData: { month: number; value: number }[] = [];
+          
+          // Create aggregated monthly data for the category
+          const last6Months = eachMonthOfInterval({
+            start: subMonths(date, 5),
+            end: date
+          });
+          
+          last6Months.forEach((month, index) => {
+            const monthKey = format(month, 'yyyy-MM');
+            const totalVolume = categoryProtocols.reduce((sum, protocolId) => {
+              return sum + (monthlyVolumeData[protocolId]?.[monthKey] || 0);
+            }, 0);
+            aggregatedData.push({ month: index, value: totalVolume });
+          });
+          
+          // Calculate trend for category
+          const getCategoryTrend = (): 'up' | 'down' | 'neutral' => {
+            if (aggregatedData.length < 2) return 'neutral';
+            
+            const firstHalf = aggregatedData.slice(0, Math.floor(aggregatedData.length / 2));
+            const secondHalf = aggregatedData.slice(Math.floor(aggregatedData.length / 2));
+            
+            const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+            const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+            
+            if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+            if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+            return 'neutral';
+          };
+          
+          const categoryTrend = getCategoryTrend();
+          const isNeutralCategory = Math.abs(value) < 0.001;
+          
+          return (
+            <div className="flex items-center justify-end w-full gap-8">
+              <div className="w-[50px] h-[20px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={aggregatedData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke={
+                        categoryTrend === 'up' ? "#22c55e" :
+                        categoryTrend === 'down' ? "#ef4444" :
+                        "#6b7280"
+                      }
+                      strokeWidth={1.5}
+                      fill={
+                        categoryTrend === 'up' ? "#22c55e" :
+                        categoryTrend === 'down' ? "#ef4444" :
+                        "#6b7280"
+                      }
+                      fillOpacity={0.2}
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              {!isNeutralCategory && (
+                <div className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                  isPositive 
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                )}>
+                  {isPositive ? (
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                    </svg>
+                  )}
+                  <span>{absPercentage.toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+          );
+        }
+        
+        if (!protocol) {
           return (
             <div className="flex items-center justify-end gap-1">
               <span className="text-muted-foreground">—</span>
@@ -124,24 +245,49 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
         }
         
         return (
-          <div className="flex items-center justify-end gap-1">
-            <div className={cn(
-              "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-              isPositive 
-                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            )}>
-              {isPositive ? (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-              ) : (
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                </svg>
-              )}
-              <span>{absPercentage.toFixed(1)}%</span>
+          <div className="flex items-center justify-end w-full gap-8">
+            <div className="w-[50px] h-[20px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={getMonthlyVolumeChart(protocol)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke={
+                      getMonthlyVolumeTrend(protocol) === 'up' ? "#22c55e" :
+                      getMonthlyVolumeTrend(protocol) === 'down' ? "#ef4444" :
+                      "#6b7280"
+                    }
+                    strokeWidth={1.5}
+                    fill={
+                      getMonthlyVolumeTrend(protocol) === 'up' ? "#22c55e" :
+                      getMonthlyVolumeTrend(protocol) === 'down' ? "#ef4444" :
+                      "#6b7280"
+                    }
+                    fillOpacity={0.2}
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
+            {!isNeutral && (
+              <div className={cn(
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                isPositive 
+                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              )}>
+                {isPositive ? (
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                  </svg>
+                ) : (
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                  </svg>
+                )}
+                <span>{absPercentage.toFixed(1)}%</span>
+              </div>
+            )}
           </div>
         );
       },
@@ -227,6 +373,49 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
           Promise.all(previousMonthDays.map(day => getDailyMetrics(day)))
         ]);
 
+        // Fetch monthly volume data for trend charts (last 6 months)
+        const last6Months = eachMonthOfInterval({
+          start: subMonths(date, 5),
+          end: date
+        });
+        
+        const monthlyPromises = last6Months.map(async (month) => {
+          const monthStart = startOfMonth(month);
+          const monthEnd = endOfMonth(month);
+          const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+          const monthDailyData = await Promise.all(monthDays.map(day => getDailyMetrics(day)));
+          
+          // Aggregate monthly data for this month
+          const monthlyAggregated: Record<Protocol, number> = {};
+          protocols.forEach(protocol => {
+            monthlyAggregated[protocol] = 0;
+          });
+          
+          monthDailyData.forEach(dayData => {
+            protocols.forEach(protocol => {
+              const protocolData = dayData[protocol];
+              if (protocolData) {
+                monthlyAggregated[protocol] += protocolData.total_volume_usd;
+              }
+            });
+          });
+          
+          return { month: format(month, 'yyyy-MM'), data: monthlyAggregated };
+        });
+        
+        const monthlyResults = await Promise.all(monthlyPromises);
+        
+        // Organize monthly volume data by protocol
+        const organizedMonthlyData: Record<Protocol, Record<string, number>> = {};
+        protocols.forEach(protocol => {
+          organizedMonthlyData[protocol] = {};
+          monthlyResults.forEach(({ month, data }) => {
+            organizedMonthlyData[protocol][month] = data[protocol] || 0;
+          });
+        });
+
+        setMonthlyVolumeData(organizedMonthlyData);
+
         // Aggregate monthly data for each protocol
         const currentAggregated: Record<Protocol, MonthlyData> = {};
         const previousAggregated: Record<Protocol, MonthlyData> = {};
@@ -289,6 +478,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
         console.error('Error fetching monthly metrics:', error);
         setMonthlyData({});
         setPreviousMonthData({});
+        setMonthlyVolumeData({});
       }
     };
     fetchData();
@@ -524,7 +714,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                     className={cn("border-t cursor-pointer", getCategoryRowColor(categoryName))}
                     onClick={toggleCollapse}
                   >
-                    <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4">
+                    <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4 pl-3 sm:pl-6">
                       <div className="flex items-center gap-1 sm:gap-2">
                         <ChevronRight 
                           className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 ${
@@ -540,14 +730,14 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                         className="text-right font-medium py-0.5 text-xs sm:text-sm"
                       >
                         {metric.key === 'market_share'
-                          ? metric.format(categoryTotals[metric.key] || 0)
+                          ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
                           : metric.key === 'daily_trades'
                           ? formatNumber(categoryTotals[metric.key] || 0)
                           : metric.key === 'monthly_growth'
-                          ? metric.format(categoryTotals[metric.key])
+                          ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
                           : metric.getValue
-                            ? metric.format(metric.getValue(categoryTotals as any))
-                            : metric.format(categoryTotals[metric.key] || 0)}
+                            ? metric.format(metric.getValue(categoryTotals as any), true, undefined, categoryName)
+                            : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -617,8 +807,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                         >
                           <span>
                             {metric.getValue
-                              ? metric.format(metric.getValue(monthlyData[protocol] || {} as any))
-                              : metric.format(monthlyData[protocol]?.[metric.key] || 0)}
+                              ? metric.format(metric.getValue(monthlyData[protocol] || {} as any), false, protocol)
+                              : metric.format(monthlyData[protocol]?.[metric.key] || 0, false, protocol)}
                           </span>
                         </TableCell>
                       ))}

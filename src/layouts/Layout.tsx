@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -22,8 +22,8 @@ const overviewPages = [
 
 const reports = [
   { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
-  { id: 'weekly', name: 'Weekly Report', icon: CalendarDays, path: '/reports/weekly' },
-  { id: 'monthly', name: 'Monthly Report', icon: CalendarDays, path: '/reports/monthly' }
+  { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly' },
+  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' }
 ];
 
 const adminPages = [

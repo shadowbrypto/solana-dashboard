@@ -778,6 +778,91 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     .filter(p => p !== 'all')
                     .reduce((sum, p) => sum + (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
                 }
+                
+                if (metric.key === 'daily_growth') {
+                  // Calculate aggregated weekly volume data for all protocols
+                  const aggregatedWeeklyData: { day: number; value: number }[] = [];
+                  
+                  for (let i = 0; i < 7; i++) {
+                    const dayData = eachDayOfInterval({
+                      start: subDays(date, 6),
+                      end: date
+                    })[i];
+                    
+                    if (dayData) {
+                      const dateKey = format(dayData, 'yyyy-MM-dd');
+                      const dailyTotal = protocols
+                        .filter(p => p !== 'all')
+                        .reduce((sum, p) => {
+                          const protocolWeeklyData = weeklyVolumeData[p];
+                          return sum + (protocolWeeklyData?.[dateKey] || 0);
+                        }, 0);
+                      
+                      aggregatedWeeklyData.push({
+                        day: i,
+                        value: dailyTotal
+                      });
+                    }
+                  }
+                  
+                  // Calculate trend for aggregated data
+                  const getAggregatedTrend = (): 'up' | 'down' | 'neutral' => {
+                    if (aggregatedWeeklyData.length < 2) return 'neutral';
+                    
+                    const firstHalf = aggregatedWeeklyData.slice(0, Math.floor(aggregatedWeeklyData.length / 2));
+                    const secondHalf = aggregatedWeeklyData.slice(Math.floor(aggregatedWeeklyData.length / 2));
+                    
+                    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+                    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+                    
+                    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+                    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+                    return 'neutral';
+                  };
+                  
+                  const trend = getAggregatedTrend();
+                  const percentage = total * 100;
+                  const absPercentage = Math.abs(percentage);
+                  const isPositive = total > 0;
+                  const isNeutral = Math.abs(total) < 0.001;
+                  
+                  return (
+                    <TableCell 
+                      key={metric.key} 
+                      className="text-right font-bold text-xs sm:text-sm"
+                    >
+                      <div className="flex items-center justify-end gap-8">
+                        <div className="w-[50px] h-[20px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={aggregatedWeeklyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                              <Area 
+                                type="monotone" 
+                                dataKey="value" 
+                                stroke={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                strokeWidth={1.5}
+                                fill={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                fillOpacity={0.2}
+                                dot={false}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <Badge 
+                          variant={isNeutral ? "secondary" : isPositive ? "default" : "destructive"}
+                          className={cn(
+                            "h-5 px-2 text-xs font-medium border",
+                            isNeutral && "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
+                            isPositive && !isNeutral && "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
+                            !isPositive && !isNeutral && "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                          )}
+                        >
+                          {isNeutral ? "0.00%" : `${isPositive ? "+" : ""}${absPercentage.toFixed(2)}%`}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                  );
+                }
+                
                 return (
                   <TableCell 
                     key={metric.key} 

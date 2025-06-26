@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ProtocolStats } from '../types/protocol';
 import { formatDate } from '../lib/protocol';
@@ -18,6 +19,7 @@ interface MultiComparisonChartProps {
   dataKey: keyof ProtocolStats;
   formatter: (value: number) => string;
   timeframe?: string;
+  onTimeframeChange?: (timeframe: string) => void;
 }
 
 export function MultiComparisonChart({
@@ -25,7 +27,8 @@ export function MultiComparisonChart({
   data,
   dataKey,
   formatter,
-  timeframe = "3m"
+  timeframe = "3m",
+  onTimeframeChange
 }: MultiComparisonChartProps) {
   // Merge and align data by date
   const mergedData = React.useMemo(() => {
@@ -117,13 +120,44 @@ export function MultiComparisonChart({
     );
   };
 
+  // Get timeframe display text
+  const getTimeframeText = () => {
+    switch (timeframe) {
+      case "7d": return "Last 7 days";
+      case "30d": return "Last 30 days";
+      case "3m": return "Last 3 months";
+      case "6m": return "Last 6 months";
+      case "1y": return "Last 1 year";
+      default: return "All time";
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Comparing {data.length} protocol{data.length !== 1 ? 's' : ''} - {timeframe === "7d" ? "Last 7 days" : timeframe === "30d" ? "Last 30 days" : timeframe === "3m" ? "Last 3 months" : timeframe === "6m" ? "Last 6 months" : timeframe === "1y" ? "Last 1 year" : "All time"}
-        </p>
+    <Card className="bg-card border-border rounded-xl">
+      <CardHeader className="border-b">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {getTimeframeText()}
+            </p>
+          </div>
+          {onTimeframeChange && (
+            <Select value={timeframe} onValueChange={onTimeframeChange}>
+              <SelectTrigger className="w-[140px] bg-background/50 backdrop-blur-sm">
+                <SelectValue placeholder="Select timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="3m">Last 3 months</SelectItem>
+                <SelectItem value="6m">Last 6 months</SelectItem>
+                <SelectItem value="1y">Last 1 year</SelectItem>
+                <SelectItem value="all">All time</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="pt-2">
         <div className="h-80">

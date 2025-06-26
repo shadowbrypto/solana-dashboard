@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone } from 'lucide-react';
+import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone, Frown } from 'lucide-react';
 import { protocolConfigs, getProtocolLogoFilename, getProtocolsByCategory } from '../lib/protocol-config';
 import { getProtocolStats, getTotalProtocolStats } from '../lib/protocol';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
@@ -29,7 +29,9 @@ export default function OneVsOne() {
   const [protocolData, setProtocolData] = useState<Map<string, ProtocolData>>(new Map());
   const [loading, setLoading] = useState(false);
   const [loadingProtocols, setLoadingProtocols] = useState<Set<string>>(new Set());
-  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [volumeTimeframe, setVolumeTimeframe] = useState<TimeFrame>("3m");
+  const [usersTimeframe, setUsersTimeframe] = useState<TimeFrame>("3m");
+  const [tradesTimeframe, setTradesTimeframe] = useState<TimeFrame>("3m");
 
   // Filter protocols to exclude already selected
   const filteredProtocols = useMemo(() => 
@@ -166,11 +168,10 @@ export default function OneVsOne() {
     }
   };
 
-  // Convert data for charts with timeframe filtering
-  const chartData = useMemo(() => {
+  // Helper function to filter data by timeframe
+  const getFilteredData = (timeframe: TimeFrame) => {
     const data = Array.from(protocolData.values());
     
-    // Apply timeframe filter to stats
     if (timeframe !== "all") {
       const now = new Date();
       let daysToSubtract: number;
@@ -204,7 +205,10 @@ export default function OneVsOne() {
     }
     
     return data;
-  }, [protocolData, timeframe]);
+  };
+
+  // Chart data for comparison cards (uses all-time data)
+  const chartData = useMemo(() => Array.from(protocolData.values()), [protocolData]);
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
@@ -366,21 +370,11 @@ export default function OneVsOne() {
             <div className="space-y-4">
               <Separator />
               
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Selected Protocols</h3>
-                <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select timeframe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7d">Last 7 days</SelectItem>
-                    <SelectItem value="30d">Last 30 days</SelectItem>
-                    <SelectItem value="3m">Last 3 months</SelectItem>
-                    <SelectItem value="6m">Last 6 months</SelectItem>
-                    <SelectItem value="1y">Last 1 year</SelectItem>
-                    <SelectItem value="all">All time</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">Selected Protocols</h3>
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  {selectedProtocols.length} selected
+                </Badge>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -473,24 +467,27 @@ export default function OneVsOne() {
           <div className="space-y-6">
             <MultiComparisonChart
               title="Volume Comparison"
-              data={chartData}
+              data={getFilteredData(volumeTimeframe)}
               dataKey="volume_usd"
               formatter={formatCurrency}
-              timeframe={timeframe}
+              timeframe={volumeTimeframe}
+              onTimeframeChange={(value) => setVolumeTimeframe(value as TimeFrame)}
             />
             <MultiComparisonChart
               title="Daily Users Comparison"
-              data={chartData}
+              data={getFilteredData(usersTimeframe)}
               dataKey="daily_users"
               formatter={formatNumber}
-              timeframe={timeframe}
+              timeframe={usersTimeframe}
+              onTimeframeChange={(value) => setUsersTimeframe(value as TimeFrame)}
             />
             <MultiComparisonChart
               title="Trades Comparison"
-              data={chartData}
+              data={getFilteredData(tradesTimeframe)}
               dataKey="trades"
               formatter={formatNumber}
-              timeframe={timeframe}
+              timeframe={tradesTimeframe}
+              onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
             />
           </div>
         </div>
@@ -500,7 +497,7 @@ export default function OneVsOne() {
       {selectedProtocols.length === 0 && (
         <Card className="border-dashed mt-6">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+            <Frown className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No protocols selected</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
               Select protocols from the dropdown above to compare their performance metrics.

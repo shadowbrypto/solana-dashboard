@@ -34,48 +34,48 @@ export function MultiComparisonMetricCard({
 
   const maxValue = protocolValues[0]?.value || 0;
   
-  // Helper function to get rank styling
+  // Helper function to get rank styling using shadcn color themes
   const getRankStyling = (index: number) => {
     if (data.length >= 3) {
       switch (index) {
-        case 0: // Gold
+        case 0: // Gold - using emerald/green colors for success/winning
           return {
-            bgColor: "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20",
-            borderColor: "border-yellow-200/30 dark:border-yellow-700/30",
-            rankColor: "text-yellow-700 dark:text-yellow-400"
+            bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50",
+            borderColor: "border-emerald-200 dark:border-emerald-800",
+            rankColor: "text-emerald-700 dark:text-emerald-400"
           };
-        case 1: // Silver
+        case 1: // Silver - using blue colors
           return {
-            bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20",
-            borderColor: "border-gray-200/30 dark:border-gray-600/30",
-            rankColor: "text-gray-600 dark:text-gray-400"
+            bgColor: "bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/50 dark:to-sky-950/50",
+            borderColor: "border-blue-200 dark:border-blue-800",
+            rankColor: "text-blue-700 dark:text-blue-400"
           };
-        case 2: // Bronze
+        case 2: // Bronze - using orange/amber colors
           return {
-            bgColor: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20",
-            borderColor: "border-orange-200/30 dark:border-orange-600/30",
-            rankColor: "text-orange-600 dark:text-orange-400"
+            bgColor: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50",
+            borderColor: "border-orange-200 dark:border-orange-800",
+            rankColor: "text-orange-700 dark:text-orange-400"
           };
         default:
           return {
-            bgColor: "bg-muted/20",
-            borderColor: "border-muted/20",
-            rankColor: "text-muted-foreground"
+            bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/50 dark:to-slate-950/50",
+            borderColor: "border-gray-200 dark:border-gray-800",
+            rankColor: "text-gray-600 dark:text-gray-400"
           };
       }
     } else {
-      // Only gold for top position when less than 3 protocols
+      // Only emerald/green for top position when less than 3 protocols
       if (index === 0) {
         return {
-          bgColor: "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20",
-          borderColor: "border-yellow-200/30 dark:border-yellow-700/30",
-          rankColor: "text-yellow-700 dark:text-yellow-400"
+          bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50",
+          borderColor: "border-emerald-200 dark:border-emerald-800",
+          rankColor: "text-emerald-700 dark:text-emerald-400"
         };
       }
       return {
-        bgColor: "bg-muted/20",
-        borderColor: "border-muted/20",
-        rankColor: "text-muted-foreground"
+        bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/50 dark:to-slate-950/50",
+        borderColor: "border-gray-200 dark:border-gray-800",
+        rankColor: "text-gray-600 dark:text-gray-400"
       };
     }
   };
@@ -87,9 +87,7 @@ export function MultiComparisonMetricCard({
     <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-lg group">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Icon className="w-4 h-4 text-primary" />
-          </div>
+          <Icon className="w-5 h-5 text-primary" />
           <span className="text-sm font-medium text-muted-foreground">{title}</span>
         </CardTitle>
       </CardHeader>

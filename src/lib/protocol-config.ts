@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   BarChart2, 
   Zap, 
@@ -18,18 +19,23 @@ import {
   TrendingUp,
   LucideIcon
 } from 'lucide-react';
+import { 
+  BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon, 
+  BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
+  GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon 
+} from '../components/icons/index';
 
 export interface ProtocolConfig {
   id: string;
   name: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<any>;
   category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps';
 }
 
 export interface ProtocolConfigMutable {
   id: string;
   name: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<any>;
   category: string;
 }
 
@@ -39,28 +45,28 @@ export interface ProtocolConfigMutable {
 // 2. The protocol will automatically appear in the navigation and be categorized correctly
 export const protocolConfigs: ProtocolConfig[] = [
   // Telegram Bots
-  { id: 'bonkbot', name: 'BonkBot', icon: Bot, category: 'Telegram Bots' },
-  { id: 'trojan', name: 'Trojan', icon: Sword, category: 'Telegram Bots' },
-  { id: 'bloom', name: 'Bloom', icon: Wand2, category: 'Telegram Bots' },
-  { id: 'nova', name: 'Nova', icon: Star, category: 'Telegram Bots' },
-  { id: 'soltradingbot', name: 'SolTradingBot', icon: Rocket, category: 'Telegram Bots' },
-  { id: 'banana', name: 'Banana', icon: Banana, category: 'Telegram Bots' },
-  { id: 'maestro', name: 'Maestro', icon: Zap, category: 'Telegram Bots' },
+  { id: 'bonkbot', name: 'BonkBot', icon: BonkBotIcon, category: 'Telegram Bots' },
+  { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Telegram Bots' },
+  { id: 'bloom', name: 'Bloom', icon: BloomIcon, category: 'Telegram Bots' },
+  { id: 'nova', name: 'Nova', icon: NovaIcon, category: 'Telegram Bots' },
+  { id: 'soltradingbot', name: 'SolTradingBot', icon: SolTradingBotIcon, category: 'Telegram Bots' },
+  { id: 'banana', name: 'Banana', icon: BananaIcon, category: 'Telegram Bots' },
+  { id: 'maestro', name: 'Maestro', icon: MaestroIcon, category: 'Telegram Bots' },
   
   // Trading Terminals
-  { id: 'photon', name: 'Photon', icon: Zap, category: 'Trading Terminals' },
-  { id: 'bullx', name: 'Bull X', icon: BarChart2, category: 'Trading Terminals' },
-  { id: 'axiom', name: 'Axiom', icon: Aperture, category: 'Trading Terminals' },
-  { id: 'gmgnai', name: 'GmGnAi', icon: CalendarClock, category: 'Trading Terminals' },
-  { id: 'padre', name: 'Padre', icon: Cross, category: 'Trading Terminals' },
-  { id: 'nova terminal', name: 'Nova Terminal', icon: Terminal, category: 'Trading Terminals' },
-  { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BotMessageSquare, category: 'Trading Terminals' },
+  { id: 'photon', name: 'Photon', icon: PhotonIcon, category: 'Trading Terminals' },
+  { id: 'bullx', name: 'Bull X', icon: BullXIcon, category: 'Trading Terminals' },
+  { id: 'axiom', name: 'Axiom', icon: AxiomIcon, category: 'Trading Terminals' },
+  { id: 'gmgnai', name: 'GmGnAi', icon: GMGNAIIcon, category: 'Trading Terminals' },
+  { id: 'padre', name: 'Padre', icon: PadreIcon, category: 'Trading Terminals' },
+  { id: 'nova terminal', name: 'Nova Terminal', icon: NovaIcon, category: 'Trading Terminals' },
+  { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BonkBotIcon, category: 'Trading Terminals' },
   
   // Mobile Apps
-  { id: 'moonshot', name: 'Moonshot', icon: Moon, category: 'Mobile Apps' },
-  { id: 'vector', name: 'Vector', icon: ArrowUpRight, category: 'Mobile Apps' },
-  { id: 'slingshot', name: 'Slingshot', icon: Crosshair, category: 'Mobile Apps' },
-  { id: 'fomo', name: 'Fomo', icon: TrendingUp, category: 'Mobile Apps' },
+  { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps' },
+  { id: 'vector', name: 'Vector', icon: VectorIcon, category: 'Mobile Apps' },
+  { id: 'slingshot', name: 'Slingshot', icon: SlingshotIcon, category: 'Mobile Apps' },
+  { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps' },
 ];
 
 // Helper functions

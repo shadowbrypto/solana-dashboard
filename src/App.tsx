@@ -33,8 +33,9 @@ import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { VolumeActivity } from "./components/VolumeActivity";
 import { getAllProtocols } from "./lib/protocol-categories";
-import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory } from "./lib/protocol-config";
+import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
+import { LayoutGrid } from 'lucide-react';
 
 interface DailyData {
   formattedDay: string;
@@ -456,12 +457,48 @@ const MainContent = (): JSX.Element => {
           <Skeleton className="h-8 sm:h-10 w-40 sm:w-48 mx-auto" />
         </div>
       ) : (
-        <h1 className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-          {protocol === "all"
-            ? "Overview"
-            : getProtocolName(protocol)}{" "}
-          Dashboard
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
+          {protocol === "all" ? (
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            </div>
+          ) : (
+            (() => {
+              const protocolConfig = getProtocolById(protocol);
+              if (protocolConfig) {
+                return (
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-muted/10 ring-1 ring-border">
+                    <img 
+                      src={`/src/assets/logos/${protocol}.jpg`}
+                      alt={protocolConfig.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to original icon if logo not found
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-8 h-8 sm:w-10 sm:h-10 bg-muted/10 rounded-lg flex items-center justify-center ring-1 ring-border';
+                          const Icon = protocolConfig.icon;
+                          const iconElement = document.createElement('div');
+                          iconElement.className = 'w-4 h-4 sm:w-5 sm:h-5';
+                          container.appendChild(iconElement);
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              }
+              return null;
+            })()
+          )}
+          <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+            {protocol === "all"
+              ? "Overview"
+              : getProtocolName(protocol)}{" "}
+            Dashboard
+          </h1>
+        </div>
       )}
 
       <MetricCards totalMetrics={totalMetrics} loading={loading} />

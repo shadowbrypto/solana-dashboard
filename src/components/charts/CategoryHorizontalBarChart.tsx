@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { getMutableAllCategories, getMutableProtocolsByCategory } from "../../lib/protocol-config";
+import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "../../lib/protocol-config";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 type MetricType = "volume" | "new_users" | "trades" | "fees";
@@ -127,7 +127,8 @@ export function CategoryHorizontalBarChart({
       return {
         name: category,
         value: total,
-        color: categoryColors[index] || `hsl(${index * 120} 70% 50%)`
+        color: categoryColors[index] || `hsl(${index * 120} 70% 50%)`,
+        protocols: protocolsInCategory
       };
     });
 
@@ -202,9 +203,9 @@ export function CategoryHorizontalBarChart({
             layout="vertical"
             margin={{
               top: 20,
-              right: 80,
+              right: 100,
               bottom: 20,
-              left: 20,
+              left: 10,
             }}
           >
             <CartesianGrid
@@ -227,20 +228,21 @@ export function CategoryHorizontalBarChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              width={140}
+              width={100}
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
+                  const categoryData = payload[0].payload;
                   return (
-                    <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
-                      <div className="grid gap-2">
+                    <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+                      <div className="grid gap-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm text-muted-foreground">
-                            {payload[0].payload.name}
+                            {categoryData.name}
                           </span>
                           <span className="text-sm font-medium text-foreground">
-                            {metricFormatters[selectedMetric](payload[0].value as number)}
+                            {metricFormatters[selectedMetric](categoryData.value as number)}
                           </span>
                         </div>
                       </div>
@@ -265,12 +267,90 @@ export function CategoryHorizontalBarChart({
               maxBarSize={30}
             >
               <LabelList
+                dataKey="protocols"
+                position="right"
+                content={(props) => {
+                  const { x, y, width, height, value } = props;
+                  if (!value || !Array.isArray(value)) return null;
+                  
+                  const protocols = value.slice(0, 3);
+                  const avatarSize = 22;
+                  const overlap = 8; // How much avatars overlap
+                  const startX = (x as number) + (width as number) + 10; // Position outside bar with less gap
+                  const centerY = (y as number) + (height as number) / 2;
+                  
+                  return (
+                    <g>
+                      {protocols.map((protocolConfig, index) => {
+                        const avatarX = startX + index * (avatarSize - overlap);
+                        const avatarY = centerY - avatarSize / 2;
+                        
+                        return (
+                          <g key={protocolConfig.id} transform={`translate(${avatarX}, ${avatarY})`} style={{ zIndex: 10 - index }}>
+                            <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
+                              <div style={{
+                                width: `${avatarSize}px`,
+                                height: `${avatarSize}px`,
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'hsl(var(--background))',
+                                border: '1px solid hsl(var(--border))'
+                              }}>
+                                <img 
+                                  src={`/src/assets/logos/${protocolConfig.id.includes('terminal') ? protocolConfig.id.split(' ')[0] : protocolConfig.id}.jpg`}
+                                  alt={protocolConfig.name}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            </foreignObject>
+                          </g>
+                        );
+                      })}
+                      {value.length > 3 && (
+                        <g transform={`translate(${startX + 3 * (avatarSize - overlap)}, ${centerY - avatarSize / 2})`}>
+                          <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
+                            <div style={{
+                              width: `${avatarSize}px`,
+                              height: `${avatarSize}px`,
+                              borderRadius: '8px',
+                              backgroundColor: 'hsl(var(--muted))',
+                              border: '1px solid hsl(var(--border))',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'hsl(var(--muted-foreground))',
+                              fontSize: '10px',
+                              fontWeight: '500'
+                            }}>
+                              +{value.length - 3}
+                            </div>
+                          </foreignObject>
+                        </g>
+                      )}
+                    </g>
+                  );
+                }}
+              />
+              <LabelList
                 dataKey="value"
                 position="right"
+                offset={80}
                 formatter={metricFormatters[selectedMetric]}
                 style={{
-                  fill: "hsl(var(--muted-foreground))",
-                  fontSize: "12px",
+                  fill: "hsl(var(--foreground))",
+                  fontSize: "13px",
+                  fontWeight: "500",
                 }}
               />
               {chartData.map((entry, index) => (

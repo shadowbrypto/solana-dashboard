@@ -122,7 +122,9 @@ export function Layout() {
                 handleProtocolChange('all');
               }}
             >
-              <LayoutGrid className="h-4 w-4" />
+              <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center">
+                <LayoutGrid className="h-4 w-4 text-primary" />
+              </div>
               All Protocols
             </Button>
             
@@ -138,7 +140,9 @@ export function Layout() {
                   )}
                   onClick={() => handleReportChange(page.path)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </div>
                   <span className="flex items-center gap-2">
                     {page.name}
                     {page.beta && (
@@ -161,13 +165,13 @@ export function Layout() {
                 <div key={category.name} className="space-y-1">
                   <Button
                     variant="ghost"
-                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-between px-2"
+                    className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-12 justify-between px-2"
                     onClick={() => setExpandedCategories(prev => ({ ...prev, [category.name]: !isExpanded }))}
                   >
-                    <div className="flex items-center gap-3">
-                      {category.name}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="font-medium">{category.name}</span>
                     </div>
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    {isExpanded ? <ChevronDown className="h-4 w-4 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 flex-shrink-0" />}
                   </Button>
                   {isExpanded && (
                     <div className="ml-4 space-y-1">
@@ -189,7 +193,24 @@ export function Layout() {
                               handleProtocolChange(protocol.id);
                             }}
                           >
-                            <Icon className="h-4 w-4" />
+                            <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
+                              <img 
+                                src={`/src/assets/logos/${protocol.id}.jpg`}
+                                alt={protocol.name} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const container = target.parentElement;
+                                  if (container) {
+                                    container.innerHTML = '';
+                                    container.className = 'w-5 h-5 bg-muted/20 rounded-md flex items-center justify-center';
+                                    const iconEl = document.createElement('div');
+                                    iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M12 8V4H8"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
+                                    container.appendChild(iconEl);
+                                  }
+                                }}
+                              />
+                            </div>
                             {protocol.name}
                           </Button>
                         );
@@ -216,7 +237,9 @@ export function Layout() {
                   )}
                   onClick={() => handleReportChange(report.path)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </div>
                   {report.name}
                 </Button>
               );
@@ -238,7 +261,9 @@ export function Layout() {
                   )}
                   onClick={() => handleReportChange(page.path)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </div>
                   {page.name}
                 </Button>
               );

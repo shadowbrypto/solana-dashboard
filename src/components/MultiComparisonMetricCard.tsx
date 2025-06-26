@@ -51,20 +51,20 @@ export function MultiComparisonMetricCard({
           <div className="p-3 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm font-semibold">Leader</span>
+                <Crown className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm font-semibold text-foreground">Leader</span>
               </div>
-              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300">
+              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30">
                 #{1}
               </Badge>
             </div>
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div 
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full ring-1 ring-white/20"
                   style={{ backgroundColor: winner.color }}
                 />
-                <span className="text-sm font-medium truncate max-w-24">
+                <span className="text-sm font-medium truncate max-w-24 text-foreground">
                   {winner.name}
                 </span>
               </div>
@@ -99,16 +99,16 @@ export function MultiComparisonMetricCard({
                   </span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="w-12 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                     <div 
-                      className="h-full rounded-full transition-all duration-300"
+                      className="h-full rounded-full transition-all duration-300 ease-out"
                       style={{ 
                         width: `${percentage}%`,
                         backgroundColor: item.color 
                       }}
                     />
                   </div>
-                  <span className="text-xs font-semibold w-16 text-right">
+                  <span className="text-xs font-semibold w-16 text-right text-foreground">
                     {formatter(item.value)}
                   </span>
                 </div>

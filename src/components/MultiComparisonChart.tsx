@@ -63,8 +63,8 @@ export function MultiComparisonChart({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium mb-2">{label}</p>
+        <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-medium mb-2 text-foreground">{label}</p>
           <div className="space-y-1">
             {payload
               .sort((a: any, b: any) => b.value - a.value) // Sort by value descending
@@ -82,7 +82,7 @@ export function MultiComparisonChart({
                       />
                       <span className="text-muted-foreground">{protocolName}:</span>
                     </div>
-                    <span className="font-semibold">{formatter(entry.value)}</span>
+                    <span className="font-semibold text-foreground">{formatter(entry.value)}</span>
                   </div>
                 );
               })}
@@ -129,17 +129,21 @@ export function MultiComparisonChart({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={mergedData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                className="stroke-muted/20"
+                horizontal={true}
+                vertical={false}
+              />
               <XAxis 
                 dataKey="formattedDate"
-                tick={{ fontSize: 11 }}
-                className="text-muted-foreground"
+                tick={{ fontSize: 11, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis 
-                tick={{ fontSize: 11 }}
-                className="text-muted-foreground"
+                tick={{ fontSize: 11, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => {
@@ -162,9 +166,15 @@ export function MultiComparisonChart({
                   type="monotone"
                   dataKey={`${protocolData.protocol}_${dataKey}`}
                   stroke={protocolData.color}
-                  strokeWidth={2}
-                  dot={{ fill: protocolData.color, strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, stroke: protocolData.color, strokeWidth: 2, fill: protocolData.color }}
+                  strokeWidth={2.5}
+                  dot={{ fill: protocolData.color, strokeWidth: 0, r: 3 }}
+                  activeDot={{ 
+                    r: 6, 
+                    stroke: protocolData.color, 
+                    strokeWidth: 2, 
+                    fill: "hsl(var(--background))",
+                    className: "drop-shadow-sm"
+                  }}
                   connectNulls={false}
                 />
               ))}

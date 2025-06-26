@@ -616,7 +616,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 <div className="flex items-center gap-2">
                                   <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                                     <img 
-                                      src={`/src/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                      src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
                                       alt={protocol.name} 
                                       className="w-full h-full object-cover"
                                       onError={(e) => {

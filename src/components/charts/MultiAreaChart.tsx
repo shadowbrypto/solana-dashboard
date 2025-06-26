@@ -127,7 +127,7 @@ export function MultiAreaChart({
                     <>
                       <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                         <img 
-                          src={`/src/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
                           alt={subtitle} 
                           className="w-full h-full object-cover"
                           onError={(e) => {

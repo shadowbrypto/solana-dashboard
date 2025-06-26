@@ -703,7 +703,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             </button>
                             <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                               <img 
-                                src={`/src/assets/logos/${protocol.includes('terminal') ? protocol.split(' ')[0] : protocol === 'bull x' ? 'bullx' : protocol}.jpg`}
+                                src={`/assets/logos/${protocol.includes('terminal') ? protocol.split(' ')[0] : protocol === 'bull x' ? 'bullx' : protocol}.jpg`}
                                 alt={protocol} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

@@ -183,7 +183,7 @@ export function Layout() {
                                 style={{ zIndex: category.protocols.length - avatarIndex }}
                               >
                                 <img 
-                                  src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                                  src={`/assets/logos/${getProtocolLogoFilename(protocolId)}`}
                                   alt={protocol.name}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -233,7 +233,7 @@ export function Layout() {
                           >
                             <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
                               <img 
-                                src={`/src/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
                                 alt={protocol.name} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

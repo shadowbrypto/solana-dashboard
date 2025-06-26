@@ -18,7 +18,7 @@ export function ProtocolLogo({
   return (
     <div className={`inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
       <img 
-        src={`/src/assets/logos/${protocolId}.jpg`}
+        src={`/assets/logos/${protocolId}.jpg`}
         alt={protocolName} 
         className="w-full h-full object-contain rounded-full"
         onError={(e) => {

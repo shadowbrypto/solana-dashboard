@@ -766,7 +766,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                             </button>
                             <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                               <img 
-                                src={`/src/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
                                 alt={protocol} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

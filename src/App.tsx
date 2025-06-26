@@ -469,7 +469,7 @@ const MainContent = (): JSX.Element => {
                 return (
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-muted/10 ring-1 ring-border">
                     <img 
-                      src={`/src/assets/logos/${protocol}.jpg`}
+                      src={`/assets/logos/${protocol}.jpg`}
                       alt={protocolConfig.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {

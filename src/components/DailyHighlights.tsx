@@ -566,7 +566,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
                           <Badge variant="outline" className="text-xs font-medium px-2 py-1 flex items-center gap-1.5">
                             <div className="w-3 h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
                               <img 
-                                src={`/src/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
+                                src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
                                 alt={insight.protocol} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

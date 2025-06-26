@@ -112,7 +112,7 @@ export function MultiComparisonMetricCard({
                   </span>
                   <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
                     <img 
-                      src={`/src/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
+                      src={`/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
                       alt={item.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {

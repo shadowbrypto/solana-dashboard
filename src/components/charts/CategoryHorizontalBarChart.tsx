@@ -175,7 +175,7 @@ export function CategoryHorizontalBarChart({
                     <>
                       <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                         <img 
-                          src={`/src/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
                           alt={subtitle} 
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -331,7 +331,7 @@ export function CategoryHorizontalBarChart({
                                 border: '1px solid hsl(var(--border))'
                               }}>
                                 <img 
-                                  src={`/src/assets/logos/${protocolConfig.id.includes('terminal') ? protocolConfig.id.split(' ')[0] : protocolConfig.id}.jpg`}
+                                  src={`/assets/logos/${protocolConfig.id.includes('terminal') ? protocolConfig.id.split(' ')[0] : protocolConfig.id}.jpg`}
                                   alt={protocolConfig.name}
                                   style={{
                                     width: '100%',

@@ -129,7 +129,7 @@ export function HorizontalBarChart({
                     <>
                       <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                         <img 
-                          src={`/src/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
                           alt={subtitle} 
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -230,7 +230,7 @@ export function HorizontalBarChart({
                           border: '1px solid hsl(var(--border))'
                         }}>
                           <img 
-                            src={`/src/assets/logos/${protocolName.includes('terminal') ? protocolName.split(' ')[0] : protocolName === 'bull x' ? 'bullx' : protocolName}.jpg`}
+                            src={`/assets/logos/${protocolName.includes('terminal') ? protocolName.split(' ')[0] : protocolName === 'bull x' ? 'bullx' : protocolName}.jpg`}
                             alt={payload.value}
                             style={{
                               width: '100%',

@@ -45,7 +45,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
             {protocol.id !== 'all' && (
               <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                 <img 
-                  src={`/src/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                  src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
                   alt={protocol.name} 
                   className="w-full h-full object-cover"
                   onError={(e) => {

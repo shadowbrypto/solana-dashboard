@@ -582,14 +582,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               {orderedMetrics.map((metric, index) => (
                 <TableHead 
                   key={metric.key} 
-                  className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 text-xs sm:text-sm ${
-                    draggedColumn === index ? 'opacity-50' : ''
-                  }`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
+                  className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm`}
                 >
                   <div className="flex items-center gap-1 sm:gap-2 justify-end">
                     <span className="truncate">{metric.label}</span>

@@ -859,6 +859,99 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                     .filter(p => p !== 'all')
                     .reduce((sum, p) => sum + (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0), 0);
                 }
+                if (metric.key === 'monthly_growth') {
+                  // Calculate aggregated monthly volume data for all protocols (last 6 months)
+                  const aggregatedMonthlyData: { month: number; value: number }[] = [];
+                  
+                  const last6Months = eachMonthOfInterval({
+                    start: subMonths(date, 5),
+                    end: date
+                  });
+                  
+                  last6Months.forEach((month, index) => {
+                    const monthKey = format(month, 'yyyy-MM');
+                    const monthlyTotal = protocols
+                      .filter(p => p !== 'all')
+                      .reduce((sum, p) => {
+                        const protocolMonthlyData = monthlyVolumeData[p];
+                        return sum + (protocolMonthlyData?.[monthKey] || 0);
+                      }, 0);
+                    
+                    aggregatedMonthlyData.push({
+                      month: index,
+                      value: monthlyTotal
+                    });
+                  });
+                  
+                  // Calculate trend for aggregated data
+                  const getAggregatedTrend = (): 'up' | 'down' | 'neutral' => {
+                    if (aggregatedMonthlyData.length < 2) return 'neutral';
+                    
+                    const firstHalf = aggregatedMonthlyData.slice(0, Math.floor(aggregatedMonthlyData.length / 2));
+                    const secondHalf = aggregatedMonthlyData.slice(Math.floor(aggregatedMonthlyData.length / 2));
+                    
+                    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+                    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+                    
+                    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+                    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+                    return 'neutral';
+                  };
+                  
+                  const trend = getAggregatedTrend();
+                  const percentage = total * 100;
+                  const absPercentage = Math.abs(percentage);
+                  const isPositive = total > 0;
+                  const isNeutral = Math.abs(total) < 0.001;
+                  
+                  return (
+                    <TableCell 
+                      key={metric.key} 
+                      className="text-right font-bold text-xs sm:text-sm"
+                    >
+                      <div className="flex items-center justify-end w-full gap-8">
+                        <div className="w-[50px] h-[20px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={aggregatedMonthlyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                              <Area 
+                                type="monotone" 
+                                dataKey="value" 
+                                stroke={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                strokeWidth={1.5}
+                                fill={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                fillOpacity={0.2}
+                                dot={false}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {!isNeutral && (
+                          <div className={cn(
+                            "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                            isPositive 
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          )}>
+                            {isPositive ? (
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                              </svg>
+                            ) : (
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                              </svg>
+                            )}
+                            {absPercentage.toFixed(2)}%
+                          </div>
+                        )}
+                        {isNeutral && (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </div>
+                    </TableCell>
+                  );
+                }
+                
                 return (
                   <TableCell 
                     key={metric.key} 

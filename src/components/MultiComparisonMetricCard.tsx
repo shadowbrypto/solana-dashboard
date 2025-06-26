@@ -40,42 +40,42 @@ export function MultiComparisonMetricCard({
       switch (index) {
         case 0: // Gold - using emerald/green colors for success/winning
           return {
-            bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50",
-            borderColor: "border-emerald-200 dark:border-emerald-800",
-            rankColor: "text-emerald-700 dark:text-emerald-400"
+            bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20",
+            borderColor: "border-emerald-200 dark:border-emerald-900/30",
+            rankColor: "text-emerald-700 dark:text-emerald-500/80"
           };
         case 1: // Silver - using blue colors
           return {
-            bgColor: "bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/50 dark:to-sky-950/50",
-            borderColor: "border-blue-200 dark:border-blue-800",
-            rankColor: "text-blue-700 dark:text-blue-400"
+            bgColor: "bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/20 dark:to-sky-950/20",
+            borderColor: "border-blue-200 dark:border-blue-900/30",
+            rankColor: "text-blue-700 dark:text-blue-500/80"
           };
         case 2: // Bronze - using orange/amber colors
           return {
-            bgColor: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50",
-            borderColor: "border-orange-200 dark:border-orange-800",
-            rankColor: "text-orange-700 dark:text-orange-400"
+            bgColor: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20",
+            borderColor: "border-orange-200 dark:border-orange-900/30",
+            rankColor: "text-orange-700 dark:text-orange-500/80"
           };
         default:
           return {
-            bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/50 dark:to-slate-950/50",
-            borderColor: "border-gray-200 dark:border-gray-800",
-            rankColor: "text-gray-600 dark:text-gray-400"
+            bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/10 dark:to-slate-950/10",
+            borderColor: "border-gray-200 dark:border-gray-900/20",
+            rankColor: "text-gray-600 dark:text-gray-500/60"
           };
       }
     } else {
       // Only emerald/green for top position when less than 3 protocols
       if (index === 0) {
         return {
-          bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/50 dark:to-green-950/50",
-          borderColor: "border-emerald-200 dark:border-emerald-800",
-          rankColor: "text-emerald-700 dark:text-emerald-400"
+          bgColor: "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20",
+          borderColor: "border-emerald-200 dark:border-emerald-900/30",
+          rankColor: "text-emerald-700 dark:text-emerald-500/80"
         };
       }
       return {
-        bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/50 dark:to-slate-950/50",
-        borderColor: "border-gray-200 dark:border-gray-800",
-        rankColor: "text-gray-600 dark:text-gray-400"
+        bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/10 dark:to-slate-950/10",
+        borderColor: "border-gray-200 dark:border-gray-900/20",
+        rankColor: "text-gray-600 dark:text-gray-500/60"
       };
     }
   };

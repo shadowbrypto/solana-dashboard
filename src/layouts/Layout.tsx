@@ -116,11 +116,7 @@ export function Layout() {
                 "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                 currentProtocol === 'all' && isProtocolPage && "bg-muted text-foreground font-medium"
               )}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleProtocolChange('all');
-              }}
+              onClick={() => handleProtocolChange('all')}
             >
               <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center">
                 <LayoutGrid className="h-4 w-4 text-primary" />
@@ -225,11 +221,7 @@ export function Layout() {
                               "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
                               currentProtocol === protocol.id && isProtocolPage && "bg-muted text-foreground font-medium"
                             )}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleProtocolChange(protocol.id);
-                            }}
+                            onClick={() => handleProtocolChange(protocol.id)}
                           >
                             <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
                               <img 

@@ -757,8 +757,6 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                                 e.stopPropagation();
                                 toggleProtocolVisibility(protocol);
                               }}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onDragStart={(e) => e.preventDefault()}
                               className="opacity-0 hover:opacity-100 transition-opacity duration-200"
                               title={isHidden ? "Show protocol" : "Hide protocol"}
                             >

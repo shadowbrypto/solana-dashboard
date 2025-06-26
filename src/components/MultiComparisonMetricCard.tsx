@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { LucideIcon, Crown } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
 
@@ -34,7 +33,55 @@ export function MultiComparisonMetricCard({
   })).sort((a, b) => b.value - a.value);
 
   const maxValue = protocolValues[0]?.value || 0;
-  const winner = protocolValues[0];
+  
+  // Helper function to get rank styling
+  const getRankStyling = (index: number) => {
+    if (data.length >= 3) {
+      switch (index) {
+        case 0: // Gold
+          return {
+            bgColor: "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20",
+            borderColor: "border-yellow-200/30 dark:border-yellow-700/30",
+            rankColor: "text-yellow-700 dark:text-yellow-400"
+          };
+        case 1: // Silver
+          return {
+            bgColor: "bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/20 dark:to-slate-950/20",
+            borderColor: "border-gray-200/30 dark:border-gray-600/30",
+            rankColor: "text-gray-600 dark:text-gray-400"
+          };
+        case 2: // Bronze
+          return {
+            bgColor: "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20",
+            borderColor: "border-orange-200/30 dark:border-orange-600/30",
+            rankColor: "text-orange-600 dark:text-orange-400"
+          };
+        default:
+          return {
+            bgColor: "bg-muted/20",
+            borderColor: "border-muted/20",
+            rankColor: "text-muted-foreground"
+          };
+      }
+    } else {
+      // Only gold for top position when less than 3 protocols
+      if (index === 0) {
+        return {
+          bgColor: "bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20",
+          borderColor: "border-yellow-200/30 dark:border-yellow-700/30",
+          rankColor: "text-yellow-700 dark:text-yellow-400"
+        };
+      }
+      return {
+        bgColor: "bg-muted/20",
+        borderColor: "border-muted/20",
+        rankColor: "text-muted-foreground"
+      };
+    }
+  };
+
+  // Show maximum 5 protocols
+  const displayProtocols = protocolValues.slice(0, 5);
 
   return (
     <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-lg group">
@@ -46,66 +93,26 @@ export function MultiComparisonMetricCard({
           <span className="text-sm font-medium text-muted-foreground">{title}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
-        {/* Winner highlight */}
-        {winner && (
-          <div className="p-3 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-sm font-semibold text-foreground">Leader</span>
-              </div>
-              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30">
-                #{1}
-              </Badge>
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                  <img 
-                    src={`/src/assets/logos/${getProtocolLogoFilename(winner.protocol)}`}
-                    alt={winner.name} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                        const iconEl = document.createElement('div');
-                        iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                        container.appendChild(iconEl);
-                      }
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-medium truncate max-w-24 text-foreground">
-                  {winner.name}
-                </span>
-              </div>
-              <span className="text-lg font-bold text-foreground">
-                {formatter(winner.value)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* All protocols list */}
-        <div className="space-y-2 max-h-32 overflow-y-auto">
-          {protocolValues.map((item, index) => {
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          {displayProtocols.map((item, index) => {
             const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-            const isWinner = index === 0;
+            const styling = getRankStyling(index);
             
             return (
-              <div key={item.protocol} className={cn(
-                "flex items-center justify-between p-2 rounded-lg transition-colors",
-                isWinner ? "bg-muted/50" : "hover:bg-muted/30"
-              )}>
+              <div 
+                key={item.protocol} 
+                className={cn(
+                  "flex items-center justify-between p-2 rounded-lg border transition-all duration-200 hover:scale-[1.02]",
+                  styling.bgColor,
+                  styling.borderColor
+                )}
+              >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="text-xs text-muted-foreground w-4">
+                  <span className={cn("text-xs font-semibold w-6 flex-shrink-0", styling.rankColor)}>
                     #{index + 1}
                   </span>
-                  <div className="w-3 h-3 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
+                  <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
                     <img 
                       src={`/src/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
                       alt={item.name} 
@@ -115,29 +122,29 @@ export function MultiComparisonMetricCard({
                         const container = target.parentElement;
                         if (container) {
                           container.innerHTML = '';
-                          container.className = 'w-3 h-3 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
+                          container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
                           const iconEl = document.createElement('div');
-                          iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                          iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
                           container.appendChild(iconEl);
                         }
                       }}
                     />
                   </div>
-                  <span className="text-xs font-medium truncate max-w-16">
+                  <span className="text-xs font-medium truncate min-w-0">
                     {item.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className="w-12 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                     <div 
-                      className="h-full rounded-full transition-all duration-300 ease-out"
+                      className="h-full rounded-full transition-all duration-500 ease-out"
                       style={{ 
                         width: `${percentage}%`,
                         backgroundColor: item.color 
                       }}
                     />
                   </div>
-                  <span className="text-xs font-semibold w-16 text-right text-foreground">
+                  <span className="text-xs font-bold w-16 text-right text-foreground">
                     {formatter(item.value)}
                   </span>
                 </div>

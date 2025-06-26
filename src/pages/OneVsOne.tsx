@@ -445,39 +445,32 @@ export default function OneVsOne() {
       {selectedProtocols.length >= 2 && (
         <div className="space-y-6 mt-6">
           {/* Metric Comparison Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <MultiComparisonMetricCard
-              title="Total Volume"
+              title="Lifetime Volume"
               icon={DollarSign}
               data={chartData}
               dataKey="total_volume_usd"
               formatter={formatCurrency}
             />
             <MultiComparisonMetricCard
-              title="Total Users"
+              title="Lifetime Users"
               icon={Users}
               data={chartData}
               dataKey="numberOfNewUsers"
               formatter={formatNumber}
             />
             <MultiComparisonMetricCard
-              title="Total Trades"
+              title="Lifetime Trades"
               icon={Activity}
               data={chartData}
               dataKey="daily_trades"
               formatter={formatNumber}
             />
-            <MultiComparisonMetricCard
-              title="Total Fees"
-              icon={TrendingUp}
-              data={chartData}
-              dataKey="total_fees_usd"
-              formatter={formatCurrency}
-            />
           </div>
 
           {/* Time Series Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <MultiComparisonChart
               title="Volume Comparison"
               data={chartData}
@@ -497,13 +490,6 @@ export default function OneVsOne() {
               data={chartData}
               dataKey="trades"
               formatter={formatNumber}
-              timeframe={timeframe}
-            />
-            <MultiComparisonChart
-              title="Fees Comparison"
-              data={chartData}
-              dataKey="fees_usd"
-              formatter={formatCurrency}
               timeframe={timeframe}
             />
           </div>

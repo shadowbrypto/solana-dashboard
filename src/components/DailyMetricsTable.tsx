@@ -847,17 +847,28 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
-                        <Badge 
-                          variant={isNeutral ? "secondary" : isPositive ? "default" : "destructive"}
-                          className={cn(
-                            "h-5 px-2 text-xs font-medium border -ml-8",
-                            isNeutral && "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
-                            isPositive && !isNeutral && "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
-                            !isPositive && !isNeutral && "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                          )}
-                        >
-                          {isNeutral ? "0.00%" : `${isPositive ? "+" : ""}${absPercentage.toFixed(2)}%`}
-                        </Badge>
+                        {!isNeutral && (
+                          <div className={cn(
+                            "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                            isPositive 
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          )}>
+                            {isPositive ? (
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                              </svg>
+                            ) : (
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                              </svg>
+                            )}
+                            {absPercentage.toFixed(2)}%
+                          </div>
+                        )}
+                        {isNeutral && (
+                          <span className="text-muted-foreground text-xs -ml-8">—</span>
+                        )}
                       </div>
                     </TableCell>
                   );

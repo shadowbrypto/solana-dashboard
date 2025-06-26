@@ -831,7 +831,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       key={metric.key} 
                       className="text-right font-bold text-xs sm:text-sm"
                     >
-                      <div className="flex items-center justify-end gap-8">
+                      <div className="flex items-center justify-between w-full">
                         <div className="w-[50px] h-[20px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={aggregatedWeeklyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
@@ -850,7 +850,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         <Badge 
                           variant={isNeutral ? "secondary" : isPositive ? "default" : "destructive"}
                           className={cn(
-                            "h-5 px-2 text-xs font-medium border",
+                            "h-5 px-2 text-xs font-medium border -ml-8",
                             isNeutral && "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
                             isPositive && !isNeutral && "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
                             !isPositive && !isNeutral && "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"

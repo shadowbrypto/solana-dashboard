@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone } from 'lucide-react';
-import { protocolConfigs } from '../lib/protocol-config';
+import { protocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { getProtocolStats, getTotalProtocolStats } from '../lib/protocol';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
 import { getProtocolColor } from '../lib/colors';
@@ -230,7 +230,24 @@ export default function OneVsOne() {
                     return (
                       <SelectItem key={protocol.id} value={protocol.id} className="relative pr-36">
                         <div className="flex items-center gap-2">
-                          <Icon className="w-4 h-4" />
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/src/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                              alt={protocol.name} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
                           <span>{protocol.name}</span>
                         </div>
                         <Badge 
@@ -341,7 +358,24 @@ export default function OneVsOne() {
                     <Card key={protocolId} className="group">
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2">
-                          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                              alt={data?.name || protocolId} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
                           <h4 className="font-medium text-sm flex-1">{data?.name || protocolId}</h4>
                           <Badge variant="outline" className={`text-xs ${getCategoryBadgeStyle(getProtocolCategory(protocolId) || '')}`}>
                             {getProtocolCategory(protocolId)}

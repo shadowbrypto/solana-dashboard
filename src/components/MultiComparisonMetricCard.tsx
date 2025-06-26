@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { LucideIcon, Crown } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { getProtocolLogoFilename } from '../lib/protocol-config';
 
 interface ProtocolData {
   protocol: string;
@@ -60,10 +61,24 @@ export function MultiComparisonMetricCard({
             </div>
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full ring-1 ring-white/20"
-                  style={{ backgroundColor: winner.color }}
-                />
+                <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                  <img 
+                    src={`/src/assets/logos/${getProtocolLogoFilename(winner.protocol)}`}
+                    alt={winner.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = '';
+                        container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                        const iconEl = document.createElement('div');
+                        iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                        container.appendChild(iconEl);
+                      }
+                    }}
+                  />
+                </div>
                 <span className="text-sm font-medium truncate max-w-24 text-foreground">
                   {winner.name}
                 </span>
@@ -90,10 +105,24 @@ export function MultiComparisonMetricCard({
                   <span className="text-xs text-muted-foreground w-4">
                     #{index + 1}
                   </span>
-                  <div 
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  />
+                  <div className="w-3 h-3 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
+                    <img 
+                      src={`/src/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
+                      alt={item.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-3 h-3 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
+                          const iconEl = document.createElement('div');
+                          iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                          container.appendChild(iconEl);
+                        }
+                      }}
+                    />
+                  </div>
                   <span className="text-xs font-medium truncate max-w-16">
                     {item.name}
                   </span>

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
-import { getMutableProtocolConfigs } from '../lib/protocol-config';
+import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 
 // Generate protocols array from centralized config
@@ -195,7 +195,7 @@ export function Layout() {
                           >
                             <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
                               <img 
-                                src={`/src/assets/logos/${protocol.id}.jpg`}
+                                src={`/src/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
                                 alt={protocol.name} 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

@@ -92,6 +92,27 @@ export const getProtocolName = (protocolId: string): string => {
   return protocol ? protocol.name : protocolId;
 };
 
+// Centralized logo mapping for terminal protocols and special cases
+export const getProtocolLogoFilename = (protocolId: string): string => {
+  // Handle terminal protocols - use base protocol logo
+  if (protocolId.includes('terminal')) {
+    const baseName = protocolId.split(' ')[0];
+    return `${baseName}.jpg`;
+  }
+  
+  // Handle special cases
+  switch (protocolId.toLowerCase()) {
+    case 'bull x':
+      return 'bullx.jpg';
+    case 'bonkbot terminal':
+      return 'bonkbot.jpg';
+    case 'nova terminal':
+      return 'nova.jpg';
+    default:
+      return `${protocolId.toLowerCase()}.jpg`;
+  }
+};
+
 // Generate protocol categories for backward compatibility
 export const generateProtocolCategories = () => {
   const categories = getAllCategories();

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { getProtocolById } from "../../lib/protocol-config";
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -143,9 +144,9 @@ export function HorizontalBarChart({
             layout="vertical"
             margin={{
               top: 0,
-              right: 60,
+              right: 100,
               bottom: 0,
-              left: 20,
+              left: 50,
             }}
           >
             <CartesianGrid
@@ -167,7 +168,62 @@ export function HorizontalBarChart({
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={(props) => {
+                const { x, y, payload } = props;
+                // Try to find protocol by name (payload.value contains the protocol name)
+                const protocolName = payload.value?.toLowerCase();
+                const protocolConfig = getProtocolById(protocolName);
+                
+                return (
+                  <g transform={`translate(${x},${y})`}>
+                    <text 
+                      x={-30} 
+                      y={4} 
+                      textAnchor="end" 
+                      fill="hsl(var(--muted-foreground))" 
+                      fontSize="11"
+                    >
+                      {payload.value}
+                    </text>
+                    <g transform={`translate(${-25}, ${-8})`}>
+                      <foreignObject x="0" y="0" width="16" height="16">
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))'
+                        }}>
+                          <img 
+                            src={`/src/assets/logos/${protocolName.includes('terminal') ? protocolName.split(' ')[0] : protocolName === 'bull x' ? 'bullx' : protocolName}.jpg`}
+                            alt={payload.value}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
+                        </div>
+                      </foreignObject>
+                    </g>
+                  </g>
+                );
+              }}
               width={100}
             />
             <Tooltip
@@ -208,10 +264,12 @@ export function HorizontalBarChart({
               <LabelList
                 dataKey="value"
                 position="right"
+                offset={10}
                 formatter={valueFormatter}
                 style={{
-                  fill: "hsl(var(--muted-foreground))",
+                  fill: "hsl(var(--foreground))",
                   fontSize: "12px",
+                  fontWeight: "500",
                 }}
               />
               {filteredData.map((entry, index) => (

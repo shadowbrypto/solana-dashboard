@@ -17,7 +17,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { MonthPicker } from "./MonthPicker";
 import { getDailyMetrics } from "../lib/protocol";
-import { getMutableAllCategories, getMutableProtocolsByCategory } from "../lib/protocol-config";
+import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 
@@ -764,6 +764,24 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
                             >
                               {isHidden ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
                             </button>
+                            <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                              <img 
+                                src={`/src/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                                alt={protocol} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const container = target.parentElement;
+                                  if (container) {
+                                    container.innerHTML = '';
+                                    container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                    const iconEl = document.createElement('div');
+                                    iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                    container.appendChild(iconEl);
+                                  }
+                                }}
+                              />
+                            </div>
                             <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
                             {topProtocols.includes(protocol) && (
                               <Badge 

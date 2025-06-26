@@ -45,8 +45,8 @@ export interface ProtocolConfigMutable {
 // 2. The protocol will automatically appear in the navigation and be categorized correctly
 export const protocolConfigs: ProtocolConfig[] = [
   // Telegram Bots
-  { id: 'bonkbot', name: 'BonkBot', icon: BonkBotIcon, category: 'Telegram Bots' },
   { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Telegram Bots' },
+  { id: 'bonkbot', name: 'BonkBot', icon: BonkBotIcon, category: 'Telegram Bots' },
   { id: 'bloom', name: 'Bloom', icon: BloomIcon, category: 'Telegram Bots' },
   { id: 'nova', name: 'Nova', icon: NovaIcon, category: 'Telegram Bots' },
   { id: 'soltradingbot', name: 'SolTradingBot', icon: SolTradingBotIcon, category: 'Telegram Bots' },

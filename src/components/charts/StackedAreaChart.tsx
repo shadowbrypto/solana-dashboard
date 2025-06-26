@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import {
   Select,
   SelectContent,
@@ -180,7 +181,38 @@ export function StackedAreaChart({
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              {(() => {
+                // Check if subtitle is a protocol name
+                const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                if (protocolMatch) {
+                  return (
+                    <>
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img 
+                          src={`/src/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                          alt={subtitle} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            const container = target.parentElement;
+                            if (container) {
+                              container.innerHTML = '';
+                              container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                              const iconEl = document.createElement('div');
+                              iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                              container.appendChild(iconEl);
+                            }
+                          }}
+                        />
+                      </div>
+                      {subtitle}
+                    </>
+                  );
+                }
+                return subtitle;
+              })()}
+            </p>
           )}
         </div>
         <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>

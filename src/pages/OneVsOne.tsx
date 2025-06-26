@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone } from 'lucide-react';
-import { protocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
+import { protocolConfigs, getProtocolLogoFilename, getProtocolsByCategory } from '../lib/protocol-config';
 import { getProtocolStats, getTotalProtocolStats } from '../lib/protocol';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
 import { getProtocolColor } from '../lib/colors';
@@ -96,12 +96,21 @@ export default function OneVsOne() {
     setLoadingProtocols(new Set());
   }, []);
 
-  // Quick preset comparisons
-  const presets = [
-    { name: 'Top Telegram Bots', protocols: ['trojan', 'bonkbot', 'maestro'] },
-    { name: 'Trading Terminals', protocols: ['photon', 'bullx'] },
-    { name: 'Mobile Apps', protocols: ['moonshot', 'vector', 'slingshot', 'fomo'] }
-  ];
+  // Quick preset comparisons - dynamically generated from all protocols in each category
+  const presets = useMemo(() => [
+    { 
+      name: 'Top Telegram Bots', 
+      protocols: getProtocolsByCategory('Telegram Bots').map(p => p.id)
+    },
+    { 
+      name: 'Trading Terminals', 
+      protocols: getProtocolsByCategory('Trading Terminals').map(p => p.id)
+    },
+    { 
+      name: 'Mobile Apps', 
+      protocols: getProtocolsByCategory('Mobile Apps').map(p => p.id)
+    }
+  ], []);
 
   const loadPreset = useCallback(async (protocolIds: string[]) => {
     clearAll();
@@ -316,6 +325,32 @@ export default function OneVsOne() {
                             <div className="flex-1 text-left">
                               <h4 className="text-sm font-medium leading-none">{preset.name}</h4>
                             </div>
+                            <div className="flex -space-x-1">
+                              {preset.protocols.slice(0, 3).map((protocolId, avatarIndex) => (
+                                <div 
+                                  key={protocolId}
+                                  className="w-6 h-6 rounded-full border-2 border-background bg-muted overflow-hidden"
+                                  style={{ zIndex: preset.protocols.length - avatarIndex }}
+                                >
+                                  <img 
+                                    src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                                    alt={protocolConfigs.find(p => p.id === protocolId)?.name || protocolId}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      const container = target.parentElement;
+                                      if (container) {
+                                        container.innerHTML = '';
+                                        container.className = 'w-6 h-6 rounded-full border-2 border-background bg-muted/50 flex items-center justify-center';
+                                        const iconEl = document.createElement('div');
+                                        iconEl.innerHTML = '<svg class="h-3 w-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                        container.appendChild(iconEl);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -384,7 +419,7 @@ export default function OneVsOne() {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeProtocol(protocolId)}
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity -mr-2"
+                            className="h-6 w-6 -mr-2"
                           >
                             <X className="h-3 w-3" />
                           </Button>

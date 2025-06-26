@@ -170,6 +170,44 @@ export function Layout() {
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className="font-medium">{category.name}</span>
+                      {/* Stacked Protocol Icons Preview - Only show when category is collapsed */}
+                      {!isExpanded && (
+                        <div className="flex -space-x-1">
+                          {category.protocols.slice(0, 3).map((protocolId, avatarIndex) => {
+                            const protocol = protocols.find(p => p.id === protocolId);
+                            if (!protocol) return null;
+                            return (
+                              <div 
+                                key={protocolId}
+                                className="w-4 h-4 rounded-full border border-background bg-muted overflow-hidden"
+                                style={{ zIndex: category.protocols.length - avatarIndex }}
+                              >
+                                <img 
+                                  src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                                  alt={protocol.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const container = target.parentElement;
+                                    if (container) {
+                                      container.innerHTML = '';
+                                      container.className = 'w-4 h-4 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                      const iconEl = document.createElement('div');
+                                      iconEl.innerHTML = '<svg class="h-2 w-2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                      container.appendChild(iconEl);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                          {category.protocols.length > 3 && (
+                            <div className="w-4 h-4 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                              +{category.protocols.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {isExpanded ? <ChevronDown className="h-4 w-4 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 flex-shrink-0" />}
                   </Button>

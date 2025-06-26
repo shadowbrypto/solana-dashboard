@@ -709,11 +709,11 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-4 px-3 sm:px-6 text-xs sm:text-sm transition-colors">
                   <div className="flex items-center justify-between w-full">
                     <span>Total</span>
-                    <div className="flex items-center gap-8">
-                      <div className="w-[60px] h-[20px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={(() => {
-                            // Calculate aggregated weekly volume data for all protocols
+                    <div className="w-[60px] h-[20px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={(() => {
+                          // Calculate aggregated weekly volume data for all protocols
+                          try {
                             return last7Days.map((day, index) => {
                               const dateKey = format(day, 'yyyy-MM-dd');
                               const dailyTotal = protocols.reduce((sum, protocol) => {
@@ -726,12 +726,16 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 value: dailyTotal
                               };
                             });
-                          })()} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke={(() => {
-                                // Calculate trend for total
+                          } catch (error) {
+                            return [];
+                          }
+                        })()} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                          <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke={(() => {
+                              // Calculate trend for total
+                              try {
                                 const totalWeeklyData = last7Days.map((day, index) => {
                                   const dateKey = format(day, 'yyyy-MM-dd');
                                   const dailyTotal = protocols.reduce((sum, protocol) => {
@@ -752,10 +756,14 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 if (secondHalfAvg > firstHalfAvg * 1.1) return "#22c55e";
                                 if (secondHalfAvg < firstHalfAvg * 0.9) return "#ef4444";
                                 return "#6b7280";
-                              })()}
-                              strokeWidth={1.5}
-                              fill={(() => {
-                                // Calculate trend for total
+                              } catch (error) {
+                                return "#6b7280";
+                              }
+                            })()}
+                            strokeWidth={1.5}
+                            fill={(() => {
+                              // Calculate trend for total
+                              try {
                                 const totalWeeklyData = last7Days.map((day, index) => {
                                   const dateKey = format(day, 'yyyy-MM-dd');
                                   const dailyTotal = protocols.reduce((sum, protocol) => {
@@ -776,68 +784,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 if (secondHalfAvg > firstHalfAvg * 1.1) return "#22c55e";
                                 if (secondHalfAvg < firstHalfAvg * 0.9) return "#ef4444";
                                 return "#6b7280";
-                              })()}
-                              fillOpacity={0.2}
-                              dot={false}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {(() => {
-                        // Calculate week-over-week growth for display
-                        const currentWeekTotal = last7Days.reduce((sum, day) => {
-                          const dateKey = format(day, 'yyyy-MM-dd');
-                          return sum + protocols.reduce((daySum, protocol) => {
-                            const protocolVolumeData = volumeData[protocol];
-                            return daySum + (protocolVolumeData?.[dateKey] || 0);
-                          }, 0);
-                        }, 0);
-                        
-                        // Calculate previous week total (7 days before current week)
-                        const previousWeekStart = subDays(last7Days[0], 7);
-                        const previousWeek = eachDayOfInterval({
-                          start: previousWeekStart,
-                          end: subDays(last7Days[last7Days.length - 1], 7)
-                        });
-                        
-                        const previousWeekTotal = previousWeek.reduce((sum, day) => {
-                          const dateKey = format(day, 'yyyy-MM-dd');
-                          return sum + protocols.reduce((daySum, protocol) => {
-                            const protocolVolumeData = volumeData[protocol];
-                            return daySum + (protocolVolumeData?.[dateKey] || 0);
-                          }, 0);
-                        }, 0);
-                        
-                        const growth = previousWeekTotal === 0 ? 0 : (currentWeekTotal - previousWeekTotal) / previousWeekTotal;
-                        const percentage = growth * 100;
-                        const absPercentage = Math.abs(percentage);
-                        const isPositive = growth > 0;
-                        const isNeutral = Math.abs(growth) < 0.001;
-                        
-                        if (isNeutral) {
-                          return <span className="text-muted-foreground text-xs">—</span>;
-                        }
-                        
-                        return (
-                          <div className={cn(
-                            "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-                            isPositive 
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                          )}>
-                            {isPositive ? (
-                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                              </svg>
-                            ) : (
-                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                              </svg>
-                            )}
-                            {absPercentage.toFixed(1)}%
-                          </div>
-                        );
-                      })()}
+                              } catch (error) {
+                                return "#6b7280";
+                              }
+                            })()}
+                            fillOpacity={0.2}
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </TableCell>

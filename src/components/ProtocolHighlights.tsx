@@ -15,6 +15,7 @@ import {
   Award,
   Activity
 } from 'lucide-react';
+import { getProtocolLogoFilename } from '../lib/protocol-config';
 
 interface ProtocolHighlightsProps {
   title: string;
@@ -282,7 +283,40 @@ export function ProtocolHighlights({
     return (
       <Card className="bg-card border-border rounded-xl">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <CardTitle className="text-base font-medium text-card-foreground flex items-center gap-2">
+            {(() => {
+              // Extract protocol ID from title (e.g., "BonkBot Highlights" -> "bonkbot")
+              const protocolId = title.toLowerCase()
+                .replace(' highlights', '')
+                .replace(' performance', '')
+                .replace(' metrics', '')
+                .replace(' ', '');
+              
+              return (
+                <>
+                  <div className="w-6 h-6 bg-muted/10 rounded-lg overflow-hidden ring-1 ring-border/20">
+                    <img 
+                      src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                      alt={title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-6 h-6 bg-muted/20 rounded-lg flex items-center justify-center';
+                          const iconEl = document.createElement('div');
+                          iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                          container.appendChild(iconEl);
+                        }
+                      }}
+                    />
+                  </div>
+                  {title}
+                </>
+              );
+            })()}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -303,7 +337,40 @@ export function ProtocolHighlights({
     return (
       <Card className="bg-card border-border rounded-xl">
         <CardHeader className="border-b">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+          <CardTitle className="text-base font-medium text-card-foreground flex items-center gap-2">
+            {(() => {
+              // Extract protocol ID from title (e.g., "BonkBot Highlights" -> "bonkbot")
+              const protocolId = title.toLowerCase()
+                .replace(' highlights', '')
+                .replace(' performance', '')
+                .replace(' metrics', '')
+                .replace(' ', '');
+              
+              return (
+                <>
+                  <div className="w-6 h-6 bg-muted/10 rounded-lg overflow-hidden ring-1 ring-border/20">
+                    <img 
+                      src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                      alt={title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-6 h-6 bg-muted/20 rounded-lg flex items-center justify-center';
+                          const iconEl = document.createElement('div');
+                          iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                          container.appendChild(iconEl);
+                        }
+                      }}
+                    />
+                  </div>
+                  {title}
+                </>
+              );
+            })()}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="text-center text-muted-foreground py-8">
@@ -320,7 +387,40 @@ export function ProtocolHighlights({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-base font-medium">{title}</CardTitle>
+            <CardTitle className="text-base font-medium flex items-center gap-2">
+              {(() => {
+                // Extract protocol ID from title (e.g., "BonkBot Highlights" -> "bonkbot")
+                const protocolId = title.toLowerCase()
+                  .replace(' highlights', '')
+                  .replace(' performance', '')
+                  .replace(' metrics', '')
+                  .replace(' ', '');
+                
+                return (
+                  <>
+                    <div className="w-6 h-6 bg-muted/10 rounded-lg overflow-hidden ring-1 ring-border/20">
+                      <img 
+                        src={`/src/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                        alt={title} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const container = target.parentElement;
+                          if (container) {
+                            container.innerHTML = '';
+                            container.className = 'w-6 h-6 bg-muted/20 rounded-lg flex items-center justify-center';
+                            const iconEl = document.createElement('div');
+                            iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                            container.appendChild(iconEl);
+                          }
+                        }}
+                      />
+                    </div>
+                    {title}
+                  </>
+                );
+              })()}
+            </CardTitle>
             {subtitle ? (
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             ) : (

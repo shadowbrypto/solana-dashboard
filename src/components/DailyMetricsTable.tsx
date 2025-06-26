@@ -348,6 +348,25 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
 
   useEffect(() => {
+    // Debug: Add global click listener to detect if events are being captured
+    const globalClickHandler = (e: MouseEvent) => {
+      console.log('Global click detected on Daily Report page:', e.target);
+    };
+    
+    const globalWheelHandler = (e: WheelEvent) => {
+      console.log('Global wheel event detected on Daily Report page');
+    };
+    
+    document.addEventListener('click', globalClickHandler, true);
+    document.addEventListener('wheel', globalWheelHandler, true);
+    
+    return () => {
+      document.removeEventListener('click', globalClickHandler, true);
+      document.removeEventListener('wheel', globalWheelHandler, true);
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       setTopProtocols([]);
       try {
@@ -455,17 +474,21 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   const downloadReport = async () => {
+    console.log('Download report clicked - checking if this interferes with navigation');
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
     
     if (tableElement) {
       // Check element dimensions
       const rect = tableElement.getBoundingClientRect();
+      console.log('Table element dimensions:', rect);
       
       if (rect.width === 0 || rect.height === 0) {
+        console.log('Table element has zero dimensions, skipping dom-to-image');
         return;
       }
       
       try {
+        console.log('Starting dom-to-image conversion...');
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
@@ -486,6 +509,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           )
         ]) as string;
         
+        console.log('Dom-to-image conversion completed');
         // Create download link
         const link = document.createElement('a');
         link.download = `Daily Report - ${format(date, 'dd.MM')}.png`;
@@ -493,7 +517,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        console.log('Download completed');
       } catch (error) {
+        console.error('Dom-to-image error:', error);
         // Handle error silently or show user-friendly message
       }
     }
@@ -684,6 +710,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={(e) => {
+                                console.log('Protocol visibility button clicked');
                                 e.stopPropagation();
                                 toggleProtocolVisibility(protocol);
                               }}

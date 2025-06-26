@@ -60,7 +60,14 @@ export function Layout() {
   };
 
   const handleReportChange = (path: string) => {
-    navigate(path);
+    console.log('Navigation attempt:', {
+      from: location.pathname,
+      to: path,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Force navigation with replace to clear any state issues
+    navigate(path, { replace: true });
   };
 
   return (

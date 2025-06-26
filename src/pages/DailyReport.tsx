@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
@@ -13,7 +13,9 @@ export default function DailyReport() {
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
-  const protocols: Protocol[] = [...getAllProtocols(), "all"] as Protocol[];
+  
+  // Memoize protocols to prevent infinite re-renders
+  const protocols = useMemo(() => [...getAllProtocols(), "all"] as Protocol[], []);
 
   useEffect(() => {
     // In a real app, you would fetch data here

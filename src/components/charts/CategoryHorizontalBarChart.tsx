@@ -376,7 +376,7 @@ export function CategoryHorizontalBarChart({
               <LabelList
                 dataKey="value"
                 position="right"
-                offset={120}
+                offset={90}
                 formatter={metricFormatters[selectedMetric]}
                 style={{
                   fill: "hsl(var(--foreground))",

@@ -306,34 +306,12 @@ export function VolumeMilestoneChart({
               maxBarSize={60}
             >
               <LabelList
-                content={({ x, y, width, height, payload }) => {
-                  const data = payload as MilestoneData;
-                  if (!data || !data.date) return null;
-                  
-                  return (
-                    <g>
-                      <text
-                        x={x + width / 2}
-                        y={y - 25}
-                        fill="hsl(var(--foreground))"
-                        fontSize="12"
-                        fontWeight="500"
-                        textAnchor="middle"
-                      >
-                        {formatDate(data.date)}
-                      </text>
-                      <text
-                        x={x + width / 2}
-                        y={y - 10}
-                        fill="hsl(var(--primary))"
-                        fontSize="14"
-                        fontWeight="600"
-                        textAnchor="middle"
-                      >
-                        {data.daysSincePrevious} days
-                      </text>
-                    </g>
-                  );
+                dataKey="daysSincePrevious"
+                position="top"
+                style={{
+                  fill: "hsl(var(--foreground))",
+                  fontSize: "14px",
+                  fontWeight: "600",
                 }}
               />
             </Bar>

@@ -101,7 +101,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 (result) => toast({
                   variant: "success",
                   title: "Data Sync Complete",
-                  description: `Successfully downloaded and uploaded ${result.csvFilesFetched} files to database`,
+                  description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
                 })
               )}
               disabled={!canSync || isLoading}
@@ -200,7 +200,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               (result) => toast({
                 variant: "success",
                 title: "Data Sync Complete",
-                description: `Successfully downloaded and uploaded ${result.csvFilesFetched} files to database`,
+                description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
               })
             )}
             disabled={!canSync || isLoading}

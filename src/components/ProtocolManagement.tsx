@@ -195,7 +195,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Data Refresh Complete",
-        description: `Fetched ${result.csvFilesFetched} files successfully!`,
+        description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
       });
     } catch (error) {
       toast({

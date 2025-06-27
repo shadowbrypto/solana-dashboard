@@ -12,7 +12,7 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -192,37 +192,6 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     return selectedMetricOption.format(value);
   };
   
-  const getHeatMapColor = (value: number, maxValue: number): { bg: string; text: string } => {
-    if (value === 0) return { bg: 'bg-gray-50 dark:bg-gray-900', text: 'text-gray-400 dark:text-gray-600' };
-    
-    const intensity = Math.min(value / maxValue, 1);
-    const level = Math.floor(intensity * 8);
-    
-    // Very subtle heat map progression
-    const colors = [
-      { bg: 'bg-green-50 dark:bg-green-950/20', text: 'text-green-700 dark:text-green-300' },
-      { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-200' },
-      { bg: 'bg-green-200 dark:bg-green-800/40', text: 'text-green-900 dark:text-green-100' },
-      { bg: 'bg-green-300 dark:bg-green-700/50', text: 'text-green-900 dark:text-green-100' },
-      { bg: 'bg-yellow-200 dark:bg-yellow-800/50', text: 'text-yellow-900 dark:text-yellow-100' },
-      { bg: 'bg-yellow-300 dark:bg-yellow-700/60', text: 'text-yellow-900 dark:text-yellow-100' },
-      { bg: 'bg-orange-200 dark:bg-orange-800/50', text: 'text-orange-900 dark:text-orange-100' },
-      { bg: 'bg-orange-300 dark:bg-orange-700/60', text: 'text-orange-900 dark:text-orange-100' },
-      { bg: 'bg-red-200 dark:bg-red-800/50', text: 'text-red-900 dark:text-red-100' }
-    ];
-    
-    return colors[level] || colors[0];
-  };
-  
-  const getMaxValue = (): number => {
-    let max = 0;
-    Object.values(dailyData).forEach(protocolData => {
-      Object.values(protocolData).forEach(value => {
-        if (value > max) max = value;
-      });
-    });
-    return max;
-  };
   
   const getWeeklyVolumeData = (protocolId: string) => {
     const protocolVolumeData = volumeData[protocolId];
@@ -250,6 +219,50 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
     if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
     return 'neutral';
+  };
+
+  const calculateWeekOnWeekGrowth = (protocolId: string): number => {
+    // Get current week total (last 7 days)
+    const currentWeekTotal = last7Days.reduce((sum, day) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const protocolData = dailyData[protocolId];
+      return sum + (protocolData?.[dateKey] || 0);
+    }, 0);
+
+    // Get previous week total (7 days before the current week)
+    const previousWeekStart = subDays(last7Days[0], 7);
+    const previousWeekEnd = subDays(last7Days[0], 1);
+    const previousWeekDays = eachDayOfInterval({ start: previousWeekStart, end: previousWeekEnd });
+
+    // For now, we'll calculate based on the trend within the current week
+    // This is a simplified approach since we don't have previous week data loaded
+    const data = getWeeklyVolumeData(protocolId);
+    if (data.length < 2) return 0;
+
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+
+    if (firstHalfAvg === 0) return 0;
+    return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg);
+  };
+
+  const calculateCategoryWeekOnWeekGrowth = (categoryName: string): number => {
+    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    const data = getCategoryVolumeData(categoryName);
+    
+    if (data.length < 2) return 0;
+
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+
+    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+
+    if (firstHalfAvg === 0) return 0;
+    return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg);
   };
   
   const getCategoryVolumeData = (categoryName: string) => {
@@ -287,6 +300,131 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     return 'neutral';
   };
 
+  // New functions for weekly trend charts
+  const getWeeklyAverage = (protocolId: string): number => {
+    const protocolData = dailyData[protocolId];
+    if (!protocolData) return 0;
+    
+    let totalSum = 0;
+    let dayCount = 0;
+    
+    last7Days.forEach((day) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const value = protocolData[dateKey] || 0;
+      totalSum += value;
+      dayCount++;
+    });
+    
+    return dayCount > 0 ? totalSum / dayCount : 0;
+  };
+
+  const getWeeklyMetricData = (protocolId: string) => {
+    const protocolData = dailyData[protocolId];
+    if (!protocolData) return [];
+    
+    const weeklyAverage = getWeeklyAverage(protocolId);
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const value = protocolData[dateKey] || 0;
+      return {
+        day: index,
+        date: format(day, 'MMM d'),
+        value: value,
+        average: weeklyAverage
+      };
+    });
+  };
+
+  const getCategoryWeeklyAverage = (categoryName: string): number => {
+    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    
+    let totalSum = 0;
+    let dayCount = 0;
+    
+    last7Days.forEach((day) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dailyTotal = categoryProtocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol.id];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+      
+      totalSum += dailyTotal;
+      dayCount++;
+    });
+    
+    return dayCount > 0 ? totalSum / dayCount : 0;
+  };
+
+  const getCategoryMetricData = (categoryName: string) => {
+    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    const weeklyAverage = getCategoryWeeklyAverage(categoryName);
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dailyTotal = categoryProtocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol.id];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+      
+      return {
+        day: index,
+        date: format(day, 'MMM d'),
+        value: dailyTotal,
+        average: weeklyAverage
+      };
+    });
+  };
+
+  const getTotalWeeklyAverage = (): number => {
+    let totalSum = 0;
+    let dayCount = 0;
+    
+    last7Days.forEach((day) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dailyTotal = protocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+      
+      totalSum += dailyTotal;
+      dayCount++;
+    });
+    
+    return dayCount > 0 ? totalSum / dayCount : 0;
+  };
+
+  const getTotalMetricData = () => {
+    const weeklyAverage = getTotalWeeklyAverage();
+    
+    return last7Days.map((day, index) => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dailyTotal = protocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+      
+      return {
+        day: index,
+        date: format(day, 'MMM d'),
+        value: dailyTotal,
+        average: weeklyAverage
+      };
+    });
+  };
+
   const toggleCollapse = (categoryName: string) => {
     setCollapsedCategories(prev =>
       prev.includes(categoryName)
@@ -308,7 +446,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const downloadReport = async () => {
-    const tableElement = document.querySelector('[data-table="weekly-metrics"]') as HTMLElement;
+    const tableElement = document.querySelector('[data-table="weekly-metrics-full"]') as HTMLElement;
     
     if (tableElement) {
       const rect = tableElement.getBoundingClientRect();
@@ -322,13 +460,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth,
-            height: tableElement.scrollHeight,
+            width: tableElement.scrollWidth + 20,
+            height: tableElement.scrollHeight + 20,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
-              width: tableElement.scrollWidth + 'px',
-              height: tableElement.scrollHeight + 'px'
+              overflow: 'visible',
+              padding: '10px',
+              borderRadius: '16px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
             filter: (node: any) => {
               return !node.classList?.contains('no-screenshot');
@@ -340,7 +480,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         ]) as string;
         
         const link = document.createElement('a');
-        link.download = `weekly-metrics-${format(startDate, 'yyyy-MM-dd')}.png`;
+        link.download = `Weekly Report - ${format(startDate, 'dd.MM')}-${format(endDate, 'dd.MM')}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -352,7 +492,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const copyToClipboard = async () => {
-    const tableElement = document.querySelector('[data-table="weekly-metrics"]') as HTMLElement;
+    const tableElement = document.querySelector('[data-table="weekly-metrics-full"]') as HTMLElement;
     
     if (tableElement) {
       const rect = tableElement.getBoundingClientRect();
@@ -366,13 +506,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth,
-            height: tableElement.scrollHeight,
+            width: tableElement.scrollWidth + 20,
+            height: tableElement.scrollHeight + 20,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
-              width: tableElement.scrollWidth + 'px',
-              height: tableElement.scrollHeight + 'px'
+              overflow: 'visible',
+              padding: '10px',
+              borderRadius: '16px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
             filter: (node: any) => {
               return !node.classList?.contains('no-screenshot');
@@ -406,7 +548,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const startDate = subDays(endDate, 6);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-table="weekly-metrics-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 group">
           <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
@@ -478,24 +620,25 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         </div>
       </div>
       
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto" data-table="weekly-metrics">
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto lg:overflow-x-visible" data-table="weekly-metrics">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[280px] sticky left-0 z-20 bg-background py-4 text-xs sm:text-sm">Protocol</TableHead>
+              <TableHead className="w-[200px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
               {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[120px] px-3 py-4 text-xs sm:text-sm">
+                <TableHead key={day.toISOString()} className="text-center min-w-[100px] px-2 py-3 sm:py-4 text-xs sm:text-sm">
                   <span className="font-medium">
                     {format(day, 'EEE, MMM d')}
                   </span>
                 </TableHead>
               ))}
+              <TableHead className="text-center min-w-[120px] px-2 py-3 sm:py-4 text-xs sm:text-sm">Weekly Trend</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={last7Days.length + 1} className="text-center py-8">
+                <TableCell colSpan={last7Days.length + 2} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <span className="text-muted-foreground">Loading weekly data...</span>
@@ -535,40 +678,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       )}
                       onClick={() => toggleCollapse(categoryName)}
                     >
-                      <TableCell className={cn("sticky left-0 z-10 py-4 sm:py-5 px-3 sm:px-6 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <ChevronRight 
-                              className={cn(
-                                "h-4 w-4 transition-transform",
-                                !isCollapsed && "rotate-90"
-                              )}
-                            />
-                            <span className="font-semibold whitespace-nowrap">{categoryName}</span>
-                          </div>
-                          <div className="w-[60px] h-[20px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={getCategoryVolumeData(categoryName)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                                <Area 
-                                  type="monotone" 
-                                  dataKey="value" 
-                                  stroke={
-                                    getCategoryVolumeTrend(categoryName) === 'up' ? "#22c55e" :
-                                    getCategoryVolumeTrend(categoryName) === 'down' ? "#ef4444" :
-                                    "#6b7280"
-                                  }
-                                  strokeWidth={1.5}
-                                  fill={
-                                    getCategoryVolumeTrend(categoryName) === 'up' ? "#22c55e" :
-                                    getCategoryVolumeTrend(categoryName) === 'down' ? "#ef4444" :
-                                    "#6b7280"
-                                  }
-                                  fillOpacity={0.2}
-                                  dot={false}
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
+                      <TableCell className={cn("sticky left-0 z-10 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                        <div className="flex items-center gap-2">
+                          <ChevronRight 
+                            className={cn(
+                              "h-4 w-4 transition-transform",
+                              !isCollapsed && "rotate-90"
+                            )}
+                          />
+                          <span className="font-semibold whitespace-nowrap">{categoryName}</span>
                         </div>
                       </TableCell>
                       {last7Days.map(day => {
@@ -582,11 +700,39 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-4 sm:py-5 px-3 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 sm:py-4 px-2 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );
                       })}
+                      <TableCell className={cn("text-center py-1 sm:py-2 px-2 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                        <div className="flex items-center justify-center">
+                          <div className="w-[80px] h-[40px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <ComposedChart 
+                                data={getCategoryMetricData(categoryName)} 
+                                margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                              >
+                                <Bar 
+                                  dataKey="value" 
+                                  fill="#22c55e" 
+                                  opacity={0.8}
+                                  radius={[3, 3, 0, 0]}
+                                  maxBarSize={5}
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="average"
+                                  stroke="#16a34a" 
+                                  strokeWidth={1.5}
+                                  dot={false}
+                                  strokeDasharray="2 3"
+                                />
+                              </ComposedChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      </TableCell>
                     </TableRow>
                     
                     {!isCollapsed && sortedCategoryProtocols.map(protocol => {
@@ -601,100 +747,96 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           key={protocol.id}
                           className="hover:bg-muted/50 transition-colors group"
                         >
-                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 px-3 sm:px-6 text-xs sm:text-sm transition-colors">
-                            <div className="flex items-center justify-between w-full">
+                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProtocolVisibility(protocol.id);
+                                }}
+                                className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Eye className="h-3 w-3 text-muted-foreground" />
+                              </button>
                               <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleProtocolVisibility(protocol.id);
-                                  }}
-                                  className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                  <Eye className="h-3 w-3 text-muted-foreground" />
-                                </button>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                                    <img 
-                                      src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                      alt={protocol.name} 
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        const container = target.parentElement;
-                                        if (container) {
-                                          container.innerHTML = '';
-                                          container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                          const iconEl = document.createElement('div');
-                                          iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                          container.appendChild(iconEl);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="truncate">
-                                    {protocol.name}
-                                  </span>
-                                  {topProtocols.includes(protocol.id as Protocol) && (
-                                    <Badge 
-                                      variant="secondary"
-                                      className={cn(
-                                        "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
-                                        topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                        topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                        topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                                      )}
-                                    >
-                                      #{topProtocols.indexOf(protocol.id as Protocol) + 1}
-                                    </Badge>
-                                  )}
+                                <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                                  <img 
+                                    src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                    alt={protocol.name} 
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      const container = target.parentElement;
+                                      if (container) {
+                                        container.innerHTML = '';
+                                        container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                        const iconEl = document.createElement('div');
+                                        iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                        container.appendChild(iconEl);
+                                      }
+                                    }}
+                                  />
                                 </div>
-                              </div>
-                              <div className="w-[60px] h-[20px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <AreaChart data={getWeeklyVolumeData(protocol.id)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                                    <Area 
-                                      type="monotone" 
-                                      dataKey="value" 
-                                      stroke={
-                                        getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
-                                        getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
-                                        "#6b7280"
-                                      }
-                                      strokeWidth={1.5}
-                                      fill={
-                                        getVolumetrend(protocol.id) === 'up' ? "#22c55e" :
-                                        getVolumetrend(protocol.id) === 'down' ? "#ef4444" :
-                                        "#6b7280"
-                                      }
-                                      fillOpacity={0.2}
-                                      dot={false}
-                                    />
-                                  </AreaChart>
-                                </ResponsiveContainer>
+                                <span className="truncate">
+                                  {protocol.name}
+                                </span>
+                                {topProtocols.includes(protocol.id as Protocol) && (
+                                  <Badge 
+                                    variant="secondary"
+                                    className={cn(
+                                      "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                      topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    )}
+                                  >
+                                    #{topProtocols.indexOf(protocol.id as Protocol) + 1}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </TableCell>
                           {last7Days.map(day => {
                             const dateKey = format(day, 'yyyy-MM-dd');
                             const value = protocolData[dateKey] || 0;
-                            const maxValue = getMaxValue();
-                            
-                            const heatMapColor = getHeatMapColor(value, maxValue);
                             
                             return (
                               <TableCell 
                                 key={dateKey} 
-                                className={cn(
-                                  "text-center py-3 px-3 transition-all relative font-medium text-xs sm:text-sm",
-                                  heatMapColor.bg,
-                                  heatMapColor.text
-                                )}
+                                className="text-center py-3 sm:py-4 px-2 transition-all relative font-medium text-xs sm:text-sm"
                               >
                                 {formatValue(value)}
                               </TableCell>
                             );
                           })}
+                          <TableCell className="text-center py-1 sm:py-2 px-2 transition-all relative font-medium text-xs sm:text-sm">
+                            <div className="flex items-center justify-center">
+                              <div className="w-[80px] h-[40px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <ComposedChart 
+                                    data={getWeeklyMetricData(protocol.id)} 
+                                    margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                                  >
+                                    <Bar 
+                                      dataKey="value" 
+                                      fill="#10b981" 
+                                      opacity={0.9}
+                                      radius={[3, 3, 0, 0]}
+                                      maxBarSize={5}
+                                    />
+                                    <Line 
+                                      type="monotone" 
+                                      dataKey="average"
+                                      stroke="#059669" 
+                                      strokeWidth={1.5}
+                                      dot={false}
+                                      strokeDasharray="2 3"
+                                    />
+                                  </ComposedChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -705,96 +847,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             
             {/* Total Row */}
             {!loading && (
-              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-bold group transition-colors">
-                <TableCell className="sticky left-0 z-10 bg-primary/10 group-hover:bg-primary/20 font-bold py-4 px-3 sm:px-6 text-xs sm:text-sm transition-colors">
-                  <div className="flex items-center justify-between w-full">
-                    <span>Total</span>
-                    <div className="w-[60px] h-[20px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={(() => {
-                          // Calculate aggregated weekly volume data for all protocols
-                          try {
-                            return last7Days.map((day, index) => {
-                              const dateKey = format(day, 'yyyy-MM-dd');
-                              const dailyTotal = protocols.reduce((sum, protocol) => {
-                                const protocolVolumeData = volumeData[protocol];
-                                return sum + (protocolVolumeData?.[dateKey] || 0);
-                              }, 0);
-                              
-                              return {
-                                day: index,
-                                value: dailyTotal
-                              };
-                            });
-                          } catch (error) {
-                            return [];
-                          }
-                        })()} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                          <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke={(() => {
-                              // Calculate trend for total
-                              try {
-                                const totalWeeklyData = last7Days.map((day, index) => {
-                                  const dateKey = format(day, 'yyyy-MM-dd');
-                                  const dailyTotal = protocols.reduce((sum, protocol) => {
-                                    const protocolVolumeData = volumeData[protocol];
-                                    return sum + (protocolVolumeData?.[dateKey] || 0);
-                                  }, 0);
-                                  return { day: index, value: dailyTotal };
-                                });
-                                
-                                if (totalWeeklyData.length < 2) return "#6b7280";
-                                
-                                const firstHalf = totalWeeklyData.slice(0, Math.floor(totalWeeklyData.length / 2));
-                                const secondHalf = totalWeeklyData.slice(Math.floor(totalWeeklyData.length / 2));
-                                
-                                const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
-                                const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
-                                
-                                if (secondHalfAvg > firstHalfAvg * 1.1) return "#22c55e";
-                                if (secondHalfAvg < firstHalfAvg * 0.9) return "#ef4444";
-                                return "#6b7280";
-                              } catch (error) {
-                                return "#6b7280";
-                              }
-                            })()}
-                            strokeWidth={1.5}
-                            fill={(() => {
-                              // Calculate trend for total
-                              try {
-                                const totalWeeklyData = last7Days.map((day, index) => {
-                                  const dateKey = format(day, 'yyyy-MM-dd');
-                                  const dailyTotal = protocols.reduce((sum, protocol) => {
-                                    const protocolVolumeData = volumeData[protocol];
-                                    return sum + (protocolVolumeData?.[dateKey] || 0);
-                                  }, 0);
-                                  return { day: index, value: dailyTotal };
-                                });
-                                
-                                if (totalWeeklyData.length < 2) return "#6b7280";
-                                
-                                const firstHalf = totalWeeklyData.slice(0, Math.floor(totalWeeklyData.length / 2));
-                                const secondHalf = totalWeeklyData.slice(Math.floor(totalWeeklyData.length / 2));
-                                
-                                const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
-                                const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
-                                
-                                if (secondHalfAvg > firstHalfAvg * 1.1) return "#22c55e";
-                                if (secondHalfAvg < firstHalfAvg * 0.9) return "#ef4444";
-                                return "#6b7280";
-                              } catch (error) {
-                                return "#6b7280";
-                              }
-                            })()}
-                            fillOpacity={0.2}
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
+              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/30 hover:bg-gray-200 dark:hover:bg-gray-900/40 font-bold group transition-colors">
+                <TableCell className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                  <span>Total</span>
                 </TableCell>
                 {last7Days.map(day => {
                   const dateKey = format(day, 'yyyy-MM-dd');
@@ -807,18 +862,46 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   }, 0);
                   
                   return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-primary/10 group-hover:bg-primary/20 py-4 px-3 text-xs sm:text-sm transition-colors">
+                    <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-2 text-xs sm:text-sm transition-colors">
                       {formatValue(dailyTotal)}
                     </TableCell>
                   );
                 })}
+                <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-2 text-xs sm:text-sm transition-colors">
+                  <div className="flex items-center justify-center">
+                    <div className="w-[80px] h-[40px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart 
+                          data={getTotalMetricData()} 
+                          margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                        >
+                          <Bar 
+                            dataKey="value" 
+                            fill="#15803d" 
+                            opacity={0.95}
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={5}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="average"
+                            stroke="#166534" 
+                            strokeWidth={2}
+                            dot={false}
+                            strokeDasharray="2 3"
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
       
-      <div className="flex justify-between items-end pt-4">
+      <div className="flex justify-end items-end pt-4">
         {/* Download and Copy buttons */}
         <div className="flex gap-2">
           <Button
@@ -839,26 +922,6 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             <Copy className="h-4 w-4 mr-2" />
             Copy
           </Button>
-        </div>
-        
-        {/* Heat Map Legend */}
-        <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2 border">
-          <span className="text-xs text-muted-foreground font-medium">Heat Map</span>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">Low</span>
-            <div className="flex rounded-md overflow-hidden border">
-              <div className="w-3 h-3 bg-green-50 dark:bg-green-950/20"></div>
-              <div className="w-3 h-3 bg-green-100 dark:bg-green-900/30"></div>
-              <div className="w-3 h-3 bg-green-200 dark:bg-green-800/40"></div>
-              <div className="w-3 h-3 bg-green-300 dark:bg-green-700/50"></div>
-              <div className="w-3 h-3 bg-yellow-200 dark:bg-yellow-800/50"></div>
-              <div className="w-3 h-3 bg-yellow-300 dark:bg-yellow-700/60"></div>
-              <div className="w-3 h-3 bg-orange-200 dark:bg-orange-800/50"></div>
-              <div className="w-3 h-3 bg-orange-300 dark:bg-orange-700/60"></div>
-              <div className="w-3 h-3 bg-red-200 dark:bg-red-800/50"></div>
-            </div>
-            <span className="text-xs text-muted-foreground">High</span>
-          </div>
         </div>
       </div>
     </div>

@@ -234,7 +234,7 @@ export function CategoryHorizontalBarChart({
             layout="vertical"
             margin={{
               top: 20,
-              right: 100,
+              right: 130,
               bottom: 20,
               left: 10,
             }}
@@ -307,7 +307,7 @@ export function CategoryHorizontalBarChart({
                   const protocols = value.slice(0, 3);
                   const avatarSize = 22;
                   const overlap = 8; // How much avatars overlap
-                  const startX = (x as number) + (width as number) + 10; // Position outside bar with less gap
+                  const startX = (x as number) + (width as number) + 15; // Position outside bar with proper spacing
                   const centerY = (y as number) + (height as number) / 2;
                   
                   return (
@@ -376,7 +376,7 @@ export function CategoryHorizontalBarChart({
               <LabelList
                 dataKey="value"
                 position="right"
-                offset={80}
+                offset={100}
                 formatter={metricFormatters[selectedMetric]}
                 style={{
                   fill: "hsl(var(--foreground))",

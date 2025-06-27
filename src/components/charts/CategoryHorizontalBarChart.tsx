@@ -234,7 +234,7 @@ export function CategoryHorizontalBarChart({
             layout="vertical"
             margin={{
               top: 20,
-              right: 130,
+              right: 180,
               bottom: 20,
               left: 10,
             }}
@@ -376,7 +376,7 @@ export function CategoryHorizontalBarChart({
               <LabelList
                 dataKey="value"
                 position="right"
-                offset={100}
+                offset={120}
                 formatter={metricFormatters[selectedMetric]}
                 style={{
                   fill: "hsl(var(--foreground))",

@@ -1,8 +1,7 @@
 import { Button } from './ui/button';
-import { RefreshCw, Clock, AlertCircle, X } from 'lucide-react';
+import { RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { useDataSync } from '../hooks/useDataSync';
-import { useToast } from '../hooks/useToast';
-import { Toast } from './ui/toast';
+import { useToast } from '../hooks/use-toast';
 import { cn } from '../lib/utils';
 import { useEffect } from 'react';
 
@@ -22,23 +21,31 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
     syncData 
   } = useDataSync();
   
-  const { toasts, removeToast, success, error: showError } = useToast();
+  const { toast } = useToast();
   
   // Show toast notifications when sync completes
   useEffect(() => {
     if (!isLoading) {
       if (error) {
-        showError(`Sync failed: ${error}`);
+        toast({
+          variant: "destructive",
+          title: "Sync Failed",
+          description: error,
+        });
       } else if (lastSyncTime) {
         const now = new Date();
         const timeDiff = now.getTime() - lastSyncTime.getTime();
         // Only show success if sync happened in the last 10 seconds
         if (timeDiff < 10000) {
-          success('Data synced successfully!');
+          toast({
+            variant: "success",
+            title: "Success",
+            description: "Data synced successfully!",
+          });
         }
       }
     }
-  }, [isLoading, error, lastSyncTime, success, showError]);
+  }, [isLoading, error, lastSyncTime, toast]);
 
   const getButtonIcon = () => {
     if (isLoading) return <RefreshCw className="h-4 w-4 animate-spin" />;
@@ -86,7 +93,17 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             <Button
               variant={getButtonVariant() as any}
               size="icon"
-              onClick={syncData}
+              onClick={() => syncData(
+                () => toast({
+                  title: "Refreshing Data",
+                  description: "Fetching latest data...",
+                }),
+                (result) => toast({
+                  variant: "success",
+                  title: "Data Sync Complete",
+                  description: `Successfully downloaded and uploaded ${result.csvFilesFetched} files to database`,
+                })
+              )}
               disabled={!canSync || isLoading}
               className={cn(
                 "h-12 w-12 relative overflow-hidden shadow-md",
@@ -143,25 +160,6 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             </div>
           )}
         </div>
-
-        {/* Toast notifications */}
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            variant={toast.variant}
-            className="flex items-center justify-between gap-2"
-          >
-            <span>{toast.message}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 p-0"
-              onClick={() => removeToast(toast.id)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </Toast>
-        ))}
       </>
     );
   }
@@ -194,7 +192,17 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
           <Button
             variant={getButtonVariant() as any}
             size="sm"
-            onClick={syncData}
+            onClick={() => syncData(
+              () => toast({
+                title: "Refreshing Data", 
+                description: "Fetching latest data...",
+              }),
+              (result) => toast({
+                variant: "success",
+                title: "Data Sync Complete",
+                description: `Successfully downloaded and uploaded ${result.csvFilesFetched} files to database`,
+              })
+            )}
             disabled={!canSync || isLoading}
             className={cn(
               "h-8 px-3 text-xs font-medium transition-all duration-200 shadow-sm",
@@ -236,25 +244,6 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
           </p>
         )}
       </div>
-
-      {/* Toast notifications */}
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          variant={toast.variant}
-          className="flex items-center justify-between gap-2"
-        >
-          <span>{toast.message}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4 p-0"
-            onClick={() => removeToast(toast.id)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </Toast>
-      ))}
     </div>
   );
 }

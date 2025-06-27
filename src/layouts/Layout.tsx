@@ -8,6 +8,7 @@ import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
+import { Toaster } from '../components/ui/toaster';
 
 // Generate protocols array from centralized config
 const protocols = [
@@ -322,6 +323,9 @@ export function Layout() {
           </div>
         </div>
       </main>
+      
+      {/* Toast notifications */}
+      <Toaster />
     </div>
   );
 }

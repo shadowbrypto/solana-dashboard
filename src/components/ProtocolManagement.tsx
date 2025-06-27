@@ -12,10 +12,9 @@ import {
   loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { Code2, Copy, Check, RefreshCcw, AlertCircle, X, GripVertical, Save, RotateCcw } from 'lucide-react';
+import { Code2, Copy, Check, RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw } from 'lucide-react';
 import { dataSyncApi } from '../lib/api';
-import { useToast } from '../hooks/useToast';
-import { Toast } from './ui/toast';
+import { useToast } from '../hooks/use-toast';
 import {
   DndContext,
   DragEndEvent,
@@ -123,7 +122,7 @@ export function ProtocolManagement() {
   const [forceRender, setForceRender] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const { toasts, removeToast, success, error: showError } = useToast();
+  const { toast } = useToast();
   
   const categories = getMutableAllCategories();
   const sensors = useSensors(useSensor(PointerSensor));
@@ -136,7 +135,11 @@ export function ProtocolManagement() {
         setForceRender(prev => prev + 1); // Trigger re-render after loading
       } catch (error) {
         console.error('Failed to load protocol configurations:', error);
-        showError('Failed to load saved configurations');
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load saved configurations",
+        });
       }
     };
     
@@ -160,7 +163,11 @@ export function ProtocolManagement() {
       const newCategory = overId.replace('category-', '');
       updateProtocolCategory(activeId, newCategory);
       setForceRender(prev => prev + 1);
-      success(`Protocol moved to ${newCategory}`);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: `Protocol moved to ${newCategory}`,
+      });
     }
   };
 
@@ -185,9 +192,17 @@ export function ProtocolManagement() {
     setIsRefreshing(true);
     try {
       const result = await dataSyncApi.syncData();
-      success(`Data refresh completed! Fetched ${result.csvFilesFetched} files.`);
+      toast({
+        variant: "success",
+        title: "Data Refresh Complete",
+        description: `Fetched ${result.csvFilesFetched} files successfully!`,
+      });
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to refresh data');
+      toast({
+        variant: "destructive",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh data",
+      });
     } finally {
       setIsRefreshing(false);
     }
@@ -199,10 +214,18 @@ export function ProtocolManagement() {
     setIsSaving(true);
     try {
       await saveProtocolConfigurations();
-      success('Protocol configurations saved to database successfully!');
+      toast({
+        variant: "success",
+        title: "Configurations Saved",
+        description: "Protocol configurations saved to database successfully!",
+      });
       setForceRender(prev => prev + 1); // Trigger re-render to update unsaved changes indicator
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to save configurations');
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save configurations",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -214,10 +237,18 @@ export function ProtocolManagement() {
     setIsResetting(true);
     try {
       await resetProtocolConfigurations();
-      success('Protocol configurations reset to defaults!');
+      toast({
+        variant: "success",
+        title: "Configurations Reset",
+        description: "Protocol configurations reset to defaults!",
+      });
       setForceRender(prev => prev + 1); // Trigger re-render to show reset changes
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to reset configurations');
+      toast({
+        variant: "destructive",
+        title: "Reset Failed",
+        description: error instanceof Error ? error.message : "Failed to reset configurations",
+      });
     } finally {
       setIsResetting(false);
     }
@@ -457,24 +488,6 @@ export function ProtocolManagement() {
         </CardContent>
       </Card>
 
-      {/* Toast notifications */}
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          variant={toast.variant}
-          className="flex items-center justify-between gap-2"
-        >
-          <span>{toast.message}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-4 w-4 p-0"
-            onClick={() => removeToast(toast.id)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </Toast>
-      ))}
     </div>
   );
 }

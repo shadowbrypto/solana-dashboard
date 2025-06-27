@@ -52,7 +52,7 @@ export function MetricCard({
   };
 
   return (
-    <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm">
+    <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 lg:mb-6 gap-2 sm:gap-0">
         <div className="flex items-center gap-2">
           {getIcon()}

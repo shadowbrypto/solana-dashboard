@@ -115,12 +115,17 @@ export function useDataSync() {
     }));
   }, [getNextAvailableTime, formatTimeUntilNext]);
 
-  const syncData = useCallback(async () => {
+  const syncData = useCallback(async (onSyncStart?: () => void, onSyncSuccess?: (result: { csvFilesFetched: number; timestamp: string }) => void) => {
     if (state.isLoading || !state.canSync) {
       return;
     }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    // Call the optional callback when sync starts
+    if (onSyncStart) {
+      onSyncStart();
+    }
 
     try {
       const data = await dataSyncApi.syncData();
@@ -135,6 +140,11 @@ export function useDataSync() {
         lastSyncTime: now,
         error: null
       }));
+
+      // Call the optional success callback with sync results
+      if (onSyncSuccess) {
+        onSyncSuccess(data);
+      }
 
       // Update state after successful sync
       setTimeout(updateSyncState, 100);

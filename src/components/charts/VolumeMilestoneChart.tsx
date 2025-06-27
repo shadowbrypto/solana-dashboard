@@ -305,15 +305,6 @@ export function VolumeMilestoneChart({
               radius={[4, 4, 0, 0]}
               maxBarSize={60}
             >
-              <LabelList
-                dataKey="daysSincePrevious"
-                position="top"
-                style={{
-                  fill: "hsl(var(--foreground))",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                }}
-              />
             </Bar>
           </RechartsBarChart>
         </ResponsiveContainer>

@@ -12,6 +12,7 @@ import { getProtocolColor } from '../lib/colors';
 import { formatNumber, formatCurrency } from '../lib/utils';
 import { MultiComparisonMetricCard } from '../components/MultiComparisonMetricCard';
 import { MultiComparisonChart } from '../components/MultiComparisonChart';
+import { MarketShareComparisonChart } from '../components/MarketShareComparisonChart';
 import { Skeleton } from '../components/ui/skeleton';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
@@ -32,6 +33,8 @@ export default function OneVsOne() {
   const [volumeTimeframe, setVolumeTimeframe] = useState<TimeFrame>("3m");
   const [usersTimeframe, setUsersTimeframe] = useState<TimeFrame>("3m");
   const [tradesTimeframe, setTradesTimeframe] = useState<TimeFrame>("3m");
+  const [marketShareTimeframe, setMarketShareTimeframe] = useState<TimeFrame>("3m");
+  const [allProtocolsData, setAllProtocolsData] = useState<Map<string, ProtocolStats[]>>(new Map());
 
   // Filter protocols to exclude already selected
   const filteredProtocols = useMemo(() => 
@@ -96,6 +99,43 @@ export default function OneVsOne() {
     setSelectedProtocols([]);
     setProtocolData(new Map());
     setLoadingProtocols(new Set());
+  }, []);
+
+  // Fetch all protocols data for market share calculation
+  useEffect(() => {
+    const fetchAllProtocolsData = async () => {
+      try {
+        const allProtocolIds = protocolConfigs.map(p => p.id);
+        const allStats = await getProtocolStats(); // Get ALL protocols without filtering
+        
+        console.log('OneVsOne - Fetched all stats count:', allStats.length);
+        
+        // Organize stats by protocol
+        const dataMap = new Map<string, ProtocolStats[]>();
+        allProtocolIds.forEach((protocolId) => {
+          const protocolStats = allStats.filter((stat: ProtocolStats) => {
+            const statProtocol = stat.protocol_name || stat.protocol;
+            return statProtocol === protocolId || 
+                   statProtocol?.toLowerCase() === protocolId.toLowerCase() ||
+                   (protocolId === 'fomo' && (statProtocol === 'tryFomo' || statProtocol === 'tryfomo')) ||
+                   (protocolId === 'trojan' && statProtocol === 'trojan') ||
+                   (protocolId === 'bloom' && statProtocol === 'bloom');
+          });
+          
+          if (protocolId === 'trojan' || protocolId === 'bloom') {
+            console.log(`OneVsOne - ${protocolId} stats count:`, protocolStats.length);
+          }
+          
+          dataMap.set(protocolId, protocolStats);
+        });
+        
+        setAllProtocolsData(dataMap);
+      } catch (error) {
+        console.error('Failed to fetch all protocols data:', error);
+      }
+    };
+
+    fetchAllProtocolsData();
   }, []);
 
   // Quick preset comparisons - dynamically generated from all protocols in each category
@@ -488,6 +528,12 @@ export default function OneVsOne() {
               formatter={formatNumber}
               timeframe={tradesTimeframe}
               onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
+            />
+            <MarketShareComparisonChart
+              data={getFilteredData(marketShareTimeframe)}
+              allProtocolsData={allProtocolsData}
+              timeframe={marketShareTimeframe}
+              onTimeframeChange={(value) => setMarketShareTimeframe(value as TimeFrame)}
             />
           </div>
         </div>

@@ -17,26 +17,26 @@ if (!API_KEY) {
   throw new Error('DUNE_API_KEY environment variable is not set');
 }
 
-// Protocol sources mapping
-const PROTOCOL_SOURCES = {
-  "trojan": 4251075,
-  "photon": 4852143,
-  "bullx": 3823331,
-  "axiom": 4663709,
-  "gmgnai": 4231939,
-  "bloom": 4340509,
-  "bonkbot": 4278881,
-  "nova": 4503165,
-  "soltradingbot": 3954872,
-  "maestro": 4537256,
-  "banana": 4537271,
-  "padre": 5099279,
-  "moonshot": 4103111,
-  "vector": 4969231,
-  "bonkbot terminal": 5212810,
-  "nova terminal": 5196914,
-  "slingshot": 4968360,
-  "fomo": 5315650
+// Protocol sources mapping - now supports multiple query IDs per protocol
+const PROTOCOL_SOURCES: Record<string, number[]> = {
+  "trojan": [4251075],
+  "photon": [4852143],
+  "bullx": [3823331],
+  "axiom": [5376750, 5376740, 5376694, 4663709], // Multiple queries for axiom
+  "gmgnai": [4231939],
+  "bloom": [4340509],
+  "bonkbot": [4278881],
+  "nova": [4503165],
+  "soltradingbot": [3954872],
+  "maestro": [4537256],
+  "banana": [4537271],
+  "padre": [5099279],
+  "moonshot": [4103111],
+  "vector": [4969231],
+  "bonkbot terminal": [5212810],
+  "nova terminal": [5196914],
+  "slingshot": [4968360],
+  "fomo": [5315650]
 };
 
 // CSV column mapping to database columns
@@ -52,6 +52,8 @@ const COLUMN_MAP: Record<string, string> = {
 interface DownloadResult {
   success: boolean;
   protocol: string;
+  queriesProcessed?: number;
+  queriesFailed?: number;
   error?: string;
 }
 
@@ -75,14 +77,13 @@ interface SyncResult {
 export class DataManagementService {
   
   /**
-   * Download CSV data from Dune API for a specific protocol
+   * Download CSV data from Dune API for a single query
    */
-  private async downloadProtocolData(protocolName: string, queryId: number): Promise<DownloadResult> {
+  private async downloadSingleQuery(protocolName: string, queryId: number, queryIndex: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
     try {
       const url = `https://api.dune.com/api/v1/query/${queryId}/results/csv?api_key=${API_KEY}`;
-      const outputFile = path.join(DATA_DIR, `${protocolName}.csv`);
 
-      console.log(`Fetching data for ${protocolName} (ID: ${queryId})...`);
+      console.log(`Fetching data for ${protocolName} query ${queryIndex + 1} (ID: ${queryId})...`);
 
       const response = await fetch(url);
       
@@ -92,31 +93,134 @@ export class DataManagementService {
 
       const csvData = await response.text();
       
-      // Ensure data directory exists
-      await fs.mkdir(DATA_DIR, { recursive: true });
-      
-      // Write CSV data to file
-      await fs.writeFile(outputFile, csvData, 'utf8');
-
-      // Verify file was written and has content
-      const stats = await fs.stat(outputFile);
-      if (stats.size === 0) {
-        throw new Error('Downloaded file is empty');
+      if (!csvData.trim()) {
+        throw new Error('Downloaded data is empty');
       }
 
-      console.log(`Successfully downloaded data for ${protocolName} to ${outputFile}`);
+      // Parse CSV data
+      const parsed = Papa.parse(csvData, {
+        header: true,
+        skipEmptyLines: true,
+      });
+
+      if (parsed.errors.length) {
+        throw new Error(`CSV parse errors: ${JSON.stringify(parsed.errors)}`);
+      }
+
+      console.log(`Successfully fetched ${parsed.data.length} rows for ${protocolName} query ${queryIndex + 1}`);
       
       return {
         success: true,
-        protocol: protocolName
+        data: parsed.data
       };
 
     } catch (error) {
-      console.error(`Error downloading data for ${protocolName}:`, error);
+      console.error(`Error downloading query ${queryId} for ${protocolName}:`, error);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Merge data from multiple queries by date, handling duplicates
+   */
+  private mergeDataByDate(dataArrays: any[][]): any[] {
+    const mergedMap = new Map<string, any>();
+
+    // Process each data array
+    dataArrays.forEach((data, queryIndex) => {
+      data.forEach(row => {
+        const dateKey = row.formattedDay;
+        if (!dateKey) return; // Skip rows without date
+
+        if (mergedMap.has(dateKey)) {
+          // Merge with existing row - combine numeric values
+          const existingRow = mergedMap.get(dateKey);
+          const mergedRow = { ...existingRow };
+
+          // Sum numeric fields
+          ['total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'total_fees_usd'].forEach(field => {
+            const existingValue = parseFloat(existingRow[field]) || 0;
+            const newValue = parseFloat(row[field]) || 0;
+            mergedRow[field] = (existingValue + newValue).toString();
+          });
+
+          mergedMap.set(dateKey, mergedRow);
+        } else {
+          // Add new row
+          mergedMap.set(dateKey, { ...row });
+        }
+      });
+    });
+
+    // Convert map back to array and sort by date
+    const result = Array.from(mergedMap.values()).sort((a, b) => {
+      const dateA = new Date(a.formattedDay.split('/').reverse().join('-'));
+      const dateB = new Date(b.formattedDay.split('/').reverse().join('-'));
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return result;
+  }
+
+  /**
+   * Download and merge CSV data for a protocol with multiple queries
+   */
+  private async downloadProtocolData(protocolName: string, queryIds: number[]): Promise<DownloadResult> {
+    try {
+      console.log(`Processing ${queryIds.length} queries for ${protocolName}...`);
+
+      // Download all queries in parallel
+      const downloadPromises = queryIds.map((queryId, index) => 
+        this.downloadSingleQuery(protocolName, queryId, index)
+      );
+
+      const results = await Promise.all(downloadPromises);
+      
+      // Separate successful and failed downloads
+      const successfulResults = results.filter(r => r.success && r.data);
+      const failedCount = results.length - successfulResults.length;
+
+      if (successfulResults.length === 0) {
+        throw new Error('All queries failed to download');
+      }
+
+      // Merge data from all successful queries
+      const allData = successfulResults.map(r => r.data!);
+      const mergedData = this.mergeDataByDate(allData);
+
+      console.log(`Merged ${mergedData.length} unique date records for ${protocolName}`);
+
+      // Convert back to CSV and save
+      const csvContent = Papa.unparse(mergedData);
+      const outputFile = path.join(DATA_DIR, `${protocolName}.csv`);
+
+      // Ensure data directory exists
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      
+      // Write merged CSV data to file
+      await fs.writeFile(outputFile, csvContent, 'utf8');
+
+      console.log(`Successfully created merged file for ${protocolName}: ${outputFile}`);
+      
+      return {
+        success: true,
+        protocol: protocolName,
+        queriesProcessed: successfulResults.length,
+        queriesFailed: failedCount
+      };
+
+    } catch (error) {
+      console.error(`Error processing protocol ${protocolName}:`, error);
       
       return {
         success: false,
         protocol: protocolName,
+        queriesProcessed: 0,
+        queriesFailed: queryIds.length,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
@@ -127,7 +231,7 @@ export class DataManagementService {
    */
   private async downloadAllProtocolData(): Promise<DownloadResult[]> {
     const downloadPromises = Object.entries(PROTOCOL_SOURCES).map(
-      ([protocolName, queryId]) => this.downloadProtocolData(protocolName, queryId)
+      ([protocolName, queryIds]) => this.downloadProtocolData(protocolName, queryIds)
     );
 
     return Promise.all(downloadPromises);

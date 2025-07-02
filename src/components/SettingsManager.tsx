@@ -106,25 +106,24 @@ export function SettingsManager() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <label className="flex-1">
+          <div className="flex-1 relative">
             <Button
               variant="outline"
               size="sm"
               className="w-full"
-              asChild
+              onClick={() => document.getElementById('settings-file-input')?.click()}
             >
-              <span>
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </span>
+              <Upload className="h-4 w-4 mr-2" />
+              Import
             </Button>
             <input
+              id="settings-file-input"
               type="file"
               accept=".json"
               onChange={handleImportSettings}
               className="hidden"
             />
-          </label>
+          </div>
           <Button
             variant="destructive"
             size="sm"

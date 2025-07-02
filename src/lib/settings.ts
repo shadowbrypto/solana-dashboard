@@ -1,4 +1,3 @@
-import React from 'react';
 import { SortingState } from '@tanstack/react-table';
 
 // Type definitions for all settings
@@ -150,17 +149,17 @@ class SettingsManager {
 // Convenience hooks and functions
 export const settingsManager = SettingsManager.getInstance();
 
-// React hook for using settings
-export function useSetting<K extends keyof AppSettings>(key: K): [AppSettings[K], (value: AppSettings[K]) => void] {
-  const [value, setValue] = React.useState<AppSettings[K]>(() => settingsManager.getSetting(key));
+// React hook for using settings (commented out - not currently used)
+// export function useSetting<K extends keyof AppSettings>(key: K): [AppSettings[K], (value: AppSettings[K]) => void] {
+//   const [value, setValue] = React.useState<AppSettings[K]>(() => settingsManager.getSetting(key));
 
-  const updateSetting = React.useCallback((newValue: AppSettings[K]) => {
-    settingsManager.setSetting(key, newValue);
-    setValue(newValue);
-  }, [key]);
+//   const updateSetting = React.useCallback((newValue: AppSettings[K]) => {
+//     settingsManager.setSetting(key, newValue);
+//     setValue(newValue);
+//   }, [key]);
 
-  return [value, updateSetting];
-}
+//   return [value, updateSetting];
+// }
 
 // Individual setting getters/setters for convenience
 export const Settings = {

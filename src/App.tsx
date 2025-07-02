@@ -117,7 +117,7 @@ const MainContent = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [invalidProtocol, setInvalidProtocol] = useState(false);
   const [totalMetrics, setTotalMetrics] = useState<ProtocolMetrics>({total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0});
-  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(["categories"]);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(["categories", "volume"]);
 
   useEffect(() => {
     document.body.classList.add("dark:bg-background");
@@ -503,6 +503,22 @@ const MainContent = (): JSX.Element => {
 
       <MetricCards totalMetrics={totalMetrics} loading={loading} />
 
+      {protocol === "all" && (
+        <div className="mb-6 lg:mb-8">
+          <VolumeActivity
+            title="Volume Activity Heatmap"
+            subtitle="All Protocols"
+            data={data.map(item => ({
+              date: item.date,
+              volume_usd: allProtocolIds.reduce((sum, protocolId) => {
+                const key = `${protocolId.replace(/\s+/g, '_').toLowerCase()}_volume`;
+                return sum + (item[key] || 0);
+              }, 0)
+            }))}
+            loading={loading}
+          />
+        </div>
+      )}
 
         <div className="space-y-4 lg:space-y-6">
           {protocol === "all" ? (
@@ -558,7 +574,7 @@ const MainContent = (): JSX.Element => {
                             data={categoryVolumeData}
                             dataKeys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_volume`)}
                             labels={getMutableAllCategories()}
-                            colors={getMutableAllCategories().map((category, index) => {
+                            colors={getMutableAllCategories().map((_, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  
@@ -579,7 +595,7 @@ const MainContent = (): JSX.Element => {
                             data={categoryDominanceData}
                             keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_dominance`)}
                             labels={getMutableAllCategories()}
-                            colors={getMutableAllCategories().map((category, index) => {
+                            colors={getMutableAllCategories().map((_, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  
@@ -599,7 +615,7 @@ const MainContent = (): JSX.Element => {
                             data={categoryMarketShareData}
                             keys={getMutableAllCategories().map(category => `${category.replace(/\s+/g, '_')}_share`)}
                             labels={getMutableAllCategories()}
-                            colors={getMutableAllCategories().map((category, index) => {
+                            colors={getMutableAllCategories().map((_, index) => {
                               const categoryColors = [
                                 "hsl(210 100% 50%)", // Blue for Trading Terminals
                                 "hsl(120 100% 40%)", // Green for Telegram Bots  

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
 import { DailyHighlights } from "../components/DailyHighlights";
@@ -9,7 +9,7 @@ export default function DailyReport() {
   // Simple daily report - no query parameters needed
   const reportType = 'daily';
   
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(subDays(new Date(), 1));
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});

@@ -9,6 +9,8 @@ import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
+import { Settings } from '../lib/settings';
+import { SettingsManager } from '../components/SettingsManager';
 
 // Generate protocols array from centralized config
 const protocols = [
@@ -36,10 +38,15 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // Initialize all categories as expanded for better navigation
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
-    protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
-  );
+  // Initialize categories from settings or default to all expanded
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
+    const saved = Settings.getSidebarExpandedCategories();
+    // If no saved settings, default to all categories expanded
+    if (Object.keys(saved).length === 0) {
+      return protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {});
+    }
+    return saved;
+  });
   
   // Check if we're on a protocol page (root)
   const isProtocolPage = location.pathname === '/';
@@ -50,6 +57,11 @@ export function Layout() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Persist expanded categories changes
+  useEffect(() => {
+    Settings.setSidebarExpandedCategories(expandedCategories);
+  }, [expandedCategories]);
 
   const handleProtocolChange = (protocolId: string) => {
     // Navigate using query parameters to match the router structure
@@ -326,6 +338,9 @@ export function Layout() {
       
       {/* Toast notifications */}
       <Toaster />
+      
+      {/* Settings Manager (Development) */}
+      <SettingsManager />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { getDailyMetrics } from "../lib/protocol";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
+import { Settings } from "../lib/settings";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -64,13 +65,13 @@ const formatPercentage = (value: number): string => {
 
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
-  const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
+  const [collapsedCategories, setCollapsedCategories] = useState<string[]>(() => Settings.getDailyTableCollapsedCategories());
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [weeklyVolumeData, setWeeklyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
-  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "daily_users", "numberOfNewUsers", "daily_trades", "market_share", "daily_growth" as MetricKey]);
-  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -421,6 +422,19 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     };
     fetchData();
   }, [date]);
+
+  // Persist settings changes
+  useEffect(() => {
+    Settings.setDailyTableCollapsedCategories(collapsedCategories);
+  }, [collapsedCategories]);
+
+  useEffect(() => {
+    Settings.setDailyTableColumnOrder(columnOrder);
+  }, [columnOrder]);
+
+  useEffect(() => {
+    Settings.setDailyTableHiddenProtocols(Array.from(hiddenProtocols));
+  }, [hiddenProtocols]);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {

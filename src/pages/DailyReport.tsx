@@ -4,12 +4,19 @@ import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
 import { DailyHighlights } from "../components/DailyHighlights";
 import { getAllProtocols } from "../lib/protocol-categories";
+import { Settings } from "../lib/settings";
 
 export default function DailyReport() {
   // Simple daily report - no query parameters needed
   const reportType = 'daily';
   
-  const [date, setDate] = useState<Date>(subDays(new Date(), 1));
+  const [date, setDate] = useState<Date>(() => {
+    const lastSelectedDates = Settings.getLastSelectedDates();
+    if (lastSelectedDates.daily) {
+      return new Date(lastSelectedDates.daily);
+    }
+    return subDays(new Date(), 1);
+  });
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
@@ -66,6 +73,11 @@ export default function DailyReport() {
     };
     setData(mockData);
   }, [date, protocols]);
+
+  // Persist date changes
+  useEffect(() => {
+    Settings.setLastSelectedDate('daily', date.toISOString());
+  }, [date]);
 
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">

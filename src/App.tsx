@@ -36,6 +36,7 @@ import { getAllProtocols } from "./lib/protocol-categories";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 import { LayoutGrid } from 'lucide-react';
+import { Settings } from './lib/settings';
 
 interface DailyData {
   formattedDay: string;
@@ -117,17 +118,27 @@ const MainContent = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [invalidProtocol, setInvalidProtocol] = useState(false);
   const [totalMetrics, setTotalMetrics] = useState<ProtocolMetrics>({total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0});
-  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(["categories", "volume"]);
-
-  useEffect(() => {
-    document.body.classList.add("dark:bg-background");
-  }, []);
+  const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(() => Settings.getAccordionState());
 
   const location = useLocation();
   const navigate = useNavigate();
   const [protocolData, setProtocolData] = useState<ProtocolStats[]>([]);
   const [data, setData] = useState<any[]>([]);
-  const [activeView, setActiveView] = useState<"charts" | "data">("charts");
+  const [activeView, setActiveView] = useState<"charts" | "data">(() => Settings.getDashboardActiveView());
+
+  useEffect(() => {
+    document.body.classList.add("dark:bg-background");
+  }, []);
+
+  // Persist accordion state changes
+  useEffect(() => {
+    Settings.setAccordionState(openAccordionItems);
+  }, [openAccordionItems]);
+
+  // Persist active view changes
+  useEffect(() => {
+    Settings.setDashboardActiveView(activeView);
+  }, [activeView]);
   
   // Get protocol from search params, fallback to 'all' for root route
   const searchParams = new URLSearchParams(location.search);

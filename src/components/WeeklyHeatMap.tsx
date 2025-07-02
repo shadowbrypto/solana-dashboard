@@ -12,6 +12,7 @@ import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
+import { Settings } from "../lib/settings";
 
 interface WeeklyHeatMapProps {
   protocols: Protocol[];
@@ -70,9 +71,9 @@ const getHeatMapColor = (value: number, maxValue: number, minValue: number = 0):
 
 export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMapProps) {
   const [dailyData, setDailyData] = useState<DailyData>({});
-  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getWeeklyHeatmapHiddenProtocols()));
   const [loading, setLoading] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>(() => Settings.getWeeklyHeatmapMetric() as MetricKey);
   const [last7Days, setLast7Days] = useState<Date[]>([]);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [hoveredCell, setHoveredCell] = useState<{ protocol: string; date: string } | null>(null);
@@ -175,6 +176,16 @@ export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMa
     
     fetchLast7DaysData();
   }, [endDate, protocols, selectedMetric]);
+
+  // Persist hidden protocols changes
+  useEffect(() => {
+    Settings.setWeeklyHeatmapHiddenProtocols(Array.from(hiddenProtocols));
+  }, [hiddenProtocols]);
+
+  // Persist selected metric changes
+  useEffect(() => {
+    Settings.setWeeklyHeatmapMetric(selectedMetric);
+  }, [selectedMetric]);
 
   const handleDateChange = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && !canNavigatePrev()) return;

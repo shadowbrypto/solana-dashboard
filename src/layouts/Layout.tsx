@@ -9,8 +9,8 @@ import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
-import { Settings } from '../lib/settings';
-import { SettingsManager } from '../components/SettingsManager';
+// import { Settings } from '../lib/settings';
+// import { SettingsManager } from '../components/SettingsManager';
 
 // Generate protocols array from centralized config
 const protocols = [
@@ -38,15 +38,10 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // Initialize categories from settings or default to all expanded
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
-    const saved = Settings.getSidebarExpandedCategories();
-    // If no saved settings, default to all categories expanded
-    if (Object.keys(saved).length === 0) {
-      return protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {});
-    }
-    return saved;
-  });
+  // Initialize all categories as expanded for better navigation
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
+    protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
+  );
   
   // Check if we're on a protocol page (root)
   const isProtocolPage = location.pathname === '/';
@@ -58,10 +53,10 @@ export function Layout() {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Persist expanded categories changes
-  useEffect(() => {
-    Settings.setSidebarExpandedCategories(expandedCategories);
-  }, [expandedCategories]);
+  // Persist expanded categories changes - disabled for now
+  // useEffect(() => {
+  //   Settings.setSidebarExpandedCategories(expandedCategories);
+  // }, [expandedCategories]);
 
   const handleProtocolChange = (protocolId: string) => {
     // Navigate using query parameters to match the router structure
@@ -339,8 +334,8 @@ export function Layout() {
       {/* Toast notifications */}
       <Toaster />
       
-      {/* Settings Manager (Development) */}
-      <SettingsManager />
+      {/* Settings Manager (Development) - disabled */}
+      {/* <SettingsManager /> */}
     </div>
   );
 }

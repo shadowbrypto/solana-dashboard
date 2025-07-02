@@ -134,6 +134,27 @@ export const dataSyncApi = {
       hasCurrentData: boolean;
       missingProtocols?: string[];
     }>('/data-update/status');
+  },
+
+  // Sync data for a specific protocol
+  async syncProtocolData(protocolName: string): Promise<{
+    message: string;
+    data: {
+      protocol: string;
+      rowsImported: number;
+      timestamp: string;
+    };
+  }> {
+    return apiRequest<{
+      message: string;
+      data: {
+        protocol: string;
+        rowsImported: number;
+        timestamp: string;
+      };
+    }>(`/data-update/sync/${protocolName}`, {
+      method: 'POST'
+    });
   }
 };
 

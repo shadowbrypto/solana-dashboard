@@ -12,7 +12,7 @@ import {
   loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { Code2, Copy, Check, RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw } from 'lucide-react';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw } from 'lucide-react';
 import { dataSyncApi } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import {
@@ -34,14 +34,18 @@ import { CSS } from '@dnd-kit/utilities';
 interface SortableProtocolProps {
   protocol: any;
   isDragging?: boolean;
+  onRefresh: (protocolId: string) => void;
+  isRefreshing: boolean;
 }
 
 interface DroppableCategoryProps {
   category: string;
   protocols: any[];
+  onRefresh: (protocolId: string) => void;
+  refreshingProtocols: Set<string>;
 }
 
-function DroppableCategory({ category, protocols }: DroppableCategoryProps) {
+function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols }: DroppableCategoryProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `category-${category}`,
   });
@@ -58,7 +62,12 @@ function DroppableCategory({ category, protocols }: DroppableCategoryProps) {
       <SortableContext items={protocols.map(p => p.id)} strategy={verticalListSortingStrategy}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {protocols.map(protocol => (
-            <SortableProtocol key={protocol.id} protocol={protocol} />
+            <SortableProtocol 
+              key={protocol.id} 
+              protocol={protocol} 
+              onRefresh={onRefresh}
+              isRefreshing={refreshingProtocols.has(protocol.id)}
+            />
           ))}
         </div>
       </SortableContext>
@@ -76,7 +85,7 @@ function DroppableCategory({ category, protocols }: DroppableCategoryProps) {
   );
 }
 
-function SortableProtocol({ protocol, isDragging }: SortableProtocolProps) {
+function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing }: SortableProtocolProps) {
   const {
     attributes,
     listeners,
@@ -111,17 +120,30 @@ function SortableProtocol({ protocol, isDragging }: SortableProtocolProps) {
         <p className="font-medium text-foreground">{protocol.name}</p>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
       </div>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRefresh(protocol.id);
+        }}
+        disabled={isRefreshing}
+        className="h-8 w-8 p-0"
+        title={`Refresh ${protocol.name} data`}
+      >
+        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+      </Button>
     </div>
   );
 }
 
 export function ProtocolManagement() {
-  const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [refreshingProtocols, setRefreshingProtocols] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   
   const categories = getMutableAllCategories();
@@ -171,20 +193,6 @@ export function ProtocolManagement() {
     }
   };
 
-  const generateNewProtocolTemplate = () => {
-    return `{ 
-  id: 'protocol-id', 
-  name: 'Protocol Name', 
-  icon: IconName, // Import from lucide-react
-  category: 'Telegram Bots' // or 'Trading Terminals' or 'Mobile Apps'
-}`;
-  };
-
-  const handleCopyTemplate = () => {
-    navigator.clipboard.writeText(generateNewProtocolTemplate());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleHardRefresh = async () => {
     if (isRefreshing) return;
@@ -231,6 +239,33 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleRefreshProtocol = async (protocolId: string) => {
+    if (refreshingProtocols.has(protocolId)) return;
+    
+    setRefreshingProtocols(prev => new Set([...prev, protocolId]));
+    
+    try {
+      const result = await dataSyncApi.syncProtocolData(protocolId);
+      toast({
+        variant: "success",
+        title: "Protocol Refreshed",
+        description: `Successfully refreshed data for ${protocolId}`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : `Failed to refresh ${protocolId}`,
+      });
+    } finally {
+      setRefreshingProtocols(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(protocolId);
+        return newSet;
+      });
+    }
+  };
+
   const handleResetConfigurations = async () => {
     if (isResetting) return;
     
@@ -260,64 +295,12 @@ export function ProtocolManagement() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Protocol Configuration</CardTitle>
-          <CardDescription>
-            Current protocols organized by category. Drag protocols between categories to reorganize them.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="space-y-6">
-              {categories.map(category => {
-                const categoryProtocols = getMutableProtocolsByCategory(category);
-                return (
-                  <div key={category}>
-                    <h3 className="text-lg font-semibold mb-3">{category}</h3>
-                    <DroppableCategory category={category} protocols={categoryProtocols} />
-                  </div>
-                );
-              })}
-            </div>
-            
-            <DragOverlay>
-              {activeProtocol ? (
-                <div className="flex items-center gap-3 p-3 border rounded-lg bg-card border-border shadow-2xl ring-2 ring-primary/50 backdrop-blur-sm transform rotate-1">
-                  <activeProtocol.icon className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{activeProtocol.name}</p>
-                    <p className="text-sm text-muted-foreground">{activeProtocol.id}</p>
-                  </div>
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        </CardContent>
-      </Card>
-
-      {/* Save/Reset Configuration Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuration Management</CardTitle>
-          <CardDescription>
-            Save your protocol category changes to the database permanently or reset to defaults
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/40">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">
-                {hasUnsavedChanges() ? 'You have unsaved changes' : 'All changes are saved'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {hasUnsavedChanges() 
-                  ? 'Save your protocol category changes to the database to make them permanent across all environments.'
-                  : 'Your protocol configurations are saved in the database.'
-                }
-              </p>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1.5">
+              <CardTitle>Protocol Configuration</CardTitle>
+              <CardDescription>
+                Current protocols organized by category. Drag protocols between categories to reorganize them.
+              </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -357,90 +340,54 @@ export function ProtocolManagement() {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Adding New Protocols</CardTitle>
-          <CardDescription>
-            Follow these steps to add a new protocol to the dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">1. Update Backend</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Add the protocol to PROTOCOL_SOURCES in server/src/services/dataManagementService.ts
-            </p>
-            <div className="bg-muted p-3 rounded-lg font-mono text-sm">
-              "protocol-name": QUERY_ID
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">2. Update Frontend Config</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Add the protocol to src/lib/protocol-config.ts
-            </p>
-            <div className="bg-muted p-3 rounded-lg font-mono text-sm relative">
-              <pre>{generateNewProtocolTemplate()}</pre>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="absolute top-2 right-2"
-                onClick={handleCopyTemplate}
-              >
-                {copied ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">3. Choose an Icon</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Browse available icons at{' '}
-              <a 
-                href="https://lucide.dev/icons" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                lucide.dev/icons
-              </a>
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">4. Sync Data</h3>
-            <p className="text-sm text-muted-foreground">
-              Run the data sync to fetch CSV files and update the database
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Categories</CardTitle>
-          <CardDescription>
-            Protocols are organized into these categories
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {categories.map(category => (
-              <Badge key={category} variant="outline">
-                {category}
-              </Badge>
-            ))}
-          </div>
+          {hasUnsavedChanges() && (
+            <div className="mb-4 p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                You have unsaved changes. Click "Save Changes" to make them permanent.
+              </p>
+            </div>
+          )}
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-6">
+              {categories.map(category => {
+                const categoryProtocols = getMutableProtocolsByCategory(category);
+                return (
+                  <div key={category}>
+                    <h3 className="text-lg font-semibold mb-3">{category}</h3>
+                    <DroppableCategory 
+                      category={category} 
+                      protocols={categoryProtocols} 
+                      onRefresh={handleRefreshProtocol}
+                      refreshingProtocols={refreshingProtocols}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            
+            <DragOverlay>
+              {activeProtocol ? (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-card border-border shadow-2xl ring-2 ring-primary/50 backdrop-blur-sm transform rotate-1">
+                  <activeProtocol.icon className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{activeProtocol.name}</p>
+                    <p className="text-sm text-muted-foreground">{activeProtocol.id}</p>
+                  </div>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </CardContent>
       </Card>
+
+
+
 
       <Card>
         <CardHeader>

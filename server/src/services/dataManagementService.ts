@@ -77,6 +77,62 @@ interface SyncResult {
 export class DataManagementService {
   
   /**
+   * Sync data for a specific protocol
+   */
+  public async syncProtocolData(protocolName: string): Promise<SyncResult> {
+    const startTime = new Date();
+    
+    try {
+      // Validate protocol exists
+      if (!PROTOCOL_SOURCES[protocolName]) {
+        throw new Error(`Protocol '${protocolName}' not found in PROTOCOL_SOURCES`);
+      }
+
+      console.log(`Starting data sync for protocol: ${protocolName}...`);
+
+      // Step 1: Download CSV file for the specific protocol
+      const downloadResult = await this.downloadProtocolData(protocolName, PROTOCOL_SOURCES[protocolName]);
+      
+      if (!downloadResult.success) {
+        throw new Error(`Failed to download data for ${protocolName}: ${downloadResult.error}`);
+      }
+
+      console.log(`Downloaded data for ${protocolName} successfully`);
+
+      // Step 2: Import CSV file to database (delete existing data for this protocol first)
+      const importResult = await this.importProtocolData(protocolName, true);
+      
+      if (!importResult.success) {
+        throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);
+      }
+
+      console.log(`Imported ${importResult.rowsInserted} rows for ${protocolName}`);
+
+      return {
+        success: true,
+        csvFilesFetched: 1,
+        rowsImported: importResult.rowsInserted,
+        timestamp: startTime.toISOString(),
+        downloadResults: [downloadResult],
+        importResults: [importResult]
+      };
+
+    } catch (error) {
+      console.error(`Error syncing data for protocol ${protocolName}:`, error);
+      
+      return {
+        success: false,
+        csvFilesFetched: 0,
+        rowsImported: 0,
+        timestamp: startTime.toISOString(),
+        downloadResults: [],
+        importResults: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+  
+  /**
    * Download CSV data from Dune API for a single query
    */
   private async downloadSingleQuery(protocolName: string, queryId: number, queryIndex: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
@@ -239,8 +295,9 @@ export class DataManagementService {
 
   /**
    * Import CSV data for a specific protocol into the database
+   * @param deleteExisting - If true, deletes existing data for this protocol before importing
    */
-  private async importProtocolData(protocolName: string): Promise<ImportResult> {
+  private async importProtocolData(protocolName: string, deleteExisting: boolean = false): Promise<ImportResult> {
     try {
       const csvFilePath = path.join(DATA_DIR, `${protocolName}.csv`);
       
@@ -252,6 +309,20 @@ export class DataManagementService {
       }
 
       console.log(`--- Importing ${csvFilePath} ---`);
+
+      // Delete existing data for this protocol if requested
+      if (deleteExisting) {
+        console.log(`Deleting existing data for ${protocolName}...`);
+        const { error: deleteError } = await supabase
+          .from(TABLE_NAME)
+          .delete()
+          .eq('protocol_name', protocolName);
+
+        if (deleteError) {
+          throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
+        }
+        console.log(`Successfully deleted existing data for ${protocolName}`);
+      }
 
       // Read and parse CSV file
       const fileContent = await fs.readFile(csvFilePath, 'utf8');

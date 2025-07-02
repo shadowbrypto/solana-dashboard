@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getLatestDate } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
 
 const router = Router();
 
@@ -118,25 +118,6 @@ router.get('/weekly-insights', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to generate weekly insights',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
-// GET /api/protocols/latest-date
-// Returns the latest date available in the database
-router.get('/latest-date', async (req: Request, res: Response) => {
-  try {
-    const latestDate = await getLatestDate();
-    res.json({ 
-      success: true, 
-      data: { date: latestDate }
-    });
-  } catch (error) {
-    console.error('Error fetching latest date:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fetch latest date',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

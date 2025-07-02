@@ -18,29 +18,6 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
 }
 
-export async function getLatestDate(): Promise<string> {
-  try {
-    const { data, error } = await supabase
-      .from('protocol_stats')
-      .select('date')
-      .order('date', { ascending: false })
-      .limit(1);
-
-    if (error) {
-      throw new Error(`Database error: ${error.message}`);
-    }
-
-    if (!data || data.length === 0) {
-      throw new Error('No data found in database');
-    }
-
-    return data[0].date;
-  } catch (error) {
-    console.error('Error getting latest date:', error);
-    throw error;
-  }
-}
-
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}-${month}-${year}`;

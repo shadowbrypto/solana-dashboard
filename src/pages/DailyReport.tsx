@@ -4,7 +4,6 @@ import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DailyMetricsTable } from "../components/DailyMetricsTable";
 import { DailyHighlights } from "../components/DailyHighlights";
 import { getAllProtocols } from "../lib/protocol-categories";
-import { protocolApi } from "../lib/api";
 
 export default function DailyReport() {
   // Simple daily report - no query parameters needed
@@ -14,34 +13,11 @@ export default function DailyReport() {
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
-  const [isLoadingLatestDate, setIsLoadingLatestDate] = useState(true);
   
   // Memoize protocols to prevent infinite re-renders
   const protocols = useMemo(() => [...getAllProtocols(), "all"] as Protocol[], []);
 
-  // Fetch the latest available date on component mount
   useEffect(() => {
-    const fetchLatestDate = async () => {
-      try {
-        const response = await protocolApi.getLatestDate();
-        // Convert YYYY-MM-DD to Date object
-        const latestDate = new Date(response.date);
-        setDate(latestDate);
-      } catch (error) {
-        console.error('Failed to fetch latest date, using current date:', error);
-        // Keep the current date as fallback
-      } finally {
-        setIsLoadingLatestDate(false);
-      }
-    };
-
-    fetchLatestDate();
-  }, []);
-
-  useEffect(() => {
-    // Only fetch data after the latest date is loaded
-    if (isLoadingLatestDate) return;
-
     // In a real app, you would fetch data here
     // For now, we'll use mock data
     const emptyMetrics = {
@@ -89,18 +65,7 @@ export default function DailyReport() {
       [format(date, "dd/MM/yyyy")]: mockDataForDate,
     };
     setData(mockData);
-  }, [date, protocols, isLoadingLatestDate]);
-
-  if (isLoadingLatestDate) {
-    return (
-      <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
-        <h1 className="text-2xl sm:text-3xl font-bold">Daily Report</h1>
-        <div className="flex items-center justify-center py-8">
-          <div className="text-muted-foreground">Loading latest date...</div>
-        </div>
-      </div>
-    );
-  }
+  }, [date, protocols]);
 
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">

@@ -103,6 +103,11 @@ export const protocolApi = {
     return apiRequest<any[]>('/protocols/aggregated-stats');
   },
 
+  // Get latest available date
+  async getLatestDate(): Promise<{ date: string }> {
+    return apiRequest<{ date: string }>('/protocols/latest-date');
+  },
+
   // Health check
   async healthCheck(): Promise<{ message: string; timestamp: string }> {
     return apiRequest<{ message: string; timestamp: string }>('/protocols/health');

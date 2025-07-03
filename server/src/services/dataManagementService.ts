@@ -17,26 +17,38 @@ if (!API_KEY) {
   throw new Error('DUNE_API_KEY environment variable is not set');
 }
 
-// Protocol sources mapping - now supports multiple query IDs per protocol
-const PROTOCOL_SOURCES: Record<string, number[]> = {
-  "trojan": [4251075],
-  "photon": [4852143],
-  "bullx": [3823331],
-  "axiom": [5376750, 5376740, 5376694, 4663709], // Multiple queries for axiom
-  "gmgnai": [4231939],
-  "bloom": [4340509],
-  "bonkbot": [4278881],
-  "nova": [4503165],
-  "soltradingbot": [3954872],
-  "maestro": [4537256],
-  "banana": [4537271],
-  "padre": [5099279],
-  "moonshot": [4103111],
-  "vector": [4969231],
-  "bonkbot terminal": [5212810],
-  "nova terminal": [5196914],
-  "slingshot": [4968360],
-  "fomo": [5315650]
+// Protocol configuration with chain support
+interface ProtocolSource {
+  queryIds: number[];
+  chain: 'solana' | 'ethereum';
+}
+
+// Protocol sources mapping - now supports multiple query IDs and chains
+const PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
+  // Solana protocols
+  "trojan": { queryIds: [4251075], chain: 'solana' },
+  "photon": { queryIds: [4852143], chain: 'solana' },
+  "bullx": { queryIds: [3823331], chain: 'solana' },
+  "axiom": { queryIds: [5376750, 5376740, 5376694, 4663709], chain: 'solana' },
+  "gmgnai": { queryIds: [4231939], chain: 'solana' },
+  "bloom": { queryIds: [4340509], chain: 'solana' },
+  "bonkbot": { queryIds: [4278881], chain: 'solana' },
+  "nova": { queryIds: [4503165], chain: 'solana' },
+  "soltradingbot": { queryIds: [3954872], chain: 'solana' },
+  "maestro": { queryIds: [4537256], chain: 'solana' },
+  "banana": { queryIds: [4537271], chain: 'solana' },
+  "padre": { queryIds: [5099279], chain: 'solana' },
+  "moonshot": { queryIds: [4103111], chain: 'solana' },
+  "vector": { queryIds: [4969231], chain: 'solana' },
+  "bonkbot terminal": { queryIds: [5212810], chain: 'solana' },
+  "nova terminal": { queryIds: [5196914], chain: 'solana' },
+  "slingshot": { queryIds: [4968360], chain: 'solana' },
+  "fomo": { queryIds: [5315650], chain: 'solana' },
+  
+  // Ethereum protocols - add your protocols here
+  // Example:
+  // "uniswap": { queryIds: [123456], chain: 'ethereum' },
+  // "sushiswap": { queryIds: [789012], chain: 'ethereum' },
 };
 
 // CSV column mapping to database columns
@@ -91,7 +103,8 @@ export class DataManagementService {
       console.log(`Starting data sync for protocol: ${protocolName}...`);
 
       // Step 1: Download CSV file for the specific protocol
-      const downloadResult = await this.downloadProtocolData(protocolName, PROTOCOL_SOURCES[protocolName]);
+      const protocolConfig = PROTOCOL_SOURCES[protocolName];
+      const downloadResult = await this.downloadProtocolData(protocolName, protocolConfig.queryIds);
       
       if (!downloadResult.success) {
         throw new Error(`Failed to download data for ${protocolName}: ${downloadResult.error}`);
@@ -187,7 +200,7 @@ export class DataManagementService {
     const mergedMap = new Map<string, any>();
 
     // Process each data array
-    dataArrays.forEach((data, queryIndex) => {
+    dataArrays.forEach((data) => {
       data.forEach(row => {
         const dateKey = row.formattedDay;
         if (!dateKey) return; // Skip rows without date
@@ -287,7 +300,7 @@ export class DataManagementService {
    */
   private async downloadAllProtocolData(): Promise<DownloadResult[]> {
     const downloadPromises = Object.entries(PROTOCOL_SOURCES).map(
-      ([protocolName, queryIds]) => this.downloadProtocolData(protocolName, queryIds)
+      ([protocolName, config]) => this.downloadProtocolData(protocolName, config.queryIds)
     );
 
     return Promise.all(downloadPromises);
@@ -337,7 +350,8 @@ export class DataManagementService {
 
       const data = parsed.data;
 
-      // Map CSV columns to database columns and add protocol name
+      // Map CSV columns to database columns and add protocol name and chain
+      const protocolConfig = PROTOCOL_SOURCES[protocolName];
       const mappedData = data.map((row: any) => {
         const mappedRow: any = {};
         
@@ -354,6 +368,7 @@ export class DataManagementService {
         }
         
         mappedRow.protocol_name = protocolName;
+        mappedRow.chain = protocolConfig?.chain || 'solana'; // Default to solana for backward compatibility
         return mappedRow;
       });
 

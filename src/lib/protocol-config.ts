@@ -30,6 +30,7 @@ export interface ProtocolConfig {
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
   category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps';
+  chain?: 'solana' | 'ethereum'; // Optional for backward compatibility
 }
 
 export interface ProtocolConfigMutable {
@@ -37,6 +38,7 @@ export interface ProtocolConfigMutable {
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
   category: string;
+  chain?: 'solana' | 'ethereum'; // Optional for backward compatibility
 }
 
 // Centralized protocol configuration
@@ -44,34 +46,47 @@ export interface ProtocolConfigMutable {
 // 1. Add an entry to this array with id, name, icon, and category
 // 2. The protocol will automatically appear in the navigation and be categorized correctly
 export const protocolConfigs: ProtocolConfig[] = [
-  // Telegram Bots
-  { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Telegram Bots' },
-  { id: 'bonkbot', name: 'BonkBot', icon: BonkBotIcon, category: 'Telegram Bots' },
-  { id: 'bloom', name: 'Bloom', icon: BloomIcon, category: 'Telegram Bots' },
-  { id: 'nova', name: 'Nova', icon: NovaIcon, category: 'Telegram Bots' },
-  { id: 'soltradingbot', name: 'SolTradingBot', icon: SolTradingBotIcon, category: 'Telegram Bots' },
-  { id: 'banana', name: 'Banana', icon: BananaIcon, category: 'Telegram Bots' },
-  { id: 'maestro', name: 'Maestro', icon: MaestroIcon, category: 'Telegram Bots' },
+  // Solana - Telegram Bots
+  { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'bonkbot', name: 'BonkBot', icon: BonkBotIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'bloom', name: 'Bloom', icon: BloomIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'nova', name: 'Nova', icon: NovaIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'soltradingbot', name: 'SolTradingBot', icon: SolTradingBotIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'banana', name: 'Banana', icon: BananaIcon, category: 'Telegram Bots', chain: 'solana' },
+  { id: 'maestro', name: 'Maestro', icon: MaestroIcon, category: 'Telegram Bots', chain: 'solana' },
   
-  // Trading Terminals
-  { id: 'photon', name: 'Photon', icon: PhotonIcon, category: 'Trading Terminals' },
-  { id: 'bullx', name: 'Bull X', icon: BullXIcon, category: 'Trading Terminals' },
-  { id: 'axiom', name: 'Axiom', icon: AxiomIcon, category: 'Trading Terminals' },
-  { id: 'gmgnai', name: 'GmGnAi', icon: GMGNAIIcon, category: 'Trading Terminals' },
-  { id: 'padre', name: 'Padre', icon: PadreIcon, category: 'Trading Terminals' },
-  { id: 'nova terminal', name: 'Nova Terminal', icon: NovaIcon, category: 'Trading Terminals' },
-  { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BonkBotIcon, category: 'Trading Terminals' },
+  // Solana - Trading Terminals
+  { id: 'photon', name: 'Photon', icon: PhotonIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'bullx', name: 'Bull X', icon: BullXIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'axiom', name: 'Axiom', icon: AxiomIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'gmgnai', name: 'GmGnAi', icon: GMGNAIIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'padre', name: 'Padre', icon: PadreIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'nova terminal', name: 'Nova Terminal', icon: NovaIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BonkBotIcon, category: 'Trading Terminals', chain: 'solana' },
   
-  // Mobile Apps
-  { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps' },
-  { id: 'vector', name: 'Vector', icon: VectorIcon, category: 'Mobile Apps' },
-  { id: 'slingshot', name: 'Slingshot', icon: SlingshotIcon, category: 'Mobile Apps' },
-  { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps' },
+  // Solana - Mobile Apps
+  { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps', chain: 'solana' },
+  { id: 'vector', name: 'Vector', icon: VectorIcon, category: 'Mobile Apps', chain: 'solana' },
+  { id: 'slingshot', name: 'Slingshot', icon: SlingshotIcon, category: 'Mobile Apps', chain: 'solana' },
+  { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps', chain: 'solana' },
+  
+  // Ethereum protocols can be added here
+  // Example:
+  // { id: 'uniswap', name: 'Uniswap', icon: ArrowUpRight, category: 'Trading Terminals', chain: 'ethereum' },
 ];
 
 // Helper functions
 export const getProtocolById = (id: string): ProtocolConfig | undefined => {
   return protocolConfigs.find(p => p.id === id);
+};
+
+export const getProtocolsByChain = (chain: 'solana' | 'ethereum'): ProtocolConfig[] => {
+  return protocolConfigs.filter(p => p.chain === chain);
+};
+
+export const getAllChains = (): Array<'solana' | 'ethereum'> => {
+  const chains = new Set(protocolConfigs.map(p => p.chain).filter(Boolean) as Array<'solana' | 'ethereum'>);
+  return Array.from(chains);
 };
 
 export const getProtocolsByCategory = (category: string): ProtocolConfig[] => {

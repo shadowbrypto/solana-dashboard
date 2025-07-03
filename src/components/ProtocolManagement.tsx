@@ -115,7 +115,9 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing }: Sor
       <div {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-accent p-1.5 rounded transition-colors">
         <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
       </div>
-      <protocol.icon className="h-5 w-5 text-muted-foreground" />
+      <div className="p-1 bg-muted/20 rounded-sm w-10 h-10 flex items-center justify-center">
+        <protocol.icon size={32} className="text-muted-foreground" />
+      </div>
       <div className="flex-1">
         <p className="font-medium text-foreground">{protocol.name}</p>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
@@ -374,7 +376,9 @@ export function ProtocolManagement() {
             <DragOverlay>
               {activeProtocol ? (
                 <div className="flex items-center gap-3 p-3 border rounded-lg bg-card border-border shadow-2xl ring-2 ring-primary/50 backdrop-blur-sm transform rotate-1">
-                  <activeProtocol.icon className="h-5 w-5 text-muted-foreground" />
+                  <div className="p-1 bg-muted/20 rounded-sm w-10 h-10 flex items-center justify-center">
+                    <activeProtocol.icon size={32} className="text-muted-foreground" />
+                  </div>
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{activeProtocol.name}</p>
                     <p className="text-sm text-muted-foreground">{activeProtocol.id}</p>
@@ -397,32 +401,21 @@ export function ProtocolManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                    Hard Refresh Warning
-                  </p>
-                  <p className="text-sm text-orange-800 dark:text-orange-200">
-                    This will force a complete data refresh from Dune Analytics, bypassing all time restrictions. 
-                    Use this only when necessary as it may impact API rate limits.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
+          <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
+            <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+            <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
+              This will force a complete data refresh from Dune Analytics, bypassing all time restrictions.
+            </p>
             <Button
               onClick={handleHardRefresh}
               disabled={isRefreshing}
               variant="outline"
-              className="w-full"
+              size="sm"
             >
               {isRefreshing ? (
                 <>
                   <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                  Refreshing Data...
+                  Refreshing...
                 </>
               ) : (
                 <>

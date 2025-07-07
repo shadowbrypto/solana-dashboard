@@ -67,6 +67,7 @@ export class ProtocolSyncStatusService {
         .from('protocol_stats')
         .select('date')
         .eq('protocol_name', protocolName)
+        .eq('chain', 'solana') // Filter for Solana data only
         .order('date', { ascending: false })
         .limit(1);
 

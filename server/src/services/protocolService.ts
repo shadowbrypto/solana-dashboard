@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase.js';
 import { ProtocolStats, ProtocolMetrics, Protocol, ProtocolStatsWithDay } from '../types/protocol.js';
 import { format } from 'date-fns';
+import { getSolanaProtocols } from '../config/chainProtocols.js';
 
 interface CacheEntry<T> {
   data: T;
@@ -47,6 +48,15 @@ export function clearProtocolCache(protocolName?: string): void {
   
   keysToDelete.forEach(key => protocolStatsCache.delete(key));
   
+  // Clear EVM-specific cache entries
+  totalStatsCache.forEach((_, key) => {
+    if (key === `evm_metrics_${protocolName}` || key === protocolName || key === 'all') {
+      keysToDelete.push(key);
+    }
+  });
+  
+  keysToDelete.forEach(key => totalStatsCache.delete(key));
+  
   // Clear related caches
   totalStatsCache.delete(protocolName);
   totalStatsCache.delete('all');
@@ -81,6 +91,7 @@ export async function getProtocolStats(protocolName?: string | string[]) {
     let query = supabase
       .from('protocol_stats')
       .select('*')
+      .eq('chain', 'solana') // Filter for Solana data only
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     
@@ -156,6 +167,7 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
     const query = supabase
       .from('protocol_stats')
       .select('volume_usd, daily_users, new_users, trades, fees_usd')
+      .eq('chain', 'solana') // Filter for Solana data only
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (protocolName) {
@@ -215,6 +227,7 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const { data: latestDateData, error: latestDateError } = await supabase
     .from('protocol_stats')
     .select('date')
+    .eq('chain', 'solana') // Filter for Solana data only
     .order('date', { ascending: false })
     .limit(1);
 
@@ -238,7 +251,8 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const { data, error } = await supabase
     .from('protocol_stats')
     .select('protocol_name, volume_usd, daily_users, new_users, trades, fees_usd')
-    .eq('date', formattedDate);
+    .eq('date', formattedDate)
+    .eq('chain', 'solana'); // Filter for Solana data only
 
   if (error) {
     console.error('Error fetching daily metrics:', error);
@@ -289,6 +303,7 @@ export async function getAggregatedProtocolStats() {
     const { data, error } = await supabase
       .from('protocol_stats')
       .select('*')
+      .eq('chain', 'solana') // Filter for Solana data only
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -313,7 +328,8 @@ export async function getAggregatedProtocolStats() {
   console.log(`Total records fetched for aggregation: ${allData.length}`);
 
   // Group data by date and aggregate all protocols
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "fomo", "slingshot", "bonkbot terminal", "nova terminal"];
+  // Only include Solana protocols (data is already filtered by chain='solana')
+  const protocols = getSolanaProtocols();
   const dataByDate = new Map();
 
   // Get all unique dates
@@ -398,7 +414,8 @@ export async function generateWeeklyInsights() {
   const last7Days = sortedData.slice(0, 7);
   const previous7Days = sortedData.slice(7, 14);
 
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector", "fomo", "slingshot", "bonkbot terminal", "nova terminal"];
+  // Only include Solana protocols (data is already filtered by chain='solana')
+  const protocols = ["axiom", "banana", "bloom", "bonkbot", "bullx", "gmgnai", "maestro", "moonshot", "nova", "padre", "photon", "soltradingbot", "trojan", "vector"];
   
   // Calculate weekly stats for each protocol
   const weeklyStats = protocols.map(protocol => {
@@ -492,6 +509,82 @@ export async function generateWeeklyInsights() {
     data: result,
     timestamp: Date.now()
   });
+
+  return result;
+}
+
+// EVM-specific metrics for different UI layout
+export async function getEVMProtocolMetrics(protocolName: string): Promise<{
+  lifetimeVolume: number;
+  chainBreakdown: Array<{
+    chain: string;
+    volume: number;
+    percentage: number;
+  }>;
+  totalChains: number;
+}> {
+  const cacheKey = `evm_metrics_${protocolName}`;
+  const cachedData = totalStatsCache.get(cacheKey);
+
+  if (cachedData && isCacheValid(cachedData)) {
+    return cachedData.data;
+  }
+
+  console.log(`Fetching EVM metrics for protocol: ${protocolName}`);
+
+  // Fetch all data for this EVM protocol across all chains
+  const { data, error } = await supabase
+    .from('protocol_stats')
+    .select('chain, volume_usd')
+    .eq('protocol_name', protocolName)
+    .neq('chain', 'solana'); // Only EVM chains
+
+  if (error) {
+    console.error('Error fetching EVM protocol metrics:', error);
+    throw error;
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      lifetimeVolume: 0,
+      chainBreakdown: [],
+      totalChains: 0
+    };
+  }
+
+  // Aggregate volume by chain
+  const chainVolumes = new Map<string, number>();
+  
+  data.forEach(row => {
+    const currentVolume = chainVolumes.get(row.chain) || 0;
+    chainVolumes.set(row.chain, currentVolume + (row.volume_usd || 0));
+  });
+
+  // Calculate total lifetime volume
+  const lifetimeVolume = Array.from(chainVolumes.values()).reduce((sum, volume) => sum + volume, 0);
+
+  // Create chain breakdown with percentages
+  const chainBreakdown = Array.from(chainVolumes.entries())
+    .map(([chain, volume]) => ({
+      chain,
+      volume,
+      percentage: lifetimeVolume > 0 ? (volume / lifetimeVolume) * 100 : 0
+    }))
+    .sort((a, b) => b.volume - a.volume); // Sort by volume descending
+
+  const result = {
+    lifetimeVolume,
+    chainBreakdown,
+    totalChains: chainBreakdown.length
+  };
+
+  // Cache the results
+  totalStatsCache.set(cacheKey, {
+    data: result,
+    timestamp: Date.now()
+  });
+
+  console.log(`EVM metrics for ${protocolName}: $${lifetimeVolume.toLocaleString()} across ${chainBreakdown.length} chains`);
 
   return result;
 }

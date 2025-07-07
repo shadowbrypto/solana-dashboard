@@ -5,6 +5,7 @@ import Papa from 'papaparse';
 import { supabase } from '../lib/supabase.js';
 import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
+import { isSolanaProtocol } from '../config/chainProtocols.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -384,7 +385,8 @@ export class DataManagementService {
         const { error: deleteError } = await supabase
           .from(TABLE_NAME)
           .delete()
-          .eq('protocol_name', protocolName);
+          .eq('protocol_name', protocolName)
+          .eq('chain', 'solana'); // Only delete Solana data
 
         if (deleteError) {
           throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);

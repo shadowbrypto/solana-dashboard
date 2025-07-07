@@ -32,10 +32,13 @@ import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizont
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { VolumeActivity } from "./components/VolumeActivity";
+import { EVMProtocolLayout } from "./components/EVMProtocolLayout";
 import { getAllProtocols } from "./lib/protocol-categories";
-import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "./lib/protocol-config";
+import { isEVMProtocol, isSolanaProtocol } from "./config/chainProtocols";
+import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 import { LayoutGrid } from 'lucide-react';
+import { Badge } from './components/ui/badge';
 // import { Settings } from './lib/settings';
 
 interface DailyData {
@@ -480,7 +483,7 @@ const MainContent = (): JSX.Element => {
                 return (
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-muted/10 ring-1 ring-border">
                     <img 
-                      src={`/assets/logos/${protocol}.jpg`}
+                      src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
                       alt={protocolConfig.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -503,12 +506,26 @@ const MainContent = (): JSX.Element => {
               return null;
             })()
           )}
-          <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-            {protocol === "all"
-              ? "Overview"
-              : getProtocolName(protocol)}{" "}
-            Dashboard
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              {protocol === "all"
+                ? "Overview"
+                : getProtocolName(protocol)}{" "}
+              Dashboard
+            </h1>
+            {(() => {
+              const protocolConfig = getProtocolById(protocol);
+              return protocolConfig?.chain === 'evm' ? (
+                <Badge variant="secondary" className="h-6 px-3 text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                  EVM
+                </Badge>
+              ) : protocolConfig?.chain === 'solana' ? (
+                <Badge variant="secondary" className="h-6 px-3 text-sm bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                  SOL
+                </Badge>
+              ) : null;
+            })()}
+          </div>
         </div>
       )}
 
@@ -935,6 +952,8 @@ const MainContent = (): JSX.Element => {
                 </AccordionItem>
               </Accordion>
             </>
+          ) : protocol.endsWith('_evm') ? (
+            <EVMProtocolLayout protocol={protocol} />
           ) : (
             <>
               <ProtocolHighlights

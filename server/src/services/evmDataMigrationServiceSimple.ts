@@ -126,7 +126,8 @@ export class SimpleEVMDataMigrationService {
       const { error: deleteError } = await supabase
         .from(TABLE_NAME)
         .delete()
-        .eq('protocol_name', cleanProtocolName);
+        .eq('protocol_name', cleanProtocolName)
+        .neq('chain', 'solana'); // Only delete EVM data, not Solana data
 
       if (deleteError) {
         throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);

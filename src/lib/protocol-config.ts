@@ -72,10 +72,10 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps', chain: 'solana' },
   
   // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
-  { id: 'sigma_evm', name: 'Sigma EVM', icon: SigmaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'maestro_evm', name: 'Maestro EVM', icon: MaestroEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'bloom_evm', name: 'Bloom EVM', icon: BloomEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'banana_evm', name: 'Banana EVM', icon: BananaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'sigma_evm', name: 'Sigma', icon: SigmaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'maestro_evm', name: 'Maestro', icon: MaestroEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'bloom_evm', name: 'Bloom', icon: BloomEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'banana_evm', name: 'Banana', icon: BananaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
 ];
 
 // Helper functions

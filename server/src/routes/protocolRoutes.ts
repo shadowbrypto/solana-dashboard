@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMProtocolMetrics } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 
@@ -120,6 +120,31 @@ router.get('/weekly-insights', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to generate weekly insights',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/evm-metrics/:protocol
+// Returns EVM-specific metrics with lifetime volume and chain breakdown
+router.get('/evm-metrics/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    
+    if (!protocol) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Protocol parameter is required' 
+      });
+    }
+
+    const evmMetrics = await getEVMProtocolMetrics(protocol);
+    res.json({ success: true, data: evmMetrics });
+  } catch (error) {
+    console.error('Error fetching EVM protocol metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM protocol metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

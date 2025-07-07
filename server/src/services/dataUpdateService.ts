@@ -3,17 +3,14 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { supabase } from '../lib/supabase.js';
 import { dataManagementService } from './dataManagementService.js';
+import { getSolanaProtocols } from '../config/chainProtocols.js';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// List of all protocols we expect to have data for
-const EXPECTED_PROTOCOLS = [
-  'axiom', 'banana', 'bloom', 'bonkbot', 'bullx', 'gmgnai', 
-  'maestro', 'moonshot', 'nova', 'padre', 'photon', 
-  'soltradingbot', 'trojan', 'vector'
-];
+// List of all protocols we expect to have data for (Solana only)
+const EXPECTED_PROTOCOLS = getSolanaProtocols();
 
 // Check if we have current day data for all protocols in the database
 async function checkCurrentDataInDB(): Promise<{ hasCurrentData: boolean; missingProtocols: string[] }> {
@@ -26,6 +23,7 @@ async function checkCurrentDataInDB(): Promise<{ hasCurrentData: boolean; missin
       .from('protocol_stats')
       .select('protocol_name')
       .eq('date', today)
+      .eq('chain', 'solana') // Filter for Solana data only
       .in('protocol_name', EXPECTED_PROTOCOLS);
     
     if (error) {

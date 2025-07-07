@@ -90,7 +90,7 @@ export async function getProtocolStats(protocolName?: string | string[]) {
   }
 }
 
-export async function getTotalProtocolStats(protocolName?: string): Promise<ProtocolMetrics> {
+export async function getTotalProtocolStats(protocolName?: string, chain?: string): Promise<ProtocolMetrics> {
   const cacheKey = protocolName || 'all';
   
   // Check local cache first
@@ -100,7 +100,7 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
   }
 
   try {
-    const totalStats = await protocolApi.getTotalProtocolStats(protocolName);
+    const totalStats = await protocolApi.getTotalProtocolStats(protocolName, chain);
     
     // Cache the results locally
     totalStatsCache.set(cacheKey, {

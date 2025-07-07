@@ -87,11 +87,20 @@ export const protocolApi = {
   },
 
   // Get total protocol stats with optional filtering
-  async getTotalProtocolStats(protocolName?: string): Promise<ProtocolMetrics> {
+  async getTotalProtocolStats(protocolName?: string, chain?: string): Promise<ProtocolMetrics> {
     let endpoint = '/protocols/total-stats';
+    const params = new URLSearchParams();
     
     if (protocolName) {
-      endpoint += `?protocol=${encodeURIComponent(protocolName)}`;
+      params.append('protocol', protocolName);
+    }
+    
+    if (chain) {
+      params.append('chain', chain);
+    }
+    
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
     }
     
     return apiRequest<ProtocolMetrics>(endpoint);

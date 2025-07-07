@@ -6,10 +6,10 @@ import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServi
 const router = Router();
 
 // GET /api/protocols/stats
-// Query params: protocol (optional, can be single string or comma-separated list)
+// Query params: protocol (optional, can be single string or comma-separated list), chain (optional - 'solana', 'evm', or specific chain)
 router.get('/stats', async (req: Request, res: Response) => {
   try {
-    const { protocol } = req.query;
+    const { protocol, chain } = req.query;
     
     let protocolName: string | string[] | undefined;
     if (protocol) {
@@ -20,7 +20,8 @@ router.get('/stats', async (req: Request, res: Response) => {
       }
     }
 
-    const stats = await getProtocolStats(protocolName);
+    const chainFilter = typeof chain === 'string' ? chain : undefined;
+    const stats = await getProtocolStats(protocolName, chainFilter);
     res.json({ success: true, data: stats });
   } catch (error) {
     console.error('Error fetching protocol stats:', error);
@@ -33,13 +34,14 @@ router.get('/stats', async (req: Request, res: Response) => {
 });
 
 // GET /api/protocols/total-stats
-// Query params: protocol (optional)
+// Query params: protocol (optional), chain (optional - 'solana', 'evm', or specific chain)
 router.get('/total-stats', async (req: Request, res: Response) => {
   try {
-    const { protocol } = req.query;
+    const { protocol, chain } = req.query;
     const protocolName = typeof protocol === 'string' ? protocol : undefined;
+    const chainFilter = typeof chain === 'string' ? chain : undefined;
 
-    const totalStats = await getTotalProtocolStats(protocolName);
+    const totalStats = await getTotalProtocolStats(protocolName, chainFilter);
     res.json({ success: true, data: totalStats });
   } catch (error) {
     console.error('Error fetching total protocol stats:', error);

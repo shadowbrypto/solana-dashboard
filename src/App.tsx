@@ -174,7 +174,7 @@ const MainContent = (): JSX.Element => {
       } else if (selectedProtocol.endsWith('_evm')) {
         // For EVM protocols, fetch lifetime volume from all non-Solana chains
         const cleanProtocol = selectedProtocol.replace('_evm', '');
-        const evmTotalStats = await getTotalProtocolStats(cleanProtocol);
+        const evmTotalStats = await getTotalProtocolStats(cleanProtocol, 'evm');
         setTotalMetrics(evmTotalStats);
         fetchedData = []; // EVM protocols don't need time-series data for now
         console.log(`EVM protocol ${selectedProtocol} - loaded lifetime metrics`);

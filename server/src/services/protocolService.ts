@@ -72,7 +72,7 @@ export function formatDate(isoDate: string): string {
   return `${day}-${month}-${year}`;
 }
 
-export async function getProtocolStats(protocolName?: string | string[]) {
+export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string) {
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') 
     : (protocolName || 'all');
@@ -94,13 +94,16 @@ export async function getProtocolStats(protocolName?: string | string[]) {
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    // Determine which chains to query based on protocol type
-    if (protocolName && !Array.isArray(protocolName) && isEVMProtocol(protocolName)) {
-      // For EVM protocols, query all non-Solana chains
+    // Determine which chains to query based on chain parameter
+    if (chainFilter === 'evm') {
+      // For EVM, query all non-Solana chains
       query = query.neq('chain', 'solana');
-    } else {
-      // For Solana protocols or 'all', query Solana chain
+    } else if (chainFilter === 'solana' || !chainFilter) {
+      // For Solana or default, query Solana chain
       query = query.eq('chain', 'solana');
+    } else {
+      // For specific chain, query that exact chain
+      query = query.eq('chain', chainFilter);
     }
     
     if (protocolName) {
@@ -158,8 +161,8 @@ export async function getProtocolStats(protocolName?: string | string[]) {
   return formattedData;
 }
 
-export async function getTotalProtocolStats(protocolName?: string): Promise<ProtocolMetrics> {
-  const cacheKey = protocolName || 'all';
+export async function getTotalProtocolStats(protocolName?: string, chainFilter?: string): Promise<ProtocolMetrics> {
+  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}`;
   const cachedData = totalStatsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -177,20 +180,28 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
       .select('volume_usd, daily_users, new_users, trades, fees_usd')
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    // Determine which chains to query based on protocol type
-    if (protocolName && isEVMProtocol(protocolName)) {
-      // For EVM protocols, query all non-Solana chains
+    // Determine which chains to query based on chain parameter
+    if (chainFilter === 'evm') {
+      // For EVM, query all non-Solana chains
+      console.log(`EVM filter detected, querying non-Solana chains`);
       query = query.neq('chain', 'solana');
-    } else {
-      // For Solana protocols or 'all', query Solana chain
+    } else if (chainFilter === 'solana' || !chainFilter) {
+      // For Solana or default, query Solana chain
+      console.log(`Solana filter, querying Solana chain`);
       query = query.eq('chain', 'solana');
+    } else {
+      // For specific chain, query that exact chain
+      console.log(`Specific chain filter: ${chainFilter}`);
+      query = query.eq('chain', chainFilter);
     }
 
     if (protocolName) {
-      query.ilike('protocol_name', protocolName);
+      query = query.eq('protocol_name', protocolName);
     }
 
+    console.log(`Query for protocol: ${protocolName}, chain: ${chainFilter}`);
     const { data, error } = await query;
+    console.log(`Query returned ${data?.length || 0} rows`);
 
     if (error) throw error;
     if (!data || data.length === 0) break;

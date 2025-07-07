@@ -33,7 +33,7 @@ import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { VolumeActivity } from "./components/VolumeActivity";
 import { EVMProtocolLayout } from "./components/EVMProtocolLayout";
-import { getAllProtocols } from "./lib/protocol-categories";
+import { getAllProtocols, getAllProtocolsIncludingEVM } from "./lib/protocol-categories";
 import { isEVMProtocol, isSolanaProtocol } from "./config/chainProtocols";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
@@ -160,7 +160,7 @@ const MainContent = (): JSX.Element => {
       setError(null);
       setInvalidProtocol(false);
 
-      const validProtocols = [...getAllProtocols(), "all"];
+      const validProtocols = [...getAllProtocolsIncludingEVM(), "all"];
       if (!validProtocols.includes(selectedProtocol)) {
         setInvalidProtocol(true);
         setLoading(false);

@@ -7,7 +7,6 @@ import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
-import { getChainLogo } from '../components/icons';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
 // import { Settings } from '../lib/settings';
@@ -229,7 +228,7 @@ export function Layout() {
                         const protocol = protocols.find(p => p.id === protocolId);
                         if (!protocol) return null;
                         const Icon = protocol.icon;
-                        const ChainLogo = getChainLogo(protocol.id);
+                        const isEVM = protocol.id.endsWith('_evm');
                         return (
                           <Button
                             key={protocol.id}
@@ -259,7 +258,14 @@ export function Layout() {
                               />
                             </div>
                             <span className="flex-1 text-left">{protocol.name}</span>
-                            <ChainLogo size={12} />
+                            <span className={cn(
+                              "text-xs px-1.5 py-0.5 rounded-md font-medium",
+                              isEVM 
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                                : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                            )}>
+                              {isEVM ? "EVM" : "SOL"}
+                            </span>
                           </Button>
                         );
                       })}

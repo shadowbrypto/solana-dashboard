@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase.js';
 import { ProtocolStats, ProtocolMetrics, Protocol, ProtocolStatsWithDay } from '../types/protocol.js';
 import { format } from 'date-fns';
-import { getSolanaProtocols } from '../config/chainProtocols.js';
+import { getSolanaProtocols, isEVMProtocol, getEVMProtocols } from '../config/chainProtocols.js';
 
 interface CacheEntry<T> {
   data: T;
@@ -91,9 +91,17 @@ export async function getProtocolStats(protocolName?: string | string[]) {
     let query = supabase
       .from('protocol_stats')
       .select('*')
-      .eq('chain', 'solana') // Filter for Solana data only
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    // Determine which chains to query based on protocol type
+    if (protocolName && !Array.isArray(protocolName) && isEVMProtocol(protocolName)) {
+      // For EVM protocols, query specific EVM chains
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+    } else {
+      // For Solana protocols or 'all', query Solana chain
+      query = query.eq('chain', 'solana');
+    }
     
     if (protocolName) {
       if (Array.isArray(protocolName)) {
@@ -164,11 +172,19 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
   const PAGE_SIZE = 1000;
 
   while (hasMore) {
-    const query = supabase
+    let query = supabase
       .from('protocol_stats')
       .select('volume_usd, daily_users, new_users, trades, fees_usd')
-      .eq('chain', 'solana') // Filter for Solana data only
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    // Determine which chains to query based on protocol type
+    if (protocolName && isEVMProtocol(protocolName)) {
+      // For EVM protocols, query specific EVM chains
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+    } else {
+      // For Solana protocols or 'all', query Solana chain
+      query = query.eq('chain', 'solana');
+    }
 
     if (protocolName) {
       query.ilike('protocol_name', protocolName);

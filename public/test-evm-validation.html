@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test EVM Protocol Validation</title>
+</head>
+<body>
+    <h1>EVM Protocol Validation Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test if EVM protocols are accessible
+        const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm'];
+        const results = document.getElementById('results');
+        
+        async function testProtocol(protocol) {
+            try {
+                const url = `/?protocol=${protocol}`;
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                // Check if it's a 404 or contains "not found"
+                const isNotFound = text.includes('not found') || text.includes('404') || response.status === 404;
+                
+                return {
+                    protocol,
+                    success: !isNotFound,
+                    status: response.status,
+                    url
+                };
+            } catch (error) {
+                return {
+                    protocol,
+                    success: false,
+                    error: error.message,
+                    url: `/?protocol=${protocol}`
+                };
+            }
+        }
+        
+        async function runTests() {
+            results.innerHTML = '<p>Testing EVM protocols...</p>';
+            
+            const testResults = [];
+            for (const protocol of evmProtocols) {
+                const result = await testProtocol(protocol);
+                testResults.push(result);
+            }
+            
+            let html = '<h2>Results:</h2><ul>';
+            testResults.forEach(result => {
+                const status = result.success ? '✅ Working' : '❌ Failed';
+                html += `<li><strong>${result.protocol}</strong>: ${status}`;
+                if (result.error) html += ` (${result.error})`;
+                if (result.status) html += ` [Status: ${result.status}]`;
+                html += `</li>`;
+            });
+            html += '</ul>';
+            
+            const successful = testResults.filter(r => r.success).length;
+            html += `<p><strong>Summary: ${successful}/${testResults.length} protocols working</strong></p>`;
+            
+            if (successful === testResults.length) {
+                html += '<p style="color: green;">🎉 All EVM protocols are accessible!</p>';
+            } else {
+                html += '<p style="color: red;">⚠️ Some EVM protocols are still showing 404 errors.</p>';
+            }
+            
+            results.innerHTML = html;
+        }
+        
+        // Run tests when page loads
+        runTests();
+    </script>
+</body>
+</html>

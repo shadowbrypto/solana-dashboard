@@ -32,9 +32,7 @@ import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizont
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { VolumeActivity } from "./components/VolumeActivity";
-import { EVMProtocolLayout } from "./components/EVMProtocolLayout";
 import { getAllProtocols, getAllProtocolsIncludingEVM } from "./lib/protocol-categories";
-import { isEVMProtocol, isSolanaProtocol } from "./config/chainProtocols";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
 import { LayoutGrid } from 'lucide-react';
@@ -173,6 +171,10 @@ const MainContent = (): JSX.Element => {
         console.log('Fetching aggregated data for all protocols...');
         fetchedData = await getAggregatedProtocolStats();
         console.log(`Fetched ${fetchedData.length} aggregated records`);
+      } else if (selectedProtocol.endsWith('_evm')) {
+        // For EVM protocols, use empty data for now (will be redesigned later)
+        fetchedData = [];
+        console.log(`EVM protocol ${selectedProtocol} - using empty data template`);
       } else {
         fetchedData = await getProtocolStats(selectedProtocol);
       }
@@ -952,8 +954,6 @@ const MainContent = (): JSX.Element => {
                 </AccordionItem>
               </Accordion>
             </>
-          ) : protocol.endsWith('_evm') ? (
-            <EVMProtocolLayout protocol={protocol} />
           ) : (
             <>
               <ProtocolHighlights

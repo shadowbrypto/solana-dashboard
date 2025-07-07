@@ -259,7 +259,7 @@ export function Layout() {
                               />
                             </div>
                             <span className="flex-1 text-left">{protocol.name}</span>
-                            <ChainLogo size={14} className="opacity-60" />
+                            <ChainLogo size={12} />
                           </Button>
                         );
                       })}

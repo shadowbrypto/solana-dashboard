@@ -11,7 +11,7 @@ export const SolanaLogo: React.FC<ChainLogoProps> = ({ className = "", size = 16
     width={size} 
     height={size} 
     viewBox="0 0 32 32" 
-    className={className}
+    className={`drop-shadow-sm ${className}`}
     fill="none" 
     xmlns="http://www.w3.org/2000/svg"
   >
@@ -55,7 +55,7 @@ export const EthereumLogo: React.FC<ChainLogoProps> = ({ className = "", size = 
     width={size} 
     height={size} 
     viewBox="0 0 32 32" 
-    className={className}
+    className={`drop-shadow-sm ${className}`}
     fill="none" 
     xmlns="http://www.w3.org/2000/svg"
   >

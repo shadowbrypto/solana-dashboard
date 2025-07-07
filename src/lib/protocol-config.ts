@@ -140,7 +140,7 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
   }
 };
 
-// Generate protocol categories for backward compatibility
+// Generate protocol categories for backward compatibility (Solana only - for reports)
 export const generateProtocolCategories = () => {
   const categories = getAllCategories();
   return categories.map(categoryName => ({
@@ -148,6 +148,15 @@ export const generateProtocolCategories = () => {
     protocols: getProtocolsByCategory(categoryName)
       .filter(p => p.chain !== 'evm') // Exclude EVM protocols from reports
       .map(p => p.id)
+  }));
+};
+
+// Generate ALL protocol categories including EVM (for sidebar navigation)
+export const generateAllProtocolCategories = () => {
+  const categories = getAllCategories();
+  return categories.map(categoryName => ({
+    name: categoryName,
+    protocols: getProtocolsByCategory(categoryName).map(p => p.id)
   }));
 };
 
@@ -244,6 +253,16 @@ export const getMutableAllCategories = (): string[] => {
   return Array.from(new Set(mutableProtocolConfigs
     .filter(p => p.chain !== 'evm') // Exclude EVM protocols from reports
     .map(p => p.category)));
+};
+
+// Get ALL categories including EVM for navigation
+export const getMutableAllCategoriesIncludingEVM = (): string[] => {
+  return Array.from(new Set(mutableProtocolConfigs.map(p => p.category)));
+};
+
+// Get ALL protocols by category including EVM for navigation
+export const getMutableProtocolsByCategoryIncludingEVM = (category: string): ProtocolConfigMutable[] => {
+  return mutableProtocolConfigs.filter(p => p.category === category);
 };
 
 // Save current configurations to database

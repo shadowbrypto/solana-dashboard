@@ -532,12 +532,12 @@ export async function getEVMProtocolMetrics(protocolName: string): Promise<{
 
   console.log(`Fetching EVM metrics for protocol: ${protocolName}`);
 
-  // Fetch all data for this EVM protocol across all chains
+  // Fetch all data for this EVM protocol across specific EVM chains
   const { data, error } = await supabase
     .from('protocol_stats')
     .select('chain, volume_usd')
     .eq('protocol_name', protocolName)
-    .neq('chain', 'solana'); // Only EVM chains
+    .in('chain', ['ethereum', 'base', 'bsc', 'avax']); // Specific EVM chains
 
   if (error) {
     console.error('Error fetching EVM protocol metrics:', error);

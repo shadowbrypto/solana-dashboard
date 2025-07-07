@@ -1,4 +1,4 @@
-import { generateProtocolCategories, getMutableProtocolConfigs } from './protocol-config';
+import { generateProtocolCategories, generateAllProtocolCategories, getMutableProtocolConfigs } from './protocol-config';
 import { isSolanaProtocol } from '../config/chainProtocols';
 
 // Note: EVM protocols are excluded from daily, weekly, and monthly reports
@@ -10,7 +10,11 @@ export interface ProtocolCategory {
 }
 
 // Generate categories from the centralized protocol configuration
-export const protocolCategories: ProtocolCategory[] = generateProtocolCategories();
+// This includes ALL protocols (Solana + EVM) for navigation sidebar
+export const protocolCategories: ProtocolCategory[] = generateAllProtocolCategories();
+
+// Generate categories for reports (Solana only)
+export const reportProtocolCategories: ProtocolCategory[] = generateProtocolCategories();
 
 export const getProtocolCategory = (protocolName: string): string => {
   const protocol = getMutableProtocolConfigs().find(p => 
@@ -42,5 +46,17 @@ export const getSolanaProtocols = (): string[] => {
 export const getSolanaCategoryProtocols = (categoryName: string): string[] => {
   return getMutableProtocolConfigs()
     .filter(p => p.category === categoryName && (p.chain === 'solana' || !p.chain)) // Include only Solana protocols
+    .map(p => p.id);
+};
+
+// Get ALL protocols (including EVM) for navigation
+export const getAllProtocolsIncludingEVM = (): string[] => {
+  return getMutableProtocolConfigs().map(p => p.id);
+};
+
+// Get ALL protocols by category (including EVM) for navigation
+export const getAllCategoryProtocolsIncludingEVM = (categoryName: string): string[] => {
+  return getMutableProtocolConfigs()
+    .filter(p => p.category === categoryName)
     .map(p => p.id);
 };

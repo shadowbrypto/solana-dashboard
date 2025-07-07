@@ -5,6 +5,8 @@ import {
   getMutableProtocolConfigs, 
   getMutableAllCategories, 
   getMutableProtocolsByCategory,
+  getMutableAllCategoriesIncludingEVM,
+  getMutableProtocolsByCategoryIncludingEVM,
   updateProtocolCategory,
   saveProtocolConfigurations,
   resetProtocolConfigurations,
@@ -180,7 +182,7 @@ export function ProtocolManagement() {
   const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
   const { toast } = useToast();
   
-  const categories = getMutableAllCategories();
+  const categories = getMutableAllCategoriesIncludingEVM(); // Show all protocols including EVM in management
   const sensors = useSensors(useSensor(PointerSensor));
 
   // Load configurations from database on component mount
@@ -458,7 +460,7 @@ export function ProtocolManagement() {
           >
             <div className="space-y-6">
               {categories.map(category => {
-                const categoryProtocols = getMutableProtocolsByCategory(category);
+                const categoryProtocols = getMutableProtocolsByCategoryIncludingEVM(category); // Show all protocols including EVM
                 return (
                   <div key={category}>
                     <h3 className="text-lg font-semibold mb-3">{category}</h3>

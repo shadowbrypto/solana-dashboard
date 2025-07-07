@@ -104,10 +104,42 @@ export class DataManagementService {
         throw new Error(`Protocol '${protocolName}' not found in PROTOCOL_SOURCES`);
       }
 
-      console.log(`Starting data sync for protocol: ${protocolName}...`);
-
-      // Step 1: Download CSV file for the specific protocol
       const protocolConfig = PROTOCOL_SOURCES[protocolName];
+      
+      // Check if this is an EVM protocol
+      if (protocolConfig.chain === 'evm') {
+        // Delegate to EVM migration service
+        console.log(`Detected EVM protocol ${protocolName}, delegating to EVM service...`);
+        
+        const { evmDataMigrationService } = await import('./evmDataMigrationService.js');
+        const evmResult = await evmDataMigrationService.syncEVMProtocolData(protocolName);
+        
+        // Convert EVM result format to standard SyncResult format
+        return {
+          success: evmResult.success,
+          csvFilesFetched: evmResult.csvFilesFetched,
+          rowsImported: evmResult.rowsImported,
+          timestamp: evmResult.timestamp,
+          downloadResults: evmResult.downloadResults.map(r => ({
+            success: r.success,
+            protocol: r.protocol,
+            queriesProcessed: r.queriesProcessed,
+            queriesFailed: r.queriesFailed,
+            error: r.error
+          })),
+          importResults: evmResult.importResults.map(r => ({
+            success: r.success,
+            protocol: r.protocol,
+            rowsInserted: r.rowsInserted,
+            error: r.error
+          })),
+          error: evmResult.error
+        };
+      }
+
+      console.log(`Starting Solana data sync for protocol: ${protocolName}...`);
+
+      // Step 1: Download CSV file for the specific protocol (Solana)
       const downloadResult = await this.downloadProtocolData(protocolName, protocolConfig.queryIds);
       
       if (!downloadResult.success) {

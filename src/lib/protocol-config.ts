@@ -29,8 +29,8 @@ export interface ProtocolConfig {
   id: string;
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
-  category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps';
-  chain?: 'solana' | 'ethereum'; // Optional for backward compatibility
+  category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps' | 'EVM Protocols';
+  chain?: 'solana' | 'ethereum' | 'evm'; // Optional for backward compatibility
 }
 
 export interface ProtocolConfigMutable {
@@ -38,7 +38,7 @@ export interface ProtocolConfigMutable {
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
   category: string;
-  chain?: 'solana' | 'ethereum'; // Optional for backward compatibility
+  chain?: 'solana' | 'ethereum' | 'evm'; // Optional for backward compatibility
 }
 
 // Centralized protocol configuration
@@ -70,9 +70,11 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'slingshot', name: 'Slingshot', icon: SlingshotIcon, category: 'Mobile Apps', chain: 'solana' },
   { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps', chain: 'solana' },
   
-  // Ethereum protocols can be added here
-  // Example:
-  // { id: 'uniswap', name: 'Uniswap', icon: ArrowUpRight, category: 'Trading Terminals', chain: 'ethereum' },
+  // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
+  { id: 'sigma_evm', name: 'Sigma EVM', icon: TrendingUp, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'maestro_evm', name: 'Maestro EVM', icon: MaestroIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'bloom_evm', name: 'Bloom EVM', icon: BloomIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'banana_evm', name: 'Banana EVM', icon: BananaIcon, category: 'EVM Protocols', chain: 'evm' },
 ];
 
 // Helper functions
@@ -80,12 +82,12 @@ export const getProtocolById = (id: string): ProtocolConfig | undefined => {
   return protocolConfigs.find(p => p.id === id);
 };
 
-export const getProtocolsByChain = (chain: 'solana' | 'ethereum'): ProtocolConfig[] => {
+export const getProtocolsByChain = (chain: 'solana' | 'ethereum' | 'evm'): ProtocolConfig[] => {
   return protocolConfigs.filter(p => p.chain === chain);
 };
 
-export const getAllChains = (): Array<'solana' | 'ethereum'> => {
-  const chains = new Set(protocolConfigs.map(p => p.chain).filter(Boolean) as Array<'solana' | 'ethereum'>);
+export const getAllChains = (): Array<'solana' | 'ethereum' | 'evm'> => {
+  const chains = new Set(protocolConfigs.map(p => p.chain).filter(Boolean) as Array<'solana' | 'ethereum' | 'evm'>);
   return Array.from(chains);
 };
 

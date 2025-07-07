@@ -123,7 +123,14 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
         <protocol.icon size={32} className="text-muted-foreground" />
       </div>
       <div className="flex-1">
-        <p className="font-medium text-foreground">{protocol.name}</p>
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-foreground">{protocol.name}</p>
+          {protocol.chain === 'evm' && (
+            <Badge variant="secondary" className="h-5 px-2 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+              EVM
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
         {syncStatus && !syncStatus.sync_success && (
           <div className="flex items-center gap-1 mt-1">
@@ -240,6 +247,7 @@ export function ProtocolManagement() {
     
     setIsRefreshing(true);
     try {
+      // Sync only Solana protocols (filter out EVM ones)
       const result = await dataSyncApi.syncData();
       
       // Clear all frontend caches after successful refresh
@@ -247,8 +255,8 @@ export function ProtocolManagement() {
       
       toast({
         variant: "success",
-        title: "Data Refresh Complete",
-        description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
+        title: "Solana Data Refresh Complete",
+        description: `Successfully refreshed Solana data for ${result.csvFilesFetched} protocols`,
       });
       
       // Reload sync statuses after successful refresh
@@ -256,8 +264,8 @@ export function ProtocolManagement() {
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh data",
+        title: "Solana Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh Solana data",
       });
     } finally {
       setIsRefreshing(false);
@@ -293,14 +301,19 @@ export function ProtocolManagement() {
     setRefreshingProtocols(prev => new Set([...prev, protocolId]));
     
     try {
+      // Use unified sync endpoint - backend will route EVM protocols automatically
       const result = await dataSyncApi.syncProtocolData(protocolId);
       
       // Clear frontend cache for this protocol
       clearProtocolFrontendCache(protocolId);
       
+      // Check if this is an EVM protocol for different toast message
+      const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
+      const isEVMProtocol = protocol?.chain === 'evm';
+      
       toast({
         variant: "success",
-        title: "Protocol Refreshed",
+        title: isEVMProtocol ? "EVM Protocol Refreshed" : "Protocol Refreshed",
         description: `Successfully refreshed data for ${protocolId}`,
       });
       
@@ -318,6 +331,35 @@ export function ProtocolManagement() {
         newSet.delete(protocolId);
         return newSet;
       });
+    }
+  };
+
+  const handleRefreshAllEVM = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      const result = await dataSyncApi.syncEVMData();
+      
+      // Clear all frontend caches after successful refresh
+      clearAllFrontendCaches();
+      
+      toast({
+        variant: "success",
+        title: "EVM Data Refresh Complete",
+        description: `Successfully refreshed EVM data: ${result.data.rowsImported} rows imported across ${result.data.csvFilesFetched} protocols`,
+      });
+      
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "EVM Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh EVM data",
+      });
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -460,24 +502,44 @@ export function ProtocolManagement() {
             <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
               This will force a complete data refresh from Dune Analytics, bypassing all time restrictions.
             </p>
-            <Button
-              onClick={handleHardRefresh}
-              disabled={isRefreshing}
-              variant="outline"
-              size="sm"
-            >
-              {isRefreshing ? (
-                <>
-                  <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                  Refreshing...
-                </>
-              ) : (
-                <>
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  Force Refresh All Data
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleHardRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+              >
+                {isRefreshing ? (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Refresh Solana Data
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleRefreshAllEVM}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+              >
+                {isRefreshing ? (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    Refresh EVM Data
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -91,3 +91,6 @@ export const BloomEVMIcon = (props: any) => (
 export const BananaEVMIcon = (props: any) => (
   <ProtocolLogo protocolId="banana" protocolName="Banana" fallbackIcon={Banana} {...props} />
 );
+
+// Export chain logos
+export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

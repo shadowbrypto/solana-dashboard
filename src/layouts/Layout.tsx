@@ -7,6 +7,7 @@ import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
+import { getChainLogo } from '../components/icons';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
 // import { Settings } from '../lib/settings';
@@ -228,6 +229,7 @@ export function Layout() {
                         const protocol = protocols.find(p => p.id === protocolId);
                         if (!protocol) return null;
                         const Icon = protocol.icon;
+                        const ChainLogo = getChainLogo(protocol.id);
                         return (
                           <Button
                             key={protocol.id}
@@ -256,7 +258,8 @@ export function Layout() {
                                 }}
                               />
                             </div>
-                            {protocol.name}
+                            <span className="flex-1 text-left">{protocol.name}</span>
+                            <ChainLogo size={14} className="opacity-60" />
                           </Button>
                         );
                       })}

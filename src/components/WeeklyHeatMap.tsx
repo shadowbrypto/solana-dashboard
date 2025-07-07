@@ -13,6 +13,7 @@ import { Button } from "./ui/button";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
+import { useToast } from "../hooks/use-toast";
 
 interface WeeklyHeatMapProps {
   protocols: Protocol[];
@@ -77,6 +78,7 @@ export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMa
   const [last7Days, setLast7Days] = useState<Date[]>([]);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [hoveredCell, setHoveredCell] = useState<{ protocol: string; date: string } | null>(null);
+  const { toast } = useToast();
 
   const metricOptions = [
     { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
@@ -262,6 +264,11 @@ export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMa
               'image/png': blob
             })
           ]);
+          toast({
+            title: "Copied to clipboard",
+            description: "Weekly heatmap copied successfully",
+            duration: 2000,
+          });
         }
       } catch (error) {
         console.error('Error copying to clipboard:', error);

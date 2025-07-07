@@ -21,6 +21,7 @@ import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
+import { useToast } from "../hooks/use-toast";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -72,6 +73,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
+  const { toast } = useToast();
 
   // Calculate total volume for market share
   const totalVolume = Object.values(dailyData)
@@ -582,6 +584,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 'image/png': blob
               })
             ]);
+            toast({
+              title: "Copied to clipboard",
+              description: "Daily report image copied successfully",
+              duration: 2000,
+            });
           } catch (error) {
             // Handle error silently or show user-friendly message
           }

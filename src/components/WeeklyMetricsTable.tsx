@@ -12,7 +12,7 @@ import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, C
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
-import { AreaChart, Area, ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis } from 'recharts';
+import { AreaChart, Area, ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Cell } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
@@ -23,6 +23,7 @@ import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { useToast } from "../hooks/use-toast";
 
 interface WeeklyMetricsTableProps {
   protocols: Protocol[];
@@ -53,6 +54,17 @@ const formatNumber = (value: number): string => {
   return value.toLocaleString();
 };
 
+const formatGrowthPercentage = (growth: number): string => {
+  const percentage = growth * 100;
+  const sign = percentage >= 0 ? '+' : '';
+  return `${sign}${percentage.toFixed(1)}%`;
+};
+
+const getGrowthBadgeClasses = (growth: number): string => {
+  if (growth >= 0) return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"; // Positive
+  return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"; // Negative
+};
+
 export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyMetricsTableProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<DailyData>({});
@@ -62,6 +74,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
   const [last7Days, setLast7Days] = useState<Date[]>([]);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
+  const { toast } = useToast();
 
   const metricOptions = [
     { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
@@ -222,28 +235,23 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const calculateWeekOnWeekGrowth = (protocolId: string): number => {
-    // Get current week total (last 7 days)
-    const currentWeekTotal = last7Days.reduce((sum, day) => {
+    // Use a simplified approach based on current week trend
+    // Calculate based on the trend within the current week
+    const protocolData = dailyData[protocolId];
+    if (!protocolData || last7Days.length < 2) return 0;
+
+    const data = last7Days.map(day => {
       const dateKey = format(day, 'yyyy-MM-dd');
-      const protocolData = dailyData[protocolId];
-      return sum + (protocolData?.[dateKey] || 0);
-    }, 0);
+      return protocolData[dateKey] || 0;
+    });
 
-    // Get previous week total (7 days before the current week)
-    const previousWeekStart = subDays(last7Days[0], 7);
-    const previousWeekEnd = subDays(last7Days[0], 1);
-    const previousWeekDays = eachDayOfInterval({ start: previousWeekStart, end: previousWeekEnd });
-
-    // For now, we'll calculate based on the trend within the current week
-    // This is a simplified approach since we don't have previous week data loaded
-    const data = getWeeklyVolumeData(protocolId);
     if (data.length < 2) return 0;
 
     const firstHalf = data.slice(0, Math.floor(data.length / 2));
     const secondHalf = data.slice(Math.floor(data.length / 2));
 
-    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
-    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    const firstHalfAvg = firstHalf.reduce((sum, value) => sum + value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, value) => sum + value, 0) / secondHalf.length;
 
     if (firstHalfAvg === 0) return 0;
     return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg);
@@ -251,15 +259,26 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   const calculateCategoryWeekOnWeekGrowth = (categoryName: string): number => {
     const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-    const data = getCategoryVolumeData(categoryName);
+    if (last7Days.length < 2) return 0;
+
+    const data = last7Days.map(day => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return categoryProtocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol.id];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+    });
     
     if (data.length < 2) return 0;
 
     const firstHalf = data.slice(0, Math.floor(data.length / 2));
     const secondHalf = data.slice(Math.floor(data.length / 2));
 
-    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
-    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+    const firstHalfAvg = firstHalf.reduce((sum, value) => sum + value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, value) => sum + value, 0) / secondHalf.length;
 
     if (firstHalfAvg === 0) return 0;
     return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg);
@@ -327,11 +346,21 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     return last7Days.map((day, index) => {
       const dateKey = format(day, 'yyyy-MM-dd');
       const value = protocolData[dateKey] || 0;
+      
+      // Determine bar color based on relationship to average
+      let barColor = '#94a3b8'; // Light grey (slate-400) for close to average
+      if (value > weeklyAverage * 1.1) {
+        barColor = '#22c55e'; // Green (green-500) for above average
+      } else if (value < weeklyAverage * 0.8) {
+        barColor = '#ef4444'; // Red (red-500) for significantly below average
+      }
+      
       return {
         day: index,
         date: format(day, 'MMM d'),
         value: value,
-        average: weeklyAverage
+        average: weeklyAverage,
+        barColor: barColor
       };
     });
   };
@@ -373,11 +402,20 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         return sum;
       }, 0);
       
+      // Determine bar color based on relationship to average
+      let barColor = '#94a3b8'; // Light grey (slate-400) for close to average
+      if (dailyTotal > weeklyAverage * 1.1) {
+        barColor = '#22c55e'; // Green (green-500) for above average
+      } else if (dailyTotal < weeklyAverage * 0.8) {
+        barColor = '#ef4444'; // Red (red-500) for significantly below average
+      }
+      
       return {
         day: index,
         date: format(day, 'MMM d'),
         value: dailyTotal,
-        average: weeklyAverage
+        average: weeklyAverage,
+        barColor: barColor
       };
     });
   };
@@ -416,13 +454,48 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         return sum;
       }, 0);
       
+      // Determine bar color based on relationship to average
+      let barColor = '#94a3b8'; // Light grey (slate-400) for close to average
+      if (dailyTotal > weeklyAverage * 1.1) {
+        barColor = '#22c55e'; // Green (green-500) for above average
+      } else if (dailyTotal < weeklyAverage * 0.8) {
+        barColor = '#ef4444'; // Red (red-500) for significantly below average
+      }
+      
       return {
         day: index,
         date: format(day, 'MMM d'),
         value: dailyTotal,
-        average: weeklyAverage
+        average: weeklyAverage,
+        barColor: barColor
       };
     });
+  };
+
+  const calculateTotalWeekOnWeekGrowth = (): number => {
+    if (last7Days.length < 2) return 0;
+
+    const data = last7Days.map(day => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      return protocols.reduce((sum, protocol) => {
+        const protocolData = dailyData[protocol];
+        if (protocolData && protocolData[dateKey] !== undefined) {
+          return sum + protocolData[dateKey];
+        }
+        return sum;
+      }, 0);
+    });
+
+    if (data.length < 2) return 0;
+
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+
+    const firstHalfAvg = firstHalf.reduce((sum, value) => sum + value, 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, value) => sum + value, 0) / secondHalf.length;
+
+    if (firstHalfAvg === 0) return 0;
+    return ((secondHalfAvg - firstHalfAvg) / firstHalfAvg);
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -460,13 +533,16 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 20,
-            height: tableElement.scrollHeight + 20,
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 60,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: '10px',
+              paddingTop: '30px',
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              paddingBottom: '30px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -480,7 +556,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         ]) as string;
         
         const link = document.createElement('a');
-        link.download = `Weekly Report - ${format(startDate, 'dd.MM')}-${format(endDate, 'dd.MM')}.png`;
+        link.download = `Weekly Report - ${selectedMetricOption.label.replace(' (USD)', '')} - ${format(endDate, 'dd.MM')}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -506,13 +582,16 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 20,
-            height: tableElement.scrollHeight + 20,
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 60,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: '10px',
+              paddingTop: '30px',
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              paddingBottom: '30px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -535,6 +614,11 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 'image/png': blob
               })
             ]);
+            toast({
+              title: "Copied to clipboard",
+              description: "Weekly report image copied successfully",
+              duration: 2000,
+            });
           } catch (error) {
             // Handle error silently
           }
@@ -624,21 +708,26 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
+              <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
               {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[100px] px-2 py-3 sm:py-4 text-xs sm:text-sm">
+                <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
                   <span className="font-medium">
                     {format(day, 'EEE, MMM d')}
                   </span>
                 </TableHead>
               ))}
-              <TableHead className="text-center min-w-[120px] px-2 py-3 sm:py-4 text-xs sm:text-sm">Weekly Trend</TableHead>
+              {selectedMetric !== 'daily_users' && (
+                <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
+              )}
+              <TableHead className="text-center min-w-[140px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={last7Days.length + 2} className="text-center py-8">
+                <TableCell colSpan={last7Days.length + (selectedMetric === 'daily_users' ? 2 : 3)} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     <span className="text-muted-foreground">Loading weekly data...</span>
@@ -700,37 +789,66 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         }, 0);
                         
                         return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 sm:py-4 px-2 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                             {formatValue(categoryTotal)}
                           </TableCell>
                         );
                       })}
-                      <TableCell className={cn("text-center py-1 sm:py-2 px-2 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                        <div className="flex items-center justify-center">
-                          <div className="w-[80px] h-[40px]">
+                      {selectedMetric !== 'daily_users' && (
+                        <TableCell className={cn("text-center font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          {formatValue(last7Days.reduce((sum, day) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                              const protocolData = dailyData[protocol.id];
+                              if (protocolData && protocolData[dateKey] !== undefined) {
+                                return sum + protocolData[dateKey];
+                              }
+                              return sum;
+                            }, 0);
+                            return sum + categoryTotal;
+                          }, 0))}
+                        </TableCell>
+                      )}
+                      <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                        <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                          <div className="w-[70px] h-[40px]">
                             <ResponsiveContainer width="100%" height="100%">
                               <ComposedChart 
                                 data={getCategoryMetricData(categoryName)} 
-                                margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                                margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
                               >
                                 <Bar 
                                   dataKey="value" 
-                                  fill="#22c55e" 
-                                  opacity={0.8}
-                                  radius={[3, 3, 0, 0]}
-                                  maxBarSize={5}
-                                />
+                                  opacity={0.9}
+                                  radius={[2, 2, 0, 0]}
+                                  maxBarSize={8}
+                                >
+                                  {getCategoryMetricData(categoryName).map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.barColor} />
+                                  ))}
+                                </Bar>
                                 <Line 
                                   type="monotone" 
                                   dataKey="average"
-                                  stroke="#16a34a" 
-                                  strokeWidth={1.5}
+                                  stroke="#059669" 
+                                  strokeWidth={1}
                                   dot={false}
-                                  strokeDasharray="2 3"
+                                  strokeDasharray="2 2"
                                 />
                               </ComposedChart>
                             </ResponsiveContainer>
                           </div>
+                          {selectedMetric !== 'daily_users' && (
+                            <Badge 
+                              variant="secondary" 
+                              className={cn(
+                                "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                getGrowthBadgeClasses(calculateCategoryWeekOnWeekGrowth(categoryName))
+                              )}
+                            >
+                              {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -784,7 +902,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                   <Badge 
                                     variant="secondary"
                                     className={cn(
-                                      "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
+                                      "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0 hover:bg-transparent",
                                       topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
                                       topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
                                       topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
@@ -803,38 +921,61 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             return (
                               <TableCell 
                                 key={dateKey} 
-                                className="text-center py-3 sm:py-4 px-2 transition-all relative font-medium text-xs sm:text-sm"
+                                className="text-center py-3 sm:py-4 px-1 transition-all relative font-medium text-xs sm:text-sm"
                               >
                                 {formatValue(value)}
                               </TableCell>
                             );
                           })}
-                          <TableCell className="text-center py-1 sm:py-2 px-2 transition-all relative font-medium text-xs sm:text-sm">
-                            <div className="flex items-center justify-center">
-                              <div className="w-[80px] h-[40px]">
+                          {selectedMetric !== 'daily_users' && (
+                            <TableCell className="text-center py-3 sm:py-4 px-1 transition-all relative font-bold text-xs sm:text-sm">
+                              {formatValue(last7Days.reduce((sum, day) => {
+                                const dateKey = format(day, 'yyyy-MM-dd');
+                                const value = protocolData[dateKey] || 0;
+                                return sum + value;
+                              }, 0))}
+                            </TableCell>
+                          )}
+                          <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm">
+                            <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                              <div className="w-[70px] h-[40px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                   <ComposedChart 
                                     data={getWeeklyMetricData(protocol.id)} 
-                                    margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                                    margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
                                   >
                                     <Bar 
                                       dataKey="value" 
-                                      fill="#10b981" 
                                       opacity={0.9}
-                                      radius={[3, 3, 0, 0]}
-                                      maxBarSize={5}
-                                    />
+                                      radius={[2, 2, 0, 0]}
+                                      maxBarSize={8}
+                                    >
+                                      {getWeeklyMetricData(protocol.id).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.barColor} />
+                                      ))}
+                                    </Bar>
                                     <Line 
                                       type="monotone" 
                                       dataKey="average"
                                       stroke="#059669" 
-                                      strokeWidth={1.5}
+                                      strokeWidth={1}
                                       dot={false}
-                                      strokeDasharray="2 3"
+                                      strokeDasharray="2 2"
                                     />
                                   </ComposedChart>
                                 </ResponsiveContainer>
                               </div>
+                              {selectedMetric !== 'daily_users' && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className={cn(
+                                    "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                    getGrowthBadgeClasses(calculateWeekOnWeekGrowth(protocol.id))
+                                  )}
+                                >
+                                  {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -862,37 +1003,66 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   }, 0);
                   
                   return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-2 text-xs sm:text-sm transition-colors">
+                    <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
                       {formatValue(dailyTotal)}
                     </TableCell>
                   );
                 })}
-                <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-2 text-xs sm:text-sm transition-colors">
-                  <div className="flex items-center justify-center">
-                    <div className="w-[80px] h-[40px]">
+                {selectedMetric !== 'daily_users' && (
+                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                    {formatValue(last7Days.reduce((sum, day) => {
+                      const dateKey = format(day, 'yyyy-MM-dd');
+                      const dailyTotal = protocols.reduce((sum, protocol) => {
+                        const protocolData = dailyData[protocol];
+                        if (protocolData && protocolData[dateKey] !== undefined) {
+                          return sum + protocolData[dateKey];
+                        }
+                        return sum;
+                      }, 0);
+                      return sum + dailyTotal;
+                    }, 0))}
+                  </TableCell>
+                )}
+                <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors">
+                  <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                    <div className="w-[70px] h-[40px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart 
                           data={getTotalMetricData()} 
-                          margin={{ top: 2, right: 4, bottom: 2, left: 4 }}
+                          margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
                         >
                           <Bar 
                             dataKey="value" 
-                            fill="#15803d" 
-                            opacity={0.95}
-                            radius={[3, 3, 0, 0]}
-                            maxBarSize={5}
-                          />
+                            opacity={0.9}
+                            radius={[2, 2, 0, 0]}
+                            maxBarSize={8}
+                          >
+                            {getTotalMetricData().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.barColor} />
+                            ))}
+                          </Bar>
                           <Line 
                             type="monotone" 
                             dataKey="average"
-                            stroke="#166534" 
-                            strokeWidth={2}
+                            stroke="#059669" 
+                            strokeWidth={1}
                             dot={false}
-                            strokeDasharray="2 3"
+                            strokeDasharray="2 2"
                           />
                         </ComposedChart>
                       </ResponsiveContainer>
                     </div>
+                    {selectedMetric !== 'daily_users' && (
+                      <Badge 
+                        variant="secondary" 
+                        className={cn(
+                          "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                          getGrowthBadgeClasses(calculateTotalWeekOnWeekGrowth())
+                        )}
+                      >
+                        {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
+                      </Badge>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

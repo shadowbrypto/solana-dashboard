@@ -20,6 +20,7 @@ import { getDailyMetrics } from "../lib/protocol";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
+import { useToast } from "../hooks/use-toast";
 
 interface MonthlyMetricsTableProps {
   protocols: Protocol[];
@@ -80,6 +81,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "numberOfNewUsers", "daily_trades", "market_share", "monthly_growth" as MetricKey]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   // Calculate total volume for market share
   const totalVolume = Object.values(monthlyData)
@@ -608,6 +610,11 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
               'image/png': blob
             })
           ]);
+          toast({
+            title: "Copied to clipboard",
+            description: "Monthly report image copied successfully",
+            duration: 2000,
+          });
         }
       } catch (error) {
         console.error('Error copying to clipboard:', error);

@@ -96,8 +96,8 @@ export async function getProtocolStats(protocolName?: string | string[]) {
 
     // Determine which chains to query based on protocol type
     if (protocolName && !Array.isArray(protocolName) && isEVMProtocol(protocolName)) {
-      // For EVM protocols, query specific EVM chains
-      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+      // For EVM protocols, query all non-Solana chains
+      query = query.neq('chain', 'solana');
     } else {
       // For Solana protocols or 'all', query Solana chain
       query = query.eq('chain', 'solana');
@@ -179,8 +179,8 @@ export async function getTotalProtocolStats(protocolName?: string): Promise<Prot
 
     // Determine which chains to query based on protocol type
     if (protocolName && isEVMProtocol(protocolName)) {
-      // For EVM protocols, query specific EVM chains
-      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+      // For EVM protocols, query all non-Solana chains
+      query = query.neq('chain', 'solana');
     } else {
       // For Solana protocols or 'all', query Solana chain
       query = query.eq('chain', 'solana');

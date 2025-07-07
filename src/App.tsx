@@ -172,9 +172,12 @@ const MainContent = (): JSX.Element => {
         fetchedData = await getAggregatedProtocolStats();
         console.log(`Fetched ${fetchedData.length} aggregated records`);
       } else if (selectedProtocol.endsWith('_evm')) {
-        // For EVM protocols, use empty data for now (will be redesigned later)
-        fetchedData = [];
-        console.log(`EVM protocol ${selectedProtocol} - using empty data template`);
+        // For EVM protocols, fetch lifetime volume from all non-Solana chains
+        const cleanProtocol = selectedProtocol.replace('_evm', '');
+        const evmTotalStats = await getTotalProtocolStats(cleanProtocol);
+        setTotalMetrics(evmTotalStats);
+        fetchedData = []; // EVM protocols don't need time-series data for now
+        console.log(`EVM protocol ${selectedProtocol} - loaded lifetime metrics`);
       } else {
         fetchedData = await getProtocolStats(selectedProtocol);
       }
@@ -531,7 +534,9 @@ const MainContent = (): JSX.Element => {
         </div>
       )}
 
-      <MetricCards totalMetrics={totalMetrics} loading={loading} />
+      {!protocol.endsWith('_evm') && (
+        <MetricCards totalMetrics={totalMetrics} loading={loading} />
+      )}
 
       {protocol === "all" && (
         <div className="mb-6 lg:mb-8">
@@ -954,6 +959,50 @@ const MainContent = (): JSX.Element => {
                 </AccordionItem>
               </Accordion>
             </>
+          ) : protocol.endsWith('_evm') ? (
+            // EVM Protocol Layout - Single wide metric card
+            <div className="space-y-6">
+              {/* Protocol Header */}
+              <div className="flex items-center gap-4">
+                <img 
+                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                  alt={getProtocolName(protocol)}
+                  className="w-12 h-12 rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h1 className="text-3xl font-bold">{getProtocolName(protocol)}</h1>
+                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md">
+                    EVM
+                  </span>
+                </div>
+              </div>
+
+              {/* Single Wide Metric Card */}
+              <div className="w-full bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Lifetime Volume
+                    </h3>
+                    <p className="text-4xl font-bold">
+                      ${(totalMetrics.total_volume_usd / 1e6).toFixed(2)}M
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Across all EVM chains
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center w-16 h-16 bg-blue-500/10 rounded-full">
+                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               <ProtocolHighlights

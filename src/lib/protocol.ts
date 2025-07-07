@@ -13,7 +13,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 0; // Temporarily disable cache to see latest data filtering
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache for better performance
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
@@ -21,6 +21,42 @@ const aggregatedStatsCache = new Map<string, CacheEntry<any[]>>();
 
 function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
+}
+
+// Clear all frontend caches
+export function clearAllFrontendCaches(): void {
+  protocolStatsCache.clear();
+  totalStatsCache.clear();
+  dailyMetricsCache.clear();
+  aggregatedStatsCache.clear();
+  console.log('All frontend caches cleared');
+}
+
+// Clear cache for specific protocol
+export function clearProtocolFrontendCache(protocolName?: string): void {
+  if (!protocolName) {
+    clearAllFrontendCaches();
+    return;
+  }
+
+  // Clear entries that contain this protocol
+  const keysToDelete: string[] = [];
+  
+  protocolStatsCache.forEach((_, key) => {
+    if (key === protocolName || key.includes(protocolName) || key === 'all') {
+      keysToDelete.push(key);
+    }
+  });
+  
+  keysToDelete.forEach(key => protocolStatsCache.delete(key));
+  
+  // Clear related caches
+  totalStatsCache.delete(protocolName);
+  totalStatsCache.delete('all');
+  dailyMetricsCache.clear();
+  aggregatedStatsCache.clear();
+  
+  console.log(`Frontend cache cleared for protocol: ${protocolName}`);
 }
 
 export async function getProtocolStats(protocolName?: string | string[]) {

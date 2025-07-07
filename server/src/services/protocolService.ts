@@ -18,6 +18,45 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
   return Date.now() - cache.timestamp < CACHE_EXPIRY;
 }
 
+// Clear all caches - should be called after successful data refresh
+export function clearAllCaches(): void {
+  protocolStatsCache.clear();
+  totalStatsCache.clear();
+  dailyMetricsCache.clear();
+  aggregatedStatsCache.clear();
+  insightsCache.clear();
+  console.log('All protocol caches cleared');
+}
+
+// Clear cache for specific protocol
+export function clearProtocolCache(protocolName?: string): void {
+  if (!protocolName) {
+    // Clear all caches if no protocol specified
+    clearAllCaches();
+    return;
+  }
+
+  // Clear entries that contain this protocol
+  const keysToDelete: string[] = [];
+  
+  protocolStatsCache.forEach((_, key) => {
+    if (key === protocolName || key.includes(protocolName) || key === 'all') {
+      keysToDelete.push(key);
+    }
+  });
+  
+  keysToDelete.forEach(key => protocolStatsCache.delete(key));
+  
+  // Clear related caches
+  totalStatsCache.delete(protocolName);
+  totalStatsCache.delete('all');
+  dailyMetricsCache.clear(); // Clear all daily metrics as they might include this protocol
+  aggregatedStatsCache.clear(); // Clear aggregated stats
+  insightsCache.clear(); // Clear insights
+  
+  console.log(`Cache cleared for protocol: ${protocolName}`);
+}
+
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}-${month}-${year}`;

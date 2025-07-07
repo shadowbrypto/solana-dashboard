@@ -13,8 +13,9 @@ import {
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
 import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw } from 'lucide-react';
-import { dataSyncApi } from '../lib/api';
+import { dataSyncApi, protocolApi, ProtocolSyncStatus } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
+import { clearAllFrontendCaches, clearProtocolFrontendCache } from '../lib/protocol';
 import {
   DndContext,
   DragEndEvent,
@@ -36,6 +37,7 @@ interface SortableProtocolProps {
   isDragging?: boolean;
   onRefresh: (protocolId: string) => void;
   isRefreshing: boolean;
+  syncStatus?: ProtocolSyncStatus;
 }
 
 interface DroppableCategoryProps {
@@ -43,9 +45,10 @@ interface DroppableCategoryProps {
   protocols: any[];
   onRefresh: (protocolId: string) => void;
   refreshingProtocols: Set<string>;
+  syncStatuses: Map<string, ProtocolSyncStatus>;
 }
 
-function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols }: DroppableCategoryProps) {
+function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols, syncStatuses }: DroppableCategoryProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `category-${category}`,
   });
@@ -67,6 +70,7 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
               protocol={protocol} 
               onRefresh={onRefresh}
               isRefreshing={refreshingProtocols.has(protocol.id)}
+              syncStatus={syncStatuses.get(protocol.id)}
             />
           ))}
         </div>
@@ -85,7 +89,7 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
   );
 }
 
-function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing }: SortableProtocolProps) {
+function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncStatus }: SortableProtocolProps) {
   const {
     attributes,
     listeners,
@@ -121,6 +125,20 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing }: Sor
       <div className="flex-1">
         <p className="font-medium text-foreground">{protocol.name}</p>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
+        {syncStatus && !syncStatus.sync_success && (
+          <div className="flex items-center gap-1 mt-1">
+            <AlertCircle className="h-3 w-3 text-red-500" />
+            <span className="text-xs text-red-500">Sync Failed</span>
+          </div>
+        )}
+        {syncStatus && syncStatus.sync_success && !syncStatus.has_recent_data && (
+          <div className="flex items-center gap-1 mt-1">
+            <AlertCircle className="h-3 w-3 text-amber-500" />
+            <span className="text-xs text-amber-500">
+              {syncStatus.days_behind ? `${syncStatus.days_behind} days old` : 'No recent data'}
+            </span>
+          </div>
+        )}
       </div>
       <Button
         size="sm"
@@ -146,6 +164,8 @@ export function ProtocolManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [refreshingProtocols, setRefreshingProtocols] = useState<Set<string>>(new Set());
+  const [syncStatuses, setSyncStatuses] = useState<Map<string, ProtocolSyncStatus>>(new Map());
+  const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
   const { toast } = useToast();
   
   const categories = getMutableAllCategories();
@@ -169,6 +189,25 @@ export function ProtocolManagement() {
     
     loadConfigs();
   }, []);
+
+  // Load sync statuses
+  useEffect(() => {
+    const loadSyncStatuses = async () => {
+      try {
+        setLoadingSyncStatus(true);
+        const statuses = await protocolApi.getAllSyncStatus();
+        const statusMap = new Map(statuses.map(s => [s.protocol_name, s]));
+        setSyncStatuses(statusMap);
+      } catch (error) {
+        console.error('Failed to load sync statuses:', error);
+      } finally {
+        setLoadingSyncStatus(false);
+      }
+    };
+
+    loadSyncStatuses();
+    // Reload sync statuses after any refresh
+  }, [forceRender]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -202,11 +241,18 @@ export function ProtocolManagement() {
     setIsRefreshing(true);
     try {
       const result = await dataSyncApi.syncData();
+      
+      // Clear all frontend caches after successful refresh
+      clearAllFrontendCaches();
+      
       toast({
         variant: "success",
         title: "Data Refresh Complete",
         description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
       });
+      
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -248,11 +294,18 @@ export function ProtocolManagement() {
     
     try {
       const result = await dataSyncApi.syncProtocolData(protocolId);
+      
+      // Clear frontend cache for this protocol
+      clearProtocolFrontendCache(protocolId);
+      
       toast({
         variant: "success",
         title: "Protocol Refreshed",
         description: `Successfully refreshed data for ${protocolId}`,
       });
+      
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -367,6 +420,7 @@ export function ProtocolManagement() {
                       protocols={categoryProtocols} 
                       onRefresh={handleRefreshProtocol}
                       refreshingProtocols={refreshingProtocols}
+                      syncStatuses={syncStatuses}
                     />
                   </div>
                 );

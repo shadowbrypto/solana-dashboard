@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
+import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 
 const router = Router();
 
@@ -130,6 +131,47 @@ router.get('/health', (req: Request, res: Response) => {
     message: 'Protocol API is healthy',
     timestamp: new Date().toISOString()
   });
+});
+
+// GET /api/protocols/sync-status
+// Get sync status for all protocols
+router.get('/sync-status', async (req: Request, res: Response) => {
+  try {
+    const syncStatus = await protocolSyncStatusService.getAllProtocolSyncStatus();
+    res.json({ success: true, data: syncStatus });
+  } catch (error) {
+    console.error('Error fetching protocol sync status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch protocol sync status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/sync-status/:protocol
+// Get sync status for a specific protocol
+router.get('/sync-status/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const syncStatus = await protocolSyncStatusService.getProtocolSyncStatus(protocol);
+    
+    if (!syncStatus) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Protocol sync status not found' 
+      });
+    }
+    
+    res.json({ success: true, data: syncStatus });
+  } catch (error) {
+    console.error('Error fetching protocol sync status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch protocol sync status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 export default router;

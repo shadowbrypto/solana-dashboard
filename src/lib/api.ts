@@ -62,6 +62,17 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T
   }
 }
 
+export interface ProtocolSyncStatus {
+  protocol_name: string;
+  last_sync_at: string;
+  sync_success: boolean;
+  rows_imported: number;
+  error_message?: string;
+  has_recent_data: boolean;
+  latest_data_date?: string;
+  days_behind?: number;
+}
+
 export const protocolApi = {
   // Get protocol stats with optional filtering
   async getProtocolStats(protocolName?: string | string[]): Promise<ProtocolStats[]> {
@@ -106,6 +117,16 @@ export const protocolApi = {
   // Health check
   async healthCheck(): Promise<{ message: string; timestamp: string }> {
     return apiRequest<{ message: string; timestamp: string }>('/protocols/health');
+  },
+
+  // Get sync status for all protocols
+  async getAllSyncStatus(): Promise<ProtocolSyncStatus[]> {
+    return apiRequest<ProtocolSyncStatus[]>('/protocols/sync-status');
+  },
+
+  // Get sync status for a specific protocol
+  async getProtocolSyncStatus(protocolName: string): Promise<ProtocolSyncStatus> {
+    return apiRequest<ProtocolSyncStatus>(`/protocols/sync-status/${protocolName}`);
   }
 };
 

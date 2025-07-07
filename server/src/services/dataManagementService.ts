@@ -3,6 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
 import { supabase } from '../lib/supabase.js';
+import { clearAllCaches, clearProtocolCache } from './protocolService.js';
+import { protocolSyncStatusService } from './protocolSyncStatusService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -121,6 +123,17 @@ export class DataManagementService {
 
       console.log(`Imported ${importResult.rowsInserted} rows for ${protocolName}`);
 
+      // Update sync status
+      await protocolSyncStatusService.updateProtocolSyncStatus(
+        protocolName,
+        true,
+        importResult.rowsInserted
+      );
+
+      // Clear cache for this specific protocol after successful import
+      clearProtocolCache(protocolName);
+      console.log(`Cache cleared for protocol: ${protocolName}`);
+
       return {
         success: true,
         csvFilesFetched: 1,
@@ -132,6 +145,14 @@ export class DataManagementService {
 
     } catch (error) {
       console.error(`Error syncing data for protocol ${protocolName}:`, error);
+      
+      // Update sync status for failed sync
+      await protocolSyncStatusService.updateProtocolSyncStatus(
+        protocolName,
+        false,
+        0,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
       
       return {
         success: false,
@@ -486,6 +507,20 @@ export class DataManagementService {
 
       console.log(`Imported ${successfulImports.length}/${importResults.length} protocols successfully`);
       console.log(`Total rows imported: ${totalRowsImported}`);
+
+      // Update sync status for each protocol
+      for (const importResult of importResults) {
+        await protocolSyncStatusService.updateProtocolSyncStatus(
+          importResult.protocol,
+          importResult.success,
+          importResult.rowsInserted,
+          importResult.error
+        );
+      }
+
+      // Clear all caches after successful import of all protocols
+      clearAllCaches();
+      console.log('All caches cleared after successful data sync');
 
       return {
         success: true,

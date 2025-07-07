@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -178,6 +178,39 @@ router.get('/evm-metrics/:protocol', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch EVM metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/evm-daily-metrics/:protocol
+// Get EVM daily chain breakdown for a specific protocol with timeframe
+router.get('/evm-daily-metrics/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const { timeframe = '30d' } = req.query;
+    
+    if (!protocol) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Protocol parameter is required' 
+      });
+    }
+
+    if (typeof timeframe !== 'string' || !['7d', '30d', '90d', '1y'].includes(timeframe)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid timeframe. Must be one of: 7d, 30d, 90d, 1y' 
+      });
+    }
+
+    const dailyMetrics = await getEVMDailyChainBreakdown(protocol, timeframe);
+    res.json({ success: true, data: dailyMetrics });
+  } catch (error) {
+    console.error('Error fetching EVM daily metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM daily metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

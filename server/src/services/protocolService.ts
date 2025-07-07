@@ -324,6 +324,105 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
   return result;
 }
 
+// Get EVM daily chain breakdown for a specific protocol with timeframe
+export async function getEVMDailyChainBreakdown(protocolName: string, timeframe: string = '30d'): Promise<Array<{
+  date: string;
+  formattedDay: string;
+  chainData: Record<string, number>;
+  totalVolume: number;
+}>> {
+  const cacheKey = `evm_daily_breakdown_${protocolName}_${timeframe}`;
+  const cachedData = insightsCache.get(cacheKey);
+
+  if (cachedData && isCacheValid(cachedData)) {
+    return cachedData.data;
+  }
+
+  // Calculate date range based on timeframe
+  const endDate = new Date();
+  const startDate = new Date();
+  
+  switch (timeframe) {
+    case '7d':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '30d':
+      startDate.setDate(endDate.getDate() - 30);
+      break;
+    case '90d':
+      startDate.setDate(endDate.getDate() - 90);
+      break;
+    case '1y':
+      startDate.setFullYear(endDate.getFullYear() - 1);
+      break;
+    default:
+      startDate.setDate(endDate.getDate() - 30);
+  }
+
+  let allData: any[] = [];
+  let hasMore = true;
+  let page = 0;
+  const PAGE_SIZE = 1000;
+
+  while (hasMore) {
+    let query = supabase
+      .from('protocol_stats')
+      .select('date, chain, volume_usd')
+      .eq('protocol_name', protocolName)
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
+      .gte('date', format(startDate, 'yyyy-MM-dd'))
+      .lte('date', format(endDate, 'yyyy-MM-dd'))
+      .order('date', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    page++;
+  }
+
+  // Group by date and chain
+  const dailyData = allData.reduce((acc, row) => {
+    const date = row.date;
+    const chain = row.chain;
+    const volume = Number(row.volume_usd) || 0;
+
+    if (!acc[date]) {
+      acc[date] = {
+        date,
+        formattedDay: formatDate(date),
+        chainData: {},
+        totalVolume: 0
+      };
+    }
+
+    if (!acc[date].chainData[chain]) {
+      acc[date].chainData[chain] = 0;
+    }
+
+    acc[date].chainData[chain] += volume;
+    acc[date].totalVolume += volume;
+
+    return acc;
+  }, {} as Record<string, any>);
+
+  // Convert to array and sort by date
+  const result = Object.values(dailyData)
+    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .filter((item: any) => item.totalVolume > 0); // Only include days with volume
+
+  insightsCache.set(cacheKey, {
+    data: result,
+    timestamp: Date.now()
+  });
+
+  return result;
+}
+
 export async function getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {
   const formattedDate = format(date, 'yyyy-MM-dd');
   const cacheKey = formattedDate;

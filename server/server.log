@@ -21,7 +21,7 @@ Error: listen EADDRINUSE: address already in use :::3001
     at listenInCluster (node:net:1920:12)
     at Server.listen (node:net:2008:7)
     at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:61:5)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
     at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
     at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
     at async loadESM (node:internal/process/esm_loader:40:7)
@@ -37,21 +37,7 @@ Emitted 'error' event on Server instance at:
 }
 
 Node.js v20.5.0
-7:31:04 PM [tsx] change in ./src/services/dataManagementService.ts Rerunning...
-cSupabase Environment Check: {
-  hasSupabaseUrl: true,
-  hasSupabaseKey: true,
-  urlSource: 'REACT_APP_SUPABASE_URL',
-  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
-  urlLength: 40,
-  keyLength: 208
-}
-🚀 Sol Analytics API server running on port 3001
-📊 Health check: http://localhost:3001/health
-🔌 API endpoints:
-   - Protocols: http://localhost:3001/api/protocols
-   - Data Update: http://localhost:3001/api/data-update
-7:31:19 PM [tsx] change in ./src/services/protocolService.ts Restarting...
+12:18:37 AM [tsx] change in ./src/routes/protocolRoutes.ts Rerunning...
 cSupabase Environment Check: {
   hasSupabaseUrl: true,
   hasSupabaseKey: true,
@@ -71,7 +57,7 @@ Error: listen EADDRINUSE: address already in use :::3001
     at listenInCluster (node:net:1920:12)
     at Server.listen (node:net:2008:7)
     at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:61:5)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
     at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
     at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
     at async loadESM (node:internal/process/esm_loader:40:7)
@@ -87,7 +73,7 @@ Emitted 'error' event on Server instance at:
 }
 
 Node.js v20.5.0
-7:34:45 PM [tsx] change in ./src/routes/dataUpdateRoutes.ts Rerunning...
+12:18:48 AM [tsx] change in ./src/routes/protocolRoutes.ts Rerunning...
 cSupabase Environment Check: {
   hasSupabaseUrl: true,
   hasSupabaseKey: true,
@@ -107,43 +93,7 @@ Error: listen EADDRINUSE: address already in use :::3001
     at listenInCluster (node:net:1920:12)
     at Server.listen (node:net:2008:7)
     at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:61:5)
-    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
-    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
-    at async loadESM (node:internal/process/esm_loader:40:7)
-    at async handleMainPromise (node:internal/modules/run_main:66:12)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1899:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -48,
-  syscall: 'listen',
-  address: '::',
-  port: 3001
-}
-
-Node.js v20.5.0
-7:35:59 PM [tsx] change in ./src/services/dataManagementService.ts Rerunning...
-cSupabase Environment Check: {
-  hasSupabaseUrl: true,
-  hasSupabaseKey: true,
-  urlSource: 'REACT_APP_SUPABASE_URL',
-  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
-  urlLength: 40,
-  keyLength: 208
-}
-node:events:492
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3001
-    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
-    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
-    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
-    at listenInCluster (node:net:1920:12)
-    at Server.listen (node:net:2008:7)
-    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:61:5)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
     at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
     at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
     at async loadESM (node:internal/process/esm_loader:40:7)

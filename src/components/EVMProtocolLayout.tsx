@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
+import { StackedBarChart } from './charts/StackedBarChart';
 
 interface EVMMetrics {
   lifetimeVolume: number;
@@ -12,6 +13,13 @@ interface EVMMetrics {
     percentage: number;
   }>;
   totalChains: number;
+}
+
+interface EVMDailyData {
+  date: string;
+  formattedDay: string;
+  chainData: Record<string, number>;
+  totalVolume: number;
 }
 
 interface EVMProtocolLayoutProps {
@@ -46,8 +54,11 @@ const formatVolume = (volume: number): string => {
 
 export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }) => {
   const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
+  const [dailyData, setDailyData] = useState<EVMDailyData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dailyLoading, setDailyLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
   useEffect(() => {
     const fetchEVMMetrics = async () => {
@@ -84,6 +95,69 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     }
   }, [protocol]);
 
+  const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '1y') => {
+    try {
+      setDailyLoading(true);
+      
+      const cleanProtocol = protocol.replace('_evm', '');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_BASE_URL}/protocols/evm-daily-metrics/${cleanProtocol}?timeframe=${timeframe}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch daily metrics: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setDailyData(result.data);
+      } else {
+        console.warn('No daily data available:', result.error);
+        setDailyData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching daily metrics:', err);
+      setDailyData([]);
+    } finally {
+      setDailyLoading(false);
+    }
+  };
+
+  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '1y') => {
+    setSelectedTimeframe(newTimeframe);
+    fetchDailyData(newTimeframe);
+  };
+  
+  // Map timeframe to StackedBarChart's TimeFrame type
+  const mapTimeframeToChartTimeframe = (timeframe: '7d' | '30d' | '90d' | '1y'): '7d' | '30d' | '3m' | '1y' => {
+    switch (timeframe) {
+      case '7d': return '7d';
+      case '30d': return '30d';
+      case '90d': return '3m';
+      case '1y': return '1y';
+      default: return '30d';
+    }
+  };
+  
+  // Map StackedBarChart's TimeFrame type back to our API timeframe
+  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '1y' => {
+    switch (timeframe) {
+      case '7d': return '7d';
+      case '30d': return '30d';
+      case '3m': return '90d';
+      case '6m': return '1y'; // Map 6m to 1y to get more data
+      case '1y': return '1y';
+      case 'all': return '1y'; // Map 'all' to 1y as the maximum
+      default: return '30d';
+    }
+  };
+
+  useEffect(() => {
+    if (protocol) {
+      fetchDailyData(selectedTimeframe);
+    }
+  }, [protocol]);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -106,6 +180,40 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   }
 
   const protocolDisplayName = protocol.replace('_evm', '').charAt(0).toUpperCase() + protocol.replace('_evm', '').slice(1);
+
+  // Get unique chains that actually have data across all days
+  const allChainsInData = new Set<string>();
+  dailyData.forEach(day => {
+    Object.keys(day.chainData).forEach(chain => {
+      if (day.chainData[chain] > 0) {
+        allChainsInData.add(chain);
+      }
+    });
+  });
+
+  // Use chains that have actual data, fallback to static breakdown
+  const availableChains = allChainsInData.size > 0 
+    ? Array.from(allChainsInData).sort() 
+    : (evmMetrics ? evmMetrics.chainBreakdown.map(chain => chain.chain) : []);
+
+  // Process daily data for StackedBarChart, ensuring all chains have values
+  const chartData = dailyData.map(day => {
+    const dayData: any = {
+      formattedDay: day.formattedDay,
+      date: day.date,
+    };
+    
+    // Add all available chains, defaulting to 0 if missing
+    availableChains.forEach(chain => {
+      dayData[chain] = day.chainData[chain] || 0;
+    });
+    
+    return dayData;
+  });
+
+  const chainLabels = availableChains.map(chain => chainNames[chain] || chain);
+  const chartColors = availableChains.map(chain => chainColors[chain] || '#6B7280');
+
 
   return (
     <div className="space-y-6">
@@ -211,6 +319,39 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           </div>
         </CardContent>
       </Card>
+
+      {/* Daily Chain Volume Breakdown Chart */}
+      {!dailyLoading && chartData.length > 0 && availableChains.length > 0 ? (
+        <StackedBarChart
+          title="Daily Volume by Chain"
+          subtitle={protocolDisplayName}
+          data={chartData}
+          dataKeys={availableChains}
+          labels={chainLabels}
+          colors={chartColors}
+          valueFormatter={(value) => formatVolume(value)}
+          loading={dailyLoading}
+          timeframe={mapTimeframeToChartTimeframe(selectedTimeframe)}
+          onTimeframeChange={(newTimeframe) => handleTimeframeChange(mapChartTimeframeToAPITimeframe(newTimeframe))}
+        />
+      ) : dailyLoading ? (
+        <Card className="bg-card border-border rounded-xl">
+          <CardContent className="p-6">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-card border-border rounded-xl">
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No daily volume data available for this timeframe</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
     </div>
   );

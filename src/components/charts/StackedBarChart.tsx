@@ -34,6 +34,9 @@ interface StackedBarChartProps {
   xAxisKey?: string;
   valueFormatter?: (value: number) => string;
   loading?: boolean;
+  timeframe?: TimeFrame;
+  onTimeframeChange?: (timeframe: TimeFrame) => void;
+  disableTimeframeSelector?: boolean;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -54,20 +57,31 @@ export function StackedBarChart({
   xAxisKey = "formattedDay",
   valueFormatter = (value: number) => `${value.toLocaleString()}`,
   loading,
+  timeframe: externalTimeframe,
+  onTimeframeChange,
+  disableTimeframeSelector = false,
 }: StackedBarChartProps) {
   if (loading) {
     return <StackedBarChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>("3m");
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
+  
+  // Use external timeframe if provided, otherwise use internal
+  const timeframe = externalTimeframe || internalTimeframe;
+  
+  const handleTimeframeChange = (newTimeframe: TimeFrame) => {
+    if (onTimeframeChange) {
+      onTimeframeChange(newTimeframe);
+    } else {
+      setInternalTimeframe(newTimeframe);
+    }
+  };
 
   const filteredData = useMemo(() => {
-
-    
-    // Create a copy and reverse the data array
-    const reversedData = [...data].reverse();
-    if (timeframe === "all") return reversedData;
+    // Don't reverse data here - it should already be in correct order (oldest to newest)
+    if (timeframe === "all") return data;
 
     const now = new Date();
     let daysToSubtract: number;
@@ -94,13 +108,11 @@ export function StackedBarChart({
 
     const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-    return [...data]
-      .reverse()
-      .filter(item => {
-        const [day, month, year] = item.formattedDay.split("-");
-        const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        return itemDate >= cutoffDate;
-      });
+    return data.filter(item => {
+      const [day, month, year] = item.formattedDay.split("-");
+      const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return itemDate >= cutoffDate;
+    });
   }, [data, timeframe]);
 
   return (
@@ -143,7 +155,8 @@ export function StackedBarChart({
             </p>
           )}
         </div>
-        <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
+        {!disableTimeframeSelector && (
+        <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
           <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>
@@ -156,6 +169,7 @@ export function StackedBarChart({
             <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
           </SelectContent>
         </Select>
+        )}
       </CardHeader>
       <CardContent className="pt-6">
         <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">

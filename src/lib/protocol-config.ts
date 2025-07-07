@@ -145,7 +145,9 @@ export const generateProtocolCategories = () => {
   const categories = getAllCategories();
   return categories.map(categoryName => ({
     name: categoryName,
-    protocols: getProtocolsByCategory(categoryName).map(p => p.id)
+    protocols: getProtocolsByCategory(categoryName)
+      .filter(p => p.chain !== 'evm') // Exclude EVM protocols from reports
+      .map(p => p.id)
   }));
 };
 
@@ -235,11 +237,13 @@ export const updateProtocolCategory = (protocolId: string, newCategory: string):
 };
 
 export const getMutableProtocolsByCategory = (category: string): ProtocolConfigMutable[] => {
-  return mutableProtocolConfigs.filter(p => p.category === category);
+  return mutableProtocolConfigs.filter(p => p.category === category && p.chain !== 'evm'); // Exclude EVM protocols from reports
 };
 
 export const getMutableAllCategories = (): string[] => {
-  return Array.from(new Set(mutableProtocolConfigs.map(p => p.category)));
+  return Array.from(new Set(mutableProtocolConfigs
+    .filter(p => p.chain !== 'evm') // Exclude EVM protocols from reports
+    .map(p => p.category)));
 };
 
 // Save current configurations to database

@@ -40,7 +40,7 @@ export class ProtocolSyncStatusService {
 
       // Upsert the sync status
       const { error } = await supabase
-        .from(this.TABLE_NAME)
+        .from(ProtocolSyncStatusService.TABLE_NAME)
         .upsert(syncStatus, {
           onConflict: 'protocol_name'
         });
@@ -102,7 +102,7 @@ export class ProtocolSyncStatusService {
   async getAllProtocolSyncStatus(): Promise<ProtocolSyncStatus[]> {
     try {
       const { data, error } = await supabase
-        .from(this.TABLE_NAME)
+        .from(ProtocolSyncStatusService.TABLE_NAME)
         .select('*')
         .order('protocol_name');
 
@@ -124,7 +124,7 @@ export class ProtocolSyncStatusService {
   async getProtocolSyncStatus(protocolName: string): Promise<ProtocolSyncStatus | null> {
     try {
       const { data, error } = await supabase
-        .from(this.TABLE_NAME)
+        .from(ProtocolSyncStatusService.TABLE_NAME)
         .select('*')
         .eq('protocol_name', protocolName)
         .single();

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
+import { evmDataMigrationService } from '../services/evmDataMigrationService.js';
 
 const router = Router();
 
@@ -169,6 +170,52 @@ router.get('/sync-status/:protocol', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch protocol sync status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// POST /api/protocols/sync-evm
+// Sync all EVM protocol data
+router.post('/sync-evm', async (req: Request, res: Response) => {
+  try {
+    console.log('Starting EVM data sync...');
+    const result = await evmDataMigrationService.syncAllEVMData();
+    
+    res.json({
+      success: true,
+      message: 'EVM data sync completed',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in EVM data sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'EVM data sync failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// POST /api/protocols/sync-evm/:protocol
+// Sync specific EVM protocol data
+router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    console.log(`Starting EVM data sync for protocol: ${protocol}`);
+    
+    const result = await evmDataMigrationService.syncEVMProtocolData(protocol);
+    
+    res.json({
+      success: true,
+      message: `EVM data sync completed for ${protocol}`,
+      data: result
+    });
+  } catch (error) {
+    console.error(`Error in EVM data sync for ${req.params.protocol}:`, error);
+    res.status(500).json({
+      success: false,
+      error: `EVM data sync failed for ${req.params.protocol}`,
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

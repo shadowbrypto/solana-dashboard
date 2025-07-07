@@ -10,7 +10,10 @@
     "start": "tsx src/index.ts",
     "import-csv": "tsx scripts/importCsvToSupabaseWithDelete.ts",
     "import-csv-upsert": "tsx scripts/importCsvToSupabase.ts",
-    "update-data": "bash scripts/update.sh"
+    "update-data": "bash scripts/update.sh",
+    "sync-evm": "tsx scripts/sync-evm-data.ts",
+    "migrate-db": "tsx scripts/run-migrations.ts",
+    "analyze-evm": "tsx scripts/analyze-evm-csv.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",

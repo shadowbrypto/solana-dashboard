@@ -22,7 +22,7 @@ if (!API_KEY) {
 // Protocol configuration with chain support
 interface ProtocolSource {
   queryIds: number[];
-  chain: 'solana' | 'ethereum';
+  chain: 'solana' | 'evm';
 }
 
 // Protocol sources mapping - now supports multiple query IDs and chains
@@ -49,8 +49,10 @@ const PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   
   // Ethereum protocols - add your protocols here
   // Example:
-  // "uniswap": { queryIds: [123456], chain: 'ethereum' },
-  // "sushiswap": { queryIds: [789012], chain: 'ethereum' },
+  "sigma_evm": { queryIds: [5430634], chain: 'evm' },
+  "maestro_evm": { queryIds: [3832557], chain: 'evm' },
+  "bloom_evm": { queryIds: [4824799], chain: 'evm' },
+  "banana_evm": { queryIds: [4750709], chain: 'evm' }
 };
 
 // CSV column mapping to database columns

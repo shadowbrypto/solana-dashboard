@@ -96,8 +96,8 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
 
     // Determine which chains to query based on chain parameter
     if (chainFilter === 'evm') {
-      // For EVM, query all non-Solana chains
-      query = query.neq('chain', 'solana');
+      // For EVM, query specific EVM chains (same as working EVM metrics query)
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
     } else if (chainFilter === 'solana' || !chainFilter) {
       // For Solana or default, query Solana chain
       query = query.eq('chain', 'solana');
@@ -182,9 +182,9 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
 
     // Determine which chains to query based on chain parameter
     if (chainFilter === 'evm') {
-      // For EVM, query all non-Solana chains
-      console.log(`EVM filter detected, querying non-Solana chains`);
-      query = query.neq('chain', 'solana');
+      // For EVM, query specific EVM chains (same as working EVM metrics query)
+      console.log(`EVM filter detected, querying EVM chains`);
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
     } else if (chainFilter === 'solana' || !chainFilter) {
       // For Solana or default, query Solana chain
       console.log(`Solana filter, querying Solana chain`);
@@ -540,78 +540,3 @@ export async function generateWeeklyInsights() {
   return result;
 }
 
-// EVM-specific metrics for different UI layout
-export async function getEVMProtocolMetrics(protocolName: string): Promise<{
-  lifetimeVolume: number;
-  chainBreakdown: Array<{
-    chain: string;
-    volume: number;
-    percentage: number;
-  }>;
-  totalChains: number;
-}> {
-  const cacheKey = `evm_metrics_${protocolName}`;
-  const cachedData = totalStatsCache.get(cacheKey);
-
-  if (cachedData && isCacheValid(cachedData)) {
-    return cachedData.data;
-  }
-
-  console.log(`Fetching EVM metrics for protocol: ${protocolName}`);
-
-  // Fetch all data for this EVM protocol across specific EVM chains
-  const { data, error } = await supabase
-    .from('protocol_stats')
-    .select('chain, volume_usd')
-    .eq('protocol_name', protocolName)
-    .in('chain', ['ethereum', 'base', 'bsc', 'avax']); // Specific EVM chains
-
-  if (error) {
-    console.error('Error fetching EVM protocol metrics:', error);
-    throw error;
-  }
-
-  if (!data || data.length === 0) {
-    return {
-      lifetimeVolume: 0,
-      chainBreakdown: [],
-      totalChains: 0
-    };
-  }
-
-  // Aggregate volume by chain
-  const chainVolumes = new Map<string, number>();
-  
-  data.forEach(row => {
-    const currentVolume = chainVolumes.get(row.chain) || 0;
-    chainVolumes.set(row.chain, currentVolume + (row.volume_usd || 0));
-  });
-
-  // Calculate total lifetime volume
-  const lifetimeVolume = Array.from(chainVolumes.values()).reduce((sum, volume) => sum + volume, 0);
-
-  // Create chain breakdown with percentages
-  const chainBreakdown = Array.from(chainVolumes.entries())
-    .map(([chain, volume]) => ({
-      chain,
-      volume,
-      percentage: lifetimeVolume > 0 ? (volume / lifetimeVolume) * 100 : 0
-    }))
-    .sort((a, b) => b.volume - a.volume); // Sort by volume descending
-
-  const result = {
-    lifetimeVolume,
-    chainBreakdown,
-    totalChains: chainBreakdown.length
-  };
-
-  // Cache the results
-  totalStatsCache.set(cacheKey, {
-    data: result,
-    timestamp: Date.now()
-  });
-
-  console.log(`EVM metrics for ${protocolName}: $${lifetimeVolume.toLocaleString()} across ${chainBreakdown.length} chains`);
-
-  return result;
-}

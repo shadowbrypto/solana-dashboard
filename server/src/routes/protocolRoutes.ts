@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
-import { evmDataMigrationService } from '../services/evmDataMigrationService.js';
+import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 
 const router = Router();
 
@@ -179,13 +179,38 @@ router.get('/sync-status/:protocol', async (req: Request, res: Response) => {
 // Sync all EVM protocol data
 router.post('/sync-evm', async (req: Request, res: Response) => {
   try {
-    console.log('Starting EVM data sync...');
-    const result = await evmDataMigrationService.syncAllEVMData();
+    console.log('Starting EVM data sync for all protocols...');
+    
+    // Get all EVM protocols and sync them individually
+    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm'];
+    const results = [];
+    
+    for (const protocol of evmProtocols) {
+      try {
+        const result = await simpleEVMDataMigrationService.syncEVMProtocolData(protocol);
+        results.push(result);
+      } catch (error) {
+        results.push({
+          success: false,
+          protocol,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+    
+    const totalRowsImported = results.reduce((sum, r) => sum + (r.rowsImported || 0), 0);
+    const successfulSyncs = results.filter(r => r.success).length;
     
     res.json({
-      success: true,
-      message: 'EVM data sync completed',
-      data: result
+      success: successfulSyncs > 0,
+      message: `EVM data sync completed: ${successfulSyncs}/${results.length} protocols successful`,
+      data: {
+        success: successfulSyncs === results.length,
+        rowsImported: totalRowsImported,
+        csvFilesFetched: successfulSyncs,
+        timestamp: new Date().toISOString(),
+        results: results
+      }
     });
   } catch (error) {
     console.error('Error in EVM data sync:', error);
@@ -202,9 +227,9 @@ router.post('/sync-evm', async (req: Request, res: Response) => {
 router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
   try {
     const { protocol } = req.params;
-    console.log(`Starting EVM data sync for protocol: ${protocol}`);
+    console.log(`Starting simple EVM data sync for protocol: ${protocol}`);
     
-    const result = await evmDataMigrationService.syncEVMProtocolData(protocol);
+    const result = await simpleEVMDataMigrationService.syncEVMProtocolData(protocol);
     
     res.json({
       success: true,

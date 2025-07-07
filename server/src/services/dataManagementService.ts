@@ -108,31 +108,31 @@ export class DataManagementService {
       
       // Check if this is an EVM protocol
       if (protocolConfig.chain === 'evm') {
-        // Delegate to EVM migration service
-        console.log(`Detected EVM protocol ${protocolName}, delegating to EVM service...`);
+        // Delegate to simple EVM migration service (no multiple files)
+        console.log(`Detected EVM protocol ${protocolName}, delegating to simple EVM service...`);
         
-        const { evmDataMigrationService } = await import('./evmDataMigrationService.js');
-        const evmResult = await evmDataMigrationService.syncEVMProtocolData(protocolName);
+        const { simpleEVMDataMigrationService } = await import('./evmDataMigrationServiceSimple.js');
+        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName);
         
-        // Convert EVM result format to standard SyncResult format
+        // Convert simple EVM result format to standard SyncResult format
         return {
           success: evmResult.success,
-          csvFilesFetched: evmResult.csvFilesFetched,
+          csvFilesFetched: 1,
           rowsImported: evmResult.rowsImported,
           timestamp: evmResult.timestamp,
-          downloadResults: evmResult.downloadResults.map(r => ({
+          downloadResults: [{
+            success: evmResult.success,
+            protocol: protocolName.replace('_evm', ''),
+            queriesProcessed: evmResult.success ? 1 : 0,
+            queriesFailed: evmResult.success ? 0 : 1,
+            error: evmResult.error
+          }],
+          importResults: evmResult.results?.map((r: any) => ({
             success: r.success,
-            protocol: r.protocol,
-            queriesProcessed: r.queriesProcessed,
-            queriesFailed: r.queriesFailed,
-            error: r.error
-          })),
-          importResults: evmResult.importResults.map(r => ({
-            success: r.success,
-            protocol: r.protocol,
+            protocol: `${protocolName.replace('_evm', '')}_${r.chain}`,
             rowsInserted: r.rowsInserted,
             error: r.error
-          })),
+          })) || [],
           error: evmResult.error
         };
       }

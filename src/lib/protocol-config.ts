@@ -126,6 +126,15 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'bonkbot.jpg';
     case 'nova terminal':
       return 'nova.jpg';
+    // EVM protocols - map to base protocol logos
+    case 'sigma_evm':
+      return 'sigma.jpg';
+    case 'maestro_evm':
+      return 'maestro.jpg';
+    case 'bloom_evm':
+      return 'bloom.jpg';
+    case 'banana_evm':
+      return 'banana.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

@@ -23,7 +23,7 @@ import {
   BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon, 
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
-  SigmaIcon, SigmaEVMIcon 
+  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon 
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
@@ -73,9 +73,9 @@ export const protocolConfigs: ProtocolConfig[] = [
   
   // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
   { id: 'sigma_evm', name: 'Sigma EVM', icon: SigmaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'maestro_evm', name: 'Maestro EVM', icon: MaestroIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'bloom_evm', name: 'Bloom EVM', icon: BloomIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'banana_evm', name: 'Banana EVM', icon: BananaIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'maestro_evm', name: 'Maestro EVM', icon: MaestroEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'bloom_evm', name: 'Bloom EVM', icon: BloomEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'banana_evm', name: 'Banana EVM', icon: BananaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
 ];
 
 // Helper functions

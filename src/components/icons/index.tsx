@@ -79,3 +79,15 @@ export const SigmaIcon = (props: any) => (
 export const SigmaEVMIcon = (props: any) => (
   <ProtocolLogo protocolId="sigma" protocolName="Sigma" fallbackIcon={TrendingUp} {...props} />
 );
+
+export const MaestroEVMIcon = (props: any) => (
+  <ProtocolLogo protocolId="maestro" protocolName="Maestro" fallbackIcon={Zap} {...props} />
+);
+
+export const BloomEVMIcon = (props: any) => (
+  <ProtocolLogo protocolId="bloom" protocolName="Bloom" fallbackIcon={Wand2} {...props} />
+);
+
+export const BananaEVMIcon = (props: any) => (
+  <ProtocolLogo protocolId="banana" protocolName="Banana" fallbackIcon={Banana} {...props} />
+);

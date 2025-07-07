@@ -130,6 +130,11 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
               EVM
             </Badge>
           )}
+          {protocol.chain === 'solana' && (
+            <Badge variant="secondary" className="h-5 px-2 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+              SOL
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
         {syncStatus && !syncStatus.sync_success && (

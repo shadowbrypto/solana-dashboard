@@ -197,10 +197,10 @@ router.get('/evm-daily-metrics/:protocol', async (req: Request, res: Response) =
       });
     }
 
-    if (typeof timeframe !== 'string' || !['7d', '30d', '90d', '1y'].includes(timeframe)) {
+    if (typeof timeframe !== 'string' || !['7d', '30d', '90d', '6m', '1y'].includes(timeframe)) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid timeframe. Must be one of: 7d, 30d, 90d, 1y' 
+        error: 'Invalid timeframe. Must be one of: 7d, 30d, 90d, 6m, 1y' 
       });
     }
 

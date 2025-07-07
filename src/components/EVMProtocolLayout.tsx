@@ -58,7 +58,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const [loading, setLoading] = useState(true);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y'>('90d'); // Default to 90d to match chart's 3m default
 
   useEffect(() => {
     const fetchEVMMetrics = async () => {
@@ -95,7 +95,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     }
   }, [protocol]);
 
-  const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '1y') => {
+  const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '6m' | '1y') => {
     try {
       setDailyLoading(true);
       
@@ -123,29 +123,30 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     }
   };
 
-  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '1y') => {
+  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '6m' | '1y') => {
     setSelectedTimeframe(newTimeframe);
     fetchDailyData(newTimeframe);
   };
   
   // Map timeframe to StackedBarChart's TimeFrame type
-  const mapTimeframeToChartTimeframe = (timeframe: '7d' | '30d' | '90d' | '1y'): '7d' | '30d' | '3m' | '1y' => {
+  const mapTimeframeToChartTimeframe = (timeframe: '7d' | '30d' | '90d' | '6m' | '1y'): '7d' | '30d' | '3m' | '6m' | '1y' => {
     switch (timeframe) {
       case '7d': return '7d';
       case '30d': return '30d';
       case '90d': return '3m';
+      case '6m': return '6m';
       case '1y': return '1y';
       default: return '30d';
     }
   };
   
   // Map StackedBarChart's TimeFrame type back to our API timeframe
-  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '1y' => {
+  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '6m' | '1y' => {
     switch (timeframe) {
       case '7d': return '7d';
       case '30d': return '30d';
       case '3m': return '90d';
-      case '6m': return '1y'; // Map 6m to 1y to get more data
+      case '6m': return '6m'; // Now properly maps to 6m
       case '1y': return '1y';
       case 'all': return '1y'; // Map 'all' to 1y as the maximum
       default: return '30d';

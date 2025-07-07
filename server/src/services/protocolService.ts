@@ -352,6 +352,9 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
     case '90d':
       startDate.setDate(endDate.getDate() - 90);
       break;
+    case '6m':
+      startDate.setMonth(endDate.getMonth() - 6);
+      break;
     case '1y':
       startDate.setFullYear(endDate.getFullYear() - 1);
       break;

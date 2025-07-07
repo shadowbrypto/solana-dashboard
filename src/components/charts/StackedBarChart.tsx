@@ -172,7 +172,7 @@ export function StackedBarChart({
         )}
       </CardHeader>
       <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+        <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
           <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -225,6 +225,17 @@ export function StackedBarChart({
                               </span>
                             </div>
                           ))}
+                        </div>
+                        <div className="bg-muted-foreground/20 rounded px-2 py-1 mt-0">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <span className="text-muted-foreground">Total:</span>
+                            <span className="text-foreground">
+                              {(() => {
+                                const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
+                                return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);
+                              })()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>

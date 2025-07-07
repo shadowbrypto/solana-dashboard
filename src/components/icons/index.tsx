@@ -71,3 +71,11 @@ export const FomoIcon = (props: any) => (
 export const PadreIcon = (props: any) => (
   <ProtocolLogo protocolId="padre" protocolName="Padre" fallbackIcon={Cross} {...props} />
 );
+
+export const SigmaIcon = (props: any) => (
+  <ProtocolLogo protocolId="sigma" protocolName="Sigma" fallbackIcon={TrendingUp} {...props} />
+);
+
+export const SigmaEVMIcon = (props: any) => (
+  <ProtocolLogo protocolId="sigma" protocolName="Sigma" fallbackIcon={TrendingUp} {...props} />
+);

@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
+import { supabase } from '../lib/supabase.js';
 
 const router = Router();
 
@@ -127,6 +128,60 @@ router.get('/weekly-insights', async (req: Request, res: Response) => {
   }
 });
 
+
+// GET /api/protocols/debug-sigma
+// Temporary debug endpoint to check sigma data
+router.get('/debug-sigma', async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('chain, volume_usd, protocol_name')
+      .eq('protocol_name', 'sigma')
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax'])
+      .limit(10);
+
+    if (error) throw error;
+
+    const totalVolume = data?.reduce((sum, row) => sum + (row.volume_usd || 0), 0) || 0;
+    
+    res.json({ 
+      success: true, 
+      data: {
+        rows: data?.length || 0,
+        sample: data?.slice(0, 3) || [],
+        totalVolume,
+        chains: [...new Set(data?.map(r => r.chain) || [])]
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/protocols/evm-metrics/:protocol
+// Get EVM chain breakdown for a specific protocol
+router.get('/evm-metrics/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    
+    if (!protocol) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Protocol parameter is required' 
+      });
+    }
+
+    const evmMetrics = await getEVMChainBreakdown(protocol);
+    res.json({ success: true, data: evmMetrics });
+  } catch (error) {
+    console.error('Error fetching EVM metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // GET /api/protocols/health
 router.get('/health', (req: Request, res: Response) => {

@@ -202,6 +202,11 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
     console.log(`Query for protocol: ${protocolName}, chain: ${chainFilter}`);
     const { data, error } = await query;
     console.log(`Query returned ${data?.length || 0} rows`);
+    if (data && data.length > 0) {
+      console.log(`Sample data:`, data.slice(0, 2));
+      const totalVol = data.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0);
+      console.log(`Total volume from this batch: ${totalVol}`);
+    }
 
     if (error) throw error;
     if (!data || data.length === 0) break;
@@ -239,6 +244,84 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
   });
 
   return metrics;
+}
+
+// Get EVM chain breakdown for a specific protocol
+export async function getEVMChainBreakdown(protocolName: string): Promise<{
+  lifetimeVolume: number;
+  chainBreakdown: Array<{
+    chain: string;
+    volume: number;
+    percentage: number;
+  }>;
+  totalChains: number;
+}> {
+  const cacheKey = `evm_breakdown_${protocolName}`;
+  const cachedData = insightsCache.get(cacheKey);
+
+  if (cachedData && isCacheValid(cachedData)) {
+    return cachedData.data;
+  }
+
+  let allData: any[] = [];
+  let hasMore = true;
+  let page = 0;
+  const PAGE_SIZE = 1000;
+
+  while (hasMore) {
+    let query = supabase
+      .from('protocol_stats')
+      .select('chain, volume_usd')
+      .eq('protocol_name', protocolName)
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    page++;
+  }
+
+  // Group by chain and calculate totals
+  const chainTotals = allData.reduce((acc, row) => {
+    const chain = row.chain;
+    const volume = Number(row.volume_usd) || 0;
+    
+    if (!acc[chain]) {
+      acc[chain] = 0;
+    }
+    acc[chain] += volume;
+    
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalVolume = Object.values(chainTotals).reduce((sum, vol) => sum + vol, 0);
+  
+  const chainBreakdown = Object.entries(chainTotals)
+    .map(([chain, volume]) => ({
+      chain,
+      volume,
+      percentage: totalVolume > 0 ? (volume / totalVolume) * 100 : 0
+    }))
+    .sort((a, b) => b.volume - a.volume) // Sort by volume descending
+    .filter(item => item.volume > 0); // Only include chains with volume
+
+  const result = {
+    lifetimeVolume: totalVolume,
+    chainBreakdown,
+    totalChains: chainBreakdown.length
+  };
+
+  insightsCache.set(cacheKey, {
+    data: result,
+    timestamp: Date.now()
+  });
+
+  return result;
 }
 
 export async function getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {

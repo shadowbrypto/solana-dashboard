@@ -299,9 +299,9 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
     return acc;
   }, {} as Record<string, number>);
 
-  const totalVolume = Object.values(chainTotals).reduce((sum, vol) => sum + vol, 0);
+  const totalVolume: number = (Object.values(chainTotals) as number[]).reduce((sum: number, vol: number) => sum + vol, 0);
   
-  const chainBreakdown = Object.entries(chainTotals)
+  const chainBreakdown = (Object.entries(chainTotals) as [string, number][])
     .map(([chain, volume]) => ({
       chain,
       volume,
@@ -389,7 +389,12 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
   }
 
   // Group by date and chain
-  const dailyData = allData.reduce((acc, row) => {
+  const dailyData = allData.reduce((acc: Record<string, {
+    date: string;
+    formattedDay: string;
+    chainData: Record<string, number>;
+    totalVolume: number;
+  }>, row: any) => {
     const date = row.date;
     const chain = row.chain;
     const volume = Number(row.volume_usd) || 0;
@@ -411,12 +416,12 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
     acc[date].totalVolume += volume;
 
     return acc;
-  }, {} as Record<string, any>);
+  }, {});
 
   // Convert to array and sort by date
   const result = Object.values(dailyData)
-    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .filter((item: any) => item.totalVolume > 0); // Only include days with volume
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .filter((item) => item.totalVolume > 0); // Only include days with volume
 
   insightsCache.set(cacheKey, {
     data: result,

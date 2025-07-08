@@ -32,6 +32,7 @@ import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizont
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
 import { ProtocolHighlights } from "./components/ProtocolHighlights";
 import { VolumeActivity } from "./components/VolumeActivity";
+import { LifetimeVolumeBreakdown } from "./components/LifetimeVolumeBreakdown";
 import { getAllProtocols, getAllProtocolsIncludingEVM } from "./lib/protocol-categories";
 import { getProtocolName, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename } from "./lib/protocol-config";
 import { generateHorizontalBarChartData, generateStackedBarChartConfig, generateStackedAreaChartKeys } from "./lib/chart-helpers";
@@ -546,20 +547,42 @@ const MainContent = (): JSX.Element => {
       )}
 
       {protocol === "all" && (
-        <div className="mb-6 lg:mb-8">
-          <VolumeActivity
-            title="Volume Activity Heatmap"
-            subtitle="All Protocols"
-            data={data.map(item => ({
-              date: item.date,
-              volume_usd: allProtocolIds.reduce((sum, protocolId) => {
-                const key = `${protocolId.replace(/\s+/g, '_').toLowerCase()}_volume`;
-                return sum + (item[key] || 0);
-              }, 0)
-            }))}
-            loading={loading}
-          />
-        </div>
+        <>
+          <div className="mb-6 lg:mb-8">
+            <VolumeActivity
+              title="Volume Activity Heatmap"
+              subtitle="All Protocols"
+              data={data.map(item => ({
+                date: item.date,
+                volume_usd: allProtocolIds.reduce((sum, protocolId) => {
+                  const key = `${protocolId.replace(/\s+/g, '_').toLowerCase()}_volume`;
+                  return sum + (item[key] || 0);
+                }, 0)
+              }))}
+              loading={loading}
+            />
+          </div>
+          
+          <div className="mb-6 lg:mb-8">
+            <LifetimeVolumeBreakdown
+              totalVolume={totalMetrics.total_volume_usd}
+              protocolData={allProtocolIds.map(protocolId => {
+                const totalVolume = data.reduce((sum, day) => {
+                  const volumeKey = `${protocolId.replace(/\s+/g, '_').toLowerCase()}_volume`;
+                  return sum + (day[volumeKey] || 0);
+                }, 0);
+                
+                return {
+                  id: protocolId,
+                  name: getProtocolName(protocolId),
+                  value: totalVolume,
+                  percentage: totalMetrics.total_volume_usd > 0 ? (totalVolume / totalMetrics.total_volume_usd) * 100 : 0,
+                  color: getProtocolColor(protocolId)
+                };
+              })}
+            />
+          </div>
+        </>
       )}
 
         <div className="space-y-4 lg:space-y-6">

@@ -96,12 +96,12 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               onClick={() => syncData(
                 () => toast({
                   title: "Refreshing Data",
-                  description: "Fetching latest data...",
+                  description: "Fetching latest Solana and EVM data...",
                 }),
                 (result) => toast({
                   variant: "success",
                   title: "Data Sync Complete",
-                  description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
+                  description: `Successfully refreshed Solana and EVM data (${result.csvFilesFetched} files synced)`,
                 })
               )}
               disabled={!canSync || isLoading}
@@ -195,12 +195,12 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             onClick={() => syncData(
               () => toast({
                 title: "Refreshing Data", 
-                description: "Fetching latest data...",
+                description: "Fetching latest Solana and EVM data...",
               }),
               (result) => toast({
                 variant: "success",
                 title: "Data Sync Complete",
-                description: `Successfully refreshed data for ${result.csvFilesFetched} protocols`,
+                description: `Successfully refreshed Solana and EVM data (${result.csvFilesFetched} files synced)`,
               })
             )}
             disabled={!canSync || isLoading}

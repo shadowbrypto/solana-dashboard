@@ -23,6 +23,30 @@ interface EVMProtocolData {
   weeklyTrend: number[];
 }
 
+// Function to fetch standalone AVAX and ARB volumes
+const fetchStandaloneChainVolumes = async (date: Date): Promise<{avax: number, arbitrum: number}> => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  try {
+    const [avaxResponse, arbResponse] = await Promise.all([
+      fetch(`${API_BASE_URL}/protocols/chain-volume/avax?date=${dateStr}`),
+      fetch(`${API_BASE_URL}/protocols/chain-volume/arbitrum?date=${dateStr}`)
+    ]);
+    
+    const avaxData = avaxResponse.ok ? await avaxResponse.json() : null;
+    const arbData = arbResponse.ok ? await arbResponse.json() : null;
+    
+    return {
+      avax: avaxData?.success ? avaxData.data.totalVolume || 0 : 0,
+      arbitrum: arbData?.success ? arbData.data.totalVolume || 0 : 0
+    };
+  } catch (error) {
+    console.error('Failed to fetch standalone chain volumes:', error);
+    return { avax: 0, arbitrum: 0 };
+  }
+};
+
 interface EVMProtocolPerformance {
   protocol: Protocol;
   current: EVMProtocolData;
@@ -110,12 +134,16 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
         const evmProtocols: Protocol[] = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm'];
 
         // Fetch data for current day and historical periods
-        const currentData = await fetchEVMDailyData(evmProtocols, date);
+        const [currentData, currentStandaloneData] = await Promise.all([
+          fetchEVMDailyData(evmProtocols, date),
+          fetchStandaloneChainVolumes(date)
+        ]);
         
         // Fetch 7-day historical data
-        const historical7d = await Promise.all(
-          Array.from({ length: 7 }, (_, i) => fetchEVMDailyData(evmProtocols, subDays(date, i + 1)))
-        );
+        const [historical7d, historicalStandalone7d] = await Promise.all([
+          Promise.all(Array.from({ length: 7 }, (_, i) => fetchEVMDailyData(evmProtocols, subDays(date, i + 1)))),
+          Promise.all(Array.from({ length: 7 }, (_, i) => fetchStandaloneChainVolumes(subDays(date, i + 1))))
+        ]);
 
         // Analyze each protocol
         for (const currentProtocol of currentData) {
@@ -216,21 +244,30 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
         }
 
         // 4. Chain Distribution Insight
-        const totalVolume = performances.reduce((sum, p) => sum + p.current.totalVolume, 0);
-        if (totalVolume > 0) {
+        const protocolTotalVolume = performances.reduce((sum, p) => sum + p.current.totalVolume, 0);
+        const totalVolumeWithStandalone = protocolTotalVolume + currentStandaloneData.avax + currentStandaloneData.arbitrum;
+        
+        if (totalVolumeWithStandalone > 0) {
           const totalEthereum = performances.reduce((sum, p) => sum + p.current.chainVolumes.ethereum, 0);
           const totalBase = performances.reduce((sum, p) => sum + p.current.chainVolumes.base, 0);
           const totalBSC = performances.reduce((sum, p) => sum + p.current.chainVolumes.bsc, 0);
+          const totalAVAX = currentStandaloneData.avax;
+          const totalArbitrum = currentStandaloneData.arbitrum;
 
-          const dominantChain = 
-            totalEthereum > totalBase && totalEthereum > totalBSC ? 'Ethereum' :
-            totalBase > totalBSC ? 'Base' : 'BSC';
+          const chainVolumes = {
+            'Ethereum': totalEthereum,
+            'Base': totalBase,
+            'BSC': totalBSC,
+            'Avalanche': totalAVAX,
+            'Arbitrum': totalArbitrum
+          };
+
+          const dominantChain = Object.keys(chainVolumes).reduce((a, b) => 
+            chainVolumes[a] > chainVolumes[b] ? a : b
+          );
           
-          const dominantVolume = 
-            dominantChain === 'Ethereum' ? totalEthereum :
-            dominantChain === 'Base' ? totalBase : totalBSC;
-          
-          const dominancePercent = (dominantVolume / totalVolume) * 100;
+          const dominantVolume = chainVolumes[dominantChain];
+          const dominancePercent = (dominantVolume / totalVolumeWithStandalone) * 100;
 
           generatedInsights.push({
             type: 'info',
@@ -262,19 +299,25 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
         }
 
         // 6. Market Growth Insight
-        const yesterdayTotal = performances.reduce((sum, p) => {
+        const yesterdayProtocolTotal = performances.reduce((sum, p) => {
           const yesterday = p.previous[0];
           return sum + (yesterday?.totalVolume || 0);
         }, 0);
+        
+        const yesterdayStandaloneTotal = historicalStandalone7d[0] 
+          ? historicalStandalone7d[0].avax + historicalStandalone7d[0].arbitrum 
+          : 0;
+        
+        const yesterdayTotalWithStandalone = yesterdayProtocolTotal + yesterdayStandaloneTotal;
 
-        if (yesterdayTotal > 0) {
-          const totalGrowth = (totalVolume - yesterdayTotal) / yesterdayTotal;
+        if (yesterdayTotalWithStandalone > 0) {
+          const totalGrowth = (totalVolumeWithStandalone - yesterdayTotalWithStandalone) / yesterdayTotalWithStandalone;
           if (Math.abs(totalGrowth) > 0.1) { // > 10% change
             generatedInsights.push({
               type: totalGrowth > 0 ? 'success' : 'warning',
               title: 'EVM Market Movement',
               description: `Total EVM volume ${totalGrowth > 0 ? 'increased' : 'decreased'} ${Math.abs(totalGrowth * 100).toFixed(1)}% from yesterday`,
-              value: formatCurrency(totalVolume),
+              value: formatCurrency(totalVolumeWithStandalone),
               trend: totalGrowth,
               icon: totalGrowth > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
             });

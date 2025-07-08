@@ -147,6 +147,19 @@ export const dataSyncApi = {
     });
   },
 
+  // Sync both Solana and EVM data
+  async syncAllData(): Promise<{ solana: { csvFilesFetched: number; timestamp: string }, evm: { csvFilesFetched: number; rowsImported: number; timestamp: string } }> {
+    const [solanaResult, evmResult] = await Promise.all([
+      this.syncData(),
+      this.syncEVMData()
+    ]);
+    
+    return {
+      solana: solanaResult,
+      evm: evmResult.data
+    };
+  },
+
   // Get sync status
   async getSyncStatus(): Promise<{ 
     lastSync: string | null; 

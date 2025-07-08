@@ -294,7 +294,10 @@ export function Layout() {
                   <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
                     <Icon className="h-4 w-4" />
                   </div>
-                  {report.name}
+                  <span className="flex-1 text-left">{report.name}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-md font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                    SOL
+                  </span>
                 </Button>
               );
             })}

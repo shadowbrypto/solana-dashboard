@@ -81,7 +81,12 @@ export default function DailyReport() {
 
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
-      <h1 className="text-2xl sm:text-3xl font-bold">Daily Report</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+        Daily Report
+        <span className="text-xs px-2 py-1 rounded-md font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          SOL
+        </span>
+      </h1>
       <DailyHighlights date={date} />
       <DailyMetricsTable protocols={protocols} date={date} onDateChange={setDate} />
     </div>

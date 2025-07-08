@@ -14,6 +14,7 @@ import { MultiComparisonMetricCard } from '../components/MultiComparisonMetricCa
 import { MultiComparisonChart } from '../components/MultiComparisonChart';
 import { MarketShareComparisonChart } from '../components/MarketShareComparisonChart';
 import { Skeleton } from '../components/ui/skeleton';
+import { MetricCardSkeleton } from '../components/MetricCardSkeleton';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -480,61 +481,110 @@ export default function OneVsOne() {
         <div className="space-y-6 mt-6">
           {/* Metric Comparison Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <MultiComparisonMetricCard
-              title="Lifetime Volume"
-              icon={DollarSign}
-              data={chartData}
-              dataKey="total_volume_usd"
-              formatter={formatCurrency}
-            />
-            <MultiComparisonMetricCard
-              title="Lifetime Users"
-              icon={Users}
-              data={chartData}
-              dataKey="numberOfNewUsers"
-              formatter={formatNumber}
-            />
-            <MultiComparisonMetricCard
-              title="Lifetime Trades"
-              icon={Activity}
-              data={chartData}
-              dataKey="daily_trades"
-              formatter={formatNumber}
-            />
+            {loadingProtocols.size > 0 ? (
+              <>
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+                <MetricCardSkeleton />
+              </>
+            ) : (
+              <>
+                <MultiComparisonMetricCard
+                  title="Lifetime Volume"
+                  icon={DollarSign}
+                  data={chartData}
+                  dataKey="total_volume_usd"
+                  formatter={formatCurrency}
+                />
+                <MultiComparisonMetricCard
+                  title="Lifetime Users"
+                  icon={Users}
+                  data={chartData}
+                  dataKey="numberOfNewUsers"
+                  formatter={formatNumber}
+                />
+                <MultiComparisonMetricCard
+                  title="Lifetime Trades"
+                  icon={Activity}
+                  data={chartData}
+                  dataKey="daily_trades"
+                  formatter={formatNumber}
+                />
+              </>
+            )}
           </div>
 
           {/* Time Series Charts */}
           <div className="space-y-6">
-            <MultiComparisonChart
-              title="Volume Comparison"
-              data={getFilteredData(volumeTimeframe)}
-              dataKey="volume_usd"
-              formatter={formatCurrency}
-              timeframe={volumeTimeframe}
-              onTimeframeChange={(value) => setVolumeTimeframe(value as TimeFrame)}
-            />
-            <MultiComparisonChart
-              title="Daily Users Comparison"
-              data={getFilteredData(usersTimeframe)}
-              dataKey="daily_users"
-              formatter={formatNumber}
-              timeframe={usersTimeframe}
-              onTimeframeChange={(value) => setUsersTimeframe(value as TimeFrame)}
-            />
-            <MultiComparisonChart
-              title="Trades Comparison"
-              data={getFilteredData(tradesTimeframe)}
-              dataKey="trades"
-              formatter={formatNumber}
-              timeframe={tradesTimeframe}
-              onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
-            />
-            <MarketShareComparisonChart
-              data={getFilteredData(marketShareTimeframe)}
-              allProtocolsData={allProtocolsData}
-              timeframe={marketShareTimeframe}
-              onTimeframeChange={(value) => setMarketShareTimeframe(value as TimeFrame)}
-            />
+            {loadingProtocols.size > 0 ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                <MultiComparisonChart
+                  title="Volume Comparison"
+                  data={getFilteredData(volumeTimeframe)}
+                  dataKey="volume_usd"
+                  formatter={formatCurrency}
+                  timeframe={volumeTimeframe}
+                  onTimeframeChange={(value) => setVolumeTimeframe(value as TimeFrame)}
+                />
+                <MultiComparisonChart
+                  title="Daily Users Comparison"
+                  data={getFilteredData(usersTimeframe)}
+                  dataKey="daily_users"
+                  formatter={formatNumber}
+                  timeframe={usersTimeframe}
+                  onTimeframeChange={(value) => setUsersTimeframe(value as TimeFrame)}
+                />
+                <MultiComparisonChart
+                  title="Trades Comparison"
+                  data={getFilteredData(tradesTimeframe)}
+                  dataKey="trades"
+                  formatter={formatNumber}
+                  timeframe={tradesTimeframe}
+                  onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
+                />
+                <MarketShareComparisonChart
+                  data={getFilteredData(marketShareTimeframe)}
+                  allProtocolsData={allProtocolsData}
+                  timeframe={marketShareTimeframe}
+                  onTimeframeChange={(value) => setMarketShareTimeframe(value as TimeFrame)}
+                />
+              </>
+            )}
           </div>
         </div>
       )}

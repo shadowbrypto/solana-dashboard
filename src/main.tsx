@@ -6,8 +6,7 @@ import App from "./App";
 import { Layout } from "./layouts/Layout";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import DailyReport from "./pages/DailyReport";
-import EVMDailyReport from "./pages/EVMDailyReport";
+import UnifiedDailyReport from "./pages/UnifiedDailyReport";
 import MonthlyReport from "./pages/MonthlyReport";
 import WeeklyReport from "./pages/WeeklyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
@@ -80,21 +79,7 @@ const router = createBrowserRouter([
                   </div>
                 }
               >
-                <DailyReport />
-              </React.Suspense>
-            ),
-          },
-          {
-            path: "evm-daily",
-            element: (
-              <React.Suspense
-                fallback={
-                  <div className="flex items-center justify-center min-h-screen">
-                    Loading...
-                  </div>
-                }
-              >
-                <EVMDailyReport />
+                <UnifiedDailyReport />
               </React.Suspense>
             ),
           },

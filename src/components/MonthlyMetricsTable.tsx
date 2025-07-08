@@ -22,10 +22,94 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { useToast } from "../hooks/use-toast";
 
+const LoadingSkeleton = () => (
+  <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
+        <div className="flex items-center gap-4">
+          <div className="h-5 sm:h-6 w-48 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="w-full sm:w-[240px] flex sm:justify-end">
+          <div className="h-10 w-full sm:w-[240px] bg-muted rounded animate-pulse" />
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <div className="min-w-[800px] space-y-0">
+          {/* Header skeleton */}
+          <div className="flex items-center border-b p-4 space-x-4">
+            <div className="w-[150px] sm:w-[200px] h-4 bg-muted rounded animate-pulse" />
+            <div className="flex-1 flex justify-end space-x-8">
+              <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+
+          {/* Category and protocol rows skeleton */}
+          {[...Array(3)].map((_, categoryIndex) => (
+            <div key={categoryIndex} className="space-y-0">
+              {/* Category header skeleton */}
+              <div className="flex items-center border-b p-4 space-x-4 bg-muted/20">
+                <div className="w-[150px] sm:w-[200px] h-4 bg-muted rounded animate-pulse" />
+                <div className="flex-1 flex justify-end space-x-8">
+                  <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+                </div>
+              </div>
+
+              {/* Protocol rows skeleton */}
+              {[...Array(2)].map((_, protocolIndex) => (
+                <div key={protocolIndex} className="flex items-center border-b p-4 space-x-4">
+                  <div className="flex items-center gap-2 w-[150px] sm:w-[200px]">
+                    <div className="w-4 h-4 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="flex-1 flex justify-end space-x-8">
+                    <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* Total row skeleton */}
+          <div className="flex items-center border-t-2 p-4 space-x-4 bg-primary/10">
+            <div className="w-[150px] sm:w-[200px] h-4 bg-muted rounded animate-pulse" />
+            <div className="flex-1 flex justify-end space-x-8">
+              <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div className="flex justify-end gap-2 pt-4">
+      <div className="h-10 w-24 bg-muted rounded animate-pulse" />
+      <div className="h-10 w-20 bg-muted rounded animate-pulse" />
+    </div>
+  </div>
+);
+
 interface MonthlyMetricsTableProps {
   protocols: Protocol[];
   date: Date;
   onDateChange: (date: Date) => void;
+  loading?: boolean;
 }
 
 type MetricKey = keyof ProtocolMetrics | 'market_share';
@@ -72,7 +156,7 @@ const formatPercentage = (value: number): string => {
   return `${(value * 100).toFixed(2)}%`;
 };
 
-export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMetricsTableProps) {
+export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = false }: MonthlyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [monthlyData, setMonthlyData] = useState<Record<Protocol, MonthlyData>>({});
@@ -82,6 +166,11 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange }: MonthlyMe
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "numberOfNewUsers", "daily_trades", "market_share", "monthly_growth" as MetricKey]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  // Show loading skeleton when loading prop is true
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
 
   // Calculate total volume for market share
   const totalVolume = Object.values(monthlyData)

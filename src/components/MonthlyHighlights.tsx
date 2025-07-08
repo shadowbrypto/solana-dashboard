@@ -10,6 +10,7 @@ import { Badge } from "./ui/badge";
 
 interface MonthlyHighlightsProps {
   date: Date;
+  loading?: boolean;
 }
 
 interface MonthlyProtocolPerformance {
@@ -35,7 +36,7 @@ interface Insight {
   icon: React.ReactNode;
 }
 
-export function MonthlyHighlights({ date }: MonthlyHighlightsProps) {
+export function MonthlyHighlights({ date, loading: externalLoading = false }: MonthlyHighlightsProps) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -331,7 +332,7 @@ export function MonthlyHighlights({ date }: MonthlyHighlightsProps) {
     );
   };
 
-  if (loading) {
+  if (loading || externalLoading) {
     return (
       <Card className="overflow-hidden">
         <CardHeader>

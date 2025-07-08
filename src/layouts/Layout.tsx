@@ -24,8 +24,7 @@ const overviewPages = [
 ];
 
 const reports = [
-  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily', chain: 'solana' },
-  { id: 'evm-daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/evm-daily', chain: 'evm' },
+  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
   { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly', chain: 'solana' },
   { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly', chain: 'solana' }
 ];
@@ -297,14 +296,16 @@ export function Layout() {
                     <Icon className="h-4 w-4" />
                   </div>
                   <span className="flex-1 text-left">{report.name}</span>
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                    isEVM 
-                      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                      : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                  )}>
-                    {isEVM ? "EVM" : "SOL"}
-                  </span>
+                  {report.chain && (
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded-md font-medium",
+                      isEVM 
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                    )}>
+                      {isEVM ? "EVM" : "SOL"}
+                    </span>
+                  )}
                 </Button>
               );
             })}

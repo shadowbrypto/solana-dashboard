@@ -94,6 +94,31 @@ const getGrowthBadgeClasses = (growth: number): string => {
 };
 
 
+// Function to fetch standalone AVAX and ARB volumes by protocol
+const fetchProtocolChainVolumes = async (protocol: string, date: Date): Promise<{avax: number, arbitrum: number}> => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  try {
+    // Try to fetch protocol-specific AVAX and ARB data
+    const [avaxResponse, arbResponse] = await Promise.all([
+      fetch(`${API_BASE_URL}/protocols/chain-volume/avax/${protocol}?date=${dateStr}`),
+      fetch(`${API_BASE_URL}/protocols/chain-volume/arbitrum/${protocol}?date=${dateStr}`)
+    ]);
+    
+    const avaxData = avaxResponse.ok ? await avaxResponse.json() : null;
+    const arbData = arbResponse.ok ? await arbResponse.json() : null;
+    
+    return {
+      avax: avaxData?.success ? avaxData.data.volume || 0 : 0,
+      arbitrum: arbData?.success ? arbData.data.volume || 0 : 0
+    };
+  } catch (error) {
+    console.error(`Failed to fetch chain volumes for ${protocol}:`, error);
+    return { avax: 0, arbitrum: 0 };
+  }
+};
+
 const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVMProtocolData[]> => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const dateStr = format(date, 'yyyy-MM-dd');
@@ -106,30 +131,41 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
     
     try {
       console.log(`Fetching data for ${cleanProtocol} on ${dateStr}`);
-      const response = await fetch(`${API_BASE_URL}/protocols/evm-daily/${cleanProtocol}?date=${dateStr}`);
       
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      // Fetch both main protocol data and additional chain volumes
+      const [protocolResponse, additionalChainVolumes] = await Promise.all([
+        fetch(`${API_BASE_URL}/protocols/evm-daily/${cleanProtocol}?date=${dateStr}`),
+        fetchProtocolChainVolumes(cleanProtocol, new Date(dateStr))
+      ]);
+      
+      if (!protocolResponse.ok) {
+        throw new Error(`API returned ${protocolResponse.status}: ${protocolResponse.statusText}`);
       }
       
-      const result = await response.json();
+      const result = await protocolResponse.json();
       
       if (result.success && result.data) {
         console.log(`Successfully fetched ${cleanProtocol} data:`, {
           totalVolume: result.data.totalVolume,
-          chainCount: Object.keys(result.data.chainVolumes).length,
+          chainVolumes: result.data.chainVolumes,
+          additionalChains: additionalChainVolumes,
+          chainCount: Object.keys(result.data.chainVolumes || {}).length,
           hasGrowth: typeof result.data.dailyGrowth === 'number'
         });
         
+        // Calculate new total volume including AVAX and ARB
+        const baseVolume = result.data.totalVolume || 0;
+        const totalVolumeWithAdditional = baseVolume + additionalChainVolumes.avax + additionalChainVolumes.arbitrum;
+        
         return {
           protocol,
-          totalVolume: result.data.totalVolume || 0,
+          totalVolume: totalVolumeWithAdditional,
           chainVolumes: {
             ethereum: result.data.chainVolumes?.ethereum || 0,
             base: result.data.chainVolumes?.base || 0,
             bsc: result.data.chainVolumes?.bsc || 0,
-            avax: result.data.chainVolumes?.avax || 0,
-            arbitrum: result.data.chainVolumes?.arbitrum || 0
+            avax: additionalChainVolumes.avax,
+            arbitrum: additionalChainVolumes.arbitrum
           },
           dailyGrowth: result.data.dailyGrowth || 0,
           weeklyTrend: result.data.weeklyTrend || Array(7).fill(0)

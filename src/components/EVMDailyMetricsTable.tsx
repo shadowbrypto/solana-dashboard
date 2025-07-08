@@ -29,6 +29,8 @@ interface ChainVolume {
   ethereum: number;
   base: number;
   bsc: number;
+  avax: number;
+  arbitrum: number;
 }
 
 interface EVMProtocolData {
@@ -91,29 +93,6 @@ const getGrowthBadgeClasses = (growth: number): string => {
   return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
 };
 
-// Function to fetch standalone AVAX and ARB volumes
-const fetchStandaloneChainVolumes = async (date: Date): Promise<{avax: number, arbitrum: number}> => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const dateStr = format(date, 'yyyy-MM-dd');
-  
-  try {
-    const [avaxResponse, arbResponse] = await Promise.all([
-      fetch(`${API_BASE_URL}/protocols/chain-volume/avax?date=${dateStr}`),
-      fetch(`${API_BASE_URL}/protocols/chain-volume/arbitrum?date=${dateStr}`)
-    ]);
-    
-    const avaxData = avaxResponse.ok ? await avaxResponse.json() : null;
-    const arbData = arbResponse.ok ? await arbResponse.json() : null;
-    
-    return {
-      avax: avaxData?.success ? avaxData.data.totalVolume || 0 : 0,
-      arbitrum: arbData?.success ? arbData.data.totalVolume || 0 : 0
-    };
-  } catch (error) {
-    console.error('Failed to fetch standalone chain volumes:', error);
-    return { avax: 0, arbitrum: 0 };
-  }
-};
 
 const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVMProtocolData[]> => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -148,7 +127,9 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
           chainVolumes: {
             ethereum: result.data.chainVolumes?.ethereum || 0,
             base: result.data.chainVolumes?.base || 0,
-            bsc: result.data.chainVolumes?.bsc || 0
+            bsc: result.data.chainVolumes?.bsc || 0,
+            avax: result.data.chainVolumes?.avax || 0,
+            arbitrum: result.data.chainVolumes?.arbitrum || 0
           },
           dailyGrowth: result.data.dailyGrowth || 0,
           weeklyTrend: result.data.weeklyTrend || Array(7).fill(0)
@@ -166,7 +147,9 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
         chainVolumes: {
           ethereum: 0,
           base: 0,
-          bsc: 0
+          bsc: 0,
+          avax: 0,
+          arbitrum: 0
         },
         dailyGrowth: 0,
         weeklyTrend: Array(7).fill(0)
@@ -243,7 +226,6 @@ const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, 
 
 export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDailyMetricsTableProps) {
   const [evmData, setEvmData] = useState<EVMProtocolData[]>([]);
-  const [standaloneVolumes, setStandaloneVolumes] = useState<{avax: number, arbitrum: number}>({avax: 0, arbitrum: 0});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
@@ -256,13 +238,9 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       setError(null);
       
       try {
-        const [data, standaloneData] = await Promise.all([
-          fetchEVMDailyData(protocols, date),
-          fetchStandaloneChainVolumes(date)
-        ]);
+        const data = await fetchEVMDailyData(protocols, date);
         
         setEvmData(data);
-        setStandaloneVolumes(standaloneData);
         
         // Set top 3 protocols based on volume
         const sortedByVolume = data
@@ -274,7 +252,6 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
         console.error('Error loading EVM daily data:', err);
         setError('Failed to load data from database');
         setEvmData([]); // Show empty state on error
-        setStandaloneVolumes({avax: 0, arbitrum: 0});
         setTopProtocols([]);
       } finally {
         setLoading(false);
@@ -289,15 +266,13 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
   // Calculate totals (excluding hidden protocols)
   const totals = useMemo(() => {
     const visibleData = evmData.filter(data => !hiddenProtocols.has(data.protocol));
-    const protocolTotalVolume = visibleData.reduce((sum, data) => sum + data.totalVolume, 0);
+    const totalVolume = visibleData.reduce((sum, data) => sum + data.totalVolume, 0);
     
-    // Add standalone AVAX and ARB volumes to the total
-    const totalVolumeWithStandalone = protocolTotalVolume + standaloneVolumes.avax + standaloneVolumes.arbitrum;
-    
-    const chainTotals = chains.reduce((acc, chain) => {
-      acc[chain] = visibleData.reduce((sum, data) => sum + data.chainVolumes[chain], 0);
+    // Calculate chain totals including all chains (ethereum, base, bsc, avax, arbitrum)
+    const chainTotals = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].reduce((acc, chain) => {
+      acc[chain] = visibleData.reduce((sum, data) => sum + (data.chainVolumes[chain] || 0), 0);
       return acc;
-    }, {} as ChainVolume);
+    }, {} as any);
     
     // Calculate overall growth (simple average)
     const avgGrowth = visibleData.length > 0 
@@ -312,14 +287,12 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       : [];
 
     return {
-      totalVolume: totalVolumeWithStandalone,
-      protocolTotalVolume,
+      totalVolume,
       chainTotals,
-      standaloneVolumes,
       avgGrowth,
       totalWeeklyTrend
     };
-  }, [evmData, chains, hiddenProtocols, standaloneVolumes]);
+  }, [evmData, hiddenProtocols]);
 
   const handleDateChange = (newDate?: Date) => {
     if (newDate) {
@@ -601,15 +574,20 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                     <div className="flex items-center gap-1">
                       {data.totalVolume > 0 && (
                         <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                          {chains.map((chain, index) => {
-                            const chainVolume = data.chainVolumes[chain] || 0;
-                            const percentage = (chainVolume / data.totalVolume) * 100;
-                            const previousPercentage = chains.slice(0, index).reduce((sum, prevChain) => {
-                              const prevVolume = data.chainVolumes[prevChain] || 0;
-                              return sum + ((prevVolume / data.totalVolume) * 100);
-                            }, 0);
+                          {/* Display chain volumes including AVAX and ARB */}
+                          {Object.entries(data.chainVolumes).map(([chain, volume], index) => {
+                            const chainVolume = volume || 0;
+                            if (chainVolume === 0) return null;
                             
-                            if (percentage === 0) return null;
+                            const percentage = (chainVolume / data.totalVolume) * 100;
+                            const previousPercentage = Object.entries(data.chainVolumes)
+                              .slice(0, index)
+                              .reduce((sum, [prevChain, prevVolume]) => {
+                                return sum + ((prevVolume || 0) / data.totalVolume) * 100;
+                              }, 0);
+                            
+                            const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
+                            const chainColor = chainBarColors[chain] || '#6B7280';
                             
                             return (
                               <div
@@ -618,9 +596,9 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                                 style={{
                                   left: `${previousPercentage}%`,
                                   width: `${percentage}%`,
-                                  backgroundColor: chainBarColors[chain]
+                                  backgroundColor: chainColor
                                 }}
-                                title={`${chainNames[chain]}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
+                                title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
                               />
                             );
                           })}
@@ -660,16 +638,20 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                 <div className="flex items-center gap-1">
                   {totals.totalVolume > 0 && (
                     <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                      {/* Protocol chain volumes */}
-                      {chains.map((chain, index) => {
-                        const chainVolume = totals.chainTotals[chain] || 0;
-                        const percentage = (chainVolume / totals.totalVolume) * 100;
-                        const previousPercentage = chains.slice(0, index).reduce((sum, prevChain) => {
-                          const prevVolume = totals.chainTotals[prevChain] || 0;
-                          return sum + ((prevVolume / totals.totalVolume) * 100);
-                        }, 0);
+                      {/* Display all chain volumes including AVAX and ARB */}
+                      {Object.entries(totals.chainTotals).map(([chain, volume], index) => {
+                        const chainVolume = volume || 0;
+                        if (chainVolume === 0) return null;
                         
-                        if (percentage === 0) return null;
+                        const percentage = (chainVolume / totals.totalVolume) * 100;
+                        const previousPercentage = Object.entries(totals.chainTotals)
+                          .slice(0, index)
+                          .reduce((sum, [prevChain, prevVolume]) => {
+                            return sum + ((prevVolume || 0) / totals.totalVolume) * 100;
+                          }, 0);
+                        
+                        const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
+                        const chainColor = chainBarColors[chain] || '#6B7280';
                         
                         return (
                           <div
@@ -678,49 +660,12 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                             style={{
                               left: `${previousPercentage}%`,
                               width: `${percentage}%`,
-                              backgroundColor: chainBarColors[chain]
+                              backgroundColor: chainColor
                             }}
-                            title={`${chainNames[chain]}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
+                            title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
                           />
                         );
                       })}
-                      
-                      {/* Standalone AVAX volume */}
-                      {totals.standaloneVolumes.avax > 0 && (() => {
-                        const avaxPercentage = (totals.standaloneVolumes.avax / totals.totalVolume) * 100;
-                        const protocolChainsPercentage = (totals.protocolTotalVolume / totals.totalVolume) * 100;
-                        
-                        return (
-                          <div
-                            className="absolute h-full transition-all duration-300 hover:opacity-80"
-                            style={{
-                              left: `${protocolChainsPercentage}%`,
-                              width: `${avaxPercentage}%`,
-                              backgroundColor: chainBarColors.avax
-                            }}
-                            title={`${additionalChainNames.avax}: ${formatVolume(totals.standaloneVolumes.avax)} (${avaxPercentage.toFixed(1)}%)`}
-                          />
-                        );
-                      })()}
-                      
-                      {/* Standalone ARB volume */}
-                      {totals.standaloneVolumes.arbitrum > 0 && (() => {
-                        const arbPercentage = (totals.standaloneVolumes.arbitrum / totals.totalVolume) * 100;
-                        const protocolChainsPercentage = (totals.protocolTotalVolume / totals.totalVolume) * 100;
-                        const avaxPercentage = (totals.standaloneVolumes.avax / totals.totalVolume) * 100;
-                        
-                        return (
-                          <div
-                            className="absolute h-full transition-all duration-300 hover:opacity-80"
-                            style={{
-                              left: `${protocolChainsPercentage + avaxPercentage}%`,
-                              width: `${arbPercentage}%`,
-                              backgroundColor: chainBarColors.arbitrum
-                            }}
-                            title={`${additionalChainNames.arbitrum}: ${formatVolume(totals.standaloneVolumes.arbitrum)} (${arbPercentage.toFixed(1)}%)`}
-                          />
-                        );
-                      })()}
                     </div>
                   )}
                   <Badge variant="outline" className="font-semibold ml-1 bg-background text-sm">

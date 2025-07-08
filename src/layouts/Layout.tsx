@@ -24,9 +24,10 @@ const overviewPages = [
 ];
 
 const reports = [
-  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
-  { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly' },
-  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' }
+  { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily', chain: 'solana' },
+  { id: 'evm-daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/evm-daily', chain: 'evm' },
+  { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly', chain: 'solana' },
+  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly', chain: 'solana' }
 ];
 
 const adminPages = [
@@ -281,6 +282,7 @@ export function Layout() {
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>
             {reports.map((report) => {
               const Icon = report.icon;
+              const isEVM = report.chain === 'evm';
               return (
                 <Button
                   key={report.id}
@@ -295,8 +297,13 @@ export function Layout() {
                     <Icon className="h-4 w-4" />
                   </div>
                   <span className="flex-1 text-left">{report.name}</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded-md font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                    SOL
+                  <span className={cn(
+                    "text-xs px-1.5 py-0.5 rounded-md font-medium",
+                    isEVM 
+                      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                      : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                  )}>
+                    {isEVM ? "EVM" : "SOL"}
                   </span>
                 </Button>
               );

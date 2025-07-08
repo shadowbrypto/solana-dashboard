@@ -135,10 +135,9 @@ router.get('/debug-sigma', async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase
       .from('protocol_stats')
-      .select('chain, volume_usd, protocol_name')
+      .select('chain, volume_usd, protocol_name, date')
       .eq('protocol_name', 'sigma')
-      .in('chain', ['ethereum', 'base', 'bsc', 'avax'])
-      .limit(10);
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon']);
 
     if (error) throw error;
 
@@ -148,12 +147,74 @@ router.get('/debug-sigma', async (req: Request, res: Response) => {
       success: true, 
       data: {
         rows: data?.length || 0,
-        sample: data?.slice(0, 3) || [],
         totalVolume,
-        chains: [...new Set(data?.map(r => r.chain) || [])]
+        chains: [...new Set(data?.map(r => r.chain) || [])],
+        recentDates: [...new Set(data?.map(r => r.date) || [])].slice(0, 5)
       }
     });
   } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// GET /api/protocols/debug-sigma-raw
+// Test exact same query as getEVMChainBreakdown
+router.get('/debug-sigma-raw', async (req: Request, res: Response) => {
+  try {
+    console.log('SIGMA RAW DEBUG: Starting query...');
+    
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('chain, volume_usd')
+      .eq('protocol_name', 'sigma')
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum']);
+
+    console.log('SIGMA RAW DEBUG: Query completed', { 
+      error: error?.message, 
+      rowCount: data?.length,
+      firstRow: data?.[0]
+    });
+
+    if (error) throw error;
+
+    // Group by chain and calculate totals - exactly like getEVMChainBreakdown
+    const chainTotals = data?.reduce((acc: Record<string, number>, row: any) => {
+      const chain = row.chain;
+      const volume = Number(row.volume_usd) || 0;
+      
+      if (!acc[chain]) {
+        acc[chain] = 0;
+      }
+      acc[chain] += volume;
+      
+      return acc;
+    }, {}) || {};
+
+    const totalVolume = (Object.values(chainTotals) as number[]).reduce((sum: number, vol: number) => sum + vol, 0);
+    
+    const chainBreakdown = (Object.entries(chainTotals) as [string, number][])
+      .map(([chain, volume]) => ({
+        chain,
+        volume,
+        percentage: totalVolume > 0 ? (volume / totalVolume) * 100 : 0
+      }))
+      .sort((a, b) => b.volume - a.volume)
+      .filter(item => item.volume > 0);
+
+    const result = {
+      lifetimeVolume: totalVolume,
+      chainBreakdown,
+      totalChains: chainBreakdown.length
+    };
+
+    console.log('SIGMA RAW DEBUG: Result', result);
+    
+    res.json({ 
+      success: true, 
+      data: result
+    });
+  } catch (error) {
+    console.error('SIGMA RAW DEBUG: Error', error);
     res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
@@ -223,6 +284,29 @@ router.get('/health', (req: Request, res: Response) => {
     message: 'Protocol API is healthy',
     timestamp: new Date().toISOString()
   });
+});
+
+// GET /api/protocols/clear-cache/:protocol
+// Debug endpoint to clear cache for specific protocol
+router.get('/clear-cache/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const { clearAllCaches } = await import('../services/protocolService.js');
+    
+    // Clear all caches to be sure
+    clearAllCaches();
+    
+    res.json({
+      success: true,
+      message: `Cache cleared for ${protocol}`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // GET /api/protocols/sync-status
@@ -296,11 +380,9 @@ router.post('/sync-evm', async (req: Request, res: Response) => {
       success: successfulSyncs > 0,
       message: `EVM data sync completed: ${successfulSyncs}/${results.length} protocols successful`,
       data: {
-        success: successfulSyncs === results.length,
         rowsImported: totalRowsImported,
         csvFilesFetched: successfulSyncs,
-        timestamp: new Date().toISOString(),
-        results: results
+        timestamp: new Date().toISOString()
       }
     });
   } catch (error) {

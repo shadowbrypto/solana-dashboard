@@ -259,7 +259,12 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
   const cacheKey = `evm_breakdown_${protocolName}`;
   const cachedData = insightsCache.get(cacheKey);
 
-  if (cachedData && isCacheValid(cachedData)) {
+  // DEBUG: Always skip cache for sigma to debug
+  if (protocolName === 'sigma') {
+    console.log(`SIGMA DEBUG: Force cache miss for ${protocolName}`);
+    insightsCache.delete(cacheKey);
+  } else if (cachedData && isCacheValid(cachedData)) {
+    console.log(`Cache hit for EVM breakdown: ${protocolName}`);
     return cachedData.data;
   }
 
@@ -268,6 +273,7 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
   let page = 0;
   const PAGE_SIZE = 1000;
 
+  console.log(`Starting EVM breakdown query for ${protocolName}`);
   while (hasMore) {
     let query = supabase
       .from('protocol_stats')
@@ -281,10 +287,15 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
     if (error) throw error;
     if (!data || data.length === 0) break;
 
+    console.log(`EVM breakdown page ${page} for ${protocolName}: found ${data.length} rows`);
+    if (page === 0) {
+      console.log(`First few rows for ${protocolName}:`, data.slice(0, 3));
+    }
     allData = allData.concat(data);
     hasMore = data.length === PAGE_SIZE;
     page++;
   }
+  console.log(`Total data found for ${protocolName}: ${allData.length} rows`);
 
   // Group by chain and calculate totals
   const chainTotals = allData.reduce((acc, row) => {

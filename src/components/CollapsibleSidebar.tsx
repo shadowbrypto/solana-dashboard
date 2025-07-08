@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { protocolCategories } from "../lib/protocol-categories";
+import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs } from "../lib/protocol-config";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface CategoryItemProps {
@@ -12,6 +12,11 @@ interface CategoryItemProps {
 
 function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol }: CategoryItemProps) {
   const [isExpanded, setIsExpanded] = useState(protocols.includes(selectedProtocol));
+
+  const getProtocolDisplayName = (protocolId: string) => {
+    const config = getMutableProtocolConfigs().find(p => p.id === protocolId);
+    return config ? config.name : protocolId.charAt(0).toUpperCase() + protocolId.slice(1);
+  };
 
   return (
     <div className="mb-2">
@@ -37,7 +42,7 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol }: C
                 ${selectedProtocol === protocol ? 'bg-gray-700' : 'hover:bg-gray-700'}
               `}
             >
-              {protocol.charAt(0).toUpperCase() + protocol.slice(1)}
+              {getProtocolDisplayName(protocol)}
             </button>
           ))}
         </div>
@@ -49,6 +54,23 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol }: C
 export function CollapsibleSidebar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProtocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
+  const [categories, setCategories] = useState<Array<{name: string, protocols: string[]}>>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      await loadProtocolConfigurations();
+      const categoryNames = getMutableAllCategoriesIncludingEVM();
+      const categoryData = categoryNames.map(name => ({
+        name,
+        protocols: getMutableProtocolsByCategoryIncludingEVM(name).map(p => p.id)
+      }));
+      setCategories(categoryData);
+      setIsLoaded(true);
+    };
+    
+    loadCategories();
+  }, []);
 
   const handleProtocolSelect = (protocol: string) => {
     setSearchParams((params) => {
@@ -56,6 +78,14 @@ export function CollapsibleSidebar() {
       return params;
     });
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="w-64 h-full bg-gray-800 text-white p-4">
+        <div className="text-center py-8">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-64 h-full bg-gray-800 text-white p-4">
@@ -74,7 +104,7 @@ export function CollapsibleSidebar() {
 
       <div>
         <h2 className="text-lg font-semibold mb-2 px-4">Protocols</h2>
-        {protocolCategories.map((category) => (
+        {categories.map((category) => (
           <CategoryItem
             key={category.name}
             name={category.name}

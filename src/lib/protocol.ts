@@ -59,6 +59,21 @@ export function clearProtocolFrontendCache(protocolName?: string): void {
   console.log(`Frontend cache cleared for protocol: ${protocolName}`);
 }
 
+// Clear cache for all EVM protocols
+export function clearEVMProtocolsCaches(): void {
+  const evmProtocols = ['sigma', 'maestro', 'bloom', 'banana']; // Clean names without _evm suffix
+  
+  evmProtocols.forEach(protocol => {
+    // Clear caches for each EVM protocol
+    clearProtocolFrontendCache(protocol);
+  });
+  
+  // Also clear any caches that might include EVM data
+  clearAllFrontendCaches();
+  
+  console.log('Frontend caches cleared for all EVM protocols');
+}
+
 export async function getProtocolStats(protocolName?: string | string[]) {
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') 

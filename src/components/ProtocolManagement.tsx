@@ -17,7 +17,7 @@ import { Button } from './ui/button';
 import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
-import { clearAllFrontendCaches, clearProtocolFrontendCache } from '../lib/protocol';
+import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
 import {
   DndContext,
   DragEndEvent,
@@ -172,7 +172,8 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
 }
 
 export function ProtocolManagement() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshingSolana, setIsRefreshingSolana] = useState(false);
+  const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -250,9 +251,9 @@ export function ProtocolManagement() {
 
 
   const handleHardRefresh = async () => {
-    if (isRefreshing) return;
+    if (isRefreshingSolana) return;
     
-    setIsRefreshing(true);
+    setIsRefreshingSolana(true);
     try {
       // Sync only Solana protocols (filter out EVM ones)
       const result = await dataSyncApi.syncData();
@@ -275,7 +276,7 @@ export function ProtocolManagement() {
         description: error instanceof Error ? error.message : "Failed to refresh Solana data",
       });
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshingSolana(false);
     }
   };
 
@@ -342,19 +343,19 @@ export function ProtocolManagement() {
   };
 
   const handleRefreshAllEVM = async () => {
-    if (isRefreshing) return;
+    if (isRefreshingEVM) return;
     
-    setIsRefreshing(true);
+    setIsRefreshingEVM(true);
     try {
       const result = await dataSyncApi.syncEVMData();
       
-      // Clear all frontend caches after successful refresh
-      clearAllFrontendCaches();
+      // Clear EVM protocol caches specifically after successful refresh
+      clearEVMProtocolsCaches();
       
       toast({
         variant: "success",
         title: "EVM Data Refresh Complete",
-        description: `Successfully refreshed EVM data: ${result.data.rowsImported} rows imported across ${result.data.csvFilesFetched} protocols`,
+        description: `Successfully refreshed ${result.csvFilesFetched} protocols`,
       });
       
       // Reload sync statuses after successful refresh
@@ -366,7 +367,7 @@ export function ProtocolManagement() {
         description: error instanceof Error ? error.message : "Failed to refresh EVM data",
       });
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshingEVM(false);
     }
   };
 
@@ -512,11 +513,11 @@ export function ProtocolManagement() {
             <div className="flex gap-2">
               <Button
                 onClick={handleHardRefresh}
-                disabled={isRefreshing}
+                disabled={isRefreshingSolana}
                 variant="outline"
                 size="sm"
               >
-                {isRefreshing ? (
+                {isRefreshingSolana ? (
                   <>
                     <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
                     Refreshing...
@@ -530,11 +531,11 @@ export function ProtocolManagement() {
               </Button>
               <Button
                 onClick={handleRefreshAllEVM}
-                disabled={isRefreshing}
+                disabled={isRefreshingEVM}
                 variant="outline"
                 size="sm"
               >
-                {isRefreshing ? (
+                {isRefreshingEVM ? (
                   <>
                     <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
                     Refreshing...

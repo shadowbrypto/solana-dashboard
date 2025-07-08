@@ -633,467 +633,467 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   return (
     <div className="space-y-3" data-table="weekly-metrics-full">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 group">
-          <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
-            <TabsList className="grid w-full grid-cols-4">
-              {metricOptions.map((option) => (
-                <TabsTrigger key={option.key} value={option.key} className="text-sm">
-                  {option.key === 'total_volume_usd' ? 'Volume' :
-                   option.key === 'daily_users' ? 'DAUs' :
-                   option.key === 'numberOfNewUsers' ? 'New Users' :
-                   'Trades'}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (hiddenProtocols.size > 0) {
-                setHiddenProtocols(new Set());
-              } else {
-                const allProtocols = new Set<string>();
-                protocols.forEach(protocol => {
-                  allProtocols.add(protocol);
-                });
-                setHiddenProtocols(allProtocols);
-              }
-            }}
-            title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            {hiddenProtocols.size > 0 ? (
-              <Eye className="h-4 w-4 mr-2" />
-            ) : (
-              <EyeOff className="h-4 w-4 mr-2" />
-            )}
-            {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handleDateChange('prev')}
-            disabled={!canNavigatePrev()}
-            title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous 7 days'}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
-              {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-            </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 group">
+            <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
+              <TabsList className="grid w-full grid-cols-4">
+                {metricOptions.map((option) => (
+                  <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                    {option.key === 'total_volume_usd' ? 'Volume' :
+                     option.key === 'daily_users' ? 'DAUs' :
+                     option.key === 'numberOfNewUsers' ? 'New Users' :
+                     'Trades'}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (hiddenProtocols.size > 0) {
+                  setHiddenProtocols(new Set());
+                } else {
+                  const allProtocols = new Set<string>();
+                  protocols.forEach(protocol => {
+                    allProtocols.add(protocol);
+                  });
+                  setHiddenProtocols(allProtocols);
+                }
+              }}
+              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              {hiddenProtocols.size > 0 ? (
+                <Eye className="h-4 w-4 mr-2" />
+              ) : (
+                <EyeOff className="h-4 w-4 mr-2" />
+              )}
+              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+            </Button>
           </div>
           
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handleDateChange('next')}
-            disabled={!canNavigateNext()}
-            title={!canNavigateNext() ? 'Cannot go beyond yesterday (today excluded due to incomplete data)' : 'Next 7 days'}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleDateChange('prev')}
+              disabled={!canNavigatePrev()}
+              title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous 7 days'}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">
+                {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+              </span>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleDateChange('next')}
+              disabled={!canNavigateNext()}
+              title={!canNavigateNext() ? 'Cannot go beyond yesterday (today excluded due to incomplete data)' : 'Next 7 days'}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
-      
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto lg:overflow-x-visible" data-table="weekly-metrics">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
-              {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
-                  <span className="font-medium">
-                    {format(day, 'EEE, MMM d')}
-                  </span>
-                </TableHead>
-              ))}
-              {selectedMetric !== 'daily_users' && (
-                <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
-              )}
-              <TableHead className="text-center min-w-[140px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
-                {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto lg:overflow-x-visible" data-table="weekly-metrics">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={last7Days.length + (selectedMetric === 'daily_users' ? 2 : 3)} className="text-center py-8">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-muted-foreground">Loading weekly data...</span>
-                  </div>
-                </TableCell>
+                <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
+                {last7Days.map((day) => (
+                  <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                    <span className="font-medium">
+                      {format(day, 'EEE, MMM d')}
+                    </span>
+                  </TableHead>
+                ))}
+                {selectedMetric !== 'daily_users' && (
+                  <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
+                )}
+                <TableHead className="text-center min-w-[140px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                  {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
+                </TableHead>
               </TableRow>
-            ) : (
-              getMutableAllCategories().map(categoryName => {
-                const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-                const isCollapsed = collapsedCategories.includes(categoryName);
-                
-                // Filter out hidden protocols and sort by metric total
-                const visibleCategoryProtocols = categoryProtocols
-                  .filter(p => !hiddenProtocols.has(p.id));
-                
-                // Sort protocols within category by their total for the selected metric
-                const sortedCategoryProtocols = categoryProtocols.sort((a, b) => {
-                  const totalA = last7Days.reduce((sum, day) => {
-                    const dateKey = format(day, 'yyyy-MM-dd');
-                    return sum + (dailyData[a.id]?.[dateKey] || 0);
-                  }, 0);
-                  const totalB = last7Days.reduce((sum, day) => {
-                    const dateKey = format(day, 'yyyy-MM-dd');
-                    return sum + (dailyData[b.id]?.[dateKey] || 0);
-                  }, 0);
-                  return totalB - totalA; // Sort descending (highest first)
-                });
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={last7Days.length + (selectedMetric === 'daily_users' ? 2 : 3)} className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-muted-foreground">Loading weekly data...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                getMutableAllCategories().map(categoryName => {
+                  const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+                  const isCollapsed = collapsedCategories.includes(categoryName);
+                  
+                  // Filter out hidden protocols and sort by metric total
+                  const visibleCategoryProtocols = categoryProtocols
+                    .filter(p => !hiddenProtocols.has(p.id));
+                  
+                  // Sort protocols within category by their total for the selected metric
+                  const sortedCategoryProtocols = categoryProtocols.sort((a, b) => {
+                    const totalA = last7Days.reduce((sum, day) => {
+                      const dateKey = format(day, 'yyyy-MM-dd');
+                      return sum + (dailyData[a.id]?.[dateKey] || 0);
+                    }, 0);
+                    const totalB = last7Days.reduce((sum, day) => {
+                      const dateKey = format(day, 'yyyy-MM-dd');
+                      return sum + (dailyData[b.id]?.[dateKey] || 0);
+                    }, 0);
+                    return totalB - totalA; // Sort descending (highest first)
+                  });
 
-                return (
-                  <React.Fragment key={categoryName}>
-                    <TableRow 
-                      className={cn(
-                        "cursor-pointer font-medium group",
-                        getCategoryRowColor(categoryName),
-                        getCategoryHoverColor(categoryName),
-                        "transition-all duration-200"
-                      )}
-                      onClick={() => toggleCollapse(categoryName)}
-                    >
-                      <TableCell className={cn("sticky left-0 z-10 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                        <div className="flex items-center gap-2">
-                          <ChevronRight 
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              !isCollapsed && "rotate-90"
+                  return (
+                    <React.Fragment key={categoryName}>
+                      <TableRow 
+                        className={cn(
+                          "cursor-pointer font-medium group",
+                          getCategoryRowColor(categoryName),
+                          getCategoryHoverColor(categoryName),
+                          "transition-all duration-200"
+                        )}
+                        onClick={() => toggleCollapse(categoryName)}
+                      >
+                        <TableCell className={cn("sticky left-0 z-10 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <div className="flex items-center gap-2">
+                            <ChevronRight 
+                              className={cn(
+                                "h-4 w-4 transition-transform",
+                                !isCollapsed && "rotate-90"
+                              )}
+                            />
+                            <span className="font-semibold whitespace-nowrap">{categoryName}</span>
+                          </div>
+                        </TableCell>
+                        {last7Days.map(day => {
+                          const dateKey = format(day, 'yyyy-MM-dd');
+                          const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                            const protocolData = dailyData[protocol.id];
+                            if (protocolData && protocolData[dateKey] !== undefined) {
+                              return sum + protocolData[dateKey];
+                            }
+                            return sum;
+                          }, 0);
+                          
+                          return (
+                            <TableCell key={dateKey} className={cn("text-center font-semibold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                              {formatValue(categoryTotal)}
+                            </TableCell>
+                          );
+                        })}
+                        {selectedMetric !== 'daily_users' && (
+                          <TableCell className={cn("text-center font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                            {formatValue(last7Days.reduce((sum, day) => {
+                              const dateKey = format(day, 'yyyy-MM-dd');
+                              const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                                const protocolData = dailyData[protocol.id];
+                                if (protocolData && protocolData[dateKey] !== undefined) {
+                                  return sum + protocolData[dateKey];
+                                }
+                                return sum;
+                              }, 0);
+                              return sum + categoryTotal;
+                            }, 0))}
+                          </TableCell>
+                        )}
+                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                            <div className="w-[70px] h-[40px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart 
+                                  data={getCategoryMetricData(categoryName)} 
+                                  margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                                >
+                                  <Bar 
+                                    dataKey="value" 
+                                    opacity={0.9}
+                                    radius={[2, 2, 0, 0]}
+                                    maxBarSize={8}
+                                  >
+                                    {getCategoryMetricData(categoryName).map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={entry.barColor} />
+                                    ))}
+                                  </Bar>
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="average"
+                                    stroke="#059669" 
+                                    strokeWidth={1}
+                                    dot={false}
+                                    strokeDasharray="2 2"
+                                  />
+                                </ComposedChart>
+                              </ResponsiveContainer>
+                            </div>
+                            {selectedMetric !== 'daily_users' && (
+                              <Badge 
+                                variant="secondary" 
+                                className={cn(
+                                  "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                  getGrowthBadgeClasses(calculateCategoryWeekOnWeekGrowth(categoryName))
+                                )}
+                              >
+                                {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
+                              </Badge>
                             )}
-                          />
-                          <span className="font-semibold whitespace-nowrap">{categoryName}</span>
-                        </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {!isCollapsed && sortedCategoryProtocols.map(protocol => {
+                        const isHidden = hiddenProtocols.has(protocol.id);
+                        const protocolData = dailyData[protocol.id] || {};
+                        
+                        // Don't render hidden protocols at all
+                        if (isHidden) return null;
+                        
+                        return (
+                          <TableRow 
+                            key={protocol.id}
+                            className="hover:bg-muted/50 transition-colors group"
+                          >
+                            <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProtocolVisibility(protocol.id);
+                                  }}
+                                  className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <Eye className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                                    <img 
+                                      src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                      alt={protocol.name} 
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        const container = target.parentElement;
+                                        if (container) {
+                                          container.innerHTML = '';
+                                          container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                          const iconEl = document.createElement('div');
+                                          iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                          container.appendChild(iconEl);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="truncate">
+                                    {protocol.name}
+                                  </span>
+                                  {topProtocols.includes(protocol.id as Protocol) && (
+                                    <Badge 
+                                      variant="secondary"
+                                      className={cn(
+                                        "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                        topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                      )}
+                                    >
+                                      #{topProtocols.indexOf(protocol.id as Protocol) + 1}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            {last7Days.map(day => {
+                              const dateKey = format(day, 'yyyy-MM-dd');
+                              const value = protocolData[dateKey] || 0;
+                              
+                              return (
+                                <TableCell 
+                                  key={dateKey} 
+                                  className="text-center py-3 sm:py-4 px-1 transition-all relative font-medium text-xs sm:text-sm"
+                                >
+                                  {formatValue(value)}
+                                </TableCell>
+                              );
+                            })}
+                            {selectedMetric !== 'daily_users' && (
+                              <TableCell className="text-center py-3 sm:py-4 px-1 transition-all relative font-bold text-xs sm:text-sm">
+                                {formatValue(last7Days.reduce((sum, day) => {
+                                  const dateKey = format(day, 'yyyy-MM-dd');
+                                  const value = protocolData[dateKey] || 0;
+                                  return sum + value;
+                                }, 0))}
+                              </TableCell>
+                            )}
+                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm">
+                              <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                                <div className="w-[70px] h-[40px]">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart 
+                                      data={getWeeklyMetricData(protocol.id)} 
+                                      margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                                    >
+                                      <Bar 
+                                        dataKey="value" 
+                                        opacity={0.9}
+                                        radius={[2, 2, 0, 0]}
+                                        maxBarSize={8}
+                                      >
+                                        {getWeeklyMetricData(protocol.id).map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={entry.barColor} />
+                                        ))}
+                                      </Bar>
+                                      <Line 
+                                        type="monotone" 
+                                        dataKey="average"
+                                        stroke="#059669" 
+                                        strokeWidth={1}
+                                        dot={false}
+                                        strokeDasharray="2 2"
+                                      />
+                                    </ComposedChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                {selectedMetric !== 'daily_users' && (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={cn(
+                                      "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                      getGrowthBadgeClasses(calculateWeekOnWeekGrowth(protocol.id))
+                                    )}
+                                  >
+                                    {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })
+              )}
+              
+              {/* Total Row */}
+              {!loading && (
+                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/30 hover:bg-gray-200 dark:hover:bg-gray-900/40 font-bold group transition-colors">
+                  <TableCell className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                    <span>Total</span>
+                  </TableCell>
+                  {last7Days.map(day => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    const dailyTotal = protocols.reduce((sum, protocol) => {
+                      const protocolData = dailyData[protocol];
+                      if (protocolData && protocolData[dateKey] !== undefined) {
+                        return sum + protocolData[dateKey];
+                      }
+                      return sum;
+                    }, 0);
+                    
+                    return (
+                      <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                        {formatValue(dailyTotal)}
                       </TableCell>
-                      {last7Days.map(day => {
+                    );
+                  })}
+                  {selectedMetric !== 'daily_users' && (
+                    <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                      {formatValue(last7Days.reduce((sum, day) => {
                         const dateKey = format(day, 'yyyy-MM-dd');
-                        const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
-                          const protocolData = dailyData[protocol.id];
+                        const dailyTotal = protocols.reduce((sum, protocol) => {
+                          const protocolData = dailyData[protocol];
                           if (protocolData && protocolData[dateKey] !== undefined) {
                             return sum + protocolData[dateKey];
                           }
                           return sum;
                         }, 0);
-                        
-                        return (
-                          <TableCell key={dateKey} className={cn("text-center font-semibold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                            {formatValue(categoryTotal)}
-                          </TableCell>
-                        );
-                      })}
-                      {selectedMetric !== 'daily_users' && (
-                        <TableCell className={cn("text-center font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                          {formatValue(last7Days.reduce((sum, day) => {
-                            const dateKey = format(day, 'yyyy-MM-dd');
-                            const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
-                              const protocolData = dailyData[protocol.id];
-                              if (protocolData && protocolData[dateKey] !== undefined) {
-                                return sum + protocolData[dateKey];
-                              }
-                              return sum;
-                            }, 0);
-                            return sum + categoryTotal;
-                          }, 0))}
-                        </TableCell>
-                      )}
-                      <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                        <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                          <div className="w-[70px] h-[40px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <ComposedChart 
-                                data={getCategoryMetricData(categoryName)} 
-                                margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
-                              >
-                                <Bar 
-                                  dataKey="value" 
-                                  opacity={0.9}
-                                  radius={[2, 2, 0, 0]}
-                                  maxBarSize={8}
-                                >
-                                  {getCategoryMetricData(categoryName).map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.barColor} />
-                                  ))}
-                                </Bar>
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="average"
-                                  stroke="#059669" 
-                                  strokeWidth={1}
-                                  dot={false}
-                                  strokeDasharray="2 2"
-                                />
-                              </ComposedChart>
-                            </ResponsiveContainer>
-                          </div>
-                          {selectedMetric !== 'daily_users' && (
-                            <Badge 
-                              variant="secondary" 
-                              className={cn(
-                                "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
-                                getGrowthBadgeClasses(calculateCategoryWeekOnWeekGrowth(categoryName))
-                              )}
-                            >
-                              {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    
-                    {!isCollapsed && sortedCategoryProtocols.map(protocol => {
-                      const isHidden = hiddenProtocols.has(protocol.id);
-                      const protocolData = dailyData[protocol.id] || {};
-                      
-                      // Don't render hidden protocols at all
-                      if (isHidden) return null;
-                      
-                      return (
-                        <TableRow 
-                          key={protocol.id}
-                          className="hover:bg-muted/50 transition-colors group"
-                        >
-                          <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleProtocolVisibility(protocol.id);
-                                }}
-                                className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
-                              >
-                                <Eye className="h-3 w-3 text-muted-foreground" />
-                              </button>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                                  <img 
-                                    src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                    alt={protocol.name} 
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      const container = target.parentElement;
-                                      if (container) {
-                                        container.innerHTML = '';
-                                        container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                        const iconEl = document.createElement('div');
-                                        iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                        container.appendChild(iconEl);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <span className="truncate">
-                                  {protocol.name}
-                                </span>
-                                {topProtocols.includes(protocol.id as Protocol) && (
-                                  <Badge 
-                                    variant="secondary"
-                                    className={cn(
-                                      "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0 hover:bg-transparent",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                      topProtocols.indexOf(protocol.id as Protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                                    )}
-                                  >
-                                    #{topProtocols.indexOf(protocol.id as Protocol) + 1}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          {last7Days.map(day => {
-                            const dateKey = format(day, 'yyyy-MM-dd');
-                            const value = protocolData[dateKey] || 0;
-                            
-                            return (
-                              <TableCell 
-                                key={dateKey} 
-                                className="text-center py-3 sm:py-4 px-1 transition-all relative font-medium text-xs sm:text-sm"
-                              >
-                                {formatValue(value)}
-                              </TableCell>
-                            );
-                          })}
-                          {selectedMetric !== 'daily_users' && (
-                            <TableCell className="text-center py-3 sm:py-4 px-1 transition-all relative font-bold text-xs sm:text-sm">
-                              {formatValue(last7Days.reduce((sum, day) => {
-                                const dateKey = format(day, 'yyyy-MM-dd');
-                                const value = protocolData[dateKey] || 0;
-                                return sum + value;
-                              }, 0))}
-                            </TableCell>
-                          )}
-                          <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm">
-                            <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                              <div className="w-[70px] h-[40px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <ComposedChart 
-                                    data={getWeeklyMetricData(protocol.id)} 
-                                    margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
-                                  >
-                                    <Bar 
-                                      dataKey="value" 
-                                      opacity={0.9}
-                                      radius={[2, 2, 0, 0]}
-                                      maxBarSize={8}
-                                    >
-                                      {getWeeklyMetricData(protocol.id).map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.barColor} />
-                                      ))}
-                                    </Bar>
-                                    <Line 
-                                      type="monotone" 
-                                      dataKey="average"
-                                      stroke="#059669" 
-                                      strokeWidth={1}
-                                      dot={false}
-                                      strokeDasharray="2 2"
-                                    />
-                                  </ComposedChart>
-                                </ResponsiveContainer>
-                              </div>
-                              {selectedMetric !== 'daily_users' && (
-                                <Badge 
-                                  variant="secondary" 
-                                  className={cn(
-                                    "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
-                                    getGrowthBadgeClasses(calculateWeekOnWeekGrowth(protocol.id))
-                                  )}
-                                >
-                                  {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </React.Fragment>
-                );
-              })
-            )}
-            
-            {/* Total Row */}
-            {!loading && (
-              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/30 hover:bg-gray-200 dark:hover:bg-gray-900/40 font-bold group transition-colors">
-                <TableCell className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
-                  <span>Total</span>
-                </TableCell>
-                {last7Days.map(day => {
-                  const dateKey = format(day, 'yyyy-MM-dd');
-                  const dailyTotal = protocols.reduce((sum, protocol) => {
-                    const protocolData = dailyData[protocol];
-                    if (protocolData && protocolData[dateKey] !== undefined) {
-                      return sum + protocolData[dateKey];
-                    }
-                    return sum;
-                  }, 0);
-                  
-                  return (
-                    <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
-                      {formatValue(dailyTotal)}
+                        return sum + dailyTotal;
+                      }, 0))}
                     </TableCell>
-                  );
-                })}
-                {selectedMetric !== 'daily_users' && (
-                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
-                    {formatValue(last7Days.reduce((sum, day) => {
-                      const dateKey = format(day, 'yyyy-MM-dd');
-                      const dailyTotal = protocols.reduce((sum, protocol) => {
-                        const protocolData = dailyData[protocol];
-                        if (protocolData && protocolData[dateKey] !== undefined) {
-                          return sum + protocolData[dateKey];
-                        }
-                        return sum;
-                      }, 0);
-                      return sum + dailyTotal;
-                    }, 0))}
-                  </TableCell>
-                )}
-                <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors">
-                  <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                    <div className="w-[70px] h-[40px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart 
-                          data={getTotalMetricData()} 
-                          margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
-                        >
-                          <Bar 
-                            dataKey="value" 
-                            opacity={0.9}
-                            radius={[2, 2, 0, 0]}
-                            maxBarSize={8}
+                  )}
+                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors">
+                    <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
+                      <div className="w-[70px] h-[40px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart 
+                            data={getTotalMetricData()} 
+                            margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
                           >
-                            {getTotalMetricData().map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.barColor} />
-                            ))}
-                          </Bar>
-                          <Line 
-                            type="monotone" 
-                            dataKey="average"
-                            stroke="#059669" 
-                            strokeWidth={1}
-                            dot={false}
-                            strokeDasharray="2 2"
-                          />
-                        </ComposedChart>
-                      </ResponsiveContainer>
+                            <Bar 
+                              dataKey="value" 
+                              opacity={0.9}
+                              radius={[2, 2, 0, 0]}
+                              maxBarSize={8}
+                            >
+                              {getTotalMetricData().map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.barColor} />
+                              ))}
+                            </Bar>
+                            <Line 
+                              type="monotone" 
+                              dataKey="average"
+                              stroke="#059669" 
+                              strokeWidth={1}
+                              dot={false}
+                              strokeDasharray="2 2"
+                            />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {selectedMetric !== 'daily_users' && (
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                            getGrowthBadgeClasses(calculateTotalWeekOnWeekGrowth())
+                          )}
+                        >
+                          {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
+                        </Badge>
+                      )}
                     </div>
-                    {selectedMetric !== 'daily_users' && (
-                      <Badge 
-                        variant="secondary" 
-                        className={cn(
-                          "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
-                          getGrowthBadgeClasses(calculateTotalWeekOnWeekGrowth())
-                        )}
-                      >
-                        {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      <div className="flex justify-end items-end pt-4">
-        {/* Download and Copy buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadReport}
-            className="no-screenshot"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copyToClipboard}
-            className="no-screenshot"
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            Copy
-          </Button>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        
+        <div className="flex justify-end items-end pt-4">
+          {/* Download and Copy buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadReport}
+              className="no-screenshot"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyToClipboard}
+              className="no-screenshot"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

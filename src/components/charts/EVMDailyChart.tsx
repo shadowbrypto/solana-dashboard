@@ -18,6 +18,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { ComponentActions } from '../ComponentActions';
 
 interface EVMDailyChartProps {
   title: string;
@@ -66,130 +67,135 @@ export function EVMDailyChart({
   }
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              {(() => {
-                // Check if subtitle is a protocol name
-                const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                if (protocolMatch) {
-                  return (
-                    <>
-                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                          alt={subtitle} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
-                      {subtitle}
-                    </>
-                  );
-                }
-                return subtitle;
-              })()}
-            </p>
-          )}
-        </div>
-        <Select value={timeframe} onValueChange={onTimeframeChange}>
-          <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-muted-foreground/20">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end">
-            <SelectItem value="7d">7 days</SelectItem>
-            <SelectItem value="30d">30 days</SelectItem>
-            <SelectItem value="90d">90 days</SelectItem>
-            <SelectItem value="1y">1 year</SelectItem>
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="p-6">
-        <ResponsiveContainer width="100%" height={400}>
-          <RechartsBarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-            <XAxis 
-              dataKey="formattedDay" 
-              tick={{ fontSize: 11 }}
-              tickMargin={8}
-              interval={'preserveStartEnd'}
-            />
-            <YAxis 
-              tick={{ fontSize: 11 }}
-              tickFormatter={formatNumberWithSuffix}
-            />
-            <Tooltip
-              content={({ active, payload, label }: TooltipProps<any, any>) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-                      <p className="text-sm font-medium mb-2">{label}</p>
-                      <div className="space-y-1">
-                        {payload.map((entry, index) => (
-                          <div key={index} className="flex items-center gap-2 text-xs">
-                            <div 
-                              className="w-3 h-3 rounded-sm" 
-                              style={{ backgroundColor: entry.color }}
-                            />
-                            <span className="text-muted-foreground">
-                              {labels[dataKeys.indexOf(entry.dataKey as string)] || entry.dataKey}:
-                            </span>
-                            <span className="font-medium">
-                              {valueFormatter(entry.value || 0)}
+    <ComponentActions 
+      componentName={`${title} EVM Daily Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_EVM_Daily_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                {(() => {
+                  // Check if subtitle is a protocol name
+                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                  if (protocolMatch) {
+                    return (
+                      <>
+                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                          <img 
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                            alt={subtitle} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
+                        </div>
+                        {subtitle}
+                      </>
+                    );
+                  }
+                  return subtitle;
+                })()}
+              </p>
+            )}
+          </div>
+          <Select value={timeframe} onValueChange={onTimeframeChange}>
+            <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-muted-foreground/20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="7d">7 days</SelectItem>
+              <SelectItem value="30d">30 days</SelectItem>
+              <SelectItem value="90d">90 days</SelectItem>
+              <SelectItem value="1y">1 year</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent className="p-6">
+          <ResponsiveContainer width="100%" height={400}>
+            <RechartsBarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis 
+                dataKey="formattedDay" 
+                tick={{ fontSize: 11 }}
+                tickMargin={8}
+                interval={'preserveStartEnd'}
+              />
+              <YAxis 
+                tick={{ fontSize: 11 }}
+                tickFormatter={formatNumberWithSuffix}
+              />
+              <Tooltip
+                content={({ active, payload, label }: TooltipProps<any, any>) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+                        <p className="text-sm font-medium mb-2">{label}</p>
+                        <div className="space-y-1">
+                          {payload.map((entry, index) => (
+                            <div key={index} className="flex items-center gap-2 text-xs">
+                              <div 
+                                className="w-3 h-3 rounded-sm" 
+                                style={{ backgroundColor: entry.color }}
+                              />
+                              <span className="text-muted-foreground">
+                                {labels[dataKeys.indexOf(entry.dataKey as string)] || entry.dataKey}:
+                              </span>
+                              <span className="font-medium">
+                                {valueFormatter(entry.value || 0)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="border-t border-border pt-2 mt-2">
+                          <div className="flex items-center gap-2 text-xs font-medium">
+                            <span className="text-muted-foreground">Total:</span>
+                            <span>
+                              {valueFormatter(
+                                payload.reduce((sum, entry) => sum + (entry.value || 0), 0)
+                              )}
                             </span>
                           </div>
-                        ))}
-                      </div>
-                      <div className="border-t border-border pt-2 mt-2">
-                        <div className="flex items-center gap-2 text-xs font-medium">
-                          <span className="text-muted-foreground">Total:</span>
-                          <span>
-                            {valueFormatter(
-                              payload.reduce((sum, entry) => sum + (entry.value || 0), 0)
-                            )}
-                          </span>
                         </div>
                       </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend 
-              wrapperStyle={{ paddingTop: '20px' }}
-              iconType="rect"
-              formatter={(value) => (
-                <span className="text-xs text-muted-foreground">
-                  {labels[dataKeys.indexOf(value)] || value}
-                </span>
-              )}
-            />
-            {dataKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                stackId="volume"
-                fill={colors[index % colors.length]}
-                radius={[0, 0, 0, 0]}
+                    );
+                  }
+                  return null;
+                }}
               />
-            ))}
-          </RechartsBarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+              <Legend 
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="rect"
+                formatter={(value) => (
+                  <span className="text-xs text-muted-foreground">
+                    {labels[dataKeys.indexOf(value)] || value}
+                  </span>
+                )}
+              />
+              {dataKeys.map((key, index) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="volume"
+                  fill={colors[index % colors.length]}
+                  radius={[0, 0, 0, 0]}
+                />
+              ))}
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

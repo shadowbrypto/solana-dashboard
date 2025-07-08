@@ -6,6 +6,7 @@ import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { ComponentActions } from './ComponentActions';
 
 interface EVMDailyHighlightsProps {
   date: Date;
@@ -447,105 +448,110 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium">EVM Daily Insights</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Key trends and performance highlights for EVM protocols
-            </p>
+    <ComponentActions 
+      componentName="EVM Daily Insights"
+      filename={`EVM_Daily_Insights_${format(date, 'yyyy_MM_dd')}.png`}
+    >
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-medium">EVM Daily Insights</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Key trends and performance highlights for EVM protocols
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="h-5 text-xs">
+                <Calendar className="w-2.5 h-2.5 mr-1" />
+                {format(date, 'MMM dd')}
+              </Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="h-5 text-xs">
-              <Calendar className="w-2.5 h-2.5 mr-1" />
-              {format(date, 'MMM dd')}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        {insights.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No significant insights for this date</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            {insights.slice(0, 4).map((insight, index) => {
-              const isRightColumn = (index + 1) % 2 === 0;
-              const isBottomRow = index >= 2;
-              
-              return (
-                <div 
-                  key={index}
-                  className={`relative group p-4 transition-colors hover:bg-muted/50 ${
-                    !isRightColumn ? 'border-r' : ''
-                  } ${
-                    !isBottomRow ? 'border-b' : ''
-                  }`}
-                >
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className={cn(
-                        "inline-flex h-7 w-7 items-center justify-center rounded-lg",
-                        getInsightBadgeColor(insight.type)
-                      )}>
-                        {React.cloneElement(insight.icon as React.ReactElement, {
-                          className: cn("h-3.5 w-3.5", getInsightIconColor(insight.type))
-                        })}
+        </CardHeader>
+        <CardContent className="p-0">
+          {insights.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No significant insights for this date</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {insights.slice(0, 4).map((insight, index) => {
+                const isRightColumn = (index + 1) % 2 === 0;
+                const isBottomRow = index >= 2;
+                
+                return (
+                  <div 
+                    key={index}
+                    className={`relative group p-4 transition-colors hover:bg-muted/50 ${
+                      !isRightColumn ? 'border-r' : ''
+                    } ${
+                      !isBottomRow ? 'border-b' : ''
+                    }`}
+                  >
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className={cn(
+                          "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                          getInsightBadgeColor(insight.type)
+                        )}>
+                          {React.cloneElement(insight.icon as React.ReactElement, {
+                            className: cn("h-3.5 w-3.5", getInsightIconColor(insight.type))
+                          })}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {insight.protocol && (
+                            <Badge variant="outline" className="text-xs font-medium px-2 py-1 flex items-center gap-1.5">
+                              <div className="w-3 h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
+                                <img 
+                                  src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
+                                  alt={insight.protocol} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const container = target.parentElement;
+                                    if (container) {
+                                      container.innerHTML = '';
+                                      container.className = 'w-3 h-3 bg-muted/20 rounded-full flex items-center justify-center';
+                                      const iconEl = document.createElement('div');
+                                      iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                      container.appendChild(iconEl);
+                                    }
+                                  }}
+                                />
+                              </div>
+                              {insight.protocol.replace('_evm', '').charAt(0).toUpperCase() + insight.protocol.replace('_evm', '').slice(1)}
+                            </Badge>
+                          )}
+                          {getTrendBadge(insight.trend)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        {insight.protocol && (
-                          <Badge variant="outline" className="text-xs font-medium px-2 py-1 flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
-                              <img 
-                                src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
-                                alt={insight.protocol} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-3 h-3 bg-muted/20 rounded-full flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
-                            {insight.protocol.replace('_evm', '').charAt(0).toUpperCase() + insight.protocol.replace('_evm', '').slice(1)}
-                          </Badge>
+                      
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-medium leading-none text-muted-foreground">
+                          {insight.title}
+                        </h4>
+                        <p className="text-sm font-semibold tracking-tight leading-tight">
+                          {insight.description}
+                        </p>
+                        {insight.value && (
+                          <p className="text-xs text-muted-foreground/70">
+                            {insight.value}
+                          </p>
                         )}
-                        {getTrendBadge(insight.trend)}
                       </div>
                     </div>
                     
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-medium leading-none text-muted-foreground">
-                        {insight.title}
-                      </h4>
-                      <p className="text-sm font-semibold tracking-tight leading-tight">
-                        {insight.description}
-                      </p>
-                      {insight.value && (
-                        <p className="text-xs text-muted-foreground/70">
-                          {insight.value}
-                        </p>
-                      )}
-                    </div>
+                    {/* Subtle hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
-                  
-                  {/* Subtle hover effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

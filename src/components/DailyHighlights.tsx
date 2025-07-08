@@ -7,6 +7,7 @@ import { getDailyMetrics } from "../lib/protocol";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { ComponentActions } from './ComponentActions';
 
 interface DailyHighlightsProps {
   date: Date;
@@ -513,7 +514,11 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
   }
 
   return (
-    <Card className="overflow-hidden">
+    <ComponentActions 
+      componentName="Daily Insights"
+      filename={`Daily_Insights_${format(date, 'yyyy_MM_dd')}.png`}
+    >
+      <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -613,5 +618,6 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
         )}
       </CardContent>
     </Card>
+    </ComponentActions>
   );
 }

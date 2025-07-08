@@ -36,6 +36,17 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T
       ...options,
     });
 
+    // Check if response is actually JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', { url, status: response.status, contentType, text: text.substring(0, 200) });
+      throw new ApiError(
+        `API returned ${contentType || 'unknown content type'} instead of JSON. Status: ${response.status}`,
+        response.status
+      );
+    }
+
     const data: ApiResponse<T> = await response.json();
 
     if (!response.ok) {
@@ -55,7 +66,14 @@ async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T
       throw error;
     }
     
-    // Network or parsing error
+    // Check if it's a JSON parsing error
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      throw new ApiError(
+        'Server returned invalid JSON response. This usually means the API server is down or misconfigured.'
+      );
+    }
+    
+    // Network or other parsing error
     throw new ApiError(
       error instanceof Error ? error.message : 'Network error occurred'
     );

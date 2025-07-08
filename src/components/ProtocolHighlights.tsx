@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { ComponentActions } from './ComponentActions';
 import { 
   TrendingUp, 
   Users, 
@@ -318,7 +319,11 @@ export function ProtocolHighlights({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <ComponentActions 
+      componentName={`${title} Protocol Highlights`}
+      filename={`${title.replace(/\s+/g, '_')}_Protocol_Highlights.png`}
+    >
+      <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -420,5 +425,6 @@ export function ProtocolHighlights({
         </div>
       </CardContent>
     </Card>
+    </ComponentActions>
   );
 }

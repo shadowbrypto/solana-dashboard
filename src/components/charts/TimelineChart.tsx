@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
+import { ComponentActions } from '../ComponentActions';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -143,7 +144,11 @@ export function TimelineChart({
   }, [data, timeframe]);
 
   return (
-    <Card className="bg-card border-border rounded-xl">
+    <ComponentActions 
+      componentName={`${title} Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">
@@ -496,5 +501,6 @@ export function TimelineChart({
         </ResponsiveContainer>
       </CardContent>
     </Card>
+    </ComponentActions>
   );
 }

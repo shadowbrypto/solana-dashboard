@@ -173,201 +173,201 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
 
   return (
     <Card className="bg-background border-border rounded-xl">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-semibold tracking-tight">
-          Protocol Stats
-        </CardTitle>
-        <Tabs
-          value={selectedMetric}
-          onValueChange={(value: string) =>
-            setSelectedMetric(value as MetricKey)
-          }
-          className="w-fit ml-auto"
-        >
-          <TabsList className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900/90 p-1 text-muted-foreground">
-            {Object.entries(metricLabels).map(([key, label]) => (
-              <TabsTrigger
-                key={key}
-                value={key}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-medium ring-offset-background transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-zinc-800 data-[state=active]:text-white data-[state=active]:shadow-sm"
-              >
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-xl border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hover:text-foreground [&:has([role=checkbox])]:pr-0"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-semibold tracking-tight">
+            Protocol Stats
+          </CardTitle>
+          <Tabs
+            value={selectedMetric}
+            onValueChange={(value: string) =>
+              setSelectedMetric(value as MetricKey)
+            }
+            className="w-fit ml-auto"
+          >
+            <TabsList className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900/90 p-1 text-muted-foreground">
+              {Object.entries(metricLabels).map(([key, label]) => (
+                <TabsTrigger
+                  key={key}
+                  value={key}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-medium ring-offset-background transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-zinc-800 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  {label}
+                </TabsTrigger>
               ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hover:text-foreground [&:has([role=checkbox])]:pr-0"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between px-2">
-          <div className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} total rows
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <Pagination>
-              <PaginationContent className="gap-4">
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  />
-                </PaginationItem>
-                {table.getPageCount() <= 5 ? (
-                  // If 5 or fewer pages, show all page numbers
-                  [...Array(table.getPageCount())].map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        onClick={() => table.setPageIndex(i)}
-                        isActive={table.getState().pagination.pageIndex === i}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                   ))
                 ) : (
-                  // If more than 5 pages, show first, last, and pages around current
-                  <>
-                    <PaginationItem>
-                      <PaginationLink
-                        onClick={() => table.setPageIndex(0)}
-                        isActive={table.getState().pagination.pageIndex === 0}
-                      >
-                        1
-                      </PaginationLink>
-                    </PaginationItem>
-                    {table.getState().pagination.pageIndex > 2 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    {table.getState().pagination.pageIndex > 1 && (
-                      <PaginationItem>
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between px-2">
+            <div className="text-sm text-muted-foreground">
+              {table.getFilteredRowModel().rows.length} total rows
+            </div>
+
+            <div className="flex items-center space-x-6">
+              <Pagination>
+                <PaginationContent className="gap-4">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => table.previousPage()}
+                      disabled={!table.getCanPreviousPage()}
+                    />
+                  </PaginationItem>
+                  {table.getPageCount() <= 5 ? (
+                    // If 5 or fewer pages, show all page numbers
+                    [...Array(table.getPageCount())].map((_, i) => (
+                      <PaginationItem key={i}>
                         <PaginationLink
-                          onClick={() =>
-                            table.setPageIndex(
-                              table.getState().pagination.pageIndex - 1
-                            )
-                          }
+                          onClick={() => table.setPageIndex(i)}
+                          isActive={table.getState().pagination.pageIndex === i}
                         >
-                          {table.getState().pagination.pageIndex}
+                          {i + 1}
                         </PaginationLink>
                       </PaginationItem>
-                    )}
-                    {table.getState().pagination.pageIndex > 0 &&
-                      table.getState().pagination.pageIndex <
-                        table.getPageCount() - 1 && (
+                    ))
+                  ) : (
+                    // If more than 5 pages, show first, last, and pages around current
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => table.setPageIndex(0)}
+                          isActive={table.getState().pagination.pageIndex === 0}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      {table.getState().pagination.pageIndex > 2 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      {table.getState().pagination.pageIndex > 1 && (
                         <PaginationItem>
                           <PaginationLink
-                            isActive
                             onClick={() =>
                               table.setPageIndex(
-                                table.getState().pagination.pageIndex
+                                table.getState().pagination.pageIndex - 1
                               )
                             }
                           >
-                            {table.getState().pagination.pageIndex + 1}
+                            {table.getState().pagination.pageIndex}
                           </PaginationLink>
                         </PaginationItem>
                       )}
-                    {table.getState().pagination.pageIndex <
-                      table.getPageCount() - 2 && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            table.setPageIndex(
-                              table.getState().pagination.pageIndex + 1
-                            )
-                          }
-                        >
-                          {table.getState().pagination.pageIndex + 2}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                    {table.getState().pagination.pageIndex <
-                      table.getPageCount() - 3 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    {table.getState().pagination.pageIndex !==
-                      table.getPageCount() - 1 && (
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() =>
-                            table.setPageIndex(table.getPageCount() - 1)
-                          }
-                        >
-                          {table.getPageCount()}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                  </>
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                      {table.getState().pagination.pageIndex > 0 &&
+                        table.getState().pagination.pageIndex <
+                          table.getPageCount() - 1 && (
+                          <PaginationItem>
+                            <PaginationLink
+                              isActive
+                              onClick={() =>
+                                table.setPageIndex(
+                                  table.getState().pagination.pageIndex
+                                )
+                              }
+                            >
+                              {table.getState().pagination.pageIndex + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )}
+                      {table.getState().pagination.pageIndex <
+                        table.getPageCount() - 2 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() =>
+                              table.setPageIndex(
+                                table.getState().pagination.pageIndex + 1
+                              )
+                            }
+                          >
+                            {table.getState().pagination.pageIndex + 2}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+                      {table.getState().pagination.pageIndex <
+                        table.getPageCount() - 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      {table.getState().pagination.pageIndex !==
+                        table.getPageCount() - 1 && (
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() =>
+                              table.setPageIndex(table.getPageCount() - 1)
+                            }
+                          >
+                            {table.getPageCount()}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )}
+                    </>
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => table.nextPage()}
+                      disabled={!table.getCanNextPage()}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
   );
 }

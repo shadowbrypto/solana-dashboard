@@ -1,4 +1,5 @@
 import { LucideIcon, TrendingDown, TrendingUp, Sparkles, Coins, Users, BarChart2, DollarSign, UsersRound, CircleDollarSign, Hash, HandCoins } from "lucide-react";
+import { ComponentActions } from "./ComponentActions";
 
 interface MetricCardProps {
   title: string;
@@ -52,53 +53,58 @@ export function MetricCard({
   };
 
   return (
-    <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 lg:mb-6 gap-2 sm:gap-0">
-        <div className="flex items-center gap-2">
-          {getIcon()}
-          <h3 className="text-muted-foreground text-sm sm:text-md truncate">{title}</h3>
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2 justify-start sm:justify-end">
-          <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold transition-colors text-muted-foreground">
-            Lifetime
+    <ComponentActions 
+      componentName={`${title} Metric`}
+      filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
+    >
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 lg:mb-6 gap-2 sm:gap-0">
+          <div className="flex items-center gap-2">
+            {getIcon()}
+            <h3 className="text-muted-foreground text-sm sm:text-md truncate">{title}</h3>
           </div>
-          {percentageChange && (
-            <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
-              isNegative 
-                ? 'bg-destructive/10 text-destructive' 
-                : 'bg-green-500/10 text-green-600 dark:text-green-400'
-            }`}>
-              <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              <span className="text-[10px] sm:text-xs font-medium">
-                {isNegative ? "" : "+"}
-                {percentageChange.toFixed(1)}%
-              </span>
+          <div className="flex items-center gap-1 sm:gap-2 justify-start sm:justify-end">
+            <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold transition-colors text-muted-foreground">
+              Lifetime
+            </div>
+            {percentageChange && (
+              <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
+                isNegative 
+                  ? 'bg-destructive/10 text-destructive' 
+                  : 'bg-green-500/10 text-green-600 dark:text-green-400'
+              }`}>
+                <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span className="text-[10px] sm:text-xs font-medium">
+                  {isNegative ? "" : "+"}
+                  {percentageChange.toFixed(1)}%
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+            {typeof value === 'number' ? `${prefix || ''}${formatNumber(value)}` : value}
+          </div>
+          
+          {(duration || description) && (
+            <div className="space-y-1">
+              {duration && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
+                  {duration}
+                  <TrendIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                </div>
+              )}
+              {description && (
+                <div className="text-muted-foreground text-xs sm:text-sm">
+                  {description}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
-      
-      <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-        <div className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-          {typeof value === 'number' ? `${prefix || ''}${formatNumber(value)}` : value}
-        </div>
-        
-        {(duration || description) && (
-          <div className="space-y-1">
-            {duration && (
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                {duration}
-                <TrendIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              </div>
-            )}
-            {description && (
-              <div className="text-muted-foreground text-xs sm:text-sm">
-                {description}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+    </ComponentActions>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 import { CalendarDays, TrendingUp, Clock } from "lucide-react";
+import { ComponentActions } from '../ComponentActions';
 
 interface VolumeMilestoneChartProps {
   title: string;
@@ -181,156 +182,161 @@ export function VolumeMilestoneChart({
   }
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                {(() => {
-                  // Check if subtitle is a protocol name
-                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                  if (protocolMatch) {
-                    return (
-                      <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {subtitle}
-                      </>
-                    );
-                  }
-                  return subtitle;
-                })()}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full border">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="font-medium">Active since {(milestoneData[milestoneData.length - 1]?.daysToReach || 0) + 1} days</span>
+    <ComponentActions 
+      componentName={`${title} Volume Milestone Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Volume_Milestone_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+              {subtitle && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  {(() => {
+                    // Check if subtitle is a protocol name
+                    const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                    if (protocolMatch) {
+                      return (
+                        <>
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                              alt={subtitle} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
+                          {subtitle}
+                        </>
+                      );
+                    }
+                    return subtitle;
+                  })()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full border">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="font-medium">Active since {(milestoneData[milestoneData.length - 1]?.daysToReach || 0) + 1} days</span>
+              </div>
             </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4 px-2 pb-2">
-        <ResponsiveContainer width="100%" height={400}>
-          <RechartsBarChart
-            data={milestoneData}
-            margin={{
-              top: 20,
-              right: 10,
-              bottom: 45,
-              left: 10,
-            }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              className="stroke-border"
-              stroke="hsl(var(--border))"
-              strokeOpacity={0.2}
-            />
-            <XAxis
-              dataKey="milestone"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 }}
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-              tickFormatter={(value) => `${value} days`}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload as MilestoneData;
-                  return (
-                    <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
-                      <div className="space-y-2">
-                        <div className="font-semibold text-foreground">{data.milestone} Milestone</div>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-muted-foreground">Date reached:</span>
-                            <span className="font-medium">{formatDate(data.date)}</span>
-                          </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-muted-foreground">Days from start:</span>
-                            <span className="font-medium">{data.daysToReach} days</span>
-                          </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-muted-foreground">Days since previous:</span>
-                            <span className="font-medium text-primary">{data.daysSincePrevious} days</span>
+        </CardHeader>
+        <CardContent className="pt-4 px-2 pb-2">
+          <ResponsiveContainer width="100%" height={400}>
+            <RechartsBarChart
+              data={milestoneData}
+              margin={{
+                top: 20,
+                right: 10,
+                bottom: 45,
+                left: 10,
+              }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                className="stroke-border"
+                stroke="hsl(var(--border))"
+                strokeOpacity={0.2}
+              />
+              <XAxis
+                dataKey="milestone"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                tickFormatter={(value) => `${value} days`}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload as MilestoneData;
+                    return (
+                      <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+                        <div className="space-y-2">
+                          <div className="font-semibold text-foreground">{data.milestone} Milestone</div>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-muted-foreground">Date reached:</span>
+                              <span className="font-medium">{formatDate(data.date)}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-muted-foreground">Days from start:</span>
+                              <span className="font-medium">{data.daysToReach} days</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-muted-foreground">Days since previous:</span>
+                              <span className="font-medium text-primary">{data.daysSincePrevious} days</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                color: 'hsl(var(--foreground))'
-              }}
-              cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-            />
-            <Bar
-              dataKey="daysSincePrevious"
-              fill={protocolColor}
-              fillOpacity={0.8}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={60}
-            >
-            </Bar>
-          </RechartsBarChart>
-        </ResponsiveContainer>
-        
-        {/* Summary Stats */}
-        <div className="mt-0 grid grid-cols-3 gap-4 border-t pt-0">
-          <div className="text-center py-4">
-            <div className="text-2xl font-bold text-foreground">
-              {milestoneData.length}
+                    );
+                  }
+                  return null;
+                }}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
+                }}
+                cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+              />
+              <Bar
+                dataKey="daysSincePrevious"
+                fill={protocolColor}
+                fillOpacity={0.8}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={60}
+              >
+              </Bar>
+            </RechartsBarChart>
+          </ResponsiveContainer>
+          
+          {/* Summary Stats */}
+          <div className="mt-0 grid grid-cols-3 gap-4 border-t pt-0">
+            <div className="text-center py-4">
+              <div className="text-2xl font-bold text-foreground">
+                {milestoneData.length}
+              </div>
+              <div className="text-sm text-muted-foreground">Milestones</div>
             </div>
-            <div className="text-sm text-muted-foreground">Milestones</div>
-          </div>
-          <div className="text-center py-4">
-            <div className="text-2xl font-bold text-foreground">
-              {milestoneData.length > 0 ? Math.round((milestoneData[milestoneData.length - 1]?.daysToReach || 0) / milestoneData.length) : 0}
+            <div className="text-center py-4">
+              <div className="text-2xl font-bold text-foreground">
+                {milestoneData.length > 0 ? Math.round((milestoneData[milestoneData.length - 1]?.daysToReach || 0) / milestoneData.length) : 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Avg Days/Billion</div>
             </div>
-            <div className="text-sm text-muted-foreground">Avg Days/Billion</div>
-          </div>
-          <div className="text-center py-4">
-            <div className="text-2xl font-bold text-foreground">
-              ${((milestoneData[milestoneData.length - 1]?.volume || 0) / 1e9).toFixed(2)}B
+            <div className="text-center py-4">
+              <div className="text-2xl font-bold text-foreground">
+                ${((milestoneData[milestoneData.length - 1]?.volume || 0) / 1e9).toFixed(2)}B
+              </div>
+              <div className="text-sm text-muted-foreground">Total Volume</div>
             </div>
-            <div className="text-sm text-muted-foreground">Total Volume</div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

@@ -19,6 +19,7 @@ import {
   YAxis,
 } from "recharts";
 import { useState, useMemo } from "react";
+import { ComponentActions } from '../ComponentActions';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -116,183 +117,188 @@ export function StackedBarChart({
   }, [data, timeframe]);
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              {(() => {
-                // Check if subtitle is a protocol name
-                const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                if (protocolMatch) {
-                  return (
-                    <>
-                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                          alt={subtitle} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
-                      {subtitle}
-                    </>
-                  );
-                }
-                return subtitle;
-              })()}
-            </p>
-          )}
-        </div>
-        {!disableTimeframeSelector && (
-        <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
-          <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-            <SelectValue placeholder="Select timeframe" />
-          </SelectTrigger>
-          <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-            <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
-            <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
-            <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
-            <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
-            <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
-            <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
-          </SelectContent>
-        </Select>
-        )}
-      </CardHeader>
-      <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
-          <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              strokeOpacity={0.2}
-              vertical={false}
-            />
-            <XAxis
-              dataKey={xAxisKey}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              tickFormatter={(value) => {
-                const [day, month] = value.split('-');
-                const date = new Date(2025, parseInt(month) - 1, parseInt(day));
-                return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
-              }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              tickFormatter={(value) => formatNumberWithSuffix(value)}
-            />
-            <Tooltip
-              content={({ active, payload, label }: TooltipProps<number, string>) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
-                      <div className="grid gap-2">
-                        <div className="text-sm font-medium text-muted-foreground">
-                          {(() => {
-                            const [day, month, year] = label.split('-');
-                            return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            });
-                          })()}
+    <ComponentActions 
+      componentName={`${title} Stacked Bar Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Stacked_Bar_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                {(() => {
+                  // Check if subtitle is a protocol name
+                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                  if (protocolMatch) {
+                    return (
+                      <>
+                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                          <img 
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                            alt={subtitle} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
                         </div>
-                        <div className="space-y-1">
-                          {payload.map((entry, index) => (
-                            <div key={entry.name} className="flex items-center gap-2">
-                              <div 
-                                className="w-2 h-2 rounded-lg" 
-                                style={{ backgroundColor: colors[index] }}
-                              />
-                              <span className="text-sm text-foreground">
-                                {labels[index]}: {entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}
+                        {subtitle}
+                      </>
+                    );
+                  }
+                  return subtitle;
+                })()}
+              </p>
+            )}
+          </div>
+          {!disableTimeframeSelector && (
+          <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
+            <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+              <SelectValue placeholder="Select timeframe" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+              <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
+              <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
+              <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
+              <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
+              <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
+              <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
+            </SelectContent>
+          </Select>
+          )}
+        </CardHeader>
+        <CardContent className="pt-6">
+          <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
+            <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                strokeOpacity={0.2}
+                vertical={false}
+              />
+              <XAxis
+                dataKey={xAxisKey}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tickFormatter={(value) => {
+                  const [day, month] = value.split('-');
+                  const date = new Date(2025, parseInt(month) - 1, parseInt(day));
+                  return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+                }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tickFormatter={(value) => formatNumberWithSuffix(value)}
+              />
+              <Tooltip
+                content={({ active, payload, label }: TooltipProps<number, string>) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
+                        <div className="grid gap-2">
+                          <div className="text-sm font-medium text-muted-foreground">
+                            {(() => {
+                              const [day, month, year] = label.split('-');
+                              return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              });
+                            })()}
+                          </div>
+                          <div className="space-y-1">
+                            {payload.map((entry, index) => (
+                              <div key={entry.name} className="flex items-center gap-2">
+                                <div 
+                                  className="w-2 h-2 rounded-lg" 
+                                  style={{ backgroundColor: colors[index] }}
+                                />
+                                <span className="text-sm text-foreground">
+                                  {labels[index]}: {entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="bg-muted-foreground/20 rounded px-2 py-1 mt-0">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <span className="text-muted-foreground">Total:</span>
+                              <span className="text-foreground">
+                                {(() => {
+                                  const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
+                                  return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);
+                                })()}
                               </span>
                             </div>
-                          ))}
-                        </div>
-                        <div className="bg-muted-foreground/20 rounded px-2 py-1 mt-0">
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <span className="text-muted-foreground">Total:</span>
-                            <span className="text-foreground">
-                              {(() => {
-                                const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
-                                return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);
-                              })()}
-                            </span>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    );
+                  }
+                  return null;
+                }}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
+                }}
+                cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+              />
+              {dataKeys.map((key, index) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    stackId="a"
+                    fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                    fillOpacity={disabledKeys.includes(key) ? 0.3 : 1}
+                    radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                    name={labels[index]}
+                  />
+              ))}
+              <Legend
+                verticalAlign="bottom"
+                height={32}
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{
+                  paddingTop: "12px"
+                }}
+                onClick={(e) => {
+                  if (e && typeof e.dataKey === 'string') {
+                    setDisabledKeys((prev: string[]) => 
+                      prev.includes(e.dataKey as string)
+                        ? prev.filter(key => key !== e.dataKey)
+                        : [...prev, e.dataKey as string]
+                    );
+                  }
+                }}
+                formatter={(value, entry) => {
+                  const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
+                  return (
+                    <span 
+                      className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                    >
+                      {value}
+                    </span>
                   );
-                }
-                return null;
-              }}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                color: 'hsl(var(--foreground))'
-              }}
-              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-            />
-            {dataKeys.map((key, index) => (
-                <Bar
-                  key={key}
-                  dataKey={key}
-                  stackId="a"
-                  fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
-                  fillOpacity={disabledKeys.includes(key) ? 0.3 : 1}
-                  radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                  name={labels[index]}
-                />
-            ))}
-            <Legend
-              verticalAlign="bottom"
-              height={32}
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{
-                paddingTop: "12px"
-              }}
-              onClick={(e) => {
-                if (e && typeof e.dataKey === 'string') {
-                  setDisabledKeys((prev: string[]) => 
-                    prev.includes(e.dataKey as string)
-                      ? prev.filter(key => key !== e.dataKey)
-                      : [...prev, e.dataKey as string]
-                  );
-                }
-              }}
-              formatter={(value, entry) => {
-                const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
-                return (
-                  <span 
-                    className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
-                  >
-                    {value}
-                  </span>
-                );
-              }}
-            />
-          </RechartsBarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+                }}
+              />
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

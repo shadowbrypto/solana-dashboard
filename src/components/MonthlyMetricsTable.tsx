@@ -713,370 +713,370 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
   return (
     <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
-      <div data-table="monthly-metrics" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
-        <div className="flex items-center gap-4">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Monthly Metrics</h3>
-          <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-            <button
-              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-            >
-              {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-            </button>
+        <div data-table="monthly-metrics" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
+          <div className="flex items-center gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Monthly Metrics</h3>
+            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+              >
+                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+              </button>
+            </div>
+          </div>
+          <div className="w-full sm:w-[240px] flex sm:justify-end">
+            <MonthPicker date={date} onDateChange={handleDateChange} />
           </div>
         </div>
-        <div className="w-full sm:w-[240px] flex sm:justify-end">
-          <MonthPicker date={date} onDateChange={handleDateChange} />
-        </div>
-      </div>
 
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
-        <Table className="min-w-[800px]">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[150px] sm:w-[200px] py-0.5 text-xs sm:text-sm">Protocol</TableHead>
-              {orderedMetrics.map((metric, index) => (
-                <TableHead 
-                  key={metric.key} 
-                  className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 text-xs sm:text-sm ${
-                    draggedColumn === index ? 'opacity-50' : ''
-                  }`}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex items-center gap-1 sm:gap-2 justify-end">
-                    <span className="truncate">{metric.label}</span>
-                    <GripVertical className="w-2 h-2 sm:w-3 sm:h-3 opacity-50 flex-shrink-0" />
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-
-          </TableHeader>
-          <TableBody>
-            {getMutableAllCategories().map((categoryName) => {
-              const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-              const availableProtocols = categoryProtocols.map(p => p.id).filter(p => protocols.includes(p as Protocol));
-              
-              // Sort protocols by volume (highest to lowest)
-              const orderedProtocols = availableProtocols.sort((a, b) => {
-                const volumeA = monthlyData[a as Protocol]?.total_volume_usd || 0;
-                const volumeB = monthlyData[b as Protocol]?.total_volume_usd || 0;
-                return volumeB - volumeA; // Sort descending (highest first)
-              });
-              
-              if (orderedProtocols.length === 0) return null;
-              
-              const isCollapsed = collapsedCategories.includes(categoryName);
-              const toggleCollapse = () => {
-                setCollapsedCategories(prev =>
-                  prev.includes(categoryName)
-                    ? prev.filter(c => c !== categoryName)
-                    : [...prev, categoryName]
-                );
-              };
-
-              // Calculate category totals for current month (excluding hidden protocols)
-              const visibleProtocols = orderedProtocols.filter(p => !hiddenProtocols.has(p));
-              const categoryTotals = orderedMetrics.reduce((acc, metric) => {
-                if (metric.key === 'monthly_growth') {
-                  const currentVolume = visibleProtocols
-                    .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
-                  const previousVolume = visibleProtocols
-                    .reduce((sum, p) => sum + (previousMonthData[p as Protocol]?.total_volume_usd || 0), 0);
-                  acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
-                } else if (metric.key === 'market_share') {
-                  // Calculate category market share based on total volume
-                  const categoryVolume = visibleProtocols
-                    .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
-                  acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
-                } else {
-                  acc[metric.key] = visibleProtocols
-                    .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.[metric.key as keyof MonthlyData] || 0), 0);
-                }
-                return acc;
-              }, {} as Record<MetricKey, number>);
-
-              return (
-                <React.Fragment key={categoryName}>
-                  {/* Category Header */}
-                  <TableRow 
-                    className={cn("border-t cursor-pointer", getCategoryRowColor(categoryName))}
-                    onClick={toggleCollapse}
+          <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[150px] sm:w-[200px] py-0.5 text-xs sm:text-sm">Protocol</TableHead>
+                {orderedMetrics.map((metric, index) => (
+                  <TableHead 
+                    key={metric.key} 
+                    className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 text-xs sm:text-sm ${
+                      draggedColumn === index ? 'opacity-50' : ''
+                    }`}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
                   >
-                    <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4 pl-3 sm:pl-6">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <ChevronRight 
-                          className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 ${
-                            !isCollapsed ? 'rotate-90' : ''
-                          }`}
-                        />
-                        <span className="truncate">{categoryName}</span>
-                      </div>
-                    </TableCell>
-                    {orderedMetrics.map((metric) => (
-                      <TableCell 
-                        key={metric.key} 
-                        className="text-right font-medium py-0.5 text-xs sm:text-sm"
-                      >
-                        {metric.key === 'market_share'
-                          ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
-                          : metric.key === 'daily_trades'
-                          ? formatNumber(categoryTotals[metric.key] || 0)
-                          : metric.key === 'monthly_growth'
-                          ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
-                          : metric.getValue
-                            ? metric.format(metric.getValue(categoryTotals as any), true, undefined, categoryName)
-                            : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
+                    <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                      <span className="truncate">{metric.label}</span>
+                      <GripVertical className="w-2 h-2 sm:w-3 sm:h-3 opacity-50 flex-shrink-0" />
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+
+            </TableHeader>
+            <TableBody>
+              {getMutableAllCategories().map((categoryName) => {
+                const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+                const availableProtocols = categoryProtocols.map(p => p.id).filter(p => protocols.includes(p as Protocol));
+                
+                // Sort protocols by volume (highest to lowest)
+                const orderedProtocols = availableProtocols.sort((a, b) => {
+                  const volumeA = monthlyData[a as Protocol]?.total_volume_usd || 0;
+                  const volumeB = monthlyData[b as Protocol]?.total_volume_usd || 0;
+                  return volumeB - volumeA; // Sort descending (highest first)
+                });
+                
+                if (orderedProtocols.length === 0) return null;
+                
+                const isCollapsed = collapsedCategories.includes(categoryName);
+                const toggleCollapse = () => {
+                  setCollapsedCategories(prev =>
+                    prev.includes(categoryName)
+                      ? prev.filter(c => c !== categoryName)
+                      : [...prev, categoryName]
+                  );
+                };
+
+                // Calculate category totals for current month (excluding hidden protocols)
+                const visibleProtocols = orderedProtocols.filter(p => !hiddenProtocols.has(p));
+                const categoryTotals = orderedMetrics.reduce((acc, metric) => {
+                  if (metric.key === 'monthly_growth') {
+                    const currentVolume = visibleProtocols
+                      .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
+                    const previousVolume = visibleProtocols
+                      .reduce((sum, p) => sum + (previousMonthData[p as Protocol]?.total_volume_usd || 0), 0);
+                    acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
+                  } else if (metric.key === 'market_share') {
+                    // Calculate category market share based on total volume
+                    const categoryVolume = visibleProtocols
+                      .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
+                    acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
+                  } else {
+                    acc[metric.key] = visibleProtocols
+                      .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.[metric.key as keyof MonthlyData] || 0), 0);
+                  }
+                  return acc;
+                }, {} as Record<MetricKey, number>);
+
+                return (
+                  <React.Fragment key={categoryName}>
+                    {/* Category Header */}
+                    <TableRow 
+                      className={cn("border-t cursor-pointer", getCategoryRowColor(categoryName))}
+                      onClick={toggleCollapse}
+                    >
+                      <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4 pl-3 sm:pl-6">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <ChevronRight 
+                            className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 ${
+                              !isCollapsed ? 'rotate-90' : ''
+                            }`}
+                          />
+                          <span className="truncate">{categoryName}</span>
+                        </div>
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  
-                  {/* Protocol Rows */}
-                  {orderedProtocols.map((protocol) => {
-                    const isHidden = hiddenProtocols.has(protocol);
-                    return (
-                      <TableRow 
-                        key={protocol} 
-                        className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
-                      >
-                        <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleProtocolVisibility(protocol);
-                              }}
-                              className="opacity-0 hover:opacity-100 transition-opacity duration-200"
-                              title={isHidden ? "Show protocol" : "Hide protocol"}
-                            >
-                              {isHidden ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
-                            </button>
-                            <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                              <img 
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
-                                alt={protocol} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
-                            <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
-                            {topProtocols.includes(protocol) && (
-                              <Badge 
-                                variant="secondary"
-                                className={cn(
-                                  "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
-                                  topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                                  topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                                  topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                                )}
-                              >
-                                #{topProtocols.indexOf(protocol) + 1}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
-                          className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'monthly_growth'
-                            ? getGrowthBackground(monthlyData[protocol]?.monthly_growth || 0)
-                            : !metric.skipGradient
-                              ? getGradientColor(
-                                  metric.getValue 
-                                    ? metric.getValue(monthlyData[protocol] || {} as any)
-                                    : (monthlyData[protocol]?.[metric.key as keyof MonthlyData] || 0),
-                                  0,
-                                  protocols.reduce((max, p) => {
-                                    const value = metric.getValue 
-                                      ? metric.getValue(monthlyData[p] || {} as any)
-                                      : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0);
-                                    return Math.max(max, value);
-                                  }, 0),
-                                  protocols.map(p => metric.getValue
-                                    ? metric.getValue(monthlyData[p] || {} as any)
-                                    : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0)
-                                  )
-                                )
-                            : ''
-                          }`}
+                          className="text-right font-medium py-0.5 text-xs sm:text-sm"
                         >
-                          <span>
-                            {metric.getValue
-                              ? metric.format(metric.getValue(monthlyData[protocol] || {} as any), false, protocol)
-                              : metric.format(monthlyData[protocol]?.[metric.key] || 0, false, protocol)}
-                          </span>
+                          {metric.key === 'market_share'
+                            ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
+                            : metric.key === 'daily_trades'
+                            ? formatNumber(categoryTotals[metric.key] || 0)
+                            : metric.key === 'monthly_growth'
+                            ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
+                            : metric.getValue
+                              ? metric.format(metric.getValue(categoryTotals as any), true, undefined, categoryName)
+                              : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
                         </TableCell>
                       ))}
                     </TableRow>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
+                    
+                    {/* Protocol Rows */}
+                    {orderedProtocols.map((protocol) => {
+                      const isHidden = hiddenProtocols.has(protocol);
+                      return (
+                        <TableRow 
+                          key={protocol} 
+                          className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                        >
+                          <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProtocolVisibility(protocol);
+                                }}
+                                className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                                title={isHidden ? "Show protocol" : "Hide protocol"}
+                              >
+                                {isHidden ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
+                              </button>
+                              <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                                <img 
+                                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                                  alt={protocol} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const container = target.parentElement;
+                                    if (container) {
+                                      container.innerHTML = '';
+                                      container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                      const iconEl = document.createElement('div');
+                                      iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                      container.appendChild(iconEl);
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
+                              {topProtocols.includes(protocol) && (
+                                <Badge 
+                                  variant="secondary"
+                                  className={cn(
+                                    "ml-1 sm:ml-2 h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs font-medium flex-shrink-0",
+                                    topProtocols.indexOf(protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                                    topProtocols.indexOf(protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                                    topProtocols.indexOf(protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                  )}
+                                >
+                                  #{topProtocols.indexOf(protocol) + 1}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        {orderedMetrics.map((metric) => (
+                          <TableCell 
+                            key={metric.key} 
+                            className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'monthly_growth'
+                              ? getGrowthBackground(monthlyData[protocol]?.monthly_growth || 0)
+                              : !metric.skipGradient
+                                ? getGradientColor(
+                                    metric.getValue 
+                                      ? metric.getValue(monthlyData[protocol] || {} as any)
+                                      : (monthlyData[protocol]?.[metric.key as keyof MonthlyData] || 0),
+                                    0,
+                                    protocols.reduce((max, p) => {
+                                      const value = metric.getValue 
+                                        ? metric.getValue(monthlyData[p] || {} as any)
+                                        : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0);
+                                      return Math.max(max, value);
+                                    }, 0),
+                                    protocols.map(p => metric.getValue
+                                      ? metric.getValue(monthlyData[p] || {} as any)
+                                      : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0)
+                                    )
+                                  )
+                              : ''
+                            }`}
+                          >
+                            <span>
+                              {metric.getValue
+                                ? metric.format(metric.getValue(monthlyData[protocol] || {} as any), false, protocol)
+                                : metric.format(monthlyData[protocol]?.[metric.key] || 0, false, protocol)}
+                            </span>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
 
-            {/* All Protocols Total Row */}
-            <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
-              <TableCell className="font-medium text-xs sm:text-sm">
-                All Protocols
-              </TableCell>
-              {orderedMetrics.map((metric) => {
-                let total: number;
-                if (metric.key === 'monthly_growth') {
-                  const currentVolume = protocols
-                    .filter(p => p !== 'all')
-                    .reduce((sum, p) => sum + (monthlyData[p]?.total_volume_usd || 0), 0);
-                  const previousVolume = protocols
-                    .filter(p => p !== 'all')
-                    .reduce((sum, p) => sum + (previousMonthData[p]?.total_volume_usd || 0), 0);
-                  total = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
-                } else if (metric.key === 'market_share') {
-                  total = 1; // 100% by definition for all protocols
-                } else {
-                  total = protocols
-                    .filter(p => p !== 'all')
-                    .reduce((sum, p) => sum + (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0), 0);
-                }
-                if (metric.key === 'monthly_growth') {
-                  // Calculate aggregated monthly volume data for all protocols (last 6 months)
-                  const aggregatedMonthlyData: { month: number; value: number }[] = [];
-                  
-                  const last6Months = eachMonthOfInterval({
-                    start: subMonths(date, 5),
-                    end: date
-                  });
-                  
-                  last6Months.forEach((month, index) => {
-                    const monthKey = format(month, 'yyyy-MM');
-                    const monthlyTotal = protocols
+              {/* All Protocols Total Row */}
+              <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
+                <TableCell className="font-medium text-xs sm:text-sm">
+                  All Protocols
+                </TableCell>
+                {orderedMetrics.map((metric) => {
+                  let total: number;
+                  if (metric.key === 'monthly_growth') {
+                    const currentVolume = protocols
                       .filter(p => p !== 'all')
-                      .reduce((sum, p) => {
-                        const protocolMonthlyData = monthlyVolumeData[p];
-                        return sum + (protocolMonthlyData?.[monthKey] || 0);
-                      }, 0);
+                      .reduce((sum, p) => sum + (monthlyData[p]?.total_volume_usd || 0), 0);
+                    const previousVolume = protocols
+                      .filter(p => p !== 'all')
+                      .reduce((sum, p) => sum + (previousMonthData[p]?.total_volume_usd || 0), 0);
+                    total = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
+                  } else if (metric.key === 'market_share') {
+                    total = 1; // 100% by definition for all protocols
+                  } else {
+                    total = protocols
+                      .filter(p => p !== 'all')
+                      .reduce((sum, p) => sum + (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0), 0);
+                  }
+                  if (metric.key === 'monthly_growth') {
+                    // Calculate aggregated monthly volume data for all protocols (last 6 months)
+                    const aggregatedMonthlyData: { month: number; value: number }[] = [];
                     
-                    aggregatedMonthlyData.push({
-                      month: index,
-                      value: monthlyTotal
+                    const last6Months = eachMonthOfInterval({
+                      start: subMonths(date, 5),
+                      end: date
                     });
-                  });
-                  
-                  // Calculate trend for aggregated data
-                  const getAggregatedTrend = (): 'up' | 'down' | 'neutral' => {
-                    if (aggregatedMonthlyData.length < 2) return 'neutral';
                     
-                    const firstHalf = aggregatedMonthlyData.slice(0, Math.floor(aggregatedMonthlyData.length / 2));
-                    const secondHalf = aggregatedMonthlyData.slice(Math.floor(aggregatedMonthlyData.length / 2));
+                    last6Months.forEach((month, index) => {
+                      const monthKey = format(month, 'yyyy-MM');
+                      const monthlyTotal = protocols
+                        .filter(p => p !== 'all')
+                        .reduce((sum, p) => {
+                          const protocolMonthlyData = monthlyVolumeData[p];
+                          return sum + (protocolMonthlyData?.[monthKey] || 0);
+                        }, 0);
+                      
+                      aggregatedMonthlyData.push({
+                        month: index,
+                        value: monthlyTotal
+                      });
+                    });
                     
-                    const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
-                    const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+                    // Calculate trend for aggregated data
+                    const getAggregatedTrend = (): 'up' | 'down' | 'neutral' => {
+                      if (aggregatedMonthlyData.length < 2) return 'neutral';
+                      
+                      const firstHalf = aggregatedMonthlyData.slice(0, Math.floor(aggregatedMonthlyData.length / 2));
+                      const secondHalf = aggregatedMonthlyData.slice(Math.floor(aggregatedMonthlyData.length / 2));
+                      
+                      const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
+                      const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
+                      
+                      if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
+                      if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
+                      return 'neutral';
+                    };
                     
-                    if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
-                    if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
-                    return 'neutral';
-                  };
-                  
-                  const trend = getAggregatedTrend();
-                  const percentage = total * 100;
-                  const absPercentage = Math.abs(percentage);
-                  const isPositive = total > 0;
-                  const isNeutral = Math.abs(total) < 0.001;
+                    const trend = getAggregatedTrend();
+                    const percentage = total * 100;
+                    const absPercentage = Math.abs(percentage);
+                    const isPositive = total > 0;
+                    const isNeutral = Math.abs(total) < 0.001;
+                    
+                    return (
+                      <TableCell 
+                        key={metric.key} 
+                        className="text-right font-bold text-xs sm:text-sm"
+                      >
+                        <div className="flex items-center justify-end w-full gap-8">
+                          <div className="w-[50px] h-[20px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={aggregatedMonthlyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                  strokeWidth={1.5}
+                                  fill={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
+                                  fillOpacity={0.2}
+                                  dot={false}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                          {!isNeutral && (
+                            <div className={cn(
+                              "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                              isPositive 
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            )}>
+                              {isPositive ? (
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                                </svg>
+                              ) : (
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                                </svg>
+                              )}
+                              {absPercentage.toFixed(2)}%
+                            </div>
+                          )}
+                          {isNeutral && (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    );
+                  }
                   
                   return (
                     <TableCell 
                       key={metric.key} 
                       className="text-right font-bold text-xs sm:text-sm"
                     >
-                      <div className="flex items-center justify-end w-full gap-8">
-                        <div className="w-[50px] h-[20px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={aggregatedMonthlyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                              <Area 
-                                type="monotone" 
-                                dataKey="value" 
-                                stroke={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
-                                strokeWidth={1.5}
-                                fill={trend === 'up' ? "#22c55e" : trend === 'down' ? "#ef4444" : "#6b7280"}
-                                fillOpacity={0.2}
-                                dot={false}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
-                        {!isNeutral && (
-                          <div className={cn(
-                            "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-                            isPositive 
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                          )}>
-                            {isPositive ? (
-                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                              </svg>
-                            ) : (
-                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                              </svg>
-                            )}
-                            {absPercentage.toFixed(2)}%
-                          </div>
-                        )}
-                        {isNeutral && (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </div>
+                      {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total)}
                     </TableCell>
                   );
-                }
-                
-                return (
-                  <TableCell 
-                    key={metric.key} 
-                    className="text-right font-bold text-xs sm:text-sm"
-                  >
-                    {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total)}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          </TableBody>
-        </Table>
+                })}
+              </TableRow>
+            </TableBody>
+          </Table>
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 pt-4">
+          <button
+            onClick={downloadReport}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </button>
+          <button
+            onClick={copyToClipboard}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+          >
+            <Copy className="h-4 w-4" />
+            Copy
+          </button>
         </div>
       </div>
-      
-      <div className="flex justify-end gap-2 pt-4">
-        <button
-          onClick={downloadReport}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          Download
-        </button>
-        <button
-          onClick={copyToClipboard}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-        >
-          <Copy className="h-4 w-4" />
-          Copy
-        </button>
-      </div>
-    </div>
   );
 }

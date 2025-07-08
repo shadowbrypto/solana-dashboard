@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { getProtocolLogoFilename, protocolConfigs } from '../lib/protocol-config';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Activity, TrendingUp } from 'lucide-react';
+import { ComponentActions } from './ComponentActions';
 
 interface VolumeActivityProps {
   title: string;
@@ -367,140 +368,145 @@ export function VolumeActivity({
   }
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                {(() => {
-                  // Check if subtitle is a protocol name
-                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                  if (protocolMatch) {
-                    return (
-                      <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {subtitle}
-                      </>
-                    );
-                  }
-                  return subtitle;
-                })()}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3 h-3" />
-              <span className="text-muted-foreground">{activeDays} active days</span>
-            </div>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-24 h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableYears.map(year => (
-                  <SelectItem key={year} value={year} className="text-sm">
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        {/* Month headers for card mode */}
-        <div className="relative w-full mb-4">
-          <div className="grid grid-cols-12 gap-1 w-full">
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
-              <div
-                key={month}
-                className="text-xs text-muted-foreground text-center"
-              >
-                {month}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Calendar grid - full width horizontal */}
-        <div className="relative">
-          <div className="w-full overflow-x-auto">
-            <div className="flex gap-1 min-w-full">
-              {activityData.weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col gap-1">
-                  {week.map((day, dayIndex) => (
-                    <div
-                      key={`${weekIndex}-${dayIndex}`}
-                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
-                        !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
-                      }`}
-                    >
-                      {day.isCurrentYear && day.volume > 0 && (
-                        <div className={`absolute rounded-lg bg-black text-white p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap ${
-                          dayIndex < 3 ? 'top-full mt-2' : 'bottom-full mb-2'
-                        } ${
-                          weekIndex < 5 ? 'left-0' : weekIndex > 47 ? 'right-0' : 'left-1/2 transform -translate-x-1/2'
-                        }`}>
-                          <div className="space-y-1">
-                            <div className="text-xs font-medium">
-                              {day.volume > 0 ? formatCurrency(day.volume) : 'No trading activity'}
-                            </div>
-                            <div className="text-xs text-gray-300">
-                              {formatTooltipDate(day.date)}
-                            </div>
+    <ComponentActions 
+      componentName="Volume Activity"
+      filename="Volume_Activity.png"
+    >
+      <Card className="bg-card border-border rounded-xl">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+              {subtitle && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  {(() => {
+                    // Check if subtitle is a protocol name
+                    const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                    if (protocolMatch) {
+                      return (
+                        <>
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                              alt={subtitle} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
                           </div>
-                          {/* Tooltip arrow */}
-                          <div className={`absolute w-0 h-0 border-l-4 border-r-4 border-transparent ${
-                            dayIndex < 3 
-                              ? 'bottom-full border-b-4 border-b-black' 
-                              : 'top-full border-t-4 border-t-black'
-                          } ${
-                            weekIndex < 5 ? 'left-4' : weekIndex > 47 ? 'right-4' : 'left-1/2 transform -translate-x-1/2'
-                          }`}></div>
-                        </div>
-                      )}
-                    </div>
+                          {subtitle}
+                        </>
+                      );
+                    }
+                    return subtitle;
+                  })()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <Activity className="w-3 h-3" />
+                <span className="text-muted-foreground">{activeDays} active days</span>
+              </div>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-24 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year} className="text-sm">
+                      {year}
+                    </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {/* Month headers for card mode */}
+          <div className="relative w-full mb-4">
+            <div className="grid grid-cols-12 gap-1 w-full">
+              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
+                <div
+                  key={month}
+                  className="text-xs text-muted-foreground text-center"
+                >
+                  {month}
                 </div>
               ))}
             </div>
           </div>
           
-          {/* Legend - bottom right */}
-          <div className="flex items-center justify-end text-xs mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Less</span>
-              <div className="flex space-x-1">
-                <div className="w-4 h-4 bg-muted rounded-sm" />
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                  <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+          {/* Calendar grid - full width horizontal */}
+          <div className="relative">
+            <div className="w-full overflow-x-auto">
+              <div className="flex gap-1 min-w-full">
+                {activityData.weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="flex flex-col gap-1">
+                    {week.map((day, dayIndex) => (
+                      <div
+                        key={`${weekIndex}-${dayIndex}`}
+                        className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
+                          !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
+                        }`}
+                      >
+                        {day.isCurrentYear && day.volume > 0 && (
+                          <div className={`absolute rounded-lg bg-black text-white p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap ${
+                            dayIndex < 3 ? 'top-full mt-2' : 'bottom-full mb-2'
+                          } ${
+                            weekIndex < 5 ? 'left-0' : weekIndex > 47 ? 'right-0' : 'left-1/2 transform -translate-x-1/2'
+                          }`}>
+                            <div className="space-y-1">
+                              <div className="text-xs font-medium">
+                                {day.volume > 0 ? formatCurrency(day.volume) : 'No trading activity'}
+                              </div>
+                              <div className="text-xs text-gray-300">
+                                {formatTooltipDate(day.date)}
+                              </div>
+                            </div>
+                            {/* Tooltip arrow */}
+                            <div className={`absolute w-0 h-0 border-l-4 border-r-4 border-transparent ${
+                              dayIndex < 3 
+                                ? 'bottom-full border-b-4 border-b-black' 
+                                : 'top-full border-t-4 border-t-black'
+                            } ${
+                              weekIndex < 5 ? 'left-4' : weekIndex > 47 ? 'right-4' : 'left-1/2 transform -translate-x-1/2'
+                            }`}></div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 ))}
               </div>
-              <span className="text-muted-foreground">More</span>
+            </div>
+            
+            {/* Legend - bottom right */}
+            <div className="flex items-center justify-end text-xs mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Less</span>
+                <div className="flex space-x-1">
+                  <div className="w-4 h-4 bg-muted rounded-sm" />
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
+                    <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                  ))}
+                </div>
+                <span className="text-muted-foreground">More</span>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

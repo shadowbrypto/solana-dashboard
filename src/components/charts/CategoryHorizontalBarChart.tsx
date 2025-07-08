@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
+import { ComponentActions } from '../ComponentActions';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 type MetricType = "volume" | "new_users" | "trades" | "fees";
@@ -159,243 +160,248 @@ export function CategoryHorizontalBarChart({
   }
 
   return (
-    <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">
-            {title} - {metricLabels[selectedMetric]}
-          </CardTitle>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              {(() => {
-                // Check if subtitle is a protocol name
-                const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                if (protocolMatch) {
-                  return (
-                    <>
-                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                          alt={subtitle} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
-                      {subtitle}
-                    </>
-                  );
-                }
-                return subtitle;
-              })()}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
-            <SelectTrigger className="w-full sm:w-[120px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-              <SelectValue placeholder="Select metric" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-              <SelectItem value="volume" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Volume</SelectItem>
-              <SelectItem value="new_users" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">New Users</SelectItem>
-              <SelectItem value="trades" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Trades</SelectItem>
-              <SelectItem value="fees" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Fees</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-            <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-              <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
-              <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
-              <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
-              <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
-              <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
-              <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-2 px-2">
-        <ResponsiveContainer width="100%" height={Math.max(chartData.length * 50 + 40, 200)}>
-          <RechartsBarChart
-            data={chartData}
-            layout="vertical"
-            margin={{
-              top: 20,
-              right: 180,
-              bottom: 20,
-              left: 10,
-            }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              horizontal={false}
-              className="stroke-border"
-              stroke="hsl(var(--border))"
-              strokeOpacity={0.2}
-            />
-            <XAxis
-              type="number"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              tickFormatter={metricFormatters[selectedMetric]}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              width={100}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const categoryData = payload[0].payload;
-                  return (
-                    <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
-                      <div className="grid gap-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm text-muted-foreground">
-                            {categoryData.name}
-                          </span>
-                          <span className="text-sm font-medium text-foreground">
-                            {metricFormatters[selectedMetric](categoryData.value as number)}
-                          </span>
+    <ComponentActions 
+      componentName={`${title} Category Horizontal Bar Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Category_Horizontal_Bar_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-medium text-card-foreground">
+              {title} - {metricLabels[selectedMetric]}
+            </CardTitle>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                {(() => {
+                  // Check if subtitle is a protocol name
+                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                  if (protocolMatch) {
+                    return (
+                      <>
+                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                          <img 
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                            alt={subtitle} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
+                        </div>
+                        {subtitle}
+                      </>
+                    );
+                  }
+                  return subtitle;
+                })()}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
+              <SelectTrigger className="w-full sm:w-[120px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+                <SelectValue placeholder="Select metric" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+                <SelectItem value="volume" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Volume</SelectItem>
+                <SelectItem value="new_users" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">New Users</SelectItem>
+                <SelectItem value="trades" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Trades</SelectItem>
+                <SelectItem value="fees" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Fees</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
+              <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+                <SelectValue placeholder="Select timeframe" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+                <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
+                <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
+                <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
+                <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
+                <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
+                <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-2 px-2">
+          <ResponsiveContainer width="100%" height={Math.max(chartData.length * 50 + 40, 200)}>
+            <RechartsBarChart
+              data={chartData}
+              layout="vertical"
+              margin={{
+                top: 20,
+                right: 180,
+                bottom: 20,
+                left: 10,
+              }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={false}
+                className="stroke-border"
+                stroke="hsl(var(--border))"
+                strokeOpacity={0.2}
+              />
+              <XAxis
+                type="number"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tickFormatter={metricFormatters[selectedMetric]}
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                width={100}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const categoryData = payload[0].payload;
+                    return (
+                      <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+                        <div className="grid gap-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {categoryData.name}
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {metricFormatters[selectedMetric](categoryData.value as number)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                color: 'hsl(var(--foreground))'
-              }}
-              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-            />
-            <Bar
-              dataKey="value"
-              barSize={30}
-              fill="none"
-              radius={[4, 4, 4, 4]}
-              maxBarSize={30}
-            >
-              <LabelList
-                dataKey="protocols"
-                position="right"
-                content={(props) => {
-                  const { x, y, width, height, value } = props;
-                  if (!value || !Array.isArray(value)) return null;
-                  
-                  const protocols = value.slice(0, 3);
-                  const avatarSize = 22;
-                  const overlap = 8; // How much avatars overlap
-                  const startX = (x as number) + (width as number) + 15; // Position outside bar with proper spacing
-                  const centerY = (y as number) + (height as number) / 2;
-                  
-                  return (
-                    <g>
-                      {protocols.map((protocolConfig, index) => {
-                        const avatarX = startX + index * (avatarSize - overlap);
-                        const avatarY = centerY - avatarSize / 2;
-                        
-                        return (
-                          <g key={protocolConfig.id} transform={`translate(${avatarX}, ${avatarY})`} style={{ zIndex: 10 - index }}>
+                    );
+                  }
+                  return null;
+                }}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  color: 'hsl(var(--foreground))'
+                }}
+                cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+              />
+              <Bar
+                dataKey="value"
+                barSize={30}
+                fill="none"
+                radius={[4, 4, 4, 4]}
+                maxBarSize={30}
+              >
+                <LabelList
+                  dataKey="protocols"
+                  position="right"
+                  content={(props) => {
+                    const { x, y, width, height, value } = props;
+                    if (!value || !Array.isArray(value)) return null;
+                    
+                    const protocols = value.slice(0, 3);
+                    const avatarSize = 22;
+                    const overlap = 8; // How much avatars overlap
+                    const startX = (x as number) + (width as number) + 15; // Position outside bar with proper spacing
+                    const centerY = (y as number) + (height as number) / 2;
+                    
+                    return (
+                      <g>
+                        {protocols.map((protocolConfig, index) => {
+                          const avatarX = startX + index * (avatarSize - overlap);
+                          const avatarY = centerY - avatarSize / 2;
+                          
+                          return (
+                            <g key={protocolConfig.id} transform={`translate(${avatarX}, ${avatarY})`} style={{ zIndex: 10 - index }}>
+                              <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
+                                <div style={{
+                                  width: `${avatarSize}px`,
+                                  height: `${avatarSize}px`,
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))'
+                                }}>
+                                  <img 
+                                    src={`/assets/logos/${protocolConfig.id.includes('terminal') ? protocolConfig.id.split(' ')[0] : protocolConfig.id}.jpg`}
+                                    alt={protocolConfig.name}
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover'
+                                    }}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              </foreignObject>
+                            </g>
+                          );
+                        })}
+                        {value.length > 3 && (
+                          <g transform={`translate(${startX + 3 * (avatarSize - overlap)}, ${centerY - avatarSize / 2})`}>
                             <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
                               <div style={{
                                 width: `${avatarSize}px`,
                                 height: `${avatarSize}px`,
                                 borderRadius: '8px',
-                                overflow: 'hidden',
+                                backgroundColor: 'hsl(var(--muted))',
+                                border: '1px solid hsl(var(--border))',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                backgroundColor: 'hsl(var(--background))',
-                                border: '1px solid hsl(var(--border))'
+                                color: 'hsl(var(--muted-foreground))',
+                                fontSize: '10px',
+                                fontWeight: '500'
                               }}>
-                                <img 
-                                  src={`/assets/logos/${protocolConfig.id.includes('terminal') ? protocolConfig.id.split(' ')[0] : protocolConfig.id}.jpg`}
-                                  alt={protocolConfig.name}
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                  }}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                  }}
-                                />
+                                +{value.length - 3}
                               </div>
                             </foreignObject>
                           </g>
-                        );
-                      })}
-                      {value.length > 3 && (
-                        <g transform={`translate(${startX + 3 * (avatarSize - overlap)}, ${centerY - avatarSize / 2})`}>
-                          <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
-                            <div style={{
-                              width: `${avatarSize}px`,
-                              height: `${avatarSize}px`,
-                              borderRadius: '8px',
-                              backgroundColor: 'hsl(var(--muted))',
-                              border: '1px solid hsl(var(--border))',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'hsl(var(--muted-foreground))',
-                              fontSize: '10px',
-                              fontWeight: '500'
-                            }}>
-                              +{value.length - 3}
-                            </div>
-                          </foreignObject>
-                        </g>
-                      )}
-                    </g>
-                  );
-                }}
-              />
-              <LabelList
-                dataKey="value"
-                position="right"
-                offset={90}
-                formatter={metricFormatters[selectedMetric]}
-                style={{
-                  fill: "hsl(var(--foreground))",
-                  fontSize: "13px",
-                  fontWeight: "500",
-                }}
-              />
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  fillOpacity={0.8}
-                  className="transition-opacity duration-200 hover:opacity-90"
+                        )}
+                      </g>
+                    );
+                  }}
                 />
-              ))}
-            </Bar>
-          </RechartsBarChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+                <LabelList
+                  dataKey="value"
+                  position="right"
+                  offset={90}
+                  formatter={metricFormatters[selectedMetric]}
+                  style={{
+                    fill: "hsl(var(--foreground))",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                  }}
+                />
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    fillOpacity={0.8}
+                    className="transition-opacity duration-200 hover:opacity-90"
+                  />
+                ))}
+              </Bar>
+            </RechartsBarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </ComponentActions>
   );
 }

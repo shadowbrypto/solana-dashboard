@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
+import { ComponentActions } from '../ComponentActions';
 import {
   Select,
   SelectContent,
@@ -113,7 +114,11 @@ export function MultiAreaChart({
   });
 
   return (
-    <Card className="bg-card border-border rounded-xl">
+    <ComponentActions 
+      componentName={`${title} Multi Area Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Multi_Area_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
@@ -279,5 +284,6 @@ export function MultiAreaChart({
         </ResponsiveContainer>
       </CardContent>
     </Card>
+    </ComponentActions>
   );
 }

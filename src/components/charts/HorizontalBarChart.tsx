@@ -12,6 +12,7 @@ import {
   YAxis,
   LabelList,
 } from "recharts";
+import { ComponentActions } from '../ComponentActions';
 import { useState, useMemo } from "react";
 import {
   Select,
@@ -115,7 +116,11 @@ export function HorizontalBarChart({
       .sort((a, b) => b.value - a.value);
   }, [data, timeframe]);
   return (
-    <Card className="bg-card border-border rounded-xl">
+    <ComponentActions 
+      componentName={`${title} Horizontal Bar Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Horizontal_Bar_Chart.png`}
+    >
+      <Card className="bg-card border-border rounded-xl">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
@@ -316,5 +321,6 @@ export function HorizontalBarChart({
         </ResponsiveContainer>
       </CardContent>
     </Card>
+    </ComponentActions>
   );
 }

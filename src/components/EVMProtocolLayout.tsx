@@ -5,6 +5,7 @@ import { Badge } from './ui/badge';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
 import { StackedBarChart } from './charts/StackedBarChart';
 import { StackedAreaChart } from './charts/StackedAreaChart';
+import { ComponentActions } from './ComponentActions';
 
 interface EVMMetrics {
   lifetimeVolume: number;

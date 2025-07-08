@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -272,6 +272,48 @@ router.get('/evm-daily-metrics/:protocol', async (req: Request, res: Response) =
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch EVM daily metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/evm-daily/:protocol
+// Get EVM protocol data for a specific date for daily report
+router.get('/evm-daily/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const { date } = req.query;
+    
+    if (!protocol) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Protocol parameter is required' 
+      });
+    }
+
+    if (!date || typeof date !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Date parameter is required in YYYY-MM-DD format' 
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid date format. Use YYYY-MM-DD' 
+      });
+    }
+
+    const dailyData = await getEVMDailyData(protocol, date);
+    res.json({ success: true, data: dailyData });
+  } catch (error) {
+    console.error('Error fetching EVM daily data:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM daily data',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

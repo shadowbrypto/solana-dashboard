@@ -741,3 +741,132 @@ export async function generateWeeklyInsights() {
   return result;
 }
 
+// Get EVM protocol data for a specific date (for daily report)
+export async function getEVMDailyData(protocol: string, dateStr: string) {
+  console.log(`Fetching EVM daily data for ${protocol} on ${dateStr}`);
+  
+  const evmChains = ['ethereum', 'base', 'bsc'];
+  
+  try {
+    // Query database for the specific date and protocol across all EVM chains
+    const { data: dailyData, error: dailyError } = await supabase
+      .from('protocol_stats')
+      .select('chain, volume_usd, daily_users, new_users, trades, fees_usd')
+      .eq('protocol_name', protocol)
+      .eq('date', dateStr)
+      .in('chain', evmChains);
+
+    if (dailyError) {
+      console.error('Error fetching daily data:', dailyError);
+      throw dailyError;
+    }
+
+    console.log(`Found ${dailyData?.length || 0} records for ${protocol} on ${dateStr}`);
+
+    // Query 7-day trend data (last 7 days including the selected date)
+    const endDate = new Date(dateStr);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 6); // 7 days total
+    
+    const { data: trendData, error: trendError } = await supabase
+      .from('protocol_stats')
+      .select('date, volume_usd')
+      .eq('protocol_name', protocol)
+      .in('chain', evmChains)
+      .gte('date', format(startDate, 'yyyy-MM-dd'))
+      .lte('date', dateStr)
+      .order('date', { ascending: true });
+
+    if (trendError) {
+      console.error('Error fetching trend data:', trendError);
+      throw trendError;
+    }
+
+    // Query previous day data for growth calculation
+    const prevDate = new Date(endDate);
+    prevDate.setDate(prevDate.getDate() - 1);
+    const prevDateStr = format(prevDate, 'yyyy-MM-dd');
+    
+    const { data: prevData, error: prevError } = await supabase
+      .from('protocol_stats')
+      .select('volume_usd')
+      .eq('protocol_name', protocol)
+      .eq('date', prevDateStr)
+      .in('chain', evmChains);
+
+    if (prevError) {
+      console.error('Error fetching previous day data:', prevError);
+    }
+
+    // Process the data
+    const chainVolumes: Record<string, number> = {};
+    let totalVolume = 0;
+
+    // Initialize chain volumes to 0
+    evmChains.forEach(chain => {
+      chainVolumes[chain] = 0;
+    });
+
+    // Populate actual volumes from database
+    if (dailyData) {
+      dailyData.forEach(record => {
+        const volume = Number(record.volume_usd) || 0;
+        chainVolumes[record.chain] = volume;
+        totalVolume += volume;
+      });
+    }
+
+    // Calculate 7-day trend (aggregate by date)
+    const trendByDate: Record<string, number> = {};
+    if (trendData) {
+      trendData.forEach(record => {
+        const date = record.date;
+        const volume = Number(record.volume_usd) || 0;
+        trendByDate[date] = (trendByDate[date] || 0) + volume;
+      });
+    }
+
+    // Create 7-day trend array
+    const weeklyTrend: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(endDate);
+      date.setDate(date.getDate() - i);
+      const dateKey = format(date, 'yyyy-MM-dd');
+      weeklyTrend.push(trendByDate[dateKey] || 0);
+    }
+
+    // Calculate daily growth
+    const prevTotalVolume = prevData ? 
+      prevData.reduce((sum, record) => sum + (Number(record.volume_usd) || 0), 0) : 0;
+    
+    let dailyGrowth = 0;
+    if (prevTotalVolume > 0) {
+      dailyGrowth = (totalVolume - prevTotalVolume) / prevTotalVolume;
+    }
+
+    const result = {
+      totalVolume,
+      chainVolumes: {
+        ethereum: chainVolumes.ethereum || 0,
+        base: chainVolumes.base || 0,
+        bsc: chainVolumes.bsc || 0
+      },
+      dailyGrowth,
+      weeklyTrend
+    };
+
+    console.log(`EVM daily data for ${protocol}:`, {
+      totalVolume: result.totalVolume,
+      hasData: dailyData?.length > 0,
+      trendPoints: weeklyTrend.length,
+      dailyGrowth: result.dailyGrowth
+    });
+
+    return result;
+    
+  } catch (error) {
+    console.error(`Error fetching EVM daily data for ${protocol}:`, error);
+    throw error;
+  }
+}
+

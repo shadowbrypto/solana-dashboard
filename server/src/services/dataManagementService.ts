@@ -474,18 +474,18 @@ export class DataManagementService {
    */
   private async importAllProtocolData(): Promise<ImportResult[]> {
     try {
-      // First, delete all existing data
-      console.log('--- Deleting all existing data from protocol_stats ---');
+      // First, delete only existing SOLANA data (preserve EVM data)
+      console.log('--- Deleting existing SOLANA data from protocol_stats (preserving EVM data) ---');
       const { error: deleteError } = await supabase
         .from(TABLE_NAME)
         .delete()
-        .neq('id', 0); // Delete all rows
+        .eq('chain', 'solana'); // Only delete Solana data, preserve EVM
 
       if (deleteError) {
         throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
       }
 
-      console.log('Successfully deleted all existing data');
+      console.log('Successfully deleted existing Solana data (EVM data preserved)');
 
       // Get list of CSV files
       const files = await fs.readdir(DATA_DIR);

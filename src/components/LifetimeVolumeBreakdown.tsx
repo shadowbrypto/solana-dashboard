@@ -71,7 +71,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                   key={protocol.id}
                   className="relative inline-block group cursor-pointer"
                   style={{ 
-                    marginLeft: index > 0 ? '-8px' : '0',
+                    marginLeft: index > 0 ? '-4px' : '0',
                     zIndex: significantProtocols.length - index
                   }}
                 >

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
 import { StackedBarChart } from './charts/StackedBarChart';
+import { StackedAreaChart } from './charts/StackedAreaChart';
 
 interface EVMMetrics {
   lifetimeVolume: number;
@@ -212,7 +213,27 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     return dayData;
   });
 
+  // Process daily data for StackedAreaChart (chain dominance over time)
+  const dominanceChartData = dailyData.map(day => {
+    const dayData: any = {
+      formattedDay: day.formattedDay,
+      date: day.date,
+    };
+    
+    const totalVolume = day.totalVolume || Object.values(day.chainData).reduce((sum, val) => sum + (val || 0), 0);
+    
+    // Calculate dominance percentages for each chain
+    availableChains.forEach(chain => {
+      const chainVolume = day.chainData[chain] || 0;
+      // Store as percentage (0-100) for StackedAreaChart
+      dayData[`${chain}_dominance`] = totalVolume > 0 ? (chainVolume / totalVolume) * 100 : 0;
+    });
+    
+    return dayData;
+  });
+
   const chainLabels = availableChains.map(chain => chainNames[chain] || chain);
+  const chainDominanceKeys = availableChains.map(chain => `${chain}_dominance`);
   const chartColors = availableChains.map(chain => chainColors[chain] || '#6B7280');
 
 
@@ -349,6 +370,37 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           <CardContent className="p-6">
             <div className="text-center py-8">
               <p className="text-muted-foreground">No daily volume data available for this timeframe</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Chain Dominance Over Time Chart */}
+      {!dailyLoading && dominanceChartData.length > 0 && availableChains.length > 0 ? (
+        <StackedAreaChart
+          title="Chain Volume Dominance Over Time"
+          subtitle={protocolDisplayName}
+          data={dominanceChartData}
+          keys={chainDominanceKeys}
+          labels={chainLabels}
+          colors={chartColors}
+          valueFormatter={(value) => `${value.toFixed(1)}%`}
+          loading={dailyLoading}
+        />
+      ) : dailyLoading ? (
+        <Card className="bg-card border-border rounded-xl">
+          <CardContent className="p-6">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-card border-border rounded-xl">
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No dominance data available for this timeframe</p>
             </div>
           </CardContent>
         </Card>

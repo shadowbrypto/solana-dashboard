@@ -1019,6 +1019,8 @@ const MainContent = (): JSX.Element => {
                 feesKey="new_users"
                 barChartLabel="Daily Users"
                 lineChartLabel="New Users"
+                leftAxisFormatter={(value: number) => `${(value / 1000000).toFixed(2)}M`}
+                rightAxisFormatter={(value: number) => `${(value / 1000).toFixed(1)}K`}
                 colors={[getProtocolColor(protocol), getProtocolColor(protocol)]}
                 loading={loading}
               />

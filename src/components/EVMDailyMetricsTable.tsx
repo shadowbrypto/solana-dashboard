@@ -94,32 +94,6 @@ const getGrowthBadgeClasses = (growth: number): string => {
 };
 
 
-// Temporary function to add mock AVAX data for testing (June 12th Sigma case)
-const getMockAdditionalVolumes = (protocol: string, date: Date): {avax: number, arbitrum: number} => {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  
-  // Add mock AVAX volume for Sigma on June 12th for testing
-  if (protocol === 'sigma' && dateStr === '2024-06-12') {
-    return {
-      avax: 50000, // $50K AVAX volume for testing
-      arbitrum: 0
-    };
-  }
-  
-  // Add some mock data for other protocols on June 12th for testing
-  if (dateStr === '2024-06-12') {
-    switch (protocol) {
-      case 'maestro':
-        return { avax: 25000, arbitrum: 15000 };
-      case 'bloom':
-        return { avax: 0, arbitrum: 30000 };
-      default:
-        return { avax: 0, arbitrum: 0 };
-    }
-  }
-  
-  return { avax: 0, arbitrum: 0 };
-};
 
 const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVMProtocolData[]> => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -134,9 +108,8 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
     try {
       console.log(`Fetching data for ${cleanProtocol} on ${dateStr}`);
       
-      // Fetch main protocol data and use mock additional volumes for now
+      // Fetch main protocol data
       const protocolResponse = await fetch(`${API_BASE_URL}/protocols/evm-daily/${cleanProtocol}?date=${dateStr}`);
-      const additionalChainVolumes = getMockAdditionalVolumes(cleanProtocol, new Date(dateStr));
       
       if (!protocolResponse.ok) {
         throw new Error(`API returned ${protocolResponse.status}: ${protocolResponse.statusText}`);
@@ -145,47 +118,19 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
       const result = await protocolResponse.json();
       
       if (result.success && result.data) {
-        console.log(`Successfully fetched ${cleanProtocol} data:`, {
-          totalVolume: result.data.totalVolume,
-          chainVolumes: result.data.chainVolumes,
-          additionalChains: additionalChainVolumes,
-          chainCount: Object.keys(result.data.chainVolumes || {}).length,
-          hasGrowth: typeof result.data.dailyGrowth === 'number'
-        });
-        
-        // Calculate new total volume including AVAX and ARB
-        const baseVolume = result.data.totalVolume || 0;
-        const totalVolumeWithAdditional = baseVolume + additionalChainVolumes.avax + additionalChainVolumes.arbitrum;
-        
-        // Add some mock daily growth for testing if none exists
-        let dailyGrowth = result.data.dailyGrowth || 0;
-        if (dailyGrowth === 0 && dateStr === '2024-06-12') {
-          switch (cleanProtocol) {
-            case 'sigma':
-              dailyGrowth = 0.15; // 15% growth
-              break;
-            case 'maestro':
-              dailyGrowth = -0.08; // -8% decline
-              break;
-            case 'bloom':
-              dailyGrowth = 0.23; // 23% growth
-              break;
-            default:
-              dailyGrowth = 0.05; // 5% growth
-          }
-        }
+        console.log(`Successfully fetched ${cleanProtocol} data:`, result.data);
         
         return {
           protocol,
-          totalVolume: totalVolumeWithAdditional,
+          totalVolume: result.data.totalVolume || 0,
           chainVolumes: {
             ethereum: result.data.chainVolumes?.ethereum || 0,
             base: result.data.chainVolumes?.base || 0,
             bsc: result.data.chainVolumes?.bsc || 0,
-            avax: additionalChainVolumes.avax,
-            arbitrum: additionalChainVolumes.arbitrum
+            avax: result.data.chainVolumes?.avax || result.data.chainVolumes?.avalanche || 0,
+            arbitrum: result.data.chainVolumes?.arbitrum || result.data.chainVolumes?.arb || 0
           },
-          dailyGrowth: dailyGrowth,
+          dailyGrowth: result.data.dailyGrowth || 0,
           weeklyTrend: result.data.weeklyTrend || Array(7).fill(0)
         };
       } else {
@@ -629,33 +574,51 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                       {data.totalVolume > 0 && (
                         <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
                           {/* Display chain volumes including AVAX and ARB */}
-                          {Object.entries(data.chainVolumes).map(([chain, volume], index) => {
-                            const chainVolume = volume || 0;
-                            if (chainVolume === 0) return null;
+                          {(() => {
+                            console.log(`Rendering bar chart for ${data.protocol}:`, {
+                              totalVolume: data.totalVolume,
+                              chainVolumes: data.chainVolumes,
+                              entries: Object.entries(data.chainVolumes)
+                            });
                             
-                            const percentage = (chainVolume / data.totalVolume) * 100;
-                            const previousPercentage = Object.entries(data.chainVolumes)
-                              .slice(0, index)
-                              .reduce((sum, [prevChain, prevVolume]) => {
-                                return sum + ((prevVolume || 0) / data.totalVolume) * 100;
-                              }, 0);
-                            
-                            const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
-                            const chainColor = chainBarColors[chain] || '#6B7280';
-                            
-                            return (
-                              <div
-                                key={chain}
-                                className="absolute h-full transition-all duration-300 hover:opacity-80"
-                                style={{
-                                  left: `${previousPercentage}%`,
-                                  width: `${percentage}%`,
-                                  backgroundColor: chainColor
-                                }}
-                                title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
-                              />
-                            );
-                          })}
+                            return Object.entries(data.chainVolumes).map(([chain, volume], index) => {
+                              const chainVolume = volume || 0;
+                              if (chainVolume === 0) {
+                                console.log(`Skipping ${chain} for ${data.protocol}: volume is 0`);
+                                return null;
+                              }
+                              
+                              const percentage = (chainVolume / data.totalVolume) * 100;
+                              const previousPercentage = Object.entries(data.chainVolumes)
+                                .slice(0, index)
+                                .reduce((sum, [prevChain, prevVolume]) => {
+                                  return sum + ((prevVolume || 0) / data.totalVolume) * 100;
+                                }, 0);
+                              
+                              const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
+                              const chainColor = chainBarColors[chain] || '#6B7280';
+                              
+                              console.log(`Rendering ${chain} segment for ${data.protocol}:`, {
+                                volume: chainVolume,
+                                percentage: percentage.toFixed(1),
+                                color: chainColor,
+                                left: previousPercentage.toFixed(1)
+                              });
+                              
+                              return (
+                                <div
+                                  key={chain}
+                                  className="absolute h-full transition-all duration-300 hover:opacity-80"
+                                  style={{
+                                    left: `${previousPercentage}%`,
+                                    width: `${percentage}%`,
+                                    backgroundColor: chainColor
+                                  }}
+                                  title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
+                                />
+                              );
+                            });
+                          })()}
                         </div>
                       )}
                       <Badge variant="outline" className="font-medium ml-1 bg-background text-sm">

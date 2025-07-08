@@ -1,5 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { LifetimeVolumeBreakdownSkeleton } from "./LifetimeVolumeBreakdownSkeleton";
 
 interface ProtocolVolumeData {
   name: string;
@@ -12,6 +14,7 @@ interface ProtocolVolumeData {
 interface LifetimeVolumeBreakdownProps {
   totalVolume: number;
   protocolData: ProtocolVolumeData[];
+  loading?: boolean;
 }
 
 const formatVolume = (value: number): string => {
@@ -21,12 +24,25 @@ const formatVolume = (value: number): string => {
   return `$${value.toFixed(2)}`;
 };
 
-export function LifetimeVolumeBreakdown({ totalVolume, protocolData }: LifetimeVolumeBreakdownProps) {
-  // Filter and sort protocols by volume (descending), only show protocols with meaningful volume
+const getColorWithOpacity = (hslColor: string, opacity: number): string => {
+  // Convert hsl(h s% l%) to hsla(h, s%, l%, opacity)
+  const match = hslColor.match(/hsl\((\d+)\s+(\d+)%\s+(\d+)%\)/);
+  if (match) {
+    const [, h, s, l] = match;
+    return `hsla(${h}, ${s}%, ${l}%, ${opacity})`;
+  }
+  // Fallback for any other format
+  return hslColor;
+};
+
+export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = false }: LifetimeVolumeBreakdownProps) {
+  if (loading) {
+    return <LifetimeVolumeBreakdownSkeleton />;
+  }
+  // Filter and sort protocols by volume (descending), show all protocols with any volume
   const significantProtocols = protocolData
-    .filter(protocol => protocol.value > 0 && protocol.percentage > 0.5) // At least 0.5% of total volume
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6); // Show top 6 protocols to match the image
+    .filter(protocol => protocol.value > 0) // Show all protocols with any volume
+    .sort((a, b) => b.value - a.value);
 
   const activeProtocolsCount = significantProtocols.length;
 
@@ -49,24 +65,41 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData }: LifetimeV
             <div className="text-3xl font-bold mb-2">
               {formatVolume(totalVolume)}
             </div>
-            <div className="flex gap-1 justify-end">
-              {significantProtocols.map((protocol) => (
+            <div className="flex justify-end">
+              {significantProtocols.map((protocol, index) => (
                 <div
                   key={protocol.id}
-                  className="p-1 rounded-md"
+                  className="relative inline-block group cursor-pointer"
                   style={{ 
-                    backgroundColor: `${protocol.color}15`
+                    marginLeft: index > 0 ? '-8px' : '0',
+                    zIndex: significantProtocols.length - index
                   }}
                 >
                   <img
                     src={`/assets/logos/${protocol.id.includes('terminal') ? protocol.id.split(' ')[0] : protocol.id === 'bull x' ? 'bullx' : protocol.id}.jpg`}
                     alt={protocol.name}
-                    className="w-5 h-5 rounded-full border border-background object-cover"
+                    className="w-6 h-6 rounded-full border border-background object-cover ring-1 ring-background transition-all duration-300 ease-in-out group-hover:ring-2 group-hover:shadow-lg group-hover:-translate-y-1 relative"
+                    style={{
+                      zIndex: 'inherit'
+                    }}
+                    onMouseEnter={(e) => {
+                      const target = e.currentTarget;
+                      target.style.zIndex = '100';
+                      target.style.transform = 'translateY(-4px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      const target = e.currentTarget;
+                      target.style.zIndex = 'inherit';
+                      target.style.transform = '';
+                    }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                     }}
                   />
+                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap z-50">
+                    {protocol.name}
+                  </div>
                 </div>
               ))}
             </div>
@@ -102,30 +135,36 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData }: LifetimeV
             }, { total: 0, bars: [] as JSX.Element[] }).bars}
           </div>
 
-          {/* Protocol Details in Single Row */}
-          <div className="flex justify-between items-center w-full gap-2">
-            {significantProtocols.map((protocol) => (
-              <div 
+          {/* Protocol Details in 3 Rows with 5 Items Each */}
+          <div className="grid grid-cols-5 gap-2">
+            {significantProtocols.slice(0, 15).map((protocol) => (
+              <Badge
                 key={protocol.id}
-                className="flex items-center gap-2 flex-1 justify-center p-2 rounded-lg"
+                variant="secondary"
+                className="flex items-center justify-between p-2 rounded-lg border-0 h-auto w-full min-w-0"
                 style={{ 
-                  backgroundColor: `${protocol.color}10`
+                  backgroundColor: getColorWithOpacity(protocol.color, 0.15),
+                  color: 'inherit'
                 }}
               >
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: protocol.color }}
-                />
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {protocol.name}
-                </span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  {formatVolume(protocol.value)}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {protocol.percentage.toFixed(1)}%
-                </span>
-              </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: protocol.color }}
+                  />
+                  <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                    {protocol.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                    {formatVolume(protocol.value)}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {protocol.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              </Badge>
             ))}
           </div>
         </div>

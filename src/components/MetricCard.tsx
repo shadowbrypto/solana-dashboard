@@ -66,24 +66,6 @@ export function MetricCard({
           <div className="flex justify-between items-start">
             <div className="flex flex-col gap-2">
               <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
-              {subtitle && (
-                <div className="flex items-center gap-2">
-                  {subtitleIcon && (
-                    <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                      <img 
-                        src={`/assets/logos/${subtitleIcon}`}
-                        alt={subtitle} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <span className="text-xs text-muted-foreground capitalize">{subtitle}</span>
-                </div>
-              )}
             </div>
             
             <div className="flex flex-col items-end gap-2">

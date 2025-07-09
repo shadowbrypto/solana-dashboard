@@ -75,10 +75,16 @@ const ErrorFallback = ({ error }: { error: Error }) => {
 const MetricCards = ({
   totalMetrics,
   loading = false,
+  protocol,
 }: {
   totalMetrics: ProtocolMetrics;
   loading?: boolean;
-}) => (
+  protocol?: string;
+}) => {
+  const protocolName = protocol && protocol !== 'all' ? getProtocolName(protocol as Protocol) : undefined;
+  const protocolLogo = protocol && protocol !== 'all' ? getProtocolLogoFilename(protocol as Protocol) : undefined;
+  
+  return (
   <div className="mb-6 lg:mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
     {loading ? (
       <>
@@ -94,27 +100,36 @@ const MetricCards = ({
           type="volume"
           value={totalMetrics.total_volume_usd ?? 0}
           prefix="$"
+          subtitle={protocolName}
+          subtitleIcon={protocolLogo}
         />
         <MetricCard
           title="Users"
           type="users"
           value={totalMetrics.numberOfNewUsers ?? 0}
+          subtitle={protocolName}
+          subtitleIcon={protocolLogo}
         />
         <MetricCard
           title="Trades"
           type="trades"
           value={totalMetrics.daily_trades ?? 0}
+          subtitle={protocolName}
+          subtitleIcon={protocolLogo}
         />
         <MetricCard
           title="Fees"
           type="fees"
           value={totalMetrics.total_fees_usd ?? 0}
           prefix="$"
+          subtitle={protocolName}
+          subtitleIcon={protocolLogo}
         />
       </>
     )}
   </div>
-);
+  );
+};
 
 const MainContent = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
@@ -543,7 +558,7 @@ const MainContent = (): JSX.Element => {
       )}
 
       {!protocol.endsWith('_evm') && (
-        <MetricCards totalMetrics={totalMetrics} loading={loading} />
+        <MetricCards totalMetrics={totalMetrics} loading={loading} protocol={protocol} />
       )}
 
       {protocol === "all" && (

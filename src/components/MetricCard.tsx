@@ -62,31 +62,28 @@ export function MetricCard({
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
       <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 sm:mb-4 lg:mb-6 gap-2 sm:gap-0">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
-            {subtitle && (
-              <div className="flex items-center gap-2">
-                {subtitleIcon && (
-                  <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                    <img 
-                      src={`/assets/logos/${subtitleIcon}`}
-                      alt={subtitle} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-                <span className="text-xs text-muted-foreground capitalize">{subtitle}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 justify-start sm:justify-end">
-            <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold transition-colors text-muted-foreground">
-              Lifetime
+        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
+              {subtitle && (
+                <div className="flex items-center gap-2">
+                  {subtitleIcon && (
+                    <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                      <img 
+                        src={`/assets/logos/${subtitleIcon}`}
+                        alt={subtitle} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <span className="text-xs text-muted-foreground capitalize">{subtitle}</span>
+                </div>
+              )}
             </div>
             {percentageChange && (
               <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
@@ -101,6 +98,12 @@ export function MetricCard({
                 </span>
               </div>
             )}
+          </div>
+          
+          <div className="flex justify-start">
+            <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2.5 py-1 text-xs font-medium transition-colors text-muted-foreground">
+              Lifetime
+            </div>
           </div>
         </div>
         

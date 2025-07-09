@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs } from "../lib/protocol-config";
+import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs, getProtocolLogoFilename } from "../lib/protocol-config";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface CategoryItemProps {
@@ -38,11 +38,29 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol }: C
               key={protocol}
               onClick={() => onSelectProtocol(protocol)}
               className={`
-                block w-full px-4 py-2 text-sm text-left rounded-md
+                flex items-center gap-3 w-full px-4 py-2 text-sm text-left rounded-md transition-colors
                 ${selectedProtocol === protocol ? 'bg-gray-700' : 'hover:bg-gray-700'}
               `}
             >
-              {getProtocolDisplayName(protocol)}
+              <div className="w-6 h-6 bg-gray-600 rounded-md overflow-hidden ring-1 ring-gray-500 flex-shrink-0">
+                <img 
+                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                  alt={getProtocolDisplayName(protocol)} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const container = target.parentElement;
+                    if (container) {
+                      container.innerHTML = '';
+                      container.className = 'w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center';
+                      const iconEl = document.createElement('div');
+                      iconEl.innerHTML = '<svg class="h-3 w-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                      container.appendChild(iconEl);
+                    }
+                  }}
+                />
+              </div>
+              <span className="truncate">{getProtocolDisplayName(protocol)}</span>
             </button>
           ))}
         </div>
@@ -94,11 +112,19 @@ export function CollapsibleSidebar() {
         <button
           onClick={() => handleProtocolSelect("all")}
           className={`
-            block w-full px-4 py-2 text-sm text-left rounded-md
+            flex items-center gap-3 w-full px-4 py-2 text-sm text-left rounded-md transition-colors
             ${selectedProtocol === "all" ? 'bg-gray-700' : 'hover:bg-gray-700'}
           `}
         >
-          All Protocols
+          <div className="w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center ring-1 ring-gray-500 flex-shrink-0">
+            <svg className="h-3 w-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect width="7" height="7" x="3" y="3" rx="1"/>
+              <rect width="7" height="7" x="14" y="3" rx="1"/>
+              <rect width="7" height="7" x="14" y="14" rx="1"/>
+              <rect width="7" height="7" x="3" y="14" rx="1"/>
+            </svg>
+          </div>
+          <span className="truncate">All Protocols</span>
         </button>
       </div>
 

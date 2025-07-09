@@ -62,7 +62,7 @@ export function MetricCard({
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
       <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
-        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-2 mb-4 sm:mb-6">
           <div className="flex justify-between items-start">
             <div className="flex flex-col gap-2">
               <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
@@ -85,24 +85,24 @@ export function MetricCard({
                 </div>
               )}
             </div>
-            {percentageChange && (
-              <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
-                isNegative 
-                  ? 'bg-destructive/10 text-destructive' 
-                  : 'bg-green-500/10 text-green-600 dark:text-green-400'
-              }`}>
-                <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                <span className="text-[10px] sm:text-xs font-medium">
-                  {isNegative ? "" : "+"}
-                  {percentageChange.toFixed(1)}%
-                </span>
+            
+            <div className="flex flex-col items-end gap-2">
+              <div className="inline-flex items-center rounded-lg bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium transition-colors text-gray-700 dark:text-gray-300">
+                Lifetime
               </div>
-            )}
-          </div>
-          
-          <div className="flex justify-start">
-            <div className="inline-flex items-center rounded-lg border bg-muted/50 px-2.5 py-1 text-xs font-medium transition-colors text-muted-foreground">
-              Lifetime
+              {percentageChange && (
+                <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
+                  isNegative 
+                    ? 'bg-destructive/10 text-destructive' 
+                    : 'bg-green-500/10 text-green-600 dark:text-green-400'
+                }`}>
+                  <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  <span className="text-[10px] sm:text-xs font-medium">
+                    {isNegative ? "" : "+"}
+                    {percentageChange.toFixed(1)}%
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -258,32 +258,15 @@ export function Layout() {
                               />
                             </div>
                             <span className="flex-1 text-left">{protocol.name}</span>
-                            <div className={cn(
-                              "flex items-center justify-center w-6 h-6 rounded-md",
-                              isEVM 
-                                ? "bg-blue-500/10" 
-                                : "bg-purple-500/10"
-                            )}>
-                              <img 
-                                src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
-                                alt={isEVM ? 'Ethereum' : 'Solana'} 
-                                className="w-4 h-4 object-cover rounded-sm"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = isEVM ? 'EVM' : 'SOL';
-                                    container.className = cn(
-                                      "text-xs px-1.5 py-0.5 rounded-md font-medium flex items-center justify-center",
-                                      isEVM 
-                                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                                    );
-                                  }
-                                }}
-                              />
-                            </div>
+                            <img 
+                              src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
+                              alt={isEVM ? 'Ethereum' : 'Solana'} 
+                              className="w-5 h-5 object-cover rounded-md"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.outerHTML = `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium ${isEVM ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'}">${isEVM ? 'EVM' : 'SOL'}</span>`;
+                              }}
+                            />
                           </Button>
                         );
                       })}
@@ -315,32 +298,15 @@ export function Layout() {
                   </div>
                   <span className="flex-1 text-left">{report.name}</span>
                   {report.chain && (
-                    <div className={cn(
-                      "flex items-center justify-center w-6 h-6 rounded-md",
-                      isEVM 
-                        ? "bg-blue-500/10" 
-                        : "bg-purple-500/10"
-                    )}>
-                      <img 
-                        src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
-                        alt={isEVM ? 'Ethereum' : 'Solana'} 
-                        className="w-4 h-4 object-cover rounded-sm"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const container = target.parentElement;
-                          if (container) {
-                            container.innerHTML = isEVM ? 'EVM' : 'SOL';
-                            container.className = cn(
-                              "text-xs px-1.5 py-0.5 rounded-md font-medium flex items-center justify-center",
-                              isEVM 
-                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                                : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                            );
-                          }
-                        }}
-                      />
-                    </div>
+                    <img 
+                      src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
+                      alt={isEVM ? 'Ethereum' : 'Solana'} 
+                      className="w-5 h-5 object-cover rounded-md"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.outerHTML = `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium ${isEVM ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'}">${isEVM ? 'EVM' : 'SOL'}</span>`;
+                      }}
+                    />
                   )}
                 </Button>
               );

@@ -258,15 +258,14 @@ export function Layout() {
                               />
                             </div>
                             <span className="flex-1 text-left">{protocol.name}</span>
-                            <img 
-                              src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
-                              alt={isEVM ? 'Ethereum' : 'Solana'} 
-                              className="w-5 h-5 object-cover rounded-md"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.outerHTML = `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium ${isEVM ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'}">${isEVM ? 'EVM' : 'SOL'}</span>`;
-                              }}
-                            />
+                            <span className={cn(
+                              "text-xs px-1.5 py-0.5 rounded-md font-medium",
+                              isEVM 
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                                : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                            )}>
+                              {isEVM ? "EVM" : "SOL"}
+                            </span>
                           </Button>
                         );
                       })}
@@ -298,15 +297,14 @@ export function Layout() {
                   </div>
                   <span className="flex-1 text-left">{report.name}</span>
                   {report.chain && (
-                    <img 
-                      src={`/assets/logos/${isEVM ? 'ethereum' : 'solana'}.jpg`}
-                      alt={isEVM ? 'Ethereum' : 'Solana'} 
-                      className="w-5 h-5 object-cover rounded-md"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.outerHTML = `<span class="text-xs px-1.5 py-0.5 rounded-md font-medium ${isEVM ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'}">${isEVM ? 'EVM' : 'SOL'}</span>`;
-                      }}
-                    />
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded-md font-medium",
+                      isEVM 
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                    )}>
+                      {isEVM ? "EVM" : "SOL"}
+                    </span>
                   )}
                 </Button>
               );

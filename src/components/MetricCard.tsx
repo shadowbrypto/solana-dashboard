@@ -61,22 +61,38 @@ export function MetricCard({
       componentName={`${title} Metric`}
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
-        <div className="flex flex-col gap-2 mb-4 sm:mb-6">
+      <div className="group relative rounded-xl border bg-gradient-to-br from-background via-background/95 to-muted/30 p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 cursor-default overflow-hidden">
+        {/* Subtle accent line */}
+        <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r transition-opacity duration-300 ${
+          type === 'volume' ? 'from-blue-500 to-cyan-500' :
+          type === 'users' ? 'from-green-500 to-emerald-500' :
+          type === 'trades' ? 'from-purple-500 to-violet-500' :
+          'from-orange-500 to-amber-500'
+        } opacity-0 group-hover:opacity-100`} />
+        
+        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
           <div className="flex justify-between items-start">
-            <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className={`p-2 rounded-lg transition-all duration-300 ${
+                type === 'volume' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20' :
+                type === 'users' ? 'bg-green-500/10 text-green-600 dark:text-green-400 group-hover:bg-green-500/20' :
+                type === 'trades' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20' :
+                'bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500/20'
+              }`}>
+                {getIcon()}
+              </div>
               <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
             </div>
             
             <div className="flex flex-col items-end gap-2">
-              <div className="inline-flex items-center rounded-lg bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium transition-colors text-gray-700 dark:text-gray-300">
+              <div className="inline-flex items-center rounded-lg bg-muted/50 border border-border/50 px-2.5 py-1 text-xs font-medium transition-all duration-200 text-muted-foreground group-hover:bg-muted/70 group-hover:border-border/70">
                 Lifetime
               </div>
               {percentageChange && (
-                <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 ${
+                <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 transition-all duration-200 ${
                   isNegative 
-                    ? 'bg-destructive/10 text-destructive' 
-                    : 'bg-green-500/10 text-green-600 dark:text-green-400'
+                    ? 'bg-destructive/10 text-destructive border border-destructive/20' 
+                    : 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
                 }`}>
                   <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   <span className="text-[10px] sm:text-xs font-medium">

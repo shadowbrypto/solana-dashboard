@@ -278,7 +278,7 @@ export default function UnifiedDailyReport() {
               chainType === 'solana' ? 'ring-purple-500/30 scale-110' : ''
             }`}>
               <img 
-                src="/src/assets/logos/solana.jpg"
+                src="/assets/logos/solana.jpg"
                 alt="Solana" 
                 className={`w-full h-full object-cover transition-all duration-300 ${
                   chainType === 'solana' ? 'brightness-110' : ''
@@ -309,7 +309,7 @@ export default function UnifiedDailyReport() {
               chainType === 'evm' ? 'ring-blue-500/30 scale-110' : ''
             }`}>
               <img 
-                src="/public/assets/logos/ethereum.jpg"
+                src="/assets/logos/ethereum.jpg"
                 alt="Ethereum" 
                 className={`w-full h-full object-cover transition-all duration-300 ${
                   chainType === 'evm' ? 'brightness-110' : ''

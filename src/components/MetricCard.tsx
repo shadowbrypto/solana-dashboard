@@ -64,7 +64,7 @@ export function MetricCard({
       <div className="rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-foreground/20 cursor-default">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 sm:mb-4 lg:mb-6 gap-2 sm:gap-0">
           <div className="flex flex-col gap-2">
-            <h3 className="text-foreground text-sm sm:text-md font-semibold truncate">{title}</h3>
+            <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
             {subtitle && (
               <div className="flex items-center gap-2">
                 {subtitleIcon && (

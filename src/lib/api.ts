@@ -91,6 +91,14 @@ export interface ProtocolSyncStatus {
   days_behind?: number;
 }
 
+export interface ProtocolLatestDate {
+  protocol_name: string;
+  latest_date: string;
+  is_current: boolean;
+  days_behind: number;
+  chain: string;
+}
+
 export const protocolApi = {
   // Get protocol stats with optional filtering
   async getProtocolStats(protocolName?: string | string[]): Promise<ProtocolStats[]> {
@@ -154,6 +162,11 @@ export const protocolApi = {
   // Get sync status for a specific protocol
   async getProtocolSyncStatus(protocolName: string): Promise<ProtocolSyncStatus> {
     return apiRequest<ProtocolSyncStatus>(`/protocols/sync-status/${protocolName}`);
+  },
+
+  // Get latest data dates for SOL protocols only
+  async getLatestDataDates(): Promise<ProtocolLatestDate[]> {
+    return apiRequest<ProtocolLatestDate[]>('/protocols/latest-dates');
   }
 };
 

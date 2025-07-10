@@ -59,7 +59,7 @@ export default function WeeklyReport() {
   const endDate = selectedEndDate;
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="p-2 sm:p-4 lg:p-4">
       {/* Header */}
       <div className="mb-6 lg:mb-8">
         <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">

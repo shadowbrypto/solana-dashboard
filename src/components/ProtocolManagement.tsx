@@ -14,8 +14,8 @@ import {
   loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw } from 'lucide-react';
-import { dataSyncApi, protocolApi, ProtocolSyncStatus } from '../lib/api';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Calendar, Clock } from 'lucide-react';
+import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
 import {
@@ -40,6 +40,7 @@ interface SortableProtocolProps {
   onRefresh: (protocolId: string) => void;
   isRefreshing: boolean;
   syncStatus?: ProtocolSyncStatus;
+  latestDate?: ProtocolLatestDate;
 }
 
 interface DroppableCategoryProps {
@@ -48,9 +49,10 @@ interface DroppableCategoryProps {
   onRefresh: (protocolId: string) => void;
   refreshingProtocols: Set<string>;
   syncStatuses: Map<string, ProtocolSyncStatus>;
+  latestDates: Map<string, ProtocolLatestDate>;
 }
 
-function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols, syncStatuses }: DroppableCategoryProps) {
+function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols, syncStatuses, latestDates }: DroppableCategoryProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `category-${category}`,
   });
@@ -73,6 +75,7 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
               onRefresh={onRefresh}
               isRefreshing={refreshingProtocols.has(protocol.id)}
               syncStatus={syncStatuses.get(protocol.id)}
+              latestDate={latestDates.get(protocol.id)}
             />
           ))}
         </div>
@@ -91,7 +94,7 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
   );
 }
 
-function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncStatus }: SortableProtocolProps) {
+function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncStatus, latestDate }: SortableProtocolProps) {
   const {
     attributes,
     listeners,
@@ -149,7 +152,17 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
           <div className="flex items-center gap-1 mt-1">
             <AlertCircle className="h-3 w-3 text-amber-500" />
             <span className="text-xs text-amber-500">
-              {syncStatus.days_behind ? `${syncStatus.days_behind} days old` : 'No recent data'}
+              {syncStatus.latest_data_date 
+                ? `Latest: ${new Date(syncStatus.latest_data_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                : 'No recent data'}
+            </span>
+          </div>
+        )}
+        {latestDate && !latestDate.is_current && (
+          <div className="flex items-center gap-1 mt-1" title={`${latestDate.days_behind} days behind current date`}>
+            <Clock className="h-3 w-3 text-red-500" />
+            <span className="text-xs text-red-500">
+              Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
         )}
@@ -181,6 +194,8 @@ export function ProtocolManagement() {
   const [refreshingProtocols, setRefreshingProtocols] = useState<Set<string>>(new Set());
   const [syncStatuses, setSyncStatuses] = useState<Map<string, ProtocolSyncStatus>>(new Map());
   const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
+  const [latestDates, setLatestDates] = useState<Map<string, ProtocolLatestDate>>(new Map());
+  const [isCheckingLatestDates, setIsCheckingLatestDates] = useState(false);
   const { toast } = useToast();
   
   const categories = getMutableAllCategoriesIncludingEVM(); // Show all protocols including EVM in management
@@ -394,6 +409,45 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleCheckLatestDates = async () => {
+    if (isCheckingLatestDates) return;
+    
+    setIsCheckingLatestDates(true);
+    try {
+      const dates = await protocolApi.getLatestDataDates();
+      const datesMap = new Map(dates.map(d => [d.protocol_name, d]));
+      setLatestDates(datesMap);
+      
+      const outdatedSolProtocols = dates.filter(d => !d.is_current && d.chain === 'solana').length;
+      const outdatedEvmProtocols = dates.filter(d => !d.is_current && d.chain === 'evm').length;
+      const totalOutdated = outdatedSolProtocols + outdatedEvmProtocols;
+      
+      let description = '';
+      if (totalOutdated === 0) {
+        description = "All protocols have current data";
+      } else {
+        const parts = [];
+        if (outdatedSolProtocols > 0) parts.push(`${outdatedSolProtocols} SOL`);
+        if (outdatedEvmProtocols > 0) parts.push(`${outdatedEvmProtocols} EVM`);
+        description = `Found ${parts.join(' and ')} protocol(s) with outdated data`;
+      }
+      
+      toast({
+        variant: totalOutdated > 0 ? "destructive" : "success",
+        title: "Latest Dates Checked",
+        description,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Check Failed",
+        description: error instanceof Error ? error.message : "Failed to check latest dates",
+      });
+    } finally {
+      setIsCheckingLatestDates(false);
+    }
+  };
+
   const activeProtocol = activeId ? getMutableProtocolConfigs().find(p => p.id === activeId) : null;
 
   return (
@@ -471,6 +525,7 @@ export function ProtocolManagement() {
                       onRefresh={handleRefreshProtocol}
                       refreshingProtocols={refreshingProtocols}
                       syncStatuses={syncStatuses}
+                      latestDates={latestDates}
                     />
                   </div>
                 );
@@ -505,45 +560,72 @@ export function ProtocolManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-            <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-            <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-              This will force a complete data refresh from Dune Analytics, bypassing all time restrictions.
-            </p>
-            <div className="flex gap-2">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
+              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
+                This will force a complete data refresh from Dune Analytics, bypassing all time restrictions.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleHardRefresh}
+                  disabled={isRefreshingSolana}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isRefreshingSolana ? (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Refresh Solana Data
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleRefreshAllEVM}
+                  disabled={isRefreshingEVM}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isRefreshingEVM ? (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Refresh EVM Data
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+                Check if all protocols have current data and highlight any outdated ones.
+              </p>
               <Button
-                onClick={handleHardRefresh}
-                disabled={isRefreshingSolana}
+                onClick={handleCheckLatestDates}
+                disabled={isCheckingLatestDates}
                 variant="outline"
                 size="sm"
               >
-                {isRefreshingSolana ? (
+                {isCheckingLatestDates ? (
                   <>
-                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
+                    <Clock className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
                   </>
                 ) : (
                   <>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Refresh Solana Data
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={handleRefreshAllEVM}
-                disabled={isRefreshingEVM}
-                variant="outline"
-                size="sm"
-              >
-                {isRefreshingEVM ? (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Refresh EVM Data
+                    <Clock className="mr-2 h-4 w-4" />
+                    Check Latest Dates
                   </>
                 )}
               </Button>

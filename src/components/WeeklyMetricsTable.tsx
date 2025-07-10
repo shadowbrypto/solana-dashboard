@@ -632,7 +632,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const startDate = subDays(endDate, 6);
 
   return (
-    <div className="space-y-3" data-table="weekly-metrics-full">
+    <div className="relative space-y-3" data-table="weekly-metrics-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 group">
             <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
@@ -1071,28 +1071,25 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           </Table>
         </div>
         
-        <div className="flex justify-end items-end pt-4">
-          {/* Download and Copy buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadReport}
-              className="no-screenshot"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              className="no-screenshot"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy
-            </Button>
-          </div>
+        <div className="absolute top-4 right-4 flex gap-2 no-screenshot">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadReport}
+            className="shadow-sm bg-background/95 backdrop-blur-sm"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyToClipboard}
+            className="shadow-sm bg-background/95 backdrop-blur-sm"
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy
+          </Button>
         </div>
       </div>
   );

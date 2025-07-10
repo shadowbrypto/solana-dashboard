@@ -870,3 +870,70 @@ export async function getEVMDailyData(protocol: string, dateStr: string) {
   }
 }
 
+// Get latest data dates for all protocols (SOL and EVM)
+export async function getLatestDataDates(): Promise<{
+  protocol_name: string;
+  latest_date: string;
+  is_current: boolean;
+  days_behind: number;
+  chain: string;
+}[]> {
+  try {
+    // Get the latest date for each protocol (both SOL and EVM)
+    const { data: latestDates, error } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, chain')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    // Get current date (today)
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Group by protocol and chain to get the latest date for each
+    const protocolLatestDates = new Map<string, { date: string; chain: string }>();
+    
+    latestDates?.forEach(row => {
+      const protocol = row.protocol_name;
+      const date = row.date;
+      const chain = row.chain;
+      
+      // Normalize protocol names - remove _evm suffix if present for consistency
+      const normalizedProtocol = protocol.endsWith('_evm') ? protocol.slice(0, -4) : protocol;
+      
+      // Create unique key for each protocol/chain combination
+      const key = chain === 'solana' ? normalizedProtocol : `${normalizedProtocol}_evm`;
+      
+      if (!protocolLatestDates.has(key) || date > protocolLatestDates.get(key)!.date) {
+        protocolLatestDates.set(key, { date, chain: chain === 'solana' ? 'solana' : 'evm' });
+      }
+    });
+
+    // Convert to result format
+    const result = Array.from(protocolLatestDates.entries()).map(([key, { date: latestDate, chain }]) => {
+      const daysBehind = Math.floor((today.getTime() - new Date(latestDate).getTime()) / (1000 * 60 * 60 * 24));
+      const isCurrent = latestDate === todayStr || daysBehind <= 1; // Consider current if today or yesterday
+      
+      // Extract protocol name (remove _evm suffix if present)
+      const protocolName = key.endsWith('_evm') ? key.slice(0, -4) : key;
+      
+      return {
+        protocol_name: protocolName,
+        latest_date: latestDate,
+        is_current: isCurrent,
+        days_behind: Math.max(0, daysBehind),
+        chain: chain
+      };
+    });
+
+    // Sort by days behind (most behind first)
+    result.sort((a, b) => b.days_behind - a.days_behind);
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching latest data dates:', error);
+    throw error;
+  }
+}
+

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -387,6 +387,22 @@ router.get('/sync-status/:protocol', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch protocol sync status',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/latest-dates
+// Get latest data dates for SOL protocols only
+router.get('/latest-dates', async (req: Request, res: Response) => {
+  try {
+    const latestDates = await getLatestDataDates();
+    res.json({ success: true, data: latestDates });
+  } catch (error) {
+    console.error('Error fetching latest data dates:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch latest data dates',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

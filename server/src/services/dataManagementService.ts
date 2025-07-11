@@ -266,17 +266,58 @@ export class DataManagementService {
           const existingRow = mergedMap.get(dateKey);
           const mergedRow = { ...existingRow };
 
-          // Sum numeric fields
+          // Sum numeric fields, handling <nil> values
           ['total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'total_fees_usd'].forEach(field => {
-            const existingValue = parseFloat(existingRow[field]) || 0;
-            const newValue = parseFloat(row[field]) || 0;
+            // Handle <nil> values before parsing
+            let existingVal = existingRow[field];
+            let newVal = row[field];
+            
+            if (existingVal === '<nil>' || existingVal === null || existingVal === undefined || existingVal === '') {
+              existingVal = '0';
+            }
+            if (newVal === '<nil>' || newVal === null || newVal === undefined || newVal === '') {
+              newVal = '0';
+            }
+            
+            // Convert scientific notation if present
+            if (typeof existingVal === 'string' && existingVal.toLowerCase().includes('e+')) {
+              try {
+                existingVal = parseFloat(existingVal).toString();
+              } catch (e) {
+                existingVal = '0';
+              }
+            }
+            if (typeof newVal === 'string' && newVal.toLowerCase().includes('e+')) {
+              try {
+                newVal = parseFloat(newVal).toString();
+              } catch (e) {
+                newVal = '0';
+              }
+            }
+            
+            const existingValue = parseFloat(existingVal) || 0;
+            const newValue = parseFloat(newVal) || 0;
             mergedRow[field] = (existingValue + newValue).toString();
           });
 
           mergedMap.set(dateKey, mergedRow);
         } else {
-          // Add new row
-          mergedMap.set(dateKey, { ...row });
+          // Add new row, cleaning <nil> values
+          const cleanedRow = { ...row };
+          ['total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'total_fees_usd'].forEach(field => {
+            if (cleanedRow[field] === '<nil>' || cleanedRow[field] === null || cleanedRow[field] === undefined || cleanedRow[field] === '') {
+              cleanedRow[field] = '0';
+            }
+            // Convert scientific notation if present
+            if (typeof cleanedRow[field] === 'string' && cleanedRow[field].toLowerCase().includes('e+')) {
+              try {
+                cleanedRow[field] = parseFloat(cleanedRow[field]).toString();
+              } catch (e) {
+                cleanedRow[field] = '0';
+              }
+            }
+          });
+          mergedMap.set(dateKey, cleanedRow);
         }
       });
     });
@@ -419,6 +460,29 @@ export class DataManagementService {
           if (COLUMN_MAP[csvCol] === "date" && value) {
             const [day, month, year] = value.split("/");
             value = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+          }
+          
+          // Handle <nil> values by replacing with 0 for numeric fields
+          if (value === '<nil>' || value === null || value === undefined || value === '') {
+            const numericFields = ['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'];
+            if (numericFields.includes(COLUMN_MAP[csvCol])) {
+              value = '0';
+            }
+          }
+          
+          // Convert scientific notation to decimal for numeric fields
+          if (value && typeof value === 'string' && value.toLowerCase().includes('e+')) {
+            const numericFields = ['volume_usd', 'fees_usd'];
+            if (numericFields.includes(COLUMN_MAP[csvCol])) {
+              try {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue)) {
+                  value = numValue.toFixed(2);
+                }
+              } catch (error) {
+                console.warn(`Failed to convert scientific notation for ${csvCol}: ${value}`);
+              }
+            }
           }
           
           mappedRow[COLUMN_MAP[csvCol]] = value;

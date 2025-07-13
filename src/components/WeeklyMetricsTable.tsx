@@ -534,15 +534,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             quality: 1,
             bgcolor: '#ffffff',
             width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 60,
+            height: tableElement.scrollHeight + 10,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              paddingTop: '30px',
+              paddingTop: '20px',
               paddingLeft: '20px',
               paddingRight: '20px',
-              paddingBottom: '30px',
+              paddingBottom: '0px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -583,15 +583,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             quality: 1,
             bgcolor: '#ffffff',
             width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 60,
+            height: tableElement.scrollHeight + 10,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              paddingTop: '30px',
+              paddingTop: '20px',
               paddingLeft: '20px',
               paddingRight: '20px',
-              paddingBottom: '30px',
+              paddingBottom: '0px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -1071,12 +1071,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           </Table>
         </div>
         
-        <div className="absolute top-4 right-4 flex gap-2 no-screenshot">
+        {/* Action buttons below the table */}
+        <div className="flex justify-end gap-2 mt-4 no-screenshot">
           <Button
             variant="outline"
             size="sm"
             onClick={downloadReport}
-            className="shadow-sm bg-background/95 backdrop-blur-sm"
+            className="shadow-sm"
           >
             <Download className="h-4 w-4 mr-2" />
             Download
@@ -1085,7 +1086,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             variant="outline"
             size="sm"
             onClick={copyToClipboard}
-            className="shadow-sm bg-background/95 backdrop-blur-sm"
+            className="shadow-sm"
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy

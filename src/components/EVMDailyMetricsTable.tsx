@@ -427,7 +427,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 shadow-sm overflow-hidden">
       <div data-table="evm-daily-metrics" className="space-y-4">
         <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

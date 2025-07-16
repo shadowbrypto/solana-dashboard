@@ -276,7 +276,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4" data-table="evm-weekly-metrics">
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3" data-table="evm-weekly-metrics">
       <div className="flex items-center justify-between pb-4">
         <h3 className="text-lg font-semibold text-foreground">EVM Weekly Volume</h3>
         <div className="flex items-center gap-2">

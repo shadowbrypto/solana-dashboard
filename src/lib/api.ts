@@ -178,12 +178,23 @@ export const dataSyncApi = {
     });
   },
 
-  // Sync both Solana and EVM data
+  // Sync both Solana and EVM data sequentially to avoid overwhelming the server
   async syncAllData(): Promise<{ solana: { csvFilesFetched: number; timestamp: string }, evm: { csvFilesFetched: number; rowsImported: number; timestamp: string } }> {
-    const [solanaResult, evmResult] = await Promise.all([
-      this.syncData(),
-      this.syncEVMData()
-    ]);
+    console.log('Starting sequential data sync...');
+    
+    // Sync Solana data first
+    console.log('Syncing Solana data...');
+    const solanaResult = await this.syncData();
+    console.log('Solana sync completed:', solanaResult);
+    
+    // Wait 2 seconds before starting EVM sync to prevent server overload
+    console.log('Waiting 2 seconds before EVM sync...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Then sync EVM data
+    console.log('Syncing EVM data...');
+    const evmResult = await this.syncEVMData();
+    console.log('EVM sync completed:', evmResult);
     
     return {
       solana: solanaResult,

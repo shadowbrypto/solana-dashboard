@@ -324,7 +324,7 @@ export class UnifiedProtocolService {
       return acc;
     }, {});
     
-    const totalVolume = Object.values(chainTotals).reduce((sum: number, vol: number) => sum + vol, 0);
+    const totalVolume = Object.values(chainTotals).reduce((sum: number, vol: unknown) => sum + (vol as number), 0);
     
     const chainBreakdown = Object.entries(chainTotals)
       .map(([chain, volume]) => ({

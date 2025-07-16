@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { unifiedProtocolService, StandardQueryParams } from '../services/unifiedProtocolService.js';
+import { unifiedProtocolService, StandardQueryParams, UnifiedProtocolService } from '../services/unifiedProtocolService.js';
 
 const router = Router();
 
@@ -245,7 +245,7 @@ router.post('/clear-cache', async (req: Request, res: Response) => {
   try {
     const { pattern } = req.body;
     
-    unifiedProtocolService.constructor.clearCache(pattern);
+    UnifiedProtocolService.clearCache(pattern);
     
     res.json({
       success: true,

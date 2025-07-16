@@ -276,7 +276,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-2" data-table="evm-weekly-metrics">
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 pt-2 pl-2 pr-1 pb-1" data-table="evm-weekly-metrics">
       <div className="flex items-center justify-between pb-4">
         <h3 className="text-lg font-semibold text-foreground">EVM Weekly Volume</h3>
         <div className="flex items-center gap-2">
@@ -567,7 +567,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       </div>
       
       {/* Action buttons below the table */}
-      <div className="flex justify-end gap-2 mt-4 no-screenshot">
+      <div className="flex justify-end gap-2 mt-2 no-screenshot">
         <Button
           variant="outline"
           size="sm"

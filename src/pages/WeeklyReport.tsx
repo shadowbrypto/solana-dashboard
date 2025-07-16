@@ -100,7 +100,7 @@ export default function WeeklyReport() {
   return (
     <div className="">
       {/* Header with Toggle */}
-      <div className="mb-4">
+      <div className="mb-2">
         <>
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">

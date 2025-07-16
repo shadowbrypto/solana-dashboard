@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { WeeklyMetricsTable } from '../components/WeeklyMetricsTable';
-import { getMutableAllCategories, getMutableProtocolsByCategory } from '../lib/protocol-config';
+import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByChain } from '../lib/protocol-config';
 import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent } from '../components/ui/card';
 import { CalendarIcon } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks, subDays } from 'date-fns';
 
+type ChainType = 'solana' | 'evm';
+
+// Skeleton component for the toggle area
+const ToggleSkeleton = () => (
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <Skeleton className="h-8 w-32" /> {/* Title */}
+      <Skeleton className="h-6 w-12" /> {/* Badge */}
+    </div>
+    <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
+      <Skeleton className="h-10 w-[100px] rounded-lg" /> {/* Solana button */}
+      <Skeleton className="h-10 w-[100px] rounded-lg" /> {/* EVM button */}
+    </div>
+  </div>
+);
+
 export default function WeeklyReport() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isChainLoading, setIsChainLoading] = useState(false);
+  
+  // Initialize chain type from localStorage or default to solana
+  const [chainType, setChainType] = useState<ChainType>(() => {
+    const saved = localStorage.getItem('preferredChainType') as ChainType;
+    return saved && ['solana', 'evm'].includes(saved) ? saved : 'solana';
+  });
   
   // Date validation - ensure we start with a valid date (excluding today)
   const getValidInitialDate = () => {
@@ -32,16 +55,50 @@ export default function WeeklyReport() {
   
   const [selectedEndDate, setSelectedEndDate] = useState(getValidInitialDate());
 
-  // Get all protocols for the table
-  const protocols: Protocol[] = [];
-  getMutableAllCategories().forEach(categoryName => {
-    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
-    categoryProtocols.forEach(p => {
-      if (!protocols.includes(p.id as Protocol)) {
-        protocols.push(p.id as Protocol);
-      }
-    });
-  });
+  // Get protocols based on chain type
+  const protocols = useMemo(() => {
+    if (chainType === 'evm') {
+      // Return EVM protocols
+      return getProtocolsByChain('evm').map(p => p.id as Protocol);
+    } else {
+      // Return Solana protocols
+      const solProtocols: Protocol[] = [];
+      getMutableAllCategories().forEach(categoryName => {
+        const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+        categoryProtocols.forEach(p => {
+          if (!solProtocols.includes(p.id as Protocol)) {
+            solProtocols.push(p.id as Protocol);
+          }
+        });
+      });
+      return solProtocols;
+    }
+  }, [chainType]);
+
+  // Handle chain type switching with loading state
+  const handleChainTypeChange = useCallback(async (newChainType: ChainType) => {
+    if (newChainType === chainType) return;
+    
+    setIsChainLoading(true);
+    
+    // Store the previous chain type for potential rollback
+    const previousChainType = chainType;
+    setChainType(newChainType);
+    
+    try {
+      // Simulate API call delay for smooth transition
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Persist the chain type preference
+      localStorage.setItem('preferredChainType', newChainType);
+    } catch (error) {
+      console.error('Failed to switch chain type:', error);
+      // Rollback on error
+      setChainType(previousChainType);
+    } finally {
+      setIsChainLoading(false);
+    }
+  }, [chainType]);
 
   const handleDateChange = (newEndDate: Date) => {
     const minDate = new Date('2024-01-01');
@@ -60,18 +117,97 @@ export default function WeeklyReport() {
 
   return (
     <div className="p-2 sm:p-4 lg:p-4">
-      {/* Header */}
+      {/* Header with Toggle */}
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-          Weekly Report
-        </h1>
-        <p className="text-center text-muted-foreground mt-2">
-          {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-        </p>
+        {isChainLoading ? (
+          <ToggleSkeleton />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+                Weekly Report
+                <span className={`text-xs px-2 py-1 rounded-md font-medium ${
+                  chainType === 'solana' 
+                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                    : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                }`}>
+                  {chainType === 'solana' ? 'SOL' : 'EVM'}
+                </span>
+              </h1>
+              
+              {/* Chain Type Toggle */}
+              <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">
+                {/* Sliding background indicator with glow effect */}
+                <div 
+                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-background to-background/95 rounded-lg shadow-md transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    chainType === 'solana' 
+                      ? 'left-1 shadow-purple-500/20' 
+                      : 'left-[calc(50%+2px)] shadow-blue-500/20'
+                  }`}
+                />
+                
+                {/* Animated glow background */}
+                <div 
+                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg opacity-20 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    chainType === 'solana' 
+                      ? 'left-1 bg-gradient-to-r from-purple-500 to-violet-500' 
+                      : 'left-[calc(50%+2px)] bg-gradient-to-r from-blue-500 to-cyan-500'
+                  }`}
+                />
+                
+                {/* Solana Button */}
+                <button
+                  onClick={() => handleChainTypeChange('solana')}
+                  className={`relative z-10 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 min-w-[100px] justify-center ${
+                    chainType === 'solana'
+                      ? 'text-foreground scale-105'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full overflow-hidden ring-1 ring-border/20 bg-background transition-all duration-300 ${
+                    chainType === 'solana' ? 'ring-purple-500/30 scale-110' : ''
+                  }`}>
+                    <img 
+                      src="/assets/logos/solana.jpg" 
+                      alt="Solana" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span>SOL</span>
+                </button>
+                
+                {/* EVM Button */}
+                <button
+                  onClick={() => handleChainTypeChange('evm')}
+                  className={`relative z-10 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 min-w-[100px] justify-center ${
+                    chainType === 'evm'
+                      ? 'text-foreground scale-105'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full overflow-hidden ring-1 ring-border/20 bg-background transition-all duration-300 ${
+                    chainType === 'evm' ? 'ring-blue-500/30 scale-110' : ''
+                  }`}>
+                    <img 
+                      src="/assets/logos/ethereum.jpg" 
+                      alt="Ethereum" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span>EVM</span>
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-center text-muted-foreground mt-2">
+              {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+            </p>
+          </>
+        )}
       </div>
 
-      {/* Weekly Metrics Table */}
-      {isLoading ? (
+      {/* Content based on chain type */}
+      {isLoading || isChainLoading ? (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -80,12 +216,40 @@ export default function WeeklyReport() {
             </div>
           </CardContent>
         </Card>
-      ) : (
+      ) : chainType === 'solana' ? (
         <WeeklyMetricsTable 
           protocols={protocols} 
           endDate={endDate}
           onDateChange={handleDateChange}
         />
+      ) : (
+        // EVM Weekly Report Placeholder
+        <Card>
+          <CardContent className="p-12">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center">
+                <img 
+                  src="/assets/logos/ethereum.jpg" 
+                  alt="Ethereum" 
+                  className="w-10 h-10 rounded-full"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">EVM Weekly Report</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                EVM weekly analytics are coming soon. We're working on bringing you comprehensive 
+                cross-chain analytics for Ethereum and other EVM-compatible networks.
+              </p>
+              <div className="flex justify-center gap-2 pt-4">
+                <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm">
+                  Coming Soon
+                </div>
+                <div className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm">
+                  Q1 2025
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -937,7 +937,10 @@ export async function getLatestDataDates(): Promise<{
   }
 }
 
-export async function getEVMWeeklyMetrics(startDate: string, endDate: string): Promise<Record<string, Record<string, number>>> {
+export async function getEVMWeeklyMetrics(startDate: string, endDate: string): Promise<{
+  dailyVolumes: Record<string, Record<string, number>>;
+  chainDistribution: Record<string, Record<string, number>>;
+}> {
   console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
   
   const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
@@ -963,26 +966,34 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string): P
     console.log(`Found ${weeklyData?.length || 0} EVM weekly records`);
 
     // Process the data by protocol and date
-    const result: Record<string, Record<string, number>> = {};
+    const dailyVolumes: Record<string, Record<string, number>> = {};
+    const chainDistribution: Record<string, Record<string, number>> = {};
 
     if (weeklyData) {
       weeklyData.forEach(record => {
         const protocolName = record.protocol_name;
         const date = record.date;
+        const chain = record.chain;
         const volume = Number(record.volume_usd) || 0;
 
         // Initialize protocol if not exists
-        if (!result[protocolName]) {
-          result[protocolName] = {};
+        if (!dailyVolumes[protocolName]) {
+          dailyVolumes[protocolName] = {};
+        }
+        if (!chainDistribution[protocolName]) {
+          chainDistribution[protocolName] = {};
         }
 
         // Aggregate volume by date (sum across all chains for that protocol)
-        result[protocolName][date] = (result[protocolName][date] || 0) + volume;
+        dailyVolumes[protocolName][date] = (dailyVolumes[protocolName][date] || 0) + volume;
+        
+        // Aggregate volume by chain for the entire period
+        chainDistribution[protocolName][chain] = (chainDistribution[protocolName][chain] || 0) + volume;
       });
     }
 
-    console.log(`Processed EVM weekly data for ${Object.keys(result).length} protocols`);
-    return result;
+    console.log(`Processed EVM weekly data for ${Object.keys(dailyVolumes).length} protocols`);
+    return { dailyVolumes, chainDistribution };
 
   } catch (error) {
     console.error('Error in getEVMWeeklyMetrics:', error);

@@ -5,8 +5,7 @@ import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByC
 import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent } from '../components/ui/card';
-import { CalendarIcon } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, isAfter, isBefore, subWeeks, subDays } from 'date-fns';
+import { format, isAfter, isBefore, subDays } from 'date-fns';
 
 type ChainType = 'solana' | 'evm';
 
@@ -26,7 +25,6 @@ const ToggleSkeleton = () => (
 
 export default function WeeklyReport() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isChainLoading, setIsChainLoading] = useState(false);
   
   // Initialize chain type from localStorage or default to solana
   const [chainType, setChainType] = useState<ChainType>(() => {
@@ -76,29 +74,12 @@ export default function WeeklyReport() {
     }
   }, [chainType]);
 
-  // Handle chain type switching with loading state
-  const handleChainTypeChange = useCallback(async (newChainType: ChainType) => {
+  // Handle chain type switching
+  const handleChainTypeChange = useCallback((newChainType: ChainType) => {
     if (newChainType === chainType) return;
     
-    setIsChainLoading(true);
-    
-    // Store the previous chain type for potential rollback
-    const previousChainType = chainType;
     setChainType(newChainType);
-    
-    try {
-      // Simulate API call delay for smooth transition
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Persist the chain type preference
-      localStorage.setItem('preferredChainType', newChainType);
-    } catch (error) {
-      console.error('Failed to switch chain type:', error);
-      // Rollback on error
-      setChainType(previousChainType);
-    } finally {
-      setIsChainLoading(false);
-    }
+    localStorage.setItem('preferredChainType', newChainType);
   }, [chainType]);
 
   const handleDateChange = (newEndDate: Date) => {
@@ -120,10 +101,7 @@ export default function WeeklyReport() {
     <div className="p-2 sm:p-4 lg:p-4">
       {/* Header with Toggle */}
       <div className="mb-6 lg:mb-8">
-        {isChainLoading ? (
-          <ToggleSkeleton />
-        ) : (
-          <>
+        <>
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
                 Weekly Report
@@ -200,15 +178,11 @@ export default function WeeklyReport() {
               </div>
             </div>
             
-            <p className="text-center text-muted-foreground mt-2">
-              {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-            </p>
-          </>
-        )}
+        </>
       </div>
 
       {/* Content based on chain type */}
-      {isLoading || isChainLoading ? (
+      {isLoading ? (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">

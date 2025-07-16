@@ -171,12 +171,18 @@ export const protocolApi = {
   },
 
   // Get EVM weekly metrics for a date range
-  async getEVMWeeklyMetrics(startDate: Date, endDate: Date): Promise<Record<Protocol, Record<string, number>>> {
+  async getEVMWeeklyMetrics(startDate: Date, endDate: Date): Promise<{
+    dailyVolumes: Record<Protocol, Record<string, number>>;
+    chainDistribution: Record<Protocol, Record<string, number>>;
+  }> {
     const startDateStr = format(startDate, 'yyyy-MM-dd');
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const endpoint = `/protocols/evm-weekly-metrics?startDate=${startDateStr}&endDate=${endDateStr}`;
     
-    return apiRequest<Record<Protocol, Record<string, number>>>(endpoint);
+    return apiRequest<{
+      dailyVolumes: Record<Protocol, Record<string, number>>;
+      chainDistribution: Record<Protocol, Record<string, number>>;
+    }>(endpoint);
   }
 };
 

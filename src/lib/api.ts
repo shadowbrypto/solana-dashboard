@@ -1,4 +1,5 @@
 import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
+import { format } from 'date-fns';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -167,6 +168,15 @@ export const protocolApi = {
   // Get latest data dates for SOL protocols only
   async getLatestDataDates(): Promise<ProtocolLatestDate[]> {
     return apiRequest<ProtocolLatestDate[]>('/protocols/latest-dates');
+  },
+
+  // Get EVM weekly metrics for a date range
+  async getEVMWeeklyMetrics(startDate: Date, endDate: Date): Promise<Record<Protocol, Record<string, number>>> {
+    const startDateStr = format(startDate, 'yyyy-MM-dd');
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    const endpoint = `/protocols/evm-weekly-metrics?startDate=${startDateStr}&endDate=${endDateStr}`;
+    
+    return apiRequest<Record<Protocol, Record<string, number>>>(endpoint);
   }
 };
 

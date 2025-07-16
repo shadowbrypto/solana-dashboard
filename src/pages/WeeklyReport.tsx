@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { WeeklyMetricsTable } from '../components/WeeklyMetricsTable';
+import { EVMWeeklyMetricsTable } from '../components/EVMWeeklyMetricsTable';
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByChain } from '../lib/protocol-config';
 import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
@@ -223,33 +224,12 @@ export default function WeeklyReport() {
           onDateChange={handleDateChange}
         />
       ) : (
-        // EVM Weekly Report Placeholder
-        <Card>
-          <CardContent className="p-12">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center">
-                <img 
-                  src="/assets/logos/ethereum.jpg" 
-                  alt="Ethereum" 
-                  className="w-10 h-10 rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground">EVM Weekly Report</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                EVM weekly analytics are coming soon. We're working on bringing you comprehensive 
-                cross-chain analytics for Ethereum and other EVM-compatible networks.
-              </p>
-              <div className="flex justify-center gap-2 pt-4">
-                <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-sm">
-                  Coming Soon
-                </div>
-                <div className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm">
-                  Q1 2025
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        // EVM Weekly Report
+        <EVMWeeklyMetricsTable 
+          protocols={protocols} 
+          endDate={endDate}
+          onDateChange={handleDateChange}
+        />
       )}
     </div>
   );

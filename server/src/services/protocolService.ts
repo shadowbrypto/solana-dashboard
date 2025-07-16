@@ -937,3 +937,56 @@ export async function getLatestDataDates(): Promise<{
   }
 }
 
+export async function getEVMWeeklyMetrics(startDate: string, endDate: string): Promise<Record<string, Record<string, number>>> {
+  console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
+  
+  const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
+  const evmProtocols = getEVMProtocols();
+  
+  try {
+    // Query database for the date range across all EVM chains and protocols
+    const { data: weeklyData, error: weeklyError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, chain, volume_usd')
+      .in('chain', evmChains)
+      .in('protocol_name', evmProtocols)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('protocol_name')
+      .order('date');
+
+    if (weeklyError) {
+      console.error('Error fetching EVM weekly data:', weeklyError);
+      throw weeklyError;
+    }
+
+    console.log(`Found ${weeklyData?.length || 0} EVM weekly records`);
+
+    // Process the data by protocol and date
+    const result: Record<string, Record<string, number>> = {};
+
+    if (weeklyData) {
+      weeklyData.forEach(record => {
+        const protocolName = record.protocol_name;
+        const date = record.date;
+        const volume = Number(record.volume_usd) || 0;
+
+        // Initialize protocol if not exists
+        if (!result[protocolName]) {
+          result[protocolName] = {};
+        }
+
+        // Aggregate volume by date (sum across all chains for that protocol)
+        result[protocolName][date] = (result[protocolName][date] || 0) + volume;
+      });
+    }
+
+    console.log(`Processed EVM weekly data for ${Object.keys(result).length} protocols`);
+    return result;
+
+  } catch (error) {
+    console.error('Error in getEVMWeeklyMetrics:', error);
+    throw error;
+  }
+}
+

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getEVMWeeklyMetrics } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -472,6 +472,40 @@ router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: `EVM data sync failed for ${req.params.protocol}`,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/evm-weekly-metrics
+// Get EVM weekly metrics for all protocols
+router.get('/evm-weekly-metrics', async (req: Request, res: Response) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'startDate and endDate parameters are required' 
+      });
+    }
+
+    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'startDate and endDate must be strings in YYYY-MM-DD format' 
+      });
+    }
+
+    console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
+    const weeklyData = await getEVMWeeklyMetrics(startDate, endDate);
+
+    res.json({ success: true, data: weeklyData });
+  } catch (error) {
+    console.error('Error fetching EVM weekly metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM weekly metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

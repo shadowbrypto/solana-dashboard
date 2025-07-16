@@ -396,17 +396,22 @@ export class UnifiedProtocolService {
       previousDateObj.setDate(previousDateObj.getDate() - 1);
       const previousDate = format(previousDateObj, 'yyyy-MM-dd');
       
-      // Get current day volume
-      const currentParams = { protocol: protocolName, date: currentDate, chain };
-      const currentResult = await this.getMetrics(currentParams);
-      const currentVolume = currentResult.data?.reduce((sum: number, row: any) => 
-        sum + (Number(row.volume_usd) || 0), 0) || 0;
+      // Get both current and previous day data in a single query for better performance
+      const startDate = format(previousDateObj, 'yyyy-MM-dd');
+      const endDate = currentDate;
       
-      // Get previous day volume
-      const previousParams = { protocol: protocolName, date: previousDate, chain };
-      const previousResult = await this.getMetrics(previousParams);
-      const previousVolume = previousResult.data?.reduce((sum: number, row: any) => 
-        sum + (Number(row.volume_usd) || 0), 0) || 0;
+      const params = { protocol: protocolName, startDate, endDate, chain };
+      const result = await this.getMetrics(params);
+      
+      if (!result.data) return 0;
+      
+      const currentVolume = result.data
+        .filter((row: any) => row.date === currentDate)
+        .reduce((sum: number, row: any) => sum + (Number(row.volume_usd) || 0), 0);
+      
+      const previousVolume = result.data
+        .filter((row: any) => row.date === previousDate)
+        .reduce((sum: number, row: any) => sum + (Number(row.volume_usd) || 0), 0);
       
       // Calculate growth percentage
       if (previousVolume === 0) return 0;

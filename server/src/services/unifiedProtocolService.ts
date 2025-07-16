@@ -230,7 +230,8 @@ export class UnifiedProtocolService {
           numberOfNewUsers: 0,
           daily_trades: 0,
           total_fees_usd: 0,
-          chains: []
+          chains: [],
+          chainVolumes: {}
         };
       }
       
@@ -241,8 +242,46 @@ export class UnifiedProtocolService {
       acc[protocol].total_fees_usd += Number(row.fees_usd) || 0;
       acc[protocol].chains.push(row.chain);
       
+      // Add chain volumes
+      const chain = row.chain;
+      const volume = Number(row.volume_usd) || 0;
+      acc[protocol].chainVolumes[chain] = (acc[protocol].chainVolumes[chain] || 0) + volume;
+      
       return acc;
     }, {});
+    
+    // If single protocol requested, return legacy format
+    const protocolFilter = UnifiedProtocolService.normalizeProtocolFilter(params.protocol);
+    if (protocolFilter && protocolFilter.length === 1) {
+      const protocolName = protocolFilter[0];
+      const protocolData = aggregated[protocolName];
+      
+      if (protocolData) {
+        // Calculate daily growth and weekly trend
+        const dailyGrowth = await this.calculateDailyGrowth(protocolName, params.date, params.chain);
+        const weeklyTrend = await this.calculateWeeklyTrend(protocolName, params.date, params.chain);
+        
+        return {
+          success: true,
+          data: {
+            totalVolume: protocolData.total_volume_usd,
+            chainVolumes: {
+              ethereum: protocolData.chainVolumes.ethereum || 0,
+              base: protocolData.chainVolumes.base || 0,
+              bsc: protocolData.chainVolumes.bsc || 0,
+              avax: protocolData.chainVolumes.avax || 0,
+              arbitrum: protocolData.chainVolumes.arbitrum || 0
+            },
+            dailyGrowth,
+            weeklyTrend
+          },
+          metadata: {
+            ...metricsResult.metadata,
+            totalRecords: 1
+          }
+        };
+      }
+    }
     
     return {
       success: true,
@@ -349,6 +388,62 @@ export class UnifiedProtocolService {
     };
   }
   
+  // Calculate daily growth for a protocol
+  private async calculateDailyGrowth(protocolName: string, currentDate: string, chain?: string): Promise<number> {
+    try {
+      const currentDateObj = new Date(currentDate);
+      const previousDateObj = new Date(currentDateObj);
+      previousDateObj.setDate(previousDateObj.getDate() - 1);
+      const previousDate = format(previousDateObj, 'yyyy-MM-dd');
+      
+      // Get current day volume
+      const currentParams = { protocol: protocolName, date: currentDate, chain };
+      const currentResult = await this.getMetrics(currentParams);
+      const currentVolume = currentResult.data?.reduce((sum: number, row: any) => 
+        sum + (Number(row.volume_usd) || 0), 0) || 0;
+      
+      // Get previous day volume
+      const previousParams = { protocol: protocolName, date: previousDate, chain };
+      const previousResult = await this.getMetrics(previousParams);
+      const previousVolume = previousResult.data?.reduce((sum: number, row: any) => 
+        sum + (Number(row.volume_usd) || 0), 0) || 0;
+      
+      // Calculate growth percentage
+      if (previousVolume === 0) return 0;
+      return (currentVolume - previousVolume) / previousVolume;
+    } catch (error) {
+      console.error('Error calculating daily growth:', error);
+      return 0;
+    }
+  }
+  
+  // Calculate weekly trend for a protocol
+  private async calculateWeeklyTrend(protocolName: string, currentDate: string, chain?: string): Promise<number[]> {
+    try {
+      const currentDateObj = new Date(currentDate);
+      const weeklyTrend: number[] = [];
+      
+      // Get last 7 days of data
+      for (let i = 6; i >= 0; i--) {
+        const dateObj = new Date(currentDateObj);
+        dateObj.setDate(dateObj.getDate() - i);
+        const dateStr = format(dateObj, 'yyyy-MM-dd');
+        
+        const params = { protocol: protocolName, date: dateStr, chain };
+        const result = await this.getMetrics(params);
+        const volume = result.data?.reduce((sum: number, row: any) => 
+          sum + (Number(row.volume_usd) || 0), 0) || 0;
+        
+        weeklyTrend.push(volume);
+      }
+      
+      return weeklyTrend;
+    } catch (error) {
+      console.error('Error calculating weekly trend:', error);
+      return Array(7).fill(0);
+    }
+  }
+
   // Clear cache
   static clearCache(pattern?: string): void {
     if (!pattern) {

@@ -108,8 +108,8 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
     try {
       console.log(`Fetching data for ${cleanProtocol} on ${dateStr}`);
       
-      // Fetch main protocol data
-      const protocolResponse = await fetch(`${API_BASE_URL}/protocols/evm-daily/${cleanProtocol}?date=${dateStr}`);
+      // Use unified API endpoint
+      const protocolResponse = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}`);
       
       if (!protocolResponse.ok) {
         throw new Error(`API returned ${protocolResponse.status}: ${protocolResponse.statusText}`);

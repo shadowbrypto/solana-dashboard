@@ -71,7 +71,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
         // Use clean protocol name (remove _evm suffix if present)
         const cleanProtocol = protocol.replace('_evm', '');
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-        const response = await fetch(`${API_BASE_URL}/protocols/evm-metrics/${cleanProtocol}`);
+        const response = await fetch(`${API_BASE_URL}/unified/chain-breakdown?protocol=${cleanProtocol}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch EVM metrics: ${response.statusText}`);
@@ -103,7 +103,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       
       const cleanProtocol = protocol.replace('_evm', '');
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/protocols/evm-daily-metrics/${cleanProtocol}?timeframe=${timeframe}`);
+      const response = await fetch(`${API_BASE_URL}/unified/metrics?protocol=${cleanProtocol}&chain=evm&timeframe=${timeframe}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch daily metrics: ${response.statusText}`);

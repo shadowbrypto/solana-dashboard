@@ -98,9 +98,9 @@ export default function WeeklyReport() {
   const endDate = selectedEndDate;
 
   return (
-    <div className="p-2 sm:p-0">
+    <div className="">
       {/* Header with Toggle */}
-      <div className="mb-6 lg:mb-8">
+      <div className="mb-4">
         <>
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">

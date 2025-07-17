@@ -169,15 +169,15 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             quality: 1,
             bgcolor: '#ffffff',
             width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 10,
+            height: tableElement.scrollHeight + 50,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              paddingTop: '16px',
-              paddingLeft: '16px',
-              paddingRight: '8px',
-              paddingBottom: '8px',
+              paddingTop: '20px',
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              paddingBottom: '20px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -218,15 +218,15 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             quality: 1,
             bgcolor: '#ffffff',
             width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 10,
+            height: tableElement.scrollHeight + 50,
             style: {
               transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              paddingTop: '16px',
-              paddingLeft: '16px',
-              paddingRight: '8px',
-              paddingBottom: '8px',
+              paddingTop: '20px',
+              paddingLeft: '20px',
+              paddingRight: '20px',
+              paddingBottom: '20px',
               borderRadius: '16px',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             },
@@ -276,76 +276,77 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6" data-table="evm-weekly-metrics">
-      <div className="flex items-center justify-between pb-4">
-        <h3 className="text-lg font-semibold text-foreground">EVM Weekly Volume</h3>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const prev7Days = subDays(endDate, 7);
-              const MIN_DATE = new Date('2024-01-01');
-              if (!isBefore(prev7Days, MIN_DATE)) {
-                onDateChange(prev7Days);
-              }
-            }}
-            disabled={(() => {
-              const prev7Days = subDays(endDate, 7);
-              const MIN_DATE = new Date('2024-01-01');
-              return isBefore(prev7Days, MIN_DATE);
-            })()}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <Calendar className="h-3 w-3 mr-1" />
-                {format(subDays(endDate, 6), 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <div className="p-3">
-                <p className="text-sm text-muted-foreground mb-2">Select week ending date</p>
-                <input
-                  type="date"
-                  value={format(endDate, 'yyyy-MM-dd')}
-                  onChange={(e) => onDateChange(new Date(e.target.value))}
-                  min={format(new Date('2024-01-01'), 'yyyy-MM-dd')}
-                  max={format(subDays(new Date(), 1), 'yyyy-MM-dd')}
-                  className="w-full px-3 py-2 border border-border rounded-md text-sm"
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const next7Days = addDays(endDate, 7);
-              const MAX_DATE = subDays(new Date(), 1);
-              if (!isAfter(next7Days, MAX_DATE)) {
-                onDateChange(next7Days);
-              }
-            }}
-            disabled={(() => {
-              const next7Days = addDays(endDate, 7);
-              const MAX_DATE = subDays(new Date(), 1);
-              return isAfter(next7Days, MAX_DATE);
-            })()}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6">
+      <div className="space-y-4" data-table="evm-weekly-metrics">
+        <div className="flex items-center justify-between pb-4">
+          <h3 className="text-lg font-semibold text-foreground">EVM Weekly Volume</h3>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const prev7Days = subDays(endDate, 7);
+                const MIN_DATE = new Date('2024-01-01');
+                if (!isBefore(prev7Days, MIN_DATE)) {
+                  onDateChange(prev7Days);
+                }
+              }}
+              disabled={(() => {
+                const prev7Days = subDays(endDate, 7);
+                const MIN_DATE = new Date('2024-01-01');
+                return isBefore(prev7Days, MIN_DATE);
+              })()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {format(subDays(endDate, 6), 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <div className="p-3">
+                  <p className="text-sm text-muted-foreground mb-2">Select week ending date</p>
+                  <input
+                    type="date"
+                    value={format(endDate, 'yyyy-MM-dd')}
+                    onChange={(e) => onDateChange(new Date(e.target.value))}
+                    min={format(new Date('2024-01-01'), 'yyyy-MM-dd')}
+                    max={format(subDays(new Date(), 1), 'yyyy-MM-dd')}
+                    className="w-full px-3 py-2 border border-border rounded-md text-sm"
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const next7Days = addDays(endDate, 7);
+                const MAX_DATE = subDays(new Date(), 1);
+                if (!isAfter(next7Days, MAX_DATE)) {
+                  onDateChange(next7Days);
+                }
+              }}
+              disabled={(() => {
+                const next7Days = addDays(endDate, 7);
+                const MAX_DATE = subDays(new Date(), 1);
+                return isAfter(next7Days, MAX_DATE);
+              })()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
-        <Table className="w-full [&_th]:px-2 [&_td]:px-2">
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+          <Table className="w-full [&_th]:px-2 [&_td]:px-2">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[120px]">Protocol</TableHead>
@@ -564,6 +565,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
       
       {/* Action buttons below the table */}

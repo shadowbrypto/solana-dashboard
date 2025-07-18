@@ -1,6 +1,7 @@
 import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
 import { protocolApi } from './api';
 import { format } from 'date-fns';
+import { Settings } from './settings';
 
 export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
   formattedDay: string;
@@ -74,10 +75,11 @@ export function clearEVMProtocolsCaches(): void {
   console.log('Frontend caches cleared for all EVM protocols');
 }
 
-export async function getProtocolStats(protocolName?: string | string[]) {
+export async function getProtocolStats(protocolName?: string | string[], chain?: string) {
+  const dataType = Settings.getDataTypePreference();
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') 
-    : (protocolName || 'all');
+    : (protocolName || 'all') + '_' + (chain || 'default') + '_' + dataType;
 
   // Check local cache first
   const cachedData = protocolStatsCache.get(cacheKey);
@@ -86,7 +88,7 @@ export async function getProtocolStats(protocolName?: string | string[]) {
   }
 
   try {
-    const stats = await protocolApi.getProtocolStats(protocolName);
+    const stats = await protocolApi.getProtocolStats(protocolName, chain, dataType);
     
     // Cache the results locally
     protocolStatsCache.set(cacheKey, {
@@ -106,7 +108,8 @@ export async function getProtocolStats(protocolName?: string | string[]) {
 }
 
 export async function getTotalProtocolStats(protocolName?: string, chain?: string): Promise<ProtocolMetrics> {
-  const cacheKey = protocolName || 'all';
+  const dataType = Settings.getDataTypePreference();
+  const cacheKey = (protocolName || 'all') + '_' + (chain || 'default') + '_' + dataType;
   
   // Check local cache first
   const cachedData = totalStatsCache.get(cacheKey);
@@ -115,7 +118,7 @@ export async function getTotalProtocolStats(protocolName?: string, chain?: strin
   }
 
   try {
-    const totalStats = await protocolApi.getTotalProtocolStats(protocolName, chain);
+    const totalStats = await protocolApi.getTotalProtocolStats(protocolName, chain, dataType);
     
     // Cache the results locally
     totalStatsCache.set(cacheKey, {
@@ -147,7 +150,8 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const formattedDate = `${year}-${month}-${day}`;
-  const cacheKey = formattedDate;
+  const dataType = Settings.getDataTypePreference();
+  const cacheKey = `${formattedDate}_${dataType}`;
 
   // Check local cache first
   const cachedData = dailyMetricsCache.get(cacheKey);
@@ -156,7 +160,7 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   }
 
   try {
-    const dailyMetrics = await protocolApi.getDailyMetrics(date);
+    const dailyMetrics = await protocolApi.getDailyMetrics(date, dataType);
     
     // Cache the results locally
     dailyMetricsCache.set(cacheKey, {
@@ -178,7 +182,8 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
 }
 
 export async function getAggregatedProtocolStats(): Promise<any[]> {
-  const cacheKey = 'all-protocols-aggregated';
+  const dataType = Settings.getDataTypePreference();
+  const cacheKey = `all-protocols-aggregated_${dataType}`;
   
   // Check local cache first
   const cachedData = aggregatedStatsCache.get(cacheKey);
@@ -187,7 +192,7 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
   }
 
   try {
-    const aggregatedStats = await protocolApi.getAggregatedProtocolStats();
+    const aggregatedStats = await protocolApi.getAggregatedProtocolStats(dataType);
     
     // Cache the results locally
     aggregatedStatsCache.set(cacheKey, {

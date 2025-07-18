@@ -18,6 +18,7 @@ export interface StandardQueryParams {
   startDate?: string;
   endDate?: string;
   timeframe?: '7d' | '30d' | '90d' | '6m' | '1y';
+  dataType?: 'private' | 'public';
 }
 
 export interface StandardApiResponse<T> {
@@ -107,6 +108,7 @@ function buildQueryString(params: StandardQueryParams): string {
   if (params.startDate) searchParams.append('startDate', params.startDate);
   if (params.endDate) searchParams.append('endDate', params.endDate);
   if (params.timeframe) searchParams.append('timeframe', params.timeframe);
+  if (params.dataType) searchParams.append('dataType', params.dataType);
   
   return searchParams.toString();
 }
@@ -252,10 +254,11 @@ export const unifiedProtocolApi = new UnifiedProtocolApi();
 // Wrapper functions to maintain backward compatibility
 export const unifiedApi = {
   // Protocol metrics
-  async getProtocolStats(protocolName?: string | string[], chain?: string): Promise<ProtocolStats[]> {
+  async getProtocolStats(protocolName?: string | string[], chain?: string, dataType?: string): Promise<ProtocolStats[]> {
     const params: StandardQueryParams = {};
     if (protocolName) params.protocol = protocolName;
     if (chain) params.chain = chain as any;
+    if (dataType) params.dataType = dataType as any;
     
     const result = await unifiedProtocolApi.getMetrics(params);
     if (!result.success) {
@@ -266,10 +269,11 @@ export const unifiedApi = {
     return result.data || [];
   },
   
-  async getTotalProtocolStats(protocolName?: string, chain?: string): Promise<ProtocolMetrics> {
+  async getTotalProtocolStats(protocolName?: string, chain?: string, dataType?: string): Promise<ProtocolMetrics> {
     const params: StandardQueryParams = {};
     if (protocolName) params.protocol = protocolName;
     if (chain) params.chain = chain as any;
+    if (dataType) params.dataType = dataType as any;
     
     const result = await unifiedProtocolApi.getMetrics(params);
     if (!result.success) {

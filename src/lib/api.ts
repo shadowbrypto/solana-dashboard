@@ -103,10 +103,10 @@ export interface ProtocolLatestDate {
 
 export const protocolApi = {
   // Get protocol stats with optional filtering
-  async getProtocolStats(protocolName?: string | string[], chain?: string): Promise<ProtocolStats[]> {
+  async getProtocolStats(protocolName?: string | string[], chain?: string, dataType?: string): Promise<ProtocolStats[]> {
     try {
       // Try unified API first
-      return await unifiedApi.getProtocolStats(protocolName, chain);
+      return await unifiedApi.getProtocolStats(protocolName, chain, dataType);
     } catch (error) {
       console.warn('Unified API failed, falling back to legacy API:', error);
       
@@ -123,6 +123,10 @@ export const protocolApi = {
         params.append('chain', chain);
       }
       
+      if (dataType) {
+        params.append('dataType', dataType);
+      }
+      
       if (params.toString()) {
         endpoint += `?${params.toString()}`;
       }
@@ -132,10 +136,10 @@ export const protocolApi = {
   },
 
   // Get total protocol stats with optional filtering
-  async getTotalProtocolStats(protocolName?: string, chain?: string): Promise<ProtocolMetrics> {
+  async getTotalProtocolStats(protocolName?: string, chain?: string, dataType?: string): Promise<ProtocolMetrics> {
     try {
       // Try unified API first
-      return await unifiedApi.getTotalProtocolStats(protocolName, chain);
+      return await unifiedApi.getTotalProtocolStats(protocolName, chain, dataType);
     } catch (error) {
       console.warn('Unified API failed, falling back to legacy API:', error);
       
@@ -151,6 +155,10 @@ export const protocolApi = {
         params.append('chain', chain);
       }
       
+      if (dataType) {
+        params.append('dataType', dataType);
+      }
+      
       if (params.toString()) {
         endpoint += `?${params.toString()}`;
       }
@@ -160,10 +168,10 @@ export const protocolApi = {
   },
 
   // Get daily metrics for a specific date
-  async getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {
+  async getDailyMetrics(date: Date, dataType?: string): Promise<Record<Protocol, ProtocolMetrics>> {
     try {
       // Try unified API first
-      return await unifiedApi.getDailyMetrics(date);
+      return await unifiedApi.getDailyMetrics(date, undefined, undefined, dataType);
     } catch (error) {
       console.warn('Unified API failed, falling back to legacy API:', error);
       
@@ -173,15 +181,16 @@ export const protocolApi = {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
-      const endpoint = `/protocols/daily-metrics?date=${dateStr}`;
+      const endpoint = `/protocols/daily-metrics?date=${dateStr}${dataType ? `&dataType=${dataType}` : ''}`;
       
       return apiRequest<Record<Protocol, ProtocolMetrics>>(endpoint);
     }
   },
 
   // Get aggregated stats for all protocols (optimized for "all" view)
-  async getAggregatedProtocolStats(): Promise<any[]> {
-    return apiRequest<any[]>('/protocols/aggregated-stats');
+  async getAggregatedProtocolStats(dataType?: string): Promise<any[]> {
+    const endpoint = `/protocols/aggregated-stats${dataType ? `?dataType=${dataType}` : ''}`;
+    return apiRequest<any[]>(endpoint);
   },
 
   // Health check
@@ -230,8 +239,9 @@ export const protocolApi = {
 
 export const dataSyncApi = {
   // Sync data from Dune API to database
-  async syncData(): Promise<{ csvFilesFetched: number; timestamp: string }> {
-    return apiRequest<{ csvFilesFetched: number; timestamp: string }>('/data-update/sync', {
+  async syncData(dataType?: string): Promise<{ csvFilesFetched: number; timestamp: string }> {
+    const endpoint = dataType ? `/data-update/sync?dataType=${dataType}` : '/data-update/sync';
+    return apiRequest<{ csvFilesFetched: number; timestamp: string }>(endpoint, {
       method: 'POST'
     });
   },
@@ -280,7 +290,7 @@ export const dataSyncApi = {
   },
 
   // Sync data for a specific protocol
-  async syncProtocolData(protocolName: string): Promise<{
+  async syncProtocolData(protocolName: string, dataType?: string): Promise<{
     message: string;
     data: {
       protocol: string;
@@ -288,6 +298,7 @@ export const dataSyncApi = {
       timestamp: string;
     };
   }> {
+    const endpoint = dataType ? `/data-update/sync/${protocolName}?dataType=${dataType}` : `/data-update/sync/${protocolName}`;
     return apiRequest<{
       message: string;
       data: {
@@ -295,7 +306,7 @@ export const dataSyncApi = {
         rowsImported: number;
         timestamp: string;
       };
-    }>(`/data-update/sync/${protocolName}`, {
+    }>(endpoint, {
       method: 'POST'
     });
   },

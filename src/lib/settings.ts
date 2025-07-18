@@ -1,5 +1,8 @@
 import { SortingState } from '@tanstack/react-table';
 
+// Data type change listeners
+const dataTypeChangeListeners = new Set<(dataType: 'private' | 'public') => void>();
+
 // Type definitions for all settings
 export interface AppSettings {
   // Dashboard accordion states
@@ -36,6 +39,9 @@ export interface AppSettings {
     weekly?: string;
     monthly?: string;
   };
+  
+  // Data type preference
+  'data-type-preference': 'private' | 'public';
 }
 
 // Default values for all settings
@@ -55,6 +61,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   'protocol-table-page-size': 10,
   'protocol-table-sorting': [{ id: 'date', desc: true }],
   'last-selected-dates': {},
+  'data-type-preference': 'private' as const,
 };
 
 class SettingsManager {
@@ -218,6 +225,24 @@ export const Settings = {
   setLastSelectedDate: (type: 'daily' | 'weekly' | 'monthly', date: string) => {
     const current = settingsManager.getSetting('last-selected-dates');
     settingsManager.setSetting('last-selected-dates', { ...current, [type]: date });
+  },
+  
+  // Data type preference
+  getDataTypePreference: () => settingsManager.getSetting('data-type-preference'),
+  setDataTypePreference: (dataType: 'private' | 'public') => {
+    const previousDataType = settingsManager.getSetting('data-type-preference');
+    settingsManager.setSetting('data-type-preference', dataType);
+    
+    // Trigger data type change listeners
+    if (previousDataType !== dataType) {
+      dataTypeChangeListeners.forEach(listener => listener(dataType));
+    }
+  },
+
+  // Data type change listeners
+  addDataTypeChangeListener: (listener: (dataType: 'private' | 'public') => void) => {
+    dataTypeChangeListeners.add(listener);
+    return () => dataTypeChangeListeners.delete(listener);
   },
 };
 

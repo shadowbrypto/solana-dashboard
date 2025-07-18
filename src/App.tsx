@@ -39,7 +39,7 @@ import { generateHorizontalBarChartData, generateStackedBarChartConfig, generate
 import { LayoutGrid } from 'lucide-react';
 import { Badge } from './components/ui/badge';
 import { EVMProtocolLayout } from './components/EVMProtocolLayout';
-// import { Settings } from './lib/settings';
+import { Settings } from './lib/settings';
 
 interface DailyData {
   formattedDay: string;
@@ -137,6 +137,7 @@ const MainContent = (): JSX.Element => {
   const [invalidProtocol, setInvalidProtocol] = useState(false);
   const [totalMetrics, setTotalMetrics] = useState<ProtocolMetrics>({total_volume_usd: 0, daily_users: 0, numberOfNewUsers: 0, daily_trades: 0, total_fees_usd: 0});
   const [openAccordionItems, setOpenAccordionItems] = useState<string[]>(["categories", "volume"]);
+  const [dataTypeChangeKey, setDataTypeChangeKey] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -146,6 +147,14 @@ const MainContent = (): JSX.Element => {
 
   useEffect(() => {
     document.body.classList.add("dark:bg-background");
+  }, []);
+
+  // Listen for data type changes to force re-render
+  useEffect(() => {
+    const unsubscribe = Settings.addDataTypeChangeListener(() => {
+      setDataTypeChangeKey(prev => prev + 1);
+    });
+    return unsubscribe;
   }, []);
 
   // Persist accordion state changes - disabled
@@ -185,20 +194,23 @@ const MainContent = (): JSX.Element => {
       let fetchedData;
       if (selectedProtocol === "all") {
         // Use the new optimized aggregated endpoint
+        const dataType = Settings.getDataTypePreference();
         console.log('Fetching aggregated data for all protocols...');
-        fetchedData = await getAggregatedProtocolStats();
+        fetchedData = await getAggregatedProtocolStats(dataType);
         console.log(`Fetched ${fetchedData.length} aggregated records`);
       } else if (selectedProtocol.endsWith('_evm')) {
         // For EVM protocols, fetch lifetime volume from all non-Solana chains
         const cleanProtocol = selectedProtocol.replace('_evm', '');
+        const dataType = Settings.getDataTypePreference();
         console.log(`Fetching EVM stats for protocol: ${cleanProtocol}`);
-        const evmTotalStats = await getTotalProtocolStats(cleanProtocol, 'evm');
+        const evmTotalStats = await getTotalProtocolStats(cleanProtocol, 'evm', dataType);
         console.log(`EVM stats received:`, evmTotalStats);
         setTotalMetrics(evmTotalStats);
         fetchedData = []; // EVM protocols don't need time-series data for now
         console.log(`EVM protocol ${selectedProtocol} - loaded lifetime metrics`);
       } else {
-        fetchedData = await getProtocolStats(selectedProtocol);
+        const dataType = Settings.getDataTypePreference();
+        fetchedData = await getProtocolStats(selectedProtocol, undefined, dataType);
       }
       
       if (selectedProtocol === 'all') {
@@ -214,9 +226,10 @@ const MainContent = (): JSX.Element => {
         setData(formattedData);
       }
 
-      // Fetch total stats with proper chain filter
+      // Fetch total stats with proper chain filter and data type
       if (!selectedProtocol.endsWith('_evm')) {
-        const totalStats = await getTotalProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol);
+        const dataType = Settings.getDataTypePreference();
+        const totalStats = await getTotalProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol, undefined, dataType);
         if (!totalStats) {
           throw new Error('Failed to fetch total protocol stats');
         }
@@ -239,7 +252,7 @@ const MainContent = (): JSX.Element => {
 
   useEffect(() => {
     loadData(protocol);
-  }, [protocol, loadData]);
+  }, [protocol, loadData, dataTypeChangeKey]);
 
 
   const latestData = useMemo<ProtocolStatsWithDay | undefined>(() => {

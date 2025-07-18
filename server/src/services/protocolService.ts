@@ -72,10 +72,10 @@ export function formatDate(isoDate: string): string {
   return `${day}-${month}-${year}`;
 }
 
-export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string) {
+export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string, dataType?: string) {
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') 
-    : (protocolName || 'all');
+    : (protocolName || 'all') + '_' + (dataType || 'private');
 
   const cachedData = protocolStatsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
@@ -115,6 +115,13 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
         // For single protocol, use case-insensitive matching
         query = query.ilike('protocol_name', protocolName);
       }
+    }
+
+    // Filter by data type (default to private)
+    if (dataType) {
+      query = query.eq('data_type', dataType);
+    } else {
+      query = query.eq('data_type', 'private');
     }
 
     const { data, error } = await query;
@@ -161,8 +168,8 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
   return formattedData;
 }
 
-export async function getTotalProtocolStats(protocolName?: string, chainFilter?: string): Promise<ProtocolMetrics> {
-  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}`;
+export async function getTotalProtocolStats(protocolName?: string, chainFilter?: string, dataType?: string): Promise<ProtocolMetrics> {
+  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}_${dataType || 'private'}`;
   const cachedData = totalStatsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -177,7 +184,8 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
   while (hasMore) {
     let query = supabase
       .from('protocol_stats')
-      .select('volume_usd, daily_users, new_users, trades, fees_usd')
+      .select('volume_usd, daily_users, new_users, trades, fees_usd, date')
+      .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     // Determine which chains to query based on chain parameter
@@ -197,6 +205,13 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
 
     if (protocolName) {
       query = query.eq('protocol_name', protocolName);
+    }
+
+    // Filter by data type (default to private)
+    if (dataType) {
+      query = query.eq('data_type', dataType);
+    } else {
+      query = query.eq('data_type', 'private');
     }
 
     console.log(`Query for protocol: ${protocolName}, chain: ${chainFilter}`);
@@ -230,12 +245,23 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
 
   console.log(`Total records fetched: ${allData.length}`);
 
+  // Sort by date and remove the most recent date (same logic as getProtocolStats)
+  const sortedData = allData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  // Find the most recent date and filter it out
+  const mostRecentDate = sortedData.length > 0 ? sortedData[0].date : null;
+  const filteredData = mostRecentDate 
+    ? sortedData.filter(row => row.date !== mostRecentDate)
+    : sortedData;
+
+  console.log(`Records after filtering out most recent date: ${filteredData.length}`);
+
   const metrics: ProtocolMetrics = {
-    total_volume_usd: allData.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0),
-    daily_users: allData.reduce((sum, row) => sum + (Number(row.daily_users) || 0), 0),
-    numberOfNewUsers: allData.reduce((sum, row) => sum + (Number(row.new_users) || 0), 0),
-    daily_trades: allData.reduce((sum, row) => sum + (Number(row.trades) || 0), 0),
-    total_fees_usd: allData.reduce((sum, row) => sum + (Number(row.fees_usd) || 0), 0)
+    total_volume_usd: filteredData.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0),
+    daily_users: filteredData.reduce((sum, row) => sum + (Number(row.daily_users) || 0), 0),
+    numberOfNewUsers: filteredData.reduce((sum, row) => sum + (Number(row.new_users) || 0), 0),
+    daily_trades: filteredData.reduce((sum, row) => sum + (Number(row.trades) || 0), 0),
+    total_fees_usd: filteredData.reduce((sum, row) => sum + (Number(row.fees_usd) || 0), 0)
   };
 
   totalStatsCache.set(cacheKey, {
@@ -247,7 +273,7 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
 }
 
 // Get EVM chain breakdown for a specific protocol
-export async function getEVMChainBreakdown(protocolName: string): Promise<{
+export async function getEVMChainBreakdown(protocolName: string, dataType?: string): Promise<{
   lifetimeVolume: number;
   chainBreakdown: Array<{
     chain: string;
@@ -256,7 +282,7 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
   }>;
   totalChains: number;
 }> {
-  const cacheKey = `evm_breakdown_${protocolName}`;
+  const cacheKey = `evm_breakdown_${protocolName}_${dataType || 'private'}`;
   const cachedData = insightsCache.get(cacheKey);
 
   // DEBUG: Always skip cache for sigma to debug
@@ -280,6 +306,7 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
       .select('chain, volume_usd')
       .eq('protocol_name', protocolName)
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
+      .eq('data_type', dataType || 'private')
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     const { data, error } = await query;
@@ -336,13 +363,13 @@ export async function getEVMChainBreakdown(protocolName: string): Promise<{
 }
 
 // Get EVM daily chain breakdown for a specific protocol with timeframe
-export async function getEVMDailyChainBreakdown(protocolName: string, timeframe: string = '30d'): Promise<Array<{
+export async function getEVMDailyChainBreakdown(protocolName: string, timeframe: string = '30d', dataType?: string): Promise<Array<{
   date: string;
   formattedDay: string;
   chainData: Record<string, number>;
   totalVolume: number;
 }>> {
-  const cacheKey = `evm_daily_breakdown_${protocolName}_${timeframe}`;
+  const cacheKey = `evm_daily_breakdown_${protocolName}_${timeframe}_${dataType || 'private'}`;
   const cachedData = insightsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -384,6 +411,7 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
       .select('date, chain, volume_usd')
       .eq('protocol_name', protocolName)
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
+      .eq('data_type', dataType || 'private')
       .gte('date', format(startDate, 'yyyy-MM-dd'))
       .lte('date', format(endDate, 'yyyy-MM-dd'))
       .order('date', { ascending: false })
@@ -442,9 +470,9 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
   return result;
 }
 
-export async function getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {
+export async function getDailyMetrics(date: Date, dataType?: string): Promise<Record<Protocol, ProtocolMetrics>> {
   const formattedDate = format(date, 'yyyy-MM-dd');
-  const cacheKey = formattedDate;
+  const cacheKey = `${formattedDate}_${dataType || 'private'}`;
 
   const cachedData = dailyMetricsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
@@ -456,6 +484,7 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
     .from('protocol_stats')
     .select('date')
     .eq('chain', 'solana') // Filter for Solana data only
+    .eq('data_type', dataType || 'private')
     .order('date', { ascending: false })
     .limit(1);
 
@@ -480,7 +509,8 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
     .from('protocol_stats')
     .select('protocol_name, volume_usd, daily_users, new_users, trades, fees_usd')
     .eq('date', formattedDate)
-    .eq('chain', 'solana'); // Filter for Solana data only
+    .eq('chain', 'solana') // Filter for Solana data only
+    .eq('data_type', dataType || 'private');
 
   if (error) {
     console.error('Error fetching daily metrics:', error);
@@ -511,8 +541,8 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   return metrics;
 }
 
-export async function getAggregatedProtocolStats() {
-  const cacheKey = 'all-protocols-aggregated';
+export async function getAggregatedProtocolStats(dataType?: string) {
+  const cacheKey = `all-protocols-aggregated_${dataType || 'private'}`;
   const cachedData = aggregatedStatsCache.get(cacheKey);
   
   if (cachedData && isCacheValid(cachedData)) {
@@ -532,6 +562,7 @@ export async function getAggregatedProtocolStats() {
       .from('protocol_stats')
       .select('*')
       .eq('chain', 'solana') // Filter for Solana data only
+      .eq('data_type', dataType || 'private')
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -742,7 +773,7 @@ export async function generateWeeklyInsights() {
 }
 
 // Get EVM protocol data for a specific date (for daily report)
-export async function getEVMDailyData(protocol: string, dateStr: string) {
+export async function getEVMDailyData(protocol: string, dateStr: string, dataType?: string) {
   console.log(`Fetching EVM daily data for ${protocol} on ${dateStr}`);
   
   const evmChains = ['ethereum', 'base', 'bsc'];
@@ -754,6 +785,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string) {
       .select('chain, volume_usd, daily_users, new_users, trades, fees_usd')
       .eq('protocol_name', protocol)
       .eq('date', dateStr)
+      .eq('data_type', dataType || 'private')
       .in('chain', evmChains);
 
     if (dailyError) {
@@ -772,6 +804,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string) {
       .from('protocol_stats')
       .select('date, volume_usd')
       .eq('protocol_name', protocol)
+      .eq('data_type', dataType || 'private')
       .in('chain', evmChains)
       .gte('date', format(startDate, 'yyyy-MM-dd'))
       .lte('date', dateStr)
@@ -792,6 +825,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string) {
       .select('volume_usd')
       .eq('protocol_name', protocol)
       .eq('date', prevDateStr)
+      .eq('data_type', dataType || 'private')
       .in('chain', evmChains);
 
     if (prevError) {
@@ -871,7 +905,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string) {
 }
 
 // Get latest data dates for all protocols (SOL and EVM)
-export async function getLatestDataDates(): Promise<{
+export async function getLatestDataDates(dataType?: string): Promise<{
   protocol_name: string;
   latest_date: string;
   is_current: boolean;
@@ -883,6 +917,7 @@ export async function getLatestDataDates(): Promise<{
     const { data: latestDates, error } = await supabase
       .from('protocol_stats')
       .select('protocol_name, date, chain')
+      .eq('data_type', dataType || 'private')
       .order('date', { ascending: false });
 
     if (error) throw error;
@@ -937,7 +972,7 @@ export async function getLatestDataDates(): Promise<{
   }
 }
 
-export async function getEVMWeeklyMetrics(startDate: string, endDate: string): Promise<{
+export async function getEVMWeeklyMetrics(startDate: string, endDate: string, dataType?: string): Promise<{
   dailyVolumes: Record<string, Record<string, number>>;
   chainDistribution: Record<string, Record<string, number>>;
 }> {
@@ -953,6 +988,7 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string): P
       .select('protocol_name, date, chain, volume_usd')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
+      .eq('data_type', dataType || 'private')
       .gte('date', startDate)
       .lte('date', endDate)
       .order('protocol_name')

@@ -6,11 +6,15 @@ const router = Router();
 
 // POST /api/data-update/sync
 // Runs the update script to fetch CSV data and import to database
+// Query params: dataType (optional - 'public', 'private')
 router.post('/sync', async (req: Request, res: Response) => {
   try {
-    console.log('Starting data sync process...');
+    const { dataType } = req.query;
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
     
-    const result = await syncData();
+    console.log(`Starting data sync process for ${dataTypeFilter} data...`);
+    
+    const result = await syncData(dataTypeFilter);
     
     if (result.success) {
       res.json({
@@ -59,9 +63,12 @@ router.get('/status', async (req: Request, res: Response) => {
 
 // POST /api/data-update/sync/:protocol
 // Sync data for a specific protocol
+// Query params: dataType (optional - 'public', 'private')
 router.post('/sync/:protocol', async (req: Request, res: Response) => {
   try {
     const { protocol } = req.params;
+    const { dataType } = req.query;
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
     
     if (!protocol) {
       return res.status(400).json({
@@ -70,9 +77,9 @@ router.post('/sync/:protocol', async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`Starting data sync for protocol: ${protocol}...`);
+    console.log(`Starting data sync for protocol: ${protocol} with ${dataTypeFilter} data...`);
     
-    const result = await dataManagementService.syncProtocolData(protocol);
+    const result = await dataManagementService.syncProtocolData(protocol, dataTypeFilter);
     
     if (result.success) {
       res.json({

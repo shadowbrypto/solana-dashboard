@@ -14,10 +14,13 @@ import {
   loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Calendar, Clock } from 'lucide-react';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Calendar, Clock, Database, Eye } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
+import { Settings } from '../lib/settings';
 import {
   DndContext,
   DragEndEvent,
@@ -196,10 +199,17 @@ export function ProtocolManagement() {
   const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
   const [latestDates, setLatestDates] = useState<Map<string, ProtocolLatestDate>>(new Map());
   const [isCheckingLatestDates, setIsCheckingLatestDates] = useState(false);
+  const [dataTypePreference, setDataTypePreference] = useState<'private' | 'public'>('private');
   const { toast } = useToast();
   
   const categories = getMutableAllCategoriesIncludingEVM(); // Show all protocols including EVM in management
   const sensors = useSensors(useSensor(PointerSensor));
+  
+  // Load data type preference on component mount
+  useEffect(() => {
+    const preference = Settings.getDataTypePreference();
+    setDataTypePreference(preference);
+  }, []);
 
   // Load configurations from database on component mount
   useEffect(() => {
@@ -219,6 +229,46 @@ export function ProtocolManagement() {
     
     loadConfigs();
   }, []);
+  
+  // Handle data type preference change
+  const handleDataTypeChange = async (isPublic: boolean) => {
+    const newDataType = isPublic ? 'public' : 'private';
+    setDataTypePreference(newDataType);
+    Settings.setDataTypePreference(newDataType);
+    
+    // Clear all caches when switching data types
+    clearAllFrontendCaches();
+    
+    // Show initial toast
+    toast({
+      variant: "success",
+      title: "Data Type Updated",
+      description: `Switched to ${newDataType} data. Starting auto-sync for all Solana protocols...`,
+    });
+    
+    // Trigger auto-sync for all Solana protocols
+    try {
+      setIsRefreshingSolana(true);
+      const result = await dataSyncApi.syncData(newDataType);
+      
+      toast({
+        variant: "success",
+        title: "Auto-Sync Complete",
+        description: `Successfully synced ${result.csvFilesFetched} Solana protocols with ${newDataType} data`,
+      });
+      
+      // Reload sync statuses after successful sync
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Auto-Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to sync Solana protocols",
+      });
+    } finally {
+      setIsRefreshingSolana(false);
+    }
+  };
 
   // Load sync statuses
   useEffect(() => {
@@ -270,8 +320,8 @@ export function ProtocolManagement() {
     
     setIsRefreshingSolana(true);
     try {
-      // Sync only Solana protocols (filter out EVM ones)
-      const result = await dataSyncApi.syncData();
+      // Sync only Solana protocols (filter out EVM ones) using current data type preference
+      const result = await dataSyncApi.syncData(dataTypePreference);
       
       // Clear all frontend caches after successful refresh
       clearAllFrontendCaches();
@@ -279,7 +329,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Solana Data Refresh Complete",
-        description: `Successfully refreshed Solana data for ${result.csvFilesFetched} protocols`,
+        description: `Successfully refreshed ${dataTypePreference} Solana data for ${result.csvFilesFetched} protocols`,
       });
       
       // Reload sync statuses after successful refresh
@@ -325,7 +375,7 @@ export function ProtocolManagement() {
     
     try {
       // Use unified sync endpoint - backend will route EVM protocols automatically
-      const result = await dataSyncApi.syncProtocolData(protocolId);
+      const result = await dataSyncApi.syncProtocolData(protocolId, dataTypePreference);
       
       // Clear frontend cache for this protocol
       clearProtocolFrontendCache(protocolId);
@@ -554,13 +604,39 @@ export function ProtocolManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Data Management</CardTitle>
-          <CardDescription>
-            Force refresh all protocol data from Dune Analytics
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1.5">
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>
+                Manage data sources and force refresh protocol data
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Database className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="data-type-toggle" className="text-sm font-medium">
+                Private Data
+              </Label>
+              <Switch
+                id="data-type-toggle"
+                checked={dataTypePreference === 'public'}
+                onCheckedChange={handleDataTypeChange}
+              />
+              <Label htmlFor="data-type-toggle" className="text-sm font-medium">
+                Public Data
+              </Label>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+              <Database className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+                Currently showing <strong>{dataTypePreference}</strong> data. Toggle above to switch between private (paid) and public (free) data sources.
+              </p>
+            </div>
+            
             <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
               <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
               <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">

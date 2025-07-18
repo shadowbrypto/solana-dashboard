@@ -24,6 +24,7 @@ async function checkCurrentDataInDB(): Promise<{ hasCurrentData: boolean; missin
       .select('protocol_name')
       .eq('date', today)
       .eq('chain', 'solana') // Filter for Solana data only
+      .eq('data_type', 'private') // Default to private data for current data check
       .in('protocol_name', EXPECTED_PROTOCOLS);
     
     if (error) {
@@ -65,12 +66,12 @@ interface SyncStatus {
   missingProtocols?: string[];
 }
 
-export async function syncData(): Promise<SyncResult> {
+export async function syncData(dataType: string = 'private'): Promise<SyncResult> {
   try {
-    console.log('Starting data sync process using API services...');
+    console.log(`Starting data sync process using API services for ${dataType} data...`);
     
     // Use the new data management service for complete sync
-    const result = await dataManagementService.syncData();
+    const result = await dataManagementService.syncData(dataType);
     
     if (result.success) {
       return {

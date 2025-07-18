@@ -16,6 +16,7 @@ import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Badge } from "./ui/badge";
 import { DatePicker } from "./DatePicker";
 import { useToast } from "../hooks/use-toast";
+import { Settings } from "../lib/settings";
 // @ts-ignore
 import domtoimage from "dom-to-image";
 
@@ -98,6 +99,7 @@ const getGrowthBadgeClasses = (growth: number): string => {
 const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVMProtocolData[]> => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const dateStr = format(date, 'yyyy-MM-dd');
+  const dataType = Settings.getDataTypePreference();
   
   console.log(`Fetching EVM data for ${protocols.length} protocols on ${dateStr}`);
   
@@ -109,7 +111,7 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
       console.log(`Fetching data for ${cleanProtocol} on ${dateStr}`);
       
       // Use unified API endpoint
-      const protocolResponse = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}`);
+      const protocolResponse = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}&dataType=${dataType}`);
       
       if (!protocolResponse.ok) {
         throw new Error(`API returned ${protocolResponse.status}: ${protocolResponse.statusText}`);

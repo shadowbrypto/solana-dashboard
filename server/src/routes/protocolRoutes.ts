@@ -7,10 +7,10 @@ import { supabase } from '../lib/supabase.js';
 const router = Router();
 
 // GET /api/protocols/stats
-// Query params: protocol (optional, can be single string or comma-separated list), chain (optional - 'solana', 'evm', or specific chain)
+// Query params: protocol (optional, can be single string or comma-separated list), chain (optional - 'solana', 'evm', or specific chain), dataType (optional - 'public', 'private')
 router.get('/stats', async (req: Request, res: Response) => {
   try {
-    const { protocol, chain } = req.query;
+    const { protocol, chain, dataType } = req.query;
     
     let protocolName: string | string[] | undefined;
     if (protocol) {
@@ -22,7 +22,8 @@ router.get('/stats', async (req: Request, res: Response) => {
     }
 
     const chainFilter = typeof chain === 'string' ? chain : undefined;
-    const stats = await getProtocolStats(protocolName, chainFilter);
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : undefined;
+    const stats = await getProtocolStats(protocolName, chainFilter, dataTypeFilter);
     res.json({ success: true, data: stats });
   } catch (error) {
     console.error('Error fetching protocol stats:', error);
@@ -35,14 +36,15 @@ router.get('/stats', async (req: Request, res: Response) => {
 });
 
 // GET /api/protocols/total-stats
-// Query params: protocol (optional), chain (optional - 'solana', 'evm', or specific chain)
+// Query params: protocol (optional), chain (optional - 'solana', 'evm', or specific chain), dataType (optional - 'public', 'private')
 router.get('/total-stats', async (req: Request, res: Response) => {
   try {
-    const { protocol, chain } = req.query;
+    const { protocol, chain, dataType } = req.query;
     const protocolName = typeof protocol === 'string' ? protocol : undefined;
     const chainFilter = typeof chain === 'string' ? chain : undefined;
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : undefined;
 
-    const totalStats = await getTotalProtocolStats(protocolName, chainFilter);
+    const totalStats = await getTotalProtocolStats(protocolName, chainFilter, dataTypeFilter);
     res.json({ success: true, data: totalStats });
   } catch (error) {
     console.error('Error fetching total protocol stats:', error);
@@ -100,7 +102,8 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
 // Returns pre-aggregated data for all protocols by date
 router.get('/aggregated-stats', async (req: Request, res: Response) => {
   try {
-    const aggregatedStats = await getAggregatedProtocolStats();
+    const dataType = req.query.dataType as string;
+    const aggregatedStats = await getAggregatedProtocolStats(dataType);
     res.json({ success: true, data: aggregatedStats });
   } catch (error) {
     console.error('Error fetching aggregated protocol stats:', error);
@@ -137,6 +140,7 @@ router.get('/debug-sigma', async (req: Request, res: Response) => {
       .from('protocol_stats')
       .select('chain, volume_usd, protocol_name, date')
       .eq('protocol_name', 'sigma')
+      .eq('data_type', 'private') // Default to private data for debug endpoint
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon']);
 
     if (error) throw error;
@@ -167,6 +171,7 @@ router.get('/debug-sigma-raw', async (req: Request, res: Response) => {
       .from('protocol_stats')
       .select('chain, volume_usd')
       .eq('protocol_name', 'sigma')
+      .eq('data_type', 'private') // Default to private data for debug endpoint
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum']);
 
     console.log('SIGMA RAW DEBUG: Query completed', { 

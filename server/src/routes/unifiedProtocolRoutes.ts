@@ -13,7 +13,8 @@ router.get('/metrics', async (req: Request, res: Response) => {
       date: req.query.date as string,
       startDate: req.query.startDate as string,
       endDate: req.query.endDate as string,
-      timeframe: req.query.timeframe as any
+      timeframe: req.query.timeframe as any,
+      dataType: req.query.dataType as 'public' | 'private'
     };
     
     // Handle comma-separated protocols
@@ -45,7 +46,8 @@ router.get('/daily', async (req: Request, res: Response) => {
     const params: StandardQueryParams = {
       chain: req.query.chain as any,
       protocol: req.query.protocol as string | string[],
-      date: req.query.date as string
+      date: req.query.date as string,
+      dataType: req.query.dataType as 'public' | 'private'
     };
     
     if (!params.date) {
@@ -85,7 +87,8 @@ router.get('/weekly', async (req: Request, res: Response) => {
       chain: req.query.chain as any,
       protocol: req.query.protocol as string | string[],
       startDate: req.query.startDate as string,
-      endDate: req.query.endDate as string
+      endDate: req.query.endDate as string,
+      dataType: req.query.dataType as 'public' | 'private'
     };
     
     if (!params.startDate || !params.endDate) {
@@ -126,7 +129,8 @@ router.get('/chain-breakdown', async (req: Request, res: Response) => {
       chain: req.query.chain as any,
       startDate: req.query.startDate as string,
       endDate: req.query.endDate as string,
-      timeframe: req.query.timeframe as any
+      timeframe: req.query.timeframe as any,
+      dataType: req.query.dataType as 'public' | 'private'
     };
     
     if (!params.protocol) {

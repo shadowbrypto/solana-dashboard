@@ -27,7 +27,39 @@ interface ProtocolSource {
 }
 
 // Protocol sources mapping - now supports multiple query IDs and chains
-const PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
+// Public data sources (when dataType is 'public')
+const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
+  // Solana protocols
+  "trojan": { queryIds: [5500774], chain: 'solana' },
+  "photon": { queryIds: [5500907], chain: 'solana' },
+  "bullx": { queryIds: [5500910], chain: 'solana' },
+  "axiom": { queryIds: [5376750, 5376740, 5376694, 4663709], chain: 'solana' },
+  "gmgnai": { queryIds: [4231939], chain: 'solana' },
+  "bloom": { queryIds: [4340509], chain: 'solana' },
+  "bonkbot": { queryIds: [4278881], chain: 'solana' },
+  "nova": { queryIds: [4503165], chain: 'solana' },
+  "soltradingbot": { queryIds: [3954872], chain: 'solana' },
+  "maestro": { queryIds: [4537256], chain: 'solana' },
+  "banana": { queryIds: [4537271], chain: 'solana' },
+  "padre": { queryIds: [5099279], chain: 'solana' },
+  "moonshot": { queryIds: [4103111], chain: 'solana' },
+  "vector": { queryIds: [4969231], chain: 'solana' },
+  "bonkbot terminal": { queryIds: [5212810], chain: 'solana' },
+  "nova terminal": { queryIds: [5196914], chain: 'solana' },
+  "slingshot": { queryIds: [4968360], chain: 'solana' },
+  "fomo": { queryIds: [5315650], chain: 'solana' },
+  "mevx": { queryIds: [5498846], chain: 'solana' },
+  
+  // Ethereum protocols - add your protocols here
+  // Example:
+  "sigma_evm": { queryIds: [5430634], chain: 'evm' },
+  "maestro_evm": { queryIds: [3832557], chain: 'evm' },
+  "bloom_evm": { queryIds: [4824799], chain: 'evm' },
+  "banana_evm": { queryIds: [4750709], chain: 'evm' }
+};
+
+// Private data sources (when dataType is 'private' or default)
+const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // Solana protocols
   "trojan": { queryIds: [4251075], chain: 'solana' },
   "photon": { queryIds: [4852143], chain: 'solana' },
@@ -56,6 +88,11 @@ const PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
   "banana_evm": { queryIds: [4750709], chain: 'evm' }
 };
+
+// Get protocol sources based on data type
+function getProtocolSources(dataType: string = 'private'): Record<string, ProtocolSource> {
+  return dataType === 'public' ? PUBLIC_PROTOCOL_SOURCES : PRIVATE_PROTOCOL_SOURCES;
+}
 
 // CSV column mapping to database columns
 const COLUMN_MAP: Record<string, string> = {
@@ -97,16 +134,24 @@ export class DataManagementService {
   /**
    * Sync data for a specific protocol
    */
-  public async syncProtocolData(protocolName: string): Promise<SyncResult> {
+  public async syncProtocolData(protocolName: string, dataType: string = 'private'): Promise<SyncResult> {
     const startTime = new Date();
     
     try {
+      console.log(`\n=== SYNC DEBUG ===`);
+      console.log(`Protocol: ${protocolName}`);
+      console.log(`Data Type: ${dataType}`);
+      console.log(`==================\n`);
+      
+      const protocolSources = getProtocolSources(dataType);
+      
       // Validate protocol exists
-      if (!PROTOCOL_SOURCES[protocolName]) {
-        throw new Error(`Protocol '${protocolName}' not found in PROTOCOL_SOURCES`);
+      if (!protocolSources[protocolName]) {
+        throw new Error(`Protocol '${protocolName}' not found in protocol sources for data type '${dataType}'`);
       }
 
-      const protocolConfig = PROTOCOL_SOURCES[protocolName];
+      const protocolConfig = protocolSources[protocolName];
+      console.log(`Using query IDs: ${protocolConfig.queryIds.join(', ')} for ${dataType} data`);
       
       // Check if this is an EVM protocol
       if (protocolConfig.chain === 'evm') {
@@ -151,7 +196,7 @@ export class DataManagementService {
       console.log(`Downloaded data for ${protocolName} successfully`);
 
       // Step 2: Import CSV file to database (delete existing data for this protocol first)
-      const importResult = await this.importProtocolData(protocolName, true);
+      const importResult = await this.importProtocolData(protocolName, true, dataType);
       
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);
@@ -209,17 +254,31 @@ export class DataManagementService {
     try {
       const url = `https://api.dune.com/api/v1/query/${queryId}/results/csv?api_key=${API_KEY}`;
 
+      console.log(`\n=== DOWNLOAD DEBUG ===`);
+      console.log(`Protocol: ${protocolName}`);
+      console.log(`Query ID: ${queryId}`);
+      console.log(`Query Index: ${queryIndex + 1}`);
+      console.log(`URL: ${url.replace(API_KEY || '', '[API_KEY]')}`);
+      console.log(`======================\n`);
+
       console.log(`Fetching data for ${protocolName} query ${queryIndex + 1} (ID: ${queryId})...`);
 
       const response = await fetch(url);
       
+      console.log(`Response status: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) {
+        console.error(`HTTP Error: ${response.status}: ${response.statusText}`);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const csvData = await response.text();
       
+      console.log(`CSV data length: ${csvData.length} characters`);
+      console.log(`CSV data preview (first 200 chars): ${csvData.substring(0, 200)}`);
+      
       if (!csvData.trim()) {
+        console.error('Downloaded CSV data is empty');
         throw new Error('Downloaded data is empty');
       }
 
@@ -229,11 +288,20 @@ export class DataManagementService {
         skipEmptyLines: true,
       });
 
+      console.log(`Parse result: ${parsed.data.length} rows, ${parsed.errors.length} errors`);
+      
       if (parsed.errors.length) {
+        console.error(`CSV parse errors:`, parsed.errors);
         throw new Error(`CSV parse errors: ${JSON.stringify(parsed.errors)}`);
       }
 
+      if (parsed.data.length === 0) {
+        console.warn(`No data rows found in CSV for ${protocolName} query ${queryIndex + 1}`);
+        return { success: true, data: [] };
+      }
+
       console.log(`Successfully fetched ${parsed.data.length} rows for ${protocolName} query ${queryIndex + 1}`);
+      console.log(`Sample row:`, parsed.data[0]);
       
       return {
         success: true,
@@ -396,8 +464,9 @@ export class DataManagementService {
   /**
    * Download CSV data for all protocols
    */
-  private async downloadAllProtocolData(): Promise<DownloadResult[]> {
-    const downloadPromises = Object.entries(PROTOCOL_SOURCES).map(
+  private async downloadAllProtocolData(dataType: string = 'private'): Promise<DownloadResult[]> {
+    const protocolSources = getProtocolSources(dataType);
+    const downloadPromises = Object.entries(protocolSources).map(
       ([protocolName, config]) => this.downloadProtocolData(protocolName, config.queryIds)
     );
 
@@ -408,7 +477,7 @@ export class DataManagementService {
    * Import CSV data for a specific protocol into the database
    * @param deleteExisting - If true, deletes existing data for this protocol before importing
    */
-  private async importProtocolData(protocolName: string, deleteExisting: boolean = false): Promise<ImportResult> {
+  private async importProtocolData(protocolName: string, deleteExisting: boolean = false, dataType: string = 'private'): Promise<ImportResult> {
     try {
       const csvFilePath = path.join(DATA_DIR, `${protocolName}.csv`);
       
@@ -423,17 +492,22 @@ export class DataManagementService {
 
       // Delete existing data for this protocol if requested
       if (deleteExisting) {
-        console.log(`Deleting existing data for ${protocolName}...`);
+        console.log(`\n=== DELETE DEBUG ===`);
+        console.log(`Deleting existing ${dataType} data for ${protocolName}...`);
+        
         const { error: deleteError } = await supabase
           .from(TABLE_NAME)
           .delete()
           .eq('protocol_name', protocolName)
-          .eq('chain', 'solana'); // Only delete Solana data
+          .eq('chain', 'solana') // Only delete Solana data
+          .eq('data_type', dataType); // Only delete data for this specific data type
 
         if (deleteError) {
+          console.error(`Delete error:`, deleteError);
           throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
         }
-        console.log(`Successfully deleted existing data for ${protocolName}`);
+        console.log(`Successfully deleted existing ${dataType} data for ${protocolName}`);
+        console.log(`====================\n`);
       }
 
       // Read and parse CSV file
@@ -450,7 +524,8 @@ export class DataManagementService {
       const data = parsed.data;
 
       // Map CSV columns to database columns and add protocol name and chain
-      const protocolConfig = PROTOCOL_SOURCES[protocolName];
+      const protocolSources = getProtocolSources(dataType);
+      const protocolConfig = protocolSources[protocolName];
       const mappedData = data.map((row: any) => {
         const mappedRow: any = {};
         
@@ -491,6 +566,14 @@ export class DataManagementService {
         
         mappedRow.protocol_name = protocolName;
         mappedRow.chain = protocolConfig?.chain || 'solana'; // Default to solana for backward compatibility
+        mappedRow.data_type = dataType; // Set the data type
+        
+        // Debug logging for first row
+        if (data.indexOf(row) === 0) {
+          console.log(`Debug: First row data_type set to: ${dataType}`);
+          console.log(`Debug: First row mapped data:`, { protocol_name: mappedRow.protocol_name, chain: mappedRow.chain, data_type: mappedRow.data_type });
+        }
+        
         return mappedRow;
       });
 
@@ -498,8 +581,23 @@ export class DataManagementService {
       const batchSize = 500;
       let insertedCount = 0;
 
+      console.log(`\n=== INSERT DEBUG ===`);
+      console.log(`Total rows to insert: ${mappedData.length}`);
+      console.log(`Data type for all rows: ${dataType}`);
+      console.log(`First row data_type: ${mappedData[0]?.data_type}`);
+      console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
+      console.log(`====================\n`);
+
       for (let i = 0; i < mappedData.length; i += batchSize) {
         const batch = mappedData.slice(i, i + batchSize);
+        
+        console.log(`Inserting batch ${Math.floor(i/batchSize) + 1}, rows ${i + 1}-${Math.min(i + batchSize, mappedData.length)}`);
+        console.log(`Sample row from batch:`, { 
+          protocol_name: batch[0]?.protocol_name, 
+          chain: batch[0]?.chain, 
+          data_type: batch[0]?.data_type,
+          date: batch[0]?.date 
+        });
         
         const { error } = await supabase
           .from(TABLE_NAME)
@@ -537,20 +635,21 @@ export class DataManagementService {
   /**
    * Import all CSV files into the database
    */
-  private async importAllProtocolData(): Promise<ImportResult[]> {
+  private async importAllProtocolData(dataType: string = 'private'): Promise<ImportResult[]> {
     try {
-      // First, delete only existing SOLANA data (preserve EVM data)
-      console.log('--- Deleting existing SOLANA data from protocol_stats (preserving EVM data) ---');
+      // First, delete only existing SOLANA data for this data type (preserve EVM data)
+      console.log(`--- Deleting existing SOLANA ${dataType} data from protocol_stats (preserving EVM data) ---`);
       const { error: deleteError } = await supabase
         .from(TABLE_NAME)
         .delete()
-        .eq('chain', 'solana'); // Only delete Solana data, preserve EVM
+        .eq('chain', 'solana') // Only delete Solana data, preserve EVM
+        .eq('data_type', dataType); // Only delete data for this data type
 
       if (deleteError) {
         throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
       }
 
-      console.log('Successfully deleted existing Solana data (EVM data preserved)');
+      console.log(`Successfully deleted existing Solana ${dataType} data (EVM data preserved)`);
 
       // Get list of CSV files
       const files = await fs.readdir(DATA_DIR);
@@ -561,7 +660,7 @@ export class DataManagementService {
       // Import each CSV file
       const importPromises = csvFiles.map(file => {
         const protocolName = path.basename(file, '.csv');
-        return this.importProtocolData(protocolName);
+        return this.importProtocolData(protocolName, false, dataType);
       });
 
       return Promise.all(importPromises);
@@ -570,7 +669,8 @@ export class DataManagementService {
       console.error('Error in importAllProtocolData:', error);
       
       // Return error result for all protocols
-      return Object.keys(PROTOCOL_SOURCES).map(protocol => ({
+      const protocolSources = getProtocolSources('private');
+      return Object.keys(protocolSources).map(protocol => ({
         success: false,
         protocol,
         rowsInserted: 0,
@@ -582,15 +682,15 @@ export class DataManagementService {
   /**
    * Complete sync process: download CSV files and import to database
    */
-  public async syncData(): Promise<SyncResult> {
+  public async syncData(dataType: string = 'private'): Promise<SyncResult> {
     const startTime = new Date();
     
     try {
-      console.log('Starting complete data sync process...');
+      console.log(`Starting complete data sync process for ${dataType} data...`);
 
       // Step 1: Download CSV files
       console.log('--- Downloading CSV files from Dune API ---');
-      const downloadResults = await this.downloadAllProtocolData();
+      const downloadResults = await this.downloadAllProtocolData(dataType);
       
       const successfulDownloads = downloadResults.filter(result => result.success);
       console.log(`Downloaded ${successfulDownloads.length}/${downloadResults.length} CSV files successfully`);
@@ -601,7 +701,7 @@ export class DataManagementService {
 
       // Step 2: Import CSV files to database
       console.log('--- Importing CSV files to database ---');
-      const importResults = await this.importAllProtocolData();
+      const importResults = await this.importAllProtocolData(dataType);
       
       const successfulImports = importResults.filter(result => result.success);
       const totalRowsImported = importResults.reduce((sum, result) => sum + result.rowsInserted, 0);

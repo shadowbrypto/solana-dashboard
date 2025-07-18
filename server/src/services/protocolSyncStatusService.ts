@@ -68,6 +68,7 @@ export class ProtocolSyncStatusService {
         .select('date')
         .eq('protocol_name', protocolName)
         .eq('chain', 'solana') // Filter for Solana data only
+        .eq('data_type', 'private') // Default to private data for sync status
         .order('date', { ascending: false })
         .limit(1);
 

@@ -6,6 +6,7 @@ import { getProtocolLogoFilename } from '../lib/protocol-config';
 import { StackedBarChart } from './charts/StackedBarChart';
 import { StackedAreaChart } from './charts/StackedAreaChart';
 import { ComponentActions } from './ComponentActions';
+import { Settings } from '../lib/settings';
 
 interface EVMMetrics {
   lifetimeVolume: number;
@@ -54,6 +55,51 @@ const formatVolume = (volume: number): string => {
   return `$${volume.toFixed(2)}`;
 };
 
+// Transform raw unified API data into the format expected by EVMProtocolLayout
+const transformUnifiedDataToEVMFormat = (rawData: any[]): EVMDailyData[] => {
+  // Group by date
+  const dateGroups = rawData.reduce((acc: Record<string, any[]>, row: any) => {
+    const date = row.date;
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(row);
+    return acc;
+  }, {});
+
+  // Convert each date group to EVMDailyData format
+  const result = Object.entries(dateGroups).map(([date, rows]) => {
+    const chainData: Record<string, number> = {};
+    let totalVolume = 0;
+
+    rows.forEach((row: any) => {
+      const volume = Number(row.volume_usd) || 0;
+      chainData[row.chain] = (chainData[row.chain] || 0) + volume;
+      totalVolume += volume;
+    });
+
+    // Format date for display (day-month-year format expected by chart)
+    const dateObj = new Date(date);
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    const formattedDay = `${day}-${month}-${year}`;
+
+    return {
+      date,
+      formattedDay,
+      chainData,
+      totalVolume
+    };
+  }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  // Debug the transformation
+  console.log('Transformed EVM data sample:', result.slice(0, 2));
+  console.log('Total transformed records:', result.length);
+  
+  return result;
+};
+
 export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }) => {
   const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
   const [dailyData, setDailyData] = useState<EVMDailyData[]>([]);
@@ -61,6 +107,15 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const [dailyLoading, setDailyLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y'>('90d'); // Default to 90d to match chart's 3m default
+  const [dataTypeChangeKey, setDataTypeChangeKey] = useState(0);
+
+  // Listen for data type changes
+  useEffect(() => {
+    const unsubscribe = Settings.addDataTypeChangeListener(() => {
+      setDataTypeChangeKey(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const fetchEVMMetrics = async () => {
@@ -70,8 +125,9 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
         
         // Use clean protocol name (remove _evm suffix if present)
         const cleanProtocol = protocol.replace('_evm', '');
+        const dataType = Settings.getDataTypePreference();
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-        const response = await fetch(`${API_BASE_URL}/unified/chain-breakdown?protocol=${cleanProtocol}`);
+        const response = await fetch(`${API_BASE_URL}/unified/chain-breakdown?protocol=${cleanProtocol}&dataType=${dataType}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch EVM metrics: ${response.statusText}`);
@@ -95,15 +151,16 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     if (protocol) {
       fetchEVMMetrics();
     }
-  }, [protocol]);
+  }, [protocol, dataTypeChangeKey]);
 
   const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '6m' | '1y') => {
     try {
       setDailyLoading(true);
       
       const cleanProtocol = protocol.replace('_evm', '');
+      const dataType = Settings.getDataTypePreference();
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/unified/metrics?protocol=${cleanProtocol}&chain=evm&timeframe=${timeframe}`);
+      const response = await fetch(`${API_BASE_URL}/unified/metrics?protocol=${cleanProtocol}&chain=evm&timeframe=${timeframe}&dataType=${dataType}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch daily metrics: ${response.statusText}`);
@@ -111,8 +168,10 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       
       const result = await response.json();
       
-      if (result.success) {
-        setDailyData(result.data);
+      if (result.success && result.data) {
+        // Transform raw unified API data into expected format
+        const transformedData = transformUnifiedDataToEVMFormat(result.data);
+        setDailyData(transformedData);
       } else {
         console.warn('No daily data available:', result.error);
         setDailyData([]);
@@ -159,7 +218,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     if (protocol) {
       fetchDailyData(selectedTimeframe);
     }
-  }, [protocol]);
+  }, [protocol, selectedTimeframe, dataTypeChangeKey]);
 
   if (loading) {
     return (
@@ -187,17 +246,29 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   // Get unique chains that actually have data across all days
   const allChainsInData = new Set<string>();
   dailyData.forEach(day => {
-    Object.keys(day.chainData).forEach(chain => {
-      if (day.chainData[chain] > 0) {
-        allChainsInData.add(chain);
-      }
-    });
+    if (day.chainData && typeof day.chainData === 'object') {
+      Object.keys(day.chainData).forEach(chain => {
+        // More permissive check - include any chain with any volume
+        if (day.chainData[chain] && day.chainData[chain] >= 0) {
+          allChainsInData.add(chain);
+        }
+      });
+    }
   });
 
-  // Use chains that have actual data, fallback to static breakdown
+  // Debug: log detected chains and sample data
+  console.log('Detected chains:', Array.from(allChainsInData));
+  console.log('Daily data sample:', dailyData.slice(0, 2));
+  console.log('EVM metrics:', evmMetrics);
+
+  // Use chains that have actual data, fallback to static breakdown or default chains
   const availableChains = allChainsInData.size > 0 
     ? Array.from(allChainsInData).sort() 
-    : (evmMetrics ? evmMetrics.chainBreakdown.map(chain => chain.chain) : []);
+    : (evmMetrics && evmMetrics.chainBreakdown.length > 0 
+       ? evmMetrics.chainBreakdown.map(chain => chain.chain) 
+       : ['ethereum', 'base', 'bsc', 'avax', 'arbitrum']); // Default EVM chains
+
+  console.log('Available chains for charts:', availableChains);
 
   // Process daily data for StackedBarChart, ensuring all chains have values
   const chartData = dailyData.map(day => {
@@ -208,7 +279,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     
     // Add all available chains, defaulting to 0 if missing
     availableChains.forEach(chain => {
-      dayData[chain] = day.chainData[chain] || 0;
+      dayData[chain] = (day.chainData && day.chainData[chain]) || 0;
     });
     
     return dayData;
@@ -221,11 +292,11 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       date: day.date,
     };
     
-    const totalVolume = day.totalVolume || Object.values(day.chainData).reduce((sum, val) => sum + (val || 0), 0);
+    const totalVolume = day.totalVolume || (day.chainData ? Object.values(day.chainData).reduce((sum, val) => sum + (val || 0), 0) : 0);
     
     // Calculate dominance percentages for each chain
     availableChains.forEach(chain => {
-      const chainVolume = day.chainData[chain] || 0;
+      const chainVolume = (day.chainData && day.chainData[chain]) || 0;
       // Store as percentage (0-100) for StackedAreaChart
       dayData[`${chain}_dominance`] = totalVolume > 0 ? (chainVolume / totalVolume) * 100 : 0;
     });
@@ -236,6 +307,12 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const chainLabels = availableChains.map(chain => chainNames[chain] || chain);
   const chainDominanceKeys = availableChains.map(chain => `${chain}_dominance`);
   const chartColors = availableChains.map(chain => chainColors[chain] || '#6B7280');
+
+  // Debug chart data
+  console.log('Chart data length:', chartData.length);
+  console.log('Chart data sample:', chartData.slice(0, 2));
+  console.log('Dominance chart data length:', dominanceChartData.length);
+  console.log('Daily loading:', dailyLoading);
 
 
   return (
@@ -344,7 +421,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       </Card>
 
       {/* Daily Chain Volume Breakdown Chart */}
-      {!dailyLoading && chartData.length > 0 && availableChains.length > 0 ? (
+      {!dailyLoading && chartData.length > 0 ? (
         <StackedBarChart
           title="Daily Volume by Chain"
           subtitle={protocolDisplayName}
@@ -352,6 +429,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           dataKeys={availableChains}
           labels={chainLabels}
           colors={chartColors}
+          xAxisKey="formattedDay"
           valueFormatter={(value) => formatVolume(value)}
           loading={dailyLoading}
           timeframe={mapTimeframeToChartTimeframe(selectedTimeframe)}
@@ -377,7 +455,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       )}
 
       {/* Chain Dominance Over Time Chart */}
-      {!dailyLoading && dominanceChartData.length > 0 && availableChains.length > 0 ? (
+      {!dailyLoading && dominanceChartData.length > 0 ? (
         <StackedAreaChart
           title="Chain Volume Dominance Over Time"
           subtitle={protocolDisplayName}

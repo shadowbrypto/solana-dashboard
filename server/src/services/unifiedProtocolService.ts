@@ -9,6 +9,7 @@ export interface StandardQueryParams {
   startDate?: string;
   endDate?: string;
   timeframe?: '7d' | '30d' | '90d' | '6m' | '1y';
+  dataType?: 'public' | 'private';
 }
 
 export interface StandardApiResponse<T> {
@@ -59,6 +60,10 @@ export class UnifiedProtocolService {
     
     if (params.timeframe && !['7d', '30d', '90d', '6m', '1y'].includes(params.timeframe)) {
       errors.push('Invalid timeframe. Must be one of: 7d, 30d, 90d, 6m, 1y');
+    }
+    
+    if (params.dataType && !['public', 'private'].includes(params.dataType)) {
+      errors.push('Invalid dataType. Must be one of: public, private');
     }
     
     if (params.startDate && params.endDate) {
@@ -175,6 +180,13 @@ export class UnifiedProtocolService {
                     .lte('date', format(endDate, 'yyyy-MM-dd'));
       }
       
+      // Apply data type filter (default to private)
+      if (params.dataType) {
+        query = query.eq('data_type', params.dataType);
+      } else {
+        query = query.eq('data_type', 'private');
+      }
+      
       const { data, error } = await query.order('date', { ascending: false });
       
       if (error) {
@@ -258,8 +270,8 @@ export class UnifiedProtocolService {
       
       if (protocolData) {
         // Calculate daily growth and weekly trend
-        const dailyGrowth = await this.calculateDailyGrowth(protocolName, params.date, params.chain);
-        const weeklyTrend = await this.calculateWeeklyTrend(protocolName, params.date, params.chain);
+        const dailyGrowth = await this.calculateDailyGrowth(protocolName, params.date, params.chain, params.dataType);
+        const weeklyTrend = await this.calculateWeeklyTrend(protocolName, params.date, params.chain, params.dataType);
         
         return {
           success: true,
@@ -389,7 +401,7 @@ export class UnifiedProtocolService {
   }
   
   // Calculate daily growth for a protocol
-  private async calculateDailyGrowth(protocolName: string, currentDate: string, chain?: string): Promise<number> {
+  private async calculateDailyGrowth(protocolName: string, currentDate: string, chain?: string, dataType?: string): Promise<number> {
     try {
       const currentDateObj = new Date(currentDate);
       const previousDateObj = new Date(currentDateObj);
@@ -400,7 +412,7 @@ export class UnifiedProtocolService {
       const startDate = format(previousDateObj, 'yyyy-MM-dd');
       const endDate = currentDate;
       
-      const params = { protocol: protocolName, startDate, endDate, chain };
+      const params = { protocol: protocolName, startDate, endDate, chain: chain as any, dataType: dataType as any };
       const result = await this.getMetrics(params);
       
       if (!result.data) return 0;
@@ -423,7 +435,7 @@ export class UnifiedProtocolService {
   }
   
   // Calculate weekly trend for a protocol
-  private async calculateWeeklyTrend(protocolName: string, currentDate: string, chain?: string): Promise<number[]> {
+  private async calculateWeeklyTrend(protocolName: string, currentDate: string, chain?: string, dataType?: string): Promise<number[]> {
     try {
       const currentDateObj = new Date(currentDate);
       const weeklyTrend: number[] = [];
@@ -434,7 +446,7 @@ export class UnifiedProtocolService {
         dateObj.setDate(dateObj.getDate() - i);
         const dateStr = format(dateObj, 'yyyy-MM-dd');
         
-        const params = { protocol: protocolName, date: dateStr, chain };
+        const params = { protocol: protocolName, date: dateStr, chain: chain as any, dataType: dataType as any };
         const result = await this.getMetrics(params);
         const volume = result.data?.reduce((sum: number, row: any) => 
           sum + (Number(row.volume_usd) || 0), 0) || 0;

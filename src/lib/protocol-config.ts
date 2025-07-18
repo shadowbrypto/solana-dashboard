@@ -23,7 +23,7 @@ import {
   BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon, 
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
-  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon 
+  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
@@ -64,6 +64,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'padre', name: 'Padre', icon: PadreIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'nova terminal', name: 'Nova Terminal', icon: NovaIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BonkBotIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'mevx', name: 'Mevx', icon: MevxIcon, category: 'Trading Terminals', chain: 'solana' },
   
   // Solana - Mobile Apps
   { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps', chain: 'solana' },

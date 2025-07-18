@@ -95,13 +95,13 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               size="icon"
               onClick={() => syncData(
                 () => toast({
-                  title: "Refreshing Data",
-                  description: "Fetching latest Solana and EVM data...",
+                  title: "Refreshing Solana Data",
+                  description: "Fetching latest Solana protocol data...",
                 }),
                 (result) => toast({
                   variant: "success",
-                  title: "Data Sync Complete",
-                  description: `Successfully refreshed Solana and EVM data (${result.csvFilesFetched} files synced)`,
+                  title: "Solana Data Sync Complete",
+                  description: `Successfully refreshed Solana data (${result.csvFilesFetched} protocols synced)`,
                 })
               )}
               disabled={!canSync || isLoading}
@@ -194,13 +194,13 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             size="sm"
             onClick={() => syncData(
               () => toast({
-                title: "Refreshing Data", 
-                description: "Fetching latest Solana and EVM data...",
+                title: "Refreshing Solana Data", 
+                description: "Fetching latest Solana protocol data...",
               }),
               (result) => toast({
                 variant: "success",
-                title: "Data Sync Complete",
-                description: `Successfully refreshed Solana and EVM data (${result.csvFilesFetched} files synced)`,
+                title: "Solana Data Sync Complete",
+                description: `Successfully refreshed Solana data (${result.csvFilesFetched} protocols synced)`,
               })
             )}
             disabled={!canSync || isLoading}
@@ -234,7 +234,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
         {/* Status Message */}
         {canSync && (
           <p className="text-xs text-green-700 dark:text-green-400 font-medium">
-            ✨ Ready to fetch latest data
+            ✨ Ready to fetch latest Solana data
           </p>
         )}
         

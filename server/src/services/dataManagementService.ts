@@ -47,6 +47,7 @@ const PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "nova terminal": { queryIds: [5196914], chain: 'solana' },
   "slingshot": { queryIds: [4968360], chain: 'solana' },
   "fomo": { queryIds: [5315650], chain: 'solana' },
+  "mevx": { queryIds: [5498846], chain: 'solana' },
   
   // Ethereum protocols - add your protocols here
   // Example:

@@ -19,6 +19,11 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'soltradingbot': { solana: true, evm: false },
   'trojan': { solana: true, evm: false },
   'vector': { solana: true, evm: false },
+  'mevx': { solana: true, evm: false },
+  'bonkbot terminal': { solana: true, evm: false },
+  'nova terminal': { solana: true, evm: false },
+  'slingshot': { solana: true, evm: false },
+  'fomo': { solana: true, evm: false },
   
   // Multi-chain protocols (both Solana and EVM)
   'bloom': { solana: true, evm: true },

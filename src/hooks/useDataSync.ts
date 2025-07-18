@@ -128,7 +128,7 @@ export function useDataSync() {
     }
 
     try {
-      const data = await dataSyncApi.syncAllData();
+      const data = await dataSyncApi.syncData();
       
       // Store the sync time
       const now = getCETDate();
@@ -141,12 +141,11 @@ export function useDataSync() {
         error: null
       }));
 
-      // Call the optional success callback with combined sync results
+      // Call the optional success callback with Solana sync results
       if (onSyncSuccess) {
-        const totalCsvFiles = data.solana.csvFilesFetched + data.evm.csvFilesFetched;
         onSyncSuccess({ 
-          csvFilesFetched: totalCsvFiles, 
-          timestamp: data.solana.timestamp 
+          csvFilesFetched: data.csvFilesFetched, 
+          timestamp: data.timestamp 
         });
       }
 

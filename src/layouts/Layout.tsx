@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -9,7 +9,7 @@ import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
-// import { Settings } from '../lib/settings';
+import { Settings as AppSettings } from '../lib/settings';
 // import { SettingsManager } from '../components/SettingsManager';
 
 // Generate protocols array from centralized config
@@ -38,6 +38,7 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [dataType, setDataType] = useState<'public' | 'private'>(AppSettings.getDataTypePreference());
   // Initialize all categories as expanded for better navigation
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
     protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
@@ -47,6 +48,14 @@ export function Layout() {
   const isProtocolPage = location.pathname === '/';
   const searchParams = new URLSearchParams(location.search);
   const currentProtocol = isProtocolPage ? (searchParams.get('protocol')?.toLowerCase() || 'all') : '';
+
+  // Listen for data type changes
+  useEffect(() => {
+    const unsubscribe = AppSettings.addDataTypeChangeListener((newDataType) => {
+      setDataType(newDataType);
+    });
+    return unsubscribe;
+  }, []);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -121,6 +130,28 @@ export function Layout() {
 
         {/* Protocol Selection */}
         <nav className="flex-1 px-2 py-4 space-y-6 overflow-y-auto lg:pt-4 pt-2">
+          {/* Data Type Indicator */}
+          <div className="px-2 mb-6">
+            <div className={cn(
+              "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors",
+              dataType === 'private' 
+                ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50" 
+                : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800/50"
+            )}>
+              {dataType === 'private' ? (
+                <>
+                  <Database className="w-3.5 h-3.5 shrink-0" />
+                  <span>Private Analytics</span>
+                </>
+              ) : (
+                <>
+                  <Globe className="w-3.5 h-3.5 shrink-0" />
+                  <span>Public Analytics</span>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Overview Section */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>

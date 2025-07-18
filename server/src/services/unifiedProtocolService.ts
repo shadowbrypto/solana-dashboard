@@ -130,85 +130,116 @@ export class UnifiedProtocolService {
       const chainFilter = UnifiedProtocolService.normalizeChainFilter(params.chain);
       const protocolFilter = UnifiedProtocolService.normalizeProtocolFilter(params.protocol);
       
-      let query = supabase.from('protocol_stats').select('*');
-      
-      // Apply chain filter
-      if (chainFilter) {
-        query = query.in('chain', chainFilter);
-      }
-      
-      // Apply protocol filter
-      if (protocolFilter) {
-        query = query.in('protocol_name', protocolFilter);
-      }
-      
-      // Apply date filters
-      if (params.date) {
-        query = query.eq('date', params.date);
-      } else if (params.startDate && params.endDate) {
-        query = query.gte('date', params.startDate).lte('date', params.endDate);
-      } else if (params.startDate) {
-        query = query.gte('date', params.startDate);
-      } else if (params.endDate) {
-        query = query.lte('date', params.endDate);
-      }
-      
-      // Apply timeframe filter (if no explicit date range)
-      if (params.timeframe && !params.startDate && !params.endDate && !params.date) {
-        const endDate = new Date();
-        const startDate = new Date();
+      // Implement pagination to fetch all data
+      let allData: any[] = [];
+      let hasMore = true;
+      let page = 0;
+      const PAGE_SIZE = 1000;
+
+      while (hasMore) {
+        let query = supabase.from('protocol_stats').select('*')
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
         
-        switch (params.timeframe) {
-          case '7d':
-            startDate.setDate(startDate.getDate() - 7);
-            break;
-          case '30d':
-            startDate.setDate(startDate.getDate() - 30);
-            break;
-          case '90d':
-            startDate.setDate(startDate.getDate() - 90);
-            break;
-          case '6m':
-            startDate.setMonth(startDate.getMonth() - 6);
-            break;
-          case '1y':
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            break;
+        // Apply chain filter
+        if (chainFilter) {
+          query = query.in('chain', chainFilter);
         }
         
-        query = query.gte('date', format(startDate, 'yyyy-MM-dd'))
-                    .lte('date', format(endDate, 'yyyy-MM-dd'));
+        // Apply protocol filter
+        if (protocolFilter) {
+          query = query.in('protocol_name', protocolFilter);
+        }
+        
+        // Apply date filters
+        if (params.date) {
+          query = query.eq('date', params.date);
+        } else if (params.startDate && params.endDate) {
+          query = query.gte('date', params.startDate).lte('date', params.endDate);
+        } else if (params.startDate) {
+          query = query.gte('date', params.startDate);
+        } else if (params.endDate) {
+          query = query.lte('date', params.endDate);
+        }
+        
+        // Apply timeframe filter (if no explicit date range)
+        if (params.timeframe && !params.startDate && !params.endDate && !params.date) {
+          const endDate = new Date();
+          const startDate = new Date();
+          
+          switch (params.timeframe) {
+            case '7d':
+              startDate.setDate(startDate.getDate() - 7);
+              break;
+            case '30d':
+              startDate.setDate(startDate.getDate() - 30);
+              break;
+            case '90d':
+              startDate.setDate(startDate.getDate() - 90);
+              break;
+            case '6m':
+              startDate.setMonth(startDate.getMonth() - 6);
+              break;
+            case '1y':
+              startDate.setFullYear(startDate.getFullYear() - 1);
+              break;
+          }
+          
+          query = query.gte('date', format(startDate, 'yyyy-MM-dd'))
+                      .lte('date', format(endDate, 'yyyy-MM-dd'));
+        }
+        
+        // Apply data type filter (default to private)
+        if (params.dataType) {
+          query = query.eq('data_type', params.dataType);
+        } else {
+          query = query.eq('data_type', 'private');
+        }
+        
+        const { data, error } = await query.order('date', { ascending: false });
+        
+        if (error) {
+          return { success: false, error: error.message };
+        }
+        
+        if (!data || data.length === 0) break;
+        
+        allData = allData.concat(data);
+        hasMore = data.length === PAGE_SIZE;
+        page++;
+        
+        console.log(`UnifiedAPI: Fetched page ${page}, records: ${data.length}, total so far: ${allData.length}`);
       }
       
-      // Apply data type filter (default to private)
-      if (params.dataType) {
-        query = query.eq('data_type', params.dataType);
-      } else {
-        query = query.eq('data_type', 'private');
-      }
+      console.log(`UnifiedAPI: Total records fetched: ${allData.length}`);
       
-      const { data, error } = await query.order('date', { ascending: false });
-      
-      if (error) {
-        return { success: false, error: error.message };
+      // Filter out the most recent date when no specific date filter is applied
+      // This matches the behavior of legacy getProtocolStats/getTotalProtocolStats
+      let filteredData = allData;
+      if (!params.date && !params.startDate && !params.endDate && allData && allData.length > 0) {
+        // Find the most recent date and filter it out
+        const mostRecentDate = allData[0]?.date; // Data is already sorted by date desc
+        if (mostRecentDate) {
+          filteredData = allData.filter(row => row.date !== mostRecentDate);
+          console.log(`UnifiedAPI: Filtered out most recent date ${mostRecentDate}. Records: ${allData.length} -> ${filteredData.length}`);
+        }
       }
       
       // Cache the result
       unifiedCache.set(cacheKey, {
-        data,
+        data: filteredData,
         timestamp: Date.now()
       });
       
       return {
         success: true,
-        data,
+        data: filteredData,
         metadata: {
           chain: params.chain,
           protocol: Array.isArray(params.protocol) ? params.protocol.join(',') : params.protocol,
           dateRange: params.startDate && params.endDate 
             ? { start: params.startDate, end: params.endDate }
             : undefined,
-          totalRecords: data?.length || 0,
+          totalRecords: filteredData?.length || 0,
           cacheHit: false
         }
       };

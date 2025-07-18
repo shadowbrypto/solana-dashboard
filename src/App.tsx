@@ -229,7 +229,11 @@ const MainContent = (): JSX.Element => {
       // Fetch total stats with proper chain filter and data type
       if (!selectedProtocol.endsWith('_evm')) {
         const dataType = Settings.getDataTypePreference();
-        const totalStats = await getTotalProtocolStats(selectedProtocol === 'all' ? undefined : selectedProtocol, undefined, dataType);
+        // For "all" view, always get total for all protocols. For specific protocol view, get total for that protocol.
+        const protocolForStats = selectedProtocol === 'all' ? undefined : selectedProtocol;
+        console.log('🔍 Debug totalStats call:', { selectedProtocol, protocolForStats, dataType });
+        const totalStats = await getTotalProtocolStats(protocolForStats, undefined, dataType);
+        console.log('📊 Total stats received:', { total_volume_usd: totalStats.total_volume_usd });
         if (!totalStats) {
           throw new Error('Failed to fetch total protocol stats');
         }

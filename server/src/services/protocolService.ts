@@ -8,7 +8,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds for fresh data
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
@@ -636,18 +636,16 @@ export async function getAggregatedProtocolStats(dataType?: string) {
   const aggregatedData = Array.from(dataByDate.values())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Remove the most recent date
-  const filteredAggregatedData = aggregatedData.length > 0 ? aggregatedData.slice(1) : aggregatedData;
-
-  console.log(`Aggregated data for ${filteredAggregatedData.length} unique dates (excluding latest date)`);
+  // Don't filter out the most recent date - show all available data
+  console.log(`Aggregated data for ${aggregatedData.length} unique dates`);
 
   // Cache the result
   aggregatedStatsCache.set(cacheKey, {
-    data: filteredAggregatedData,
+    data: aggregatedData,
     timestamp: Date.now()
   });
 
-  return filteredAggregatedData;
+  return aggregatedData;
 }
 
 export async function generateWeeklyInsights() {

@@ -30,7 +30,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds for fresh data
 const unifiedCache = new Map<string, CacheEntry<any>>();
 
 function isCacheValid<T>(cache: CacheEntry<T>): boolean {
@@ -212,17 +212,8 @@ export class UnifiedProtocolService {
       
       console.log(`UnifiedAPI: Total records fetched: ${allData.length}`);
       
-      // Filter out the most recent date when no specific date filter is applied
-      // This matches the behavior of legacy getProtocolStats/getTotalProtocolStats
+      // Don't filter out the most recent date - show all available data
       let filteredData = allData;
-      if (!params.date && !params.startDate && !params.endDate && allData && allData.length > 0) {
-        // Find the most recent date and filter it out
-        const mostRecentDate = allData[0]?.date; // Data is already sorted by date desc
-        if (mostRecentDate) {
-          filteredData = allData.filter(row => row.date !== mostRecentDate);
-          console.log(`UnifiedAPI: Filtered out most recent date ${mostRecentDate}. Records: ${allData.length} -> ${filteredData.length}`);
-        }
-      }
       
       // Cache the result
       unifiedCache.set(cacheKey, {

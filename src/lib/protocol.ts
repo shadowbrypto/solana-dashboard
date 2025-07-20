@@ -14,7 +14,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes cache for better performance
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds cache for fresh data
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();

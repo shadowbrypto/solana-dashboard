@@ -305,8 +305,8 @@ export const unifiedApi = {
     };
   },
   
-  async getDailyMetrics(date: Date): Promise<Record<Protocol, ProtocolMetrics>> {
-    const result = await unifiedProtocolApi.getDailyMetrics(date, 'solana');
+  async getDailyMetrics(date: Date, chain?: string, protocol?: string | string[], dataType?: string): Promise<Record<Protocol, ProtocolMetrics>> {
+    const result = await unifiedProtocolApi.getDailyMetrics(date, chain || 'solana', protocol, dataType);
     if (!result.success) {
       throw new UnifiedApiError(result.error || 'Failed to fetch daily metrics');
     }

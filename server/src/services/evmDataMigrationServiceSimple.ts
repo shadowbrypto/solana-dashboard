@@ -17,9 +17,9 @@ export class SimpleEVMDataMigrationService {
   /**
    * Sync EVM protocol data - download single CSV file and save like Solana protocols
    */
-  public async syncEVMProtocolData(protocolName: string): Promise<any> {
+  public async syncEVMProtocolData(protocolName: string, dataType: string = 'public'): Promise<any> {
     try {
-      console.log(`Starting simple EVM data sync for ${protocolName}...`);
+      console.log(`Starting simple EVM data sync for ${protocolName} with ${dataType} data...`);
 
       // Clean up any files created in wrong location (legacy data/evm directory)
       const oldDataDir = path.join(__dirname, '../../data/evm');
@@ -54,7 +54,7 @@ export class SimpleEVMDataMigrationService {
       const csvData = await this.downloadAndSaveEVMCSV(protocolName, queryId);
       
       // Parse and import directly to database
-      const results = await this.parseAndImportEVMData(protocolName, csvData);
+      const results = await this.parseAndImportEVMData(protocolName, csvData, dataType);
 
       return {
         success: true,
@@ -116,7 +116,7 @@ export class SimpleEVMDataMigrationService {
   /**
    * Parse CSV data and import directly to database
    */
-  private async parseAndImportEVMData(protocolName: string, csvData: any[]): Promise<any[]> {
+  private async parseAndImportEVMData(protocolName: string, csvData: any[], dataType: string = 'public'): Promise<any[]> {
     try {
       // Clean protocol name (remove _evm suffix)
       const cleanProtocolName = protocolName.replace('_evm', '');
@@ -175,7 +175,8 @@ export class SimpleEVMDataMigrationService {
             daily_users: 0,
             new_users: 0,
             trades: 0,
-            fees_usd: 0
+            fees_usd: 0,
+            data_type: dataType
           };
         }).filter(record => 
           // Only include records with valid dates and volume > 0
@@ -204,7 +205,7 @@ export class SimpleEVMDataMigrationService {
           const { error } = await supabase
             .from(TABLE_NAME)
             .upsert(batch, {
-              onConflict: 'protocol_name,date,chain'
+              onConflict: 'protocol_name,date,chain,data_type'
             });
 
           if (error) {

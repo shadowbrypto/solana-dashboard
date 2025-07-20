@@ -215,13 +215,15 @@ const MainContent = (): JSX.Element => {
       
       if (selectedProtocol === 'all') {
         // Data is already aggregated and formatted by the backend
-        setData(fetchedData);
+        // Sort in ascending order (oldest to newest) for proper chart display
+        const sortedData = fetchedData.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setData(sortedData);
       } else {
         // For single protocol, just format the data
         const formattedData = fetchedData.map((item: any) => ({
           ...item,
           formattedDay: formatDate(item.date)
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         setData(formattedData);
       }

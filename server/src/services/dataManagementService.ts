@@ -159,7 +159,7 @@ export class DataManagementService {
         console.log(`Detected EVM protocol ${protocolName}, delegating to simple EVM service...`);
         
         const { simpleEVMDataMigrationService } = await import('./evmDataMigrationServiceSimple.js');
-        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName);
+        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName, dataType);
         
         // Convert simple EVM result format to standard SyncResult format
         return {

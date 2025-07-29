@@ -190,6 +190,8 @@ export function StackedBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                interval="preserveStartEnd"
+                tickCount={Math.min(8, filteredData.length)}
                 tickFormatter={(value) => {
                   const [day, month] = value.split('-');
                   const date = new Date(2025, parseInt(month) - 1, parseInt(day));

@@ -351,6 +351,36 @@ export const dataSyncApi = {
     }>(`/protocols/sync-evm/${protocolName}`, {
       method: 'POST'
     });
+  },
+
+  // Sync all launchpad data
+  async syncAllLaunchpadData(): Promise<{ 
+    csvFilesFetched: number; 
+    rowsImported: number; 
+    timestamp: string 
+  }> {
+    return apiRequest<{ 
+      csvFilesFetched: number; 
+      rowsImported: number; 
+      timestamp: string 
+    }>('/data-update/sync/launchpads', {
+      method: 'POST'
+    });
+  },
+
+  // Sync data for a specific launchpad
+  async syncLaunchpadData(launchpadName: string): Promise<{ 
+    launchpad: string; 
+    rowsImported: number; 
+    timestamp: string 
+  }> {
+    return apiRequest<{ 
+      launchpad: string; 
+      rowsImported: number; 
+      timestamp: string 
+    }>(`/data-update/sync/launchpad/${launchpadName}`, {
+      method: 'POST'
+    });
   }
 };
 

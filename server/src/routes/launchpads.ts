@@ -247,14 +247,13 @@ router.get('/list', async (req, res) => {
 
     const { data, error } = await supabase
       .from('launchpad_stats')
-      .select('launchpad_name')
-      .group('launchpad_name');
+      .select('launchpad_name');
 
     if (error) {
       throw error;
     }
 
-    const launchpads = [...new Set(data?.map(row => row.launchpad_name) || [])];
+    const launchpads = [...new Set(data?.map((row: { launchpad_name: string }) => row.launchpad_name) || [])];
 
     // Cache the result
     launchpadCache.set(cacheKey, {

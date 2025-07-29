@@ -1,4 +1,4 @@
-import { LucideIcon, TrendingDown, TrendingUp, Sparkles, Coins, Users, BarChart2, DollarSign, UsersRound, CircleDollarSign, Hash, HandCoins } from "lucide-react";
+import { LucideIcon, TrendingDown, TrendingUp, Sparkles, Coins, Users, BarChart2, DollarSign, UsersRound, CircleDollarSign, Hash, HandCoins, Rocket, Trophy, Percent } from "lucide-react";
 import { ComponentActions } from "./ComponentActions";
 
 interface MetricCardProps {
@@ -8,7 +8,7 @@ interface MetricCardProps {
   duration?: string;
   icon?: React.ReactNode;
   description?: string;
-  type?: 'volume' | 'users' | 'trades' | 'fees';
+  type?: 'volume' | 'users' | 'trades' | 'fees' | 'launches' | 'graduations' | 'graduation_rate';
   prefix?: string;
   subtitle?: string;
   subtitleIcon?: string;
@@ -51,6 +51,12 @@ export function MetricCard({
         return <Hash className="h-4 w-4 text-muted-foreground" />;
       case 'fees':
         return <HandCoins className="h-4 w-4 text-muted-foreground" />;
+      case 'launches':
+        return <Rocket className="h-4 w-4 text-muted-foreground" />;
+      case 'graduations':
+        return <Trophy className="h-4 w-4 text-muted-foreground" />;
+      case 'graduation_rate':
+        return <Percent className="h-4 w-4 text-muted-foreground" />;
       default:
         return <Sparkles className="h-4 w-4 text-muted-foreground" />;
     }
@@ -67,6 +73,9 @@ export function MetricCard({
           type === 'volume' ? 'from-blue-500 to-cyan-500' :
           type === 'users' ? 'from-green-500 to-emerald-500' :
           type === 'trades' ? 'from-purple-500 to-violet-500' :
+          type === 'launches' ? 'from-orange-500 to-red-500' :
+          type === 'graduations' ? 'from-yellow-500 to-orange-500' :
+          type === 'graduation_rate' ? 'from-indigo-500 to-purple-500' :
           'from-orange-500 to-amber-500'
         } opacity-0 group-hover:opacity-100`} />
         

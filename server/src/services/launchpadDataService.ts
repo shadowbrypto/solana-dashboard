@@ -25,7 +25,8 @@ interface LaunchpadSource {
 
 // Launchpad sources mapping - only Solana chain
 const LAUNCHPAD_SOURCES: Record<string, LaunchpadSource> = {
-  "pumpfun": { queryIds: [4894656] }, // Will be populated with actual query IDs
+  "pumpfun": { queryIds: [4894656] }, 
+  "launchlab": {queryIds: [5552096]}
 };
 
 // CSV column mapping to database columns - only launches, graduations, date

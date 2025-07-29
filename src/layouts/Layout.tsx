@@ -7,6 +7,7 @@ import { Separator } from '../components/ui/separator';
 import { protocolCategories } from '../lib/protocol-categories';
 import { DataSyncButton } from '../components/DataSyncButton';
 import { getMutableProtocolConfigs, getProtocolLogoFilename } from '../lib/protocol-config';
+import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
 import { Settings as AppSettings } from '../lib/settings';
@@ -201,6 +202,89 @@ export function Layout() {
           {/* Protocol Categories */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>
+            
+            {/* Launchpads Category */}
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-12 justify-between px-2"
+                onClick={() => setExpandedCategories(prev => ({ ...prev, ['Launchpads']: !expandedCategories['Launchpads'] }))}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="font-medium">Launchpads</span>
+                  <span className="text-xs px-2 py-0.5 rounded-md font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
+                    NEW
+                  </span>
+                  {/* Stacked Icons Preview - Only show when category is collapsed */}
+                  {!expandedCategories['Launchpads'] && (
+                    <div className="flex -space-x-1">
+                      {getAllLaunchpads().slice(0, 3).map((launchpad, index) => (
+                        <div key={launchpad.id} className="w-4 h-4 rounded-full border border-background bg-muted overflow-hidden" style={{ zIndex: getAllLaunchpads().length - index }}>
+                          <img 
+                            src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                            alt={launchpad.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
+                        </div>
+                      ))}
+                      {getAllLaunchpads().length > 3 && (
+                        <div className="w-4 h-4 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                          +{getAllLaunchpads().length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {expandedCategories['Launchpads'] ? <ChevronDown className="h-4 w-4 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 flex-shrink-0" />}
+              </Button>
+              {expandedCategories['Launchpads'] && (
+                <div className="ml-4 space-y-1">
+                  {getAllLaunchpads().map((launchpad) => (
+                    <Button
+                      key={launchpad.id}
+                      variant="ghost"
+                      className={cn(
+                        "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
+                        location.pathname === '/launchpad' && location.search.includes(`launchpad=${launchpad.id}`) && "bg-muted text-foreground font-medium"
+                      )}
+                      onClick={() => navigate(`/launchpad?launchpad=${launchpad.id}`)}
+                    >
+                      <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
+                        <img 
+                          src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                          alt={launchpad.name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            const container = target.parentElement;
+                            if (container) {
+                              container.innerHTML = '';
+                              container.className = 'w-5 h-5 bg-muted/20 rounded-md flex items-center justify-center';
+                              const iconEl = document.createElement('div');
+                              iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                              container.appendChild(iconEl);
+                            }
+                          }}
+                        />
+                      </div>
+                      <span className="flex-1 text-left">{launchpad.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             {protocolCategories.map((category) => {
               const isExpanded = expandedCategories[category.name] || false;
               return (
@@ -306,77 +390,6 @@ export function Layout() {
               );
             })}
 
-            {/* Launchpads Category */}
-            <div className="space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-12 justify-between px-2"
-                onClick={() => setExpandedCategories(prev => ({ ...prev, ['Launchpads']: !expandedCategories['Launchpads'] }))}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="font-medium">Launchpads</span>
-                  {/* Stacked Icons Preview - Only show when category is collapsed */}
-                  {!expandedCategories['Launchpads'] && (
-                    <div className="flex -space-x-1">
-                      <div className="w-4 h-4 rounded-full border border-background bg-muted overflow-hidden">
-                        <img 
-                          src="/assets/logos/pumpfun.jpg"
-                          alt="PumpFun"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-4 h-4 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-2 w-2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {expandedCategories['Launchpads'] ? <ChevronDown className="h-4 w-4 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 flex-shrink-0" />}
-              </Button>
-              {expandedCategories['Launchpads'] && (
-                <div className="ml-4 space-y-1">
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                      location.pathname === '/launchpad' && "bg-muted text-foreground font-medium"
-                    )}
-                    onClick={() => navigate('/launchpad?launchpad=pumpfun')}
-                  >
-                    <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                      <img 
-                        src="/assets/logos/pumpfun.jpg"
-                        alt="PumpFun" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          const container = target.parentElement;
-                          if (container) {
-                            container.innerHTML = '';
-                            container.className = 'w-5 h-5 bg-muted/20 rounded-md flex items-center justify-center';
-                            const iconEl = document.createElement('div');
-                            iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                            container.appendChild(iconEl);
-                          }
-                        }}
-                      />
-                    </div>
-                    <span className="flex-1 text-left">PumpFun</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-md font-medium bg-green-500/10 text-green-600 dark:text-green-400">
-                      SOL
-                    </span>
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Reports Section */}

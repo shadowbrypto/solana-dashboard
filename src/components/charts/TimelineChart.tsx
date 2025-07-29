@@ -340,13 +340,13 @@ export function TimelineChart({
                                 ([_, key]) => key === dataKey
                               )?.[0] || dataKey
                             : title;
-                          const color = isMultiLine
+                          const tooltipColor = isMultiLine
                             ? PALETTE_COLORS[
                                 Object.values(multipleDataKeys || {}).indexOf(
                                   dataKey
                                 ) % PALETTE_COLORS.length
                               ].stroke
-                            : MIDNIGHT_THEME.stroke;
+                            : color;
 
                           return (
                             <div
@@ -355,7 +355,7 @@ export function TimelineChart({
                             >
                               <div
                                 className="w-2 h-2 rounded-lg"
-                                style={{ backgroundColor: color }}
+                                style={{ backgroundColor: tooltipColor }}
                               />
                               <span className="text-sm text-foreground">
                                 {name}:{" "}

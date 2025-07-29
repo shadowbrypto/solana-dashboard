@@ -81,40 +81,54 @@ export function StackedBarChart({
   };
 
   const filteredData = useMemo(() => {
-    // Don't reverse data here - it should already be in correct order (oldest to newest)
-    if (timeframe === "all") return data;
+    // First filter by timeframe
+    let timeFilteredData = data;
+    if (timeframe !== "all") {
+      const now = new Date();
+      let daysToSubtract: number;
 
-    const now = new Date();
-    let daysToSubtract: number;
+      switch (timeframe) {
+        case "7d":
+          daysToSubtract = 7;
+          break;
+        case "30d":
+          daysToSubtract = 30;
+          break;
+        case "3m":
+          daysToSubtract = 90;
+          break;
+        case "6m":
+          daysToSubtract = 180;
+          break;
+        case "1y":
+          daysToSubtract = 365;
+          break;
+        default:
+          daysToSubtract = 90;
+      }
 
-    switch (timeframe) {
-      case "7d":
-        daysToSubtract = 7;
-        break;
-      case "30d":
-        daysToSubtract = 30;
-        break;
-      case "3m":
-        daysToSubtract = 90;
-        break;
-      case "6m":
-        daysToSubtract = 180;
-        break;
-      case "1y":
-        daysToSubtract = 365;
-        break;
-      default:
-        daysToSubtract = 90;
+      const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+
+      timeFilteredData = data.filter(item => {
+        const [day, month, year] = item.formattedDay.split("-");
+        const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return itemDate >= cutoffDate;
+      });
     }
 
-    const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+    // Then handle disabled keys by setting their values to 0
+    if (disabledKeys.length === 0) {
+      return timeFilteredData;
+    }
 
-    return data.filter(item => {
-      const [day, month, year] = item.formattedDay.split("-");
-      const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      return itemDate >= cutoffDate;
+    return timeFilteredData.map(item => {
+      const modifiedItem = { ...item };
+      disabledKeys.forEach(key => {
+        modifiedItem[key] = 0;
+      });
+      return modifiedItem;
     });
-  }, [data, timeframe]);
+  }, [data, timeframe, disabledKeys]);
 
   return (
     <ComponentActions 
@@ -258,17 +272,22 @@ export function StackedBarChart({
                 }}
                 cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
               />
-              {dataKeys.map((key, index) => (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    stackId="a"
-                    fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
-                    fillOpacity={disabledKeys.includes(key) ? 0.3 : 1}
-                    radius={index === dataKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                    name={labels[index]}
-                  />
-              ))}
+              {dataKeys
+                .filter(key => !disabledKeys.includes(key))
+                .map((key, index) => {
+                  const originalIndex = dataKeys.indexOf(key);
+                  const isLastEnabled = index === dataKeys.filter(k => !disabledKeys.includes(k)).length - 1;
+                  return (
+                    <Bar
+                      key={key}
+                      dataKey={key}
+                      stackId="a"
+                      fill={colors[originalIndex]}
+                      radius={isLastEnabled ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                      name={labels[originalIndex]}
+                    />
+                  );
+                })}
               <Legend
                 verticalAlign="bottom"
                 height={32}
@@ -277,6 +296,12 @@ export function StackedBarChart({
                 wrapperStyle={{
                   paddingTop: "12px"
                 }}
+                payload={dataKeys.map((key, index) => ({
+                  value: labels[index],
+                  type: 'circle',
+                  color: disabledKeys.includes(key) ? 'hsl(var(--muted-foreground))' : colors[index],
+                  dataKey: key
+                }))}
                 onClick={(e) => {
                   if (e && typeof e.dataKey === 'string') {
                     setDisabledKeys((prev: string[]) => 
@@ -290,7 +315,7 @@ export function StackedBarChart({
                   const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                   return (
                     <span 
-                      className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                      className={`text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
                     >
                       {value}
                     </span>

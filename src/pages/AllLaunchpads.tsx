@@ -13,7 +13,10 @@ import { MetricCard } from '../components/MetricCard';
 import { LaunchpadMarketShare } from '../components/LaunchpadMarketShare';
 import { StackedBarChart } from '../components/charts/StackedBarChart';
 import { DominanceChart } from '../components/charts/DominanceChart';
+import { PieChart } from '../components/charts/PieChart';
+import { PieChartSkeleton } from '../components/charts/PieChartSkeleton';
 import { transformLaunchpadDataForStackedChart, formatChartNumber } from '../lib/launchpad-chart-utils';
+import { LaunchpadSplitBar } from '../components/LaunchpadSplitBar';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -25,14 +28,12 @@ interface LaunchpadData {
   color: string;
 }
 
-const LAUNCHPAD_COLORS = [
-  '#10b981', // Green for PumpFun
-  '#06b6d4', // Blue for LaunchLab  
-  '#f59e0b', // Orange for LetsBonk
-  '#8b5cf6', // Purple for Moonshot
-  '#ef4444', // Red
-  '#6366f1', // Indigo
-];
+const LAUNCHPAD_COLORS: Record<string, string> = {
+  'pumpfun': '#10b981', // Green for PumpFun
+  'launchlab': '#06b6d4', // Blue for LaunchLab  
+  'letsbonk': '#f59e0b', // Orange for LetsBonk
+  'moonshot': '#8b5cf6', // Purple for Moonshot
+};
 
 export default function AllLaunchpads() {
   const [launchpadData, setLaunchpadData] = useState<LaunchpadData[]>([]);
@@ -41,16 +42,20 @@ export default function AllLaunchpads() {
   const [launchesDominanceTimeframe, setLaunchesDominanceTimeframe] = useState<TimeFrame>("3m");
   const [graduationsTimeframe, setGraduationsTimeframe] = useState<TimeFrame>("3m");
   const [graduationsDominanceTimeframe, setGraduationsDominanceTimeframe] = useState<TimeFrame>("3m");
+  const [launchesPieTimeframe, setLaunchesPieTimeframe] = useState<TimeFrame>("all");
+  const [graduationsPieTimeframe, setGraduationsPieTimeframe] = useState<TimeFrame>("all");
   const [selectedMetric, setSelectedMetric] = useState<'launches' | 'graduations'>('launches');
 
   const allLaunchpads = getAllLaunchpads();
 
-  // Load data for all launchpads
+  // Load data for all launchpads (excluding LaunchLab by default)
   useEffect(() => {
     const loadLaunchpadData = async () => {
       setLoading(true);
       try {
-        const dataPromises = allLaunchpads.map(async (launchpad, index) => {
+        // Filter out LaunchLab by default
+        const filteredLaunchpads = allLaunchpads.filter(lp => lp.id !== 'launchlab');
+        const dataPromises = filteredLaunchpads.map(async (launchpad, index) => {
           try {
             const [data, metrics] = await Promise.all([
               LaunchpadApi.getLaunchpadData(launchpad.id, 'all'),
@@ -69,7 +74,7 @@ export default function AllLaunchpads() {
                 avg_daily_launches: 0,
                 avg_daily_graduations: 0
               },
-              color: LAUNCHPAD_COLORS[index % LAUNCHPAD_COLORS.length]
+              color: LAUNCHPAD_COLORS[launchpad.id] || '#6366f1'
             };
           } catch (error) {
             console.error(`Failed to load data for ${launchpad.id}:`, error);
@@ -85,7 +90,7 @@ export default function AllLaunchpads() {
                 avg_daily_launches: 0,
                 avg_daily_graduations: 0
               },
-              color: LAUNCHPAD_COLORS[index % LAUNCHPAD_COLORS.length]
+              color: LAUNCHPAD_COLORS[launchpad.id] || '#6366f1'
             };
           }
         });
@@ -154,6 +159,77 @@ export default function AllLaunchpads() {
       totalLaunchpads: launchpadData.length
     };
   }, [launchpadData]);
+
+  // Helper function to get launchpad breakdown for the last single day
+  const getLastDayBreakdown = (metric: 'launches' | 'graduations') => {
+    if (launchpadData.length === 0) return [];
+
+    // Get the most recent date across all launchpads
+    const allDates = launchpadData.flatMap(lp => lp.data.map(item => item.date));
+    if (allDates.length === 0) return [];
+    
+    const sortedDates = [...new Set(allDates)].sort();
+    const mostRecentDate = sortedDates[sortedDates.length - 1];
+
+    const breakdown = launchpadData.map(lp => {
+        const dayData = lp.data.find(item => item.date === mostRecentDate);
+        const value = dayData ? (dayData[metric] || 0) : 0;
+        
+        return {
+          name: lp.name,
+          value,
+          color: lp.color
+        };
+      });
+
+    return breakdown.filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+  };
+
+  // Helper function to get launchpad breakdown for a specific timeframe (7d, 30d)
+  const getLaunchpadBreakdown = (days: number, metric: 'launches' | 'graduations') => {
+    if (launchpadData.length === 0) return [];
+
+    // Get the last N days of data (same logic as existing calculateTimeStats)
+    const allData = launchpadData.flatMap(lp => lp.data.map(item => ({
+      ...item,
+      launchpad: lp.launchpad,
+      name: lp.name,
+      color: lp.color
+    }))).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Group by date and get the last N days
+    const dailyTotals = allData.reduce((acc, item) => {
+      const date = item.date;
+      if (!acc[date]) {
+        acc[date] = {};
+      }
+      if (!acc[date][item.launchpad]) {
+        acc[date][item.launchpad] = { launches: 0, graduations: 0, name: item.name, color: item.color };
+      }
+      acc[date][item.launchpad].launches += item.launches || 0;
+      acc[date][item.launchpad].graduations += item.graduations || 0;
+      return acc;
+    }, {} as Record<string, Record<string, { launches: number; graduations: number; name: string; color: string }>>);
+
+    const sortedDates = Object.keys(dailyTotals).sort();
+    const recentDates = sortedDates.slice(-days);
+
+    // Aggregate across the recent days for each launchpad
+    const breakdown = launchpadData.map(lp => {
+        const value = recentDates.reduce((sum, date) => {
+          const dayData = dailyTotals[date]?.[lp.launchpad];
+          return sum + (dayData ? (dayData[metric] || 0) : 0);
+        }, 0);
+        
+        return {
+          name: lp.name,
+          value,
+          color: lp.color
+        };
+      });
+
+    return breakdown.filter(item => item.value > 0).sort((a, b) => b.value - a.value);
+  };
 
   // Recent activity calculations
   const recentActivity = useMemo(() => {
@@ -276,13 +352,30 @@ export default function AllLaunchpads() {
     const weeklyGrowth = calculateGrowth(stats7d.launches, previous7d.launches);
     const monthlyGrowth = calculateGrowth(stats30d.launches, previous30d.launches);
 
+    // Add launchpad breakdowns
+    const breakdown1d = {
+      launches: getLastDayBreakdown('launches'),
+      graduations: getLastDayBreakdown('graduations')
+    };
+    const breakdown7d = {
+      launches: getLaunchpadBreakdown(7, 'launches'),
+      graduations: getLaunchpadBreakdown(7, 'graduations')
+    };
+    const breakdown30d = {
+      launches: getLaunchpadBreakdown(30, 'launches'),
+      graduations: getLaunchpadBreakdown(30, 'graduations')
+    };
+
     return {
       stats1d,
       stats7d,
       stats30d,
       dailyGrowth,
       weeklyGrowth,
-      monthlyGrowth
+      monthlyGrowth,
+      breakdown1d,
+      breakdown7d,
+      breakdown30d
     };
   }, [launchpadData]);
 
@@ -332,8 +425,70 @@ export default function AllLaunchpads() {
         )}
       </div>
 
-      {/* Market Share Component */}
-      <LaunchpadMarketShare data={launchpadData} loading={loading} />
+
+      {/* Pie Charts Section */}
+      <div className="mb-6 lg:mb-8">
+        <h2 className="text-lg font-semibold mb-4">Lifetime Distribution</h2>
+        
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PieChartSkeleton />
+            <PieChartSkeleton />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Launches Pie Chart */}
+            {(() => {
+              const launchesChartData = transformLaunchpadDataForStackedChart(
+                getFilteredData(launchesPieTimeframe),
+                'launches'
+              );
+              return (
+                <PieChart
+                  title="Token Launches Distribution"
+                  subtitle="Lifetime launches across all launchpads"
+                  data={launchesChartData.data}
+                  dataKeys={launchesChartData.dataKeys}
+                  labels={launchesChartData.labels}
+                  colors={launchesChartData.colors}
+                  valueFormatter={formatChartNumber}
+                  timeframe={launchesPieTimeframe}
+                  onTimeframeChange={(value) => setLaunchesPieTimeframe(value as TimeFrame)}
+                  showPercentages={true}
+                  innerRadius={70}
+                  outerRadius={140}
+                  centerLabel="Launches"
+                />
+              );
+            })()}
+
+            {/* Graduations Pie Chart */}
+            {(() => {
+              const graduationsChartData = transformLaunchpadDataForStackedChart(
+                getFilteredData(graduationsPieTimeframe),
+                'graduations'
+              );
+              return (
+                <PieChart
+                  title="Token Graduations Distribution"
+                  subtitle="Lifetime graduations across all launchpads"
+                  data={graduationsChartData.data}
+                  dataKeys={graduationsChartData.dataKeys}
+                  labels={graduationsChartData.labels}
+                  colors={graduationsChartData.colors}
+                  valueFormatter={formatChartNumber}
+                  timeframe={graduationsPieTimeframe}
+                  onTimeframeChange={(value) => setGraduationsPieTimeframe(value as TimeFrame)}
+                  showPercentages={true}
+                  innerRadius={70}
+                  outerRadius={140}
+                  centerLabel="Graduations"
+                />
+              );
+            })()}
+          </div>
+        )}
+      </div>
 
       {/* Recent Activity */}
       {!loading && recentActivity && (
@@ -346,7 +501,7 @@ export default function AllLaunchpads() {
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-sm"></div>
                     <h4 className="font-semibold text-sm text-foreground">Last Day</h4>
@@ -366,17 +521,34 @@ export default function AllLaunchpads() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.launches)}</span>
+                  {/* Launches Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.launches)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown1d.launches} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.graduations)}</span>
+                  
+                  {/* Graduations Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.graduations)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown1d.graduations} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Success Rate</span>
-                    <span className="text-lg font-bold text-foreground">{recentActivity.stats1d.ratio.toFixed(1)}%</span>
+                  
+                  {/* Graduation Rate Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
+                      <span className="text-lg font-bold text-foreground">{recentActivity.stats1d.ratio.toFixed(1)}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -388,7 +560,7 @@ export default function AllLaunchpads() {
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 shadow-sm"></div>
                     <h4 className="font-semibold text-sm text-foreground">Last 7 Days</h4>
@@ -408,17 +580,34 @@ export default function AllLaunchpads() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.launches)}</span>
+                  {/* Launches Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.launches)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown7d.launches} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.graduations)}</span>
+                  
+                  {/* Graduations Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.graduations)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown7d.graduations} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Success Rate</span>
-                    <span className="text-lg font-bold text-foreground">{recentActivity.stats7d.ratio.toFixed(1)}%</span>
+                  
+                  {/* Graduation Rate Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
+                      <span className="text-lg font-bold text-foreground">{recentActivity.stats7d.ratio.toFixed(1)}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -430,7 +619,7 @@ export default function AllLaunchpads() {
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 shadow-sm"></div>
                     <h4 className="font-semibold text-sm text-foreground">Last 30 Days</h4>
@@ -450,17 +639,34 @@ export default function AllLaunchpads() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.launches)}</span>
+                  {/* Launches Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.launches)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown30d.launches} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.graduations)}</span>
+                  
+                  {/* Graduations Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
+                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.graduations)}</span>
+                    </div>
+                    <div className="mt-2">
+                      <LaunchpadSplitBar data={recentActivity.breakdown30d.graduations} />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Success Rate</span>
-                    <span className="text-lg font-bold text-foreground">{recentActivity.stats30d.ratio.toFixed(1)}%</span>
+                  
+                  {/* Graduation Rate Box */}
+                  <div className="bg-muted/60 border border-border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
+                      <span className="text-lg font-bold text-foreground">{recentActivity.stats30d.ratio.toFixed(1)}%</span>
+                    </div>
                   </div>
                 </div>
               </div>

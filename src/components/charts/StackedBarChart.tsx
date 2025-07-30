@@ -38,6 +38,7 @@ interface StackedBarChartProps {
   timeframe?: TimeFrame;
   onTimeframeChange?: (timeframe: TimeFrame) => void;
   disableTimeframeSelector?: boolean;
+  defaultDisabledKeys?: string[];
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -61,13 +62,14 @@ export function StackedBarChart({
   timeframe: externalTimeframe,
   onTimeframeChange,
   disableTimeframeSelector = false,
+  defaultDisabledKeys = [],
 }: StackedBarChartProps) {
   if (loading) {
     return <StackedBarChartSkeleton />;
   }
 
   const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>("3m");
-  const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
+  const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
   
   // Use external timeframe if provided, otherwise use internal
   const timeframe = externalTimeframe || internalTimeframe;

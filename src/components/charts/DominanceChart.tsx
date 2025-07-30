@@ -37,6 +37,7 @@ interface DominanceChartProps {
   timeframe?: TimeFrame;
   onTimeframeChange?: (timeframe: TimeFrame) => void;
   disableTimeframeSelector?: boolean;
+  defaultDisabledKeys?: string[];
 }
 
 function formatPercentage(value: number): string {
@@ -55,13 +56,14 @@ export function DominanceChart({
   timeframe: externalTimeframe,
   onTimeframeChange,
   disableTimeframeSelector = false,
+  defaultDisabledKeys = [],
 }: DominanceChartProps) {
   if (loading) {
     return <StackedBarChartSkeleton />;
   }
 
   const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>("3m");
-  const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
+  const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
   
   // Use external timeframe if provided, otherwise use internal
   const timeframe = externalTimeframe || internalTimeframe;

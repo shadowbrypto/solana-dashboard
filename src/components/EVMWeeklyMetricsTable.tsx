@@ -110,7 +110,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       setLoading(true);
       try {
         console.log(`Fetching EVM weekly data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
-        const data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate);
+        const dataType = 'public'; // Always use public for EVM data
+        const data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
         console.log('Raw API response:', data);
         
         // Convert API data to display format

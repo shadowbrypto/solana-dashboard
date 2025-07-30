@@ -81,20 +81,20 @@ const getIntensityLevel = (value: number, max: number): number => {
 const getGreenColorClass = (intensity: number): string => {
   if (intensity === 0) return 'bg-transparent';
   
-  // 9 color shades for optimal visualization
+  // 9 color shades for optimal visualization using grey/neutral colors
   const colorMap: Record<number, string> = {
-    1: 'bg-green-100 dark:bg-green-950/20',
-    2: 'bg-green-200 dark:bg-green-900/30',
-    3: 'bg-green-300 dark:bg-green-800/40',
-    4: 'bg-green-400 dark:bg-green-700/50',
-    5: 'bg-green-500 dark:bg-green-600/60',
-    6: 'bg-green-600 dark:bg-green-500/70',
-    7: 'bg-green-700 dark:bg-green-400/80',
-    8: 'bg-green-800 dark:bg-green-300/90',
-    9: 'bg-green-900 dark:bg-green-200'
+    1: 'bg-gray-100 dark:bg-gray-950/20',
+    2: 'bg-gray-200 dark:bg-gray-900/30',
+    3: 'bg-gray-300 dark:bg-gray-800/40',
+    4: 'bg-gray-400 dark:bg-gray-700/50',
+    5: 'bg-gray-500 dark:bg-gray-600/60',
+    6: 'bg-gray-600 dark:bg-gray-500/70',
+    7: 'bg-gray-700 dark:bg-gray-400/80',
+    8: 'bg-gray-800 dark:bg-gray-300/90',
+    9: 'bg-gray-900 dark:bg-gray-200'
   };
   
-  return colorMap[intensity] || 'bg-green-900 dark:bg-green-200';
+  return colorMap[intensity] || 'bg-gray-900 dark:bg-gray-200';
 };
 
 export function VolumeActivity({ 

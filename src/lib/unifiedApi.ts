@@ -123,12 +123,13 @@ export class UnifiedProtocolApi {
   }
   
   // Daily metrics
-  async getDailyMetrics(date: Date, chain?: string, protocol?: string | string[]): Promise<StandardApiResponse<Record<Protocol, ProtocolMetrics>>> {
+  async getDailyMetrics(date: Date, chain?: string, protocol?: string | string[], dataType?: 'private' | 'public'): Promise<StandardApiResponse<Record<Protocol, ProtocolMetrics>>> {
     const dateStr = format(date, 'yyyy-MM-dd');
     const params: StandardQueryParams = { date: dateStr };
     
     if (chain) params.chain = chain as any;
     if (protocol) params.protocol = protocol;
+    if (dataType) params.dataType = dataType;
     
     const queryString = buildQueryString(params);
     const endpoint = `/daily${queryString ? `?${queryString}` : ''}`;
@@ -137,7 +138,7 @@ export class UnifiedProtocolApi {
   }
   
   // Weekly metrics
-  async getWeeklyMetrics(startDate: Date, endDate: Date, chain?: string, protocol?: string | string[]): Promise<StandardApiResponse<{
+  async getWeeklyMetrics(startDate: Date, endDate: Date, chain?: string, protocol?: string | string[], dataType?: 'private' | 'public'): Promise<StandardApiResponse<{
     dailyVolumes: Record<Protocol, Record<string, number>>;
     chainDistribution: Record<Protocol, Record<string, number>>;
   }>> {
@@ -148,6 +149,7 @@ export class UnifiedProtocolApi {
     
     if (chain) params.chain = chain as any;
     if (protocol) params.protocol = protocol;
+    if (dataType) params.dataType = dataType;
     
     const queryString = buildQueryString(params);
     const endpoint = `/weekly${queryString ? `?${queryString}` : ''}`;
@@ -201,16 +203,16 @@ export class UnifiedProtocolApi {
   }
   
   // Get all EVM protocols for a specific date
-  async getEVMDaily(date: Date): Promise<StandardApiResponse<Record<Protocol, ProtocolMetrics>>> {
-    return this.getDailyMetrics(date, 'evm');
+  async getEVMDaily(date: Date, dataType?: 'private' | 'public'): Promise<StandardApiResponse<Record<Protocol, ProtocolMetrics>>> {
+    return this.getDailyMetrics(date, 'evm', dataType);
   }
   
   // Get EVM weekly metrics
-  async getEVMWeekly(startDate: Date, endDate: Date): Promise<StandardApiResponse<{
+  async getEVMWeekly(startDate: Date, endDate: Date, dataType?: 'private' | 'public'): Promise<StandardApiResponse<{
     dailyVolumes: Record<Protocol, Record<string, number>>;
     chainDistribution: Record<Protocol, Record<string, number>>;
   }>> {
-    return this.getWeeklyMetrics(startDate, endDate, 'evm');
+    return this.getWeeklyMetrics(startDate, endDate, 'evm', dataType);
   }
   
   // Get Solana weekly metrics
@@ -314,11 +316,11 @@ export const unifiedApi = {
     return result.data || {};
   },
   
-  async getEVMWeeklyMetrics(startDate: Date, endDate: Date): Promise<{
+  async getEVMWeeklyMetrics(startDate: Date, endDate: Date, dataType?: 'private' | 'public'): Promise<{
     dailyVolumes: Record<Protocol, Record<string, number>>;
     chainDistribution: Record<Protocol, Record<string, number>>;
   }> {
-    const result = await unifiedProtocolApi.getEVMWeekly(startDate, endDate);
+    const result = await unifiedProtocolApi.getEVMWeekly(startDate, endDate, dataType);
     if (!result.success) {
       throw new UnifiedApiError(result.error || 'Failed to fetch EVM weekly metrics');
     }

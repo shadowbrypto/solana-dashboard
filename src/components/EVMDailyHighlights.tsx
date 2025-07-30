@@ -31,8 +31,8 @@ const fetchStandaloneChainVolumes = async (date: Date): Promise<{avax: number, a
   
   try {
     const [avaxResponse, arbResponse] = await Promise.all([
-      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=avax`),
-      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=arbitrum`)
+      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=avax&dataType=public`),
+      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=arbitrum&dataType=public`)
     ]);
     
     const avaxData = avaxResponse.ok ? await avaxResponse.json() : null;
@@ -77,7 +77,7 @@ const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVM
     const cleanProtocol = protocol.replace('_evm', '');
     
     try {
-      const response = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}`);
+      const response = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}&dataType=public`);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);

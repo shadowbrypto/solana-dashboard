@@ -140,7 +140,7 @@ router.get('/debug-sigma', async (req: Request, res: Response) => {
       .from('protocol_stats')
       .select('chain, volume_usd, protocol_name, date')
       .eq('protocol_name', 'sigma')
-      .eq('data_type', 'private') // Default to private data for debug endpoint
+      .eq('data_type', 'public') // Default to public data for EVM debug endpoint
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon']);
 
     if (error) throw error;
@@ -171,7 +171,7 @@ router.get('/debug-sigma-raw', async (req: Request, res: Response) => {
       .from('protocol_stats')
       .select('chain, volume_usd')
       .eq('protocol_name', 'sigma')
-      .eq('data_type', 'private') // Default to private data for debug endpoint
+      .eq('data_type', 'public') // Default to public data for EVM debug endpoint
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum']);
 
     console.log('SIGMA RAW DEBUG: Query completed', { 
@@ -486,7 +486,7 @@ router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
 // Get EVM weekly metrics for all protocols
 router.get('/evm-weekly-metrics', async (req: Request, res: Response) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, dataType } = req.query;
     
     if (!startDate || !endDate) {
       return res.status(400).json({ 
@@ -502,8 +502,8 @@ router.get('/evm-weekly-metrics', async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
-    const weeklyData = await getEVMWeeklyMetrics(startDate, endDate);
+    console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate} with dataType: ${dataType || 'public'}`);
+    const weeklyData = await getEVMWeeklyMetrics(startDate, endDate, typeof dataType === 'string' ? dataType : 'public');
 
     res.json({ success: true, data: weeklyData });
   } catch (error) {

@@ -188,11 +188,16 @@ export class UnifiedProtocolService {
                       .lte('date', format(endDate, 'yyyy-MM-dd'));
         }
         
-        // Apply data type filter (default to private)
+        // Apply data type filter (default to public for EVM, private for Solana)
         if (params.dataType) {
           query = query.eq('data_type', params.dataType);
         } else {
-          query = query.eq('data_type', 'private');
+          // Check if this is an EVM chain query
+          const isEVMQuery = chainFilter && chainFilter.some(chain => 
+            ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].includes(chain)
+          );
+          
+          query = query.eq('data_type', isEVMQuery ? 'public' : 'private');
         }
         
         const { data, error } = await query.order('date', { ascending: false });
@@ -212,8 +217,17 @@ export class UnifiedProtocolService {
       
       console.log(`UnifiedAPI: Total records fetched: ${allData.length}`);
       
-      // Don't filter out the most recent date - show all available data
+      // Filter out the most recent date when no specific date filter is applied
+      // This excludes potentially incomplete data
       let filteredData = allData;
+      if (!params.date && !params.startDate && !params.endDate && allData && allData.length > 0) {
+        // Find the most recent date and filter it out
+        const mostRecentDate = allData[0]?.date; // Data is already sorted by date desc
+        if (mostRecentDate) {
+          filteredData = allData.filter(row => row.date !== mostRecentDate);
+          console.log(`UnifiedAPI: Filtered out most recent date ${mostRecentDate}. Records: ${allData.length} -> ${filteredData.length}`);
+        }
+      }
       
       // Cache the result
       unifiedCache.set(cacheKey, {

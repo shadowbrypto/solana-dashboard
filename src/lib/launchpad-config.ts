@@ -17,6 +17,22 @@ const LaunchLabIcon: FunctionComponent<{ className?: string }> = ({ className })
   }, React.createElement('rect', { x: "4", y: "4", width: "16", height: "16", rx: "2" }))
 );
 
+const LetsBonkIcon: FunctionComponent<{ className?: string }> = ({ className }) => (
+  React.createElement('svg', {
+    className: className,
+    viewBox: "0 0 24 24",
+    fill: "currentColor"
+  }, React.createElement('polygon', { points: "12,2 22,20 2,20" }))
+);
+
+const MoonshotIcon: FunctionComponent<{ className?: string }> = ({ className }) => (
+  React.createElement('svg', {
+    className: className,
+    viewBox: "0 0 24 24",
+    fill: "currentColor"
+  }, React.createElement('circle', { cx: "12", cy: "8", r: "6" }), React.createElement('path', { d: "M12 14L8 20h8l-4-6z" }))
+);
+
 export interface LaunchpadTheme {
   primary: string;
   secondary: string;
@@ -79,6 +95,46 @@ export const launchpadConfigs: LaunchpadConfig[] = [
       ]
     }
   },
+  { 
+    id: 'letsbonk', 
+    name: 'LetsBonk', 
+    icon: LetsBonkIcon, 
+    category: 'Launchpads', 
+    chain: 'solana',
+    description: 'Token launchpad on Solana',
+    theme: {
+      primary: 'hsl(18, 100%, 55%)', // Orange
+      secondary: 'hsl(18, 100%, 95%)', // Light orange
+      accent: 'hsl(18, 100%, 45%)', // Darker orange
+      background: 'hsl(18, 20%, 98%)', // Very light orange background
+      cardBg: 'hsl(18, 30%, 96%)', // Light orange card background
+      text: 'hsl(18, 100%, 25%)', // Dark orange text
+      chartColors: [
+        'hsl(18, 100%, 55%)', // Primary orange for launches
+        'hsl(142, 76%, 36%)'  // Green for graduations
+      ]
+    }
+  },
+  { 
+    id: 'moonshot', 
+    name: 'Moonshot', 
+    icon: MoonshotIcon, 
+    category: 'Launchpads', 
+    chain: 'solana',
+    description: 'Token launchpad on Solana',
+    theme: {
+      primary: 'hsl(240, 100%, 60%)', // Blue-purple
+      secondary: 'hsl(240, 100%, 95%)', // Light blue-purple
+      accent: 'hsl(240, 100%, 50%)', // Darker blue-purple
+      background: 'hsl(240, 20%, 98%)', // Very light blue-purple background
+      cardBg: 'hsl(240, 30%, 96%)', // Light blue-purple card background
+      text: 'hsl(240, 100%, 25%)', // Dark blue-purple text
+      chartColors: [
+        'hsl(240, 100%, 60%)', // Primary blue-purple for launches
+        'hsl(142, 76%, 36%)'  // Green for graduations
+      ]
+    }
+  },
 ];
 
 // Helper functions
@@ -104,6 +160,8 @@ export const getLaunchpadLogoFilename = (id: string): string => {
   const logoMap: Record<string, string> = {
     'pumpfun': 'pumpfun.jpg',
     'launchlab': 'launchlab.jpg',
+    'letsbonk': 'letsbonk.jpg',
+    'moonshot': 'moonshot.jpg',
   };
   
   return logoMap[id] || 'default-logo.png';

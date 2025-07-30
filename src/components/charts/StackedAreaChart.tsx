@@ -63,9 +63,8 @@ export function StackedAreaChart({
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
-    // Create a copy and reverse the data array
-    const reversedData = [...data].reverse();
-    let timeFilteredData = reversedData;
+    // Use data as-is (should already be in chronological order)
+    let timeFilteredData = data;
 
     if (timeframe !== "all") {
       const now = new Date();
@@ -93,7 +92,7 @@ export function StackedAreaChart({
 
       const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-      timeFilteredData = reversedData.filter(item => {
+      timeFilteredData = data.filter(item => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         return itemDate >= cutoffDate;

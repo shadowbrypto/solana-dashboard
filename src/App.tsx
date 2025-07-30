@@ -198,6 +198,10 @@ const MainContent = (): JSX.Element => {
         console.log('Fetching aggregated data for all protocols...');
         fetchedData = await getAggregatedProtocolStats(dataType);
         console.log(`Fetched ${fetchedData.length} aggregated records`);
+        if (fetchedData.length > 0) {
+          console.log('First date:', fetchedData[0].date);
+          console.log('Last date:', fetchedData[fetchedData.length - 1].date);
+        }
       } else if (selectedProtocol.endsWith('_evm')) {
         // For EVM protocols, fetch lifetime volume from all non-Solana chains
         const cleanProtocol = selectedProtocol.replace('_evm', '');

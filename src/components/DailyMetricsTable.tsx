@@ -144,7 +144,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         const percentage = value * 100;
         const absPercentage = Math.abs(percentage);
         const isPositive = value > 0;
-        const isNeutral = Math.abs(value) < 0.001;
+        const isNeutral = Math.abs(value) < 0.0001;
         
         if (isCategory && categoryName) {
           // Get protocols in this category and calculate aggregated trend

@@ -125,7 +125,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
         
         // Use clean protocol name (remove _evm suffix if present)
         const cleanProtocol = protocol.replace('_evm', '');
-        const dataType = Settings.getDataTypePreference();
+        const dataType = 'public';
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
         const response = await fetch(`${API_BASE_URL}/unified/chain-breakdown?protocol=${cleanProtocol}&dataType=${dataType}`);
         
@@ -158,7 +158,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       setDailyLoading(true);
       
       const cleanProtocol = protocol.replace('_evm', '');
-      const dataType = Settings.getDataTypePreference();
+      const dataType = 'public';
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       const response = await fetch(`${API_BASE_URL}/unified/metrics?protocol=${cleanProtocol}&chain=evm&timeframe=${timeframe}&dataType=${dataType}`);
       

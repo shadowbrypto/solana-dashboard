@@ -99,7 +99,7 @@ const getGrowthBadgeClasses = (growth: number): string => {
 const fetchEVMDailyData = async (protocols: Protocol[], date: Date): Promise<EVMProtocolData[]> => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const dateStr = format(date, 'yyyy-MM-dd');
-  const dataType = Settings.getDataTypePreference();
+  const dataType = 'public'; // Always use public for EVM data
   
   console.log(`Fetching EVM data for ${protocols.length} protocols on ${dateStr}`);
   

@@ -73,9 +73,11 @@ export function formatDate(isoDate: string): string {
 }
 
 export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string, dataType?: string) {
+  // Default to 'public' for EVM chains, 'private' for others
+  const effectiveDataType = dataType || (chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '') ? 'public' : 'private');
   const cacheKey = Array.isArray(protocolName) 
-    ? protocolName.sort().join(',') 
-    : (protocolName || 'all') + '_' + (dataType || 'private');
+    ? protocolName.sort().join(',') + '_' + (chainFilter || 'default') + '_' + effectiveDataType
+    : (protocolName || 'all') + '_' + (chainFilter || 'default') + '_' + effectiveDataType;
 
   const cachedData = protocolStatsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
@@ -117,12 +119,8 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
       }
     }
 
-    // Filter by data type (default to private)
-    if (dataType) {
-      query = query.eq('data_type', dataType);
-    } else {
-      query = query.eq('data_type', 'private');
-    }
+    // Filter by data type (use effectiveDataType which defaults to public for EVM, private for others)
+    query = query.eq('data_type', effectiveDataType);
 
     const { data, error } = await query;
 
@@ -169,7 +167,9 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
 }
 
 export async function getTotalProtocolStats(protocolName?: string, chainFilter?: string, dataType?: string): Promise<ProtocolMetrics> {
-  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}_${dataType || 'private'}`;
+  // Default to 'public' for EVM chains, 'private' for others
+  const effectiveDataType = dataType || (chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '') ? 'public' : 'private');
+  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}_${effectiveDataType}`;
   const cachedData = totalStatsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -207,12 +207,8 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
       query = query.eq('protocol_name', protocolName);
     }
 
-    // Filter by data type (default to private)
-    if (dataType) {
-      query = query.eq('data_type', dataType);
-    } else {
-      query = query.eq('data_type', 'private');
-    }
+    // Filter by data type (use effectiveDataType which defaults to public for EVM, private for others)
+    query = query.eq('data_type', effectiveDataType);
 
     console.log(`Query for protocol: ${protocolName}, chain: ${chainFilter}`);
     const { data, error } = await query;
@@ -282,7 +278,9 @@ export async function getEVMChainBreakdown(protocolName: string, dataType?: stri
   }>;
   totalChains: number;
 }> {
-  const cacheKey = `evm_breakdown_${protocolName}_${dataType || 'private'}`;
+  // Default to 'public' for EVM data
+  const effectiveDataType = dataType || 'public';
+  const cacheKey = `evm_breakdown_${protocolName}_${effectiveDataType}`;
   const cachedData = insightsCache.get(cacheKey);
 
   // DEBUG: Always skip cache for sigma to debug
@@ -306,7 +304,7 @@ export async function getEVMChainBreakdown(protocolName: string, dataType?: stri
       .select('chain, volume_usd')
       .eq('protocol_name', protocolName)
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     const { data, error } = await query;
@@ -369,7 +367,9 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
   chainData: Record<string, number>;
   totalVolume: number;
 }>> {
-  const cacheKey = `evm_daily_breakdown_${protocolName}_${timeframe}_${dataType || 'private'}`;
+  // Default to 'public' for EVM data
+  const effectiveDataType = dataType || 'public';
+  const cacheKey = `evm_daily_breakdown_${protocolName}_${timeframe}_${effectiveDataType}`;
   const cachedData = insightsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -411,7 +411,7 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
       .select('date, chain, volume_usd')
       .eq('protocol_name', protocolName)
       .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum'])
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .gte('date', format(startDate, 'yyyy-MM-dd'))
       .lte('date', format(endDate, 'yyyy-MM-dd'))
       .order('date', { ascending: false })
@@ -636,16 +636,18 @@ export async function getAggregatedProtocolStats(dataType?: string) {
   const aggregatedData = Array.from(dataByDate.values())
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Don't filter out the most recent date - show all available data
-  console.log(`Aggregated data for ${aggregatedData.length} unique dates`);
+  // Remove the most recent date (potentially incomplete data)
+  const filteredAggregatedData = aggregatedData.length > 0 ? aggregatedData.slice(1) : aggregatedData;
+
+  console.log(`Aggregated data for ${filteredAggregatedData.length} unique dates (excluding latest date)`);
 
   // Cache the result
   aggregatedStatsCache.set(cacheKey, {
-    data: aggregatedData,
+    data: filteredAggregatedData,
     timestamp: Date.now()
   });
 
-  return aggregatedData;
+  return filteredAggregatedData;
 }
 
 export async function generateWeeklyInsights() {
@@ -775,6 +777,8 @@ export async function getEVMDailyData(protocol: string, dateStr: string, dataTyp
   console.log(`Fetching EVM daily data for ${protocol} on ${dateStr}`);
   
   const evmChains = ['ethereum', 'base', 'bsc'];
+  // Default to 'public' for EVM data
+  const effectiveDataType = dataType || 'public';
   
   try {
     // Query database for the specific date and protocol across all EVM chains
@@ -783,7 +787,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string, dataTyp
       .select('chain, volume_usd, daily_users, new_users, trades, fees_usd')
       .eq('protocol_name', protocol)
       .eq('date', dateStr)
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .in('chain', evmChains);
 
     if (dailyError) {
@@ -802,7 +806,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string, dataTyp
       .from('protocol_stats')
       .select('date, volume_usd')
       .eq('protocol_name', protocol)
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .in('chain', evmChains)
       .gte('date', format(startDate, 'yyyy-MM-dd'))
       .lte('date', dateStr)
@@ -823,7 +827,7 @@ export async function getEVMDailyData(protocol: string, dateStr: string, dataTyp
       .select('volume_usd')
       .eq('protocol_name', protocol)
       .eq('date', prevDateStr)
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .in('chain', evmChains);
 
     if (prevError) {
@@ -977,7 +981,13 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
   console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
   
   const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
-  const evmProtocols = getEVMProtocols();
+  const evmProtocols = ['banana', 'bloom', 'maestro', 'sigma']; // Hard-coded for now
+  // Default to 'public' for EVM data
+  const effectiveDataType = dataType || 'public';
+  
+  console.log(`EVM Chains:`, evmChains);
+  console.log(`EVM Protocols:`, evmProtocols);
+  console.log(`Effective Data Type:`, effectiveDataType);
   
   try {
     // Query database for the date range across all EVM chains and protocols
@@ -986,7 +996,7 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
       .select('protocol_name, date, chain, volume_usd')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
-      .eq('data_type', dataType || 'private')
+      .eq('data_type', effectiveDataType)
       .gte('date', startDate)
       .lte('date', endDate)
       .order('protocol_name')
@@ -998,6 +1008,17 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
     }
 
     console.log(`Found ${weeklyData?.length || 0} EVM weekly records`);
+    if (weeklyData && weeklyData.length > 0) {
+      console.log(`Sample data:`, weeklyData.slice(0, 3));
+    } else {
+      console.log(`No data found for query with:`, {
+        chains: evmChains,
+        protocols: evmProtocols,
+        dataType: effectiveDataType,
+        startDate,
+        endDate
+      });
+    }
 
     // Process the data by protocol and date
     const dailyVolumes: Record<string, Record<string, number>> = {};

@@ -10,34 +10,28 @@ Supabase Environment Check: {
   urlLength: 40,
   keyLength: 208
 }
-node:events:492
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3001
-    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
-    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
-    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
-    at listenInCluster (node:net:1920:12)
-    at Server.listen (node:net:2008:7)
-    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
-    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
-    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
-    at async loadESM (node:internal/process/esm_loader:40:7)
-    at async handleMainPromise (node:internal/modules/run_main:66:12)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1899:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -48,
-  syscall: 'listen',
-  address: '::',
-  port: 3001
-}
-
-Node.js v20.5.0
-12:18:37 AM [tsx] change in ./src/routes/protocolRoutes.ts Rerunning...
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-28T16:48:28.654Z - GET /api/data-update/status
+2025-07-28T16:49:25.686Z - GET /api/launchpads/metrics
+2025-07-28T16:50:08.573Z - GET /api/data-update/status
+2025-07-28T16:50:08.575Z - GET /api/launchpads/metrics
+2025-07-28T16:50:09.071Z - GET /api/launchpads/metrics
+2025-07-28T16:50:09.091Z - GET /api/data-update/status
+2025-07-28T16:54:09.704Z - GET /health
+2025-07-28T16:58:45.888Z - GET /api/launchpads/metrics
+2025-07-28T16:59:48.507Z - GET /api/data-update/status
+2025-07-28T16:59:48.512Z - GET /api/launchpads/metrics
+2025-07-28T16:59:48.887Z - GET /api/data-update/status
+2025-07-28T16:59:49.023Z - GET /api/launchpads/metrics
+7:01:44 PM [tsx] change in ./src/routes/launchpads.ts Restarting...
 cSupabase Environment Check: {
   hasSupabaseUrl: true,
   hasSupabaseKey: true,
@@ -46,34 +40,72 @@ Node.js v20.5.0
   urlLength: 40,
   keyLength: 208
 }
-node:events:492
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3001
-    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
-    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
-    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
-    at listenInCluster (node:net:1920:12)
-    at Server.listen (node:net:2008:7)
-    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
-    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
-    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
-    at async loadESM (node:internal/process/esm_loader:40:7)
-    at async handleMainPromise (node:internal/modules/run_main:66:12)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1899:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -48,
-  syscall: 'listen',
-  address: '::',
-  port: 3001
-}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-28T17:09:48.516Z - GET /api/data-update/status
+2025-07-28T17:19:48.771Z - GET /api/data-update/status
+2025-07-28T17:23:33.213Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:24:01.446Z - GET /api/launchpads/metrics
+Fetched 8 launchpad records for pumpfun with timeframe 7d
+2025-07-28T17:24:25.032Z - GET /api/launchpads/metrics
+Fetched 366 launchpad records for pumpfun with timeframe 1y
+2025-07-28T17:25:18.067Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:26:24.595Z - GET /api/data-update/status
+2025-07-28T17:26:24.603Z - GET /api/launchpads/metrics
+2025-07-28T17:26:24.988Z - GET /api/data-update/status
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:26:25.111Z - GET /api/launchpads/metrics
+2025-07-28T17:29:42.086Z - GET /api/data-update/status
+2025-07-28T17:29:42.092Z - GET /api/launchpads/metrics
+2025-07-28T17:29:42.633Z - GET /api/data-update/status
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:29:43.258Z - GET /api/launchpads/metrics
+2025-07-28T17:30:56.444Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:33:00.904Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 571, total so far: 571
+UnifiedAPI: Total records fetched: 571
+UnifiedAPI: Filtered out most recent date 2025-07-28. Records: 571 -> 570
+2025-07-28T17:33:01.733Z - GET /api/unified/metrics
+2025-07-28T17:33:01.735Z - GET /api/unified/metrics
+2025-07-28T17:33:01.876Z - GET /api/unified/metrics
+2025-07-28T17:33:10.490Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:33:11.024Z - GET /api/launchpads/metrics
+2025-07-28T17:33:16.641Z - GET /api/launchpads/metrics
+2025-07-28T17:33:31.288Z - GET /api/launchpads/metrics
+2025-07-28T17:33:43.445Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+2025-07-28T17:34:02.163Z - GET /api/launchpads/metrics
+7:34:58 PM [tsx] change in ./src/routes/launchpads.ts Restarting...
+c
+node:internal/process/esm_loader:46
+      internalBinding('errors').triggerUncaughtException(
+                                ^
+Error [TransformError]: Transform failed with 1 error:
+/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/routes/launchpads.ts:146:4: ERROR: Unexpected "catch"
+    at failureErrorWithLog (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/esbuild/lib/main.js:1463:15)
+    at /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/esbuild/lib/main.js:734:50
+    at responseCallbacks.<computed> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/esbuild/lib/main.js:601:9)
+    at handleIncomingPacket (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/esbuild/lib/main.js:656:12)
+    at Socket.readFromStdout (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/esbuild/lib/main.js:579:7)
+    at Socket.emit (node:events:514:28)
+    at addChunk (node:internal/streams/readable:343:12)
+    at readableAddChunk (node:internal/streams/readable:316:9)
+    at Readable.push (node:internal/streams/readable:253:10)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:190:23)
 
 Node.js v20.5.0
-12:18:48 AM [tsx] change in ./src/routes/protocolRoutes.ts Rerunning...
+7:35:13 PM [tsx] change in ./src/routes/launchpads.ts Rerunning...
 cSupabase Environment Check: {
   hasSupabaseUrl: true,
   hasSupabaseKey: true,
@@ -82,30 +114,1164 @@ Node.js v20.5.0
   urlLength: 40,
   keyLength: 208
 }
-node:events:492
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3001
-    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
-    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
-    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
-    at listenInCluster (node:net:1920:12)
-    at Server.listen (node:net:2008:7)
-    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
-    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:63:5)
-    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
-    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
-    at async loadESM (node:internal/process/esm_loader:40:7)
-    at async handleMainPromise (node:internal/modules/run_main:66:12)
-Emitted 'error' event on Server instance at:
-    at emitErrorNT (node:net:1899:8)
-    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
-  code: 'EADDRINUSE',
-  errno: -48,
-  syscall: 'listen',
-  address: '::',
-  port: 3001
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-28T17:36:09.754Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:36:24.250Z - GET /api/launchpads/metrics
+2025-07-28T17:36:38.908Z - GET /api/launchpads/metrics
+Fetched 8 launchpad records for pumpfun with timeframe 7d
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 8 -> 7
+2025-07-28T17:37:09.077Z - GET /api/data-update/status
+2025-07-28T17:37:09.079Z - GET /api/launchpads/metrics
+2025-07-28T17:37:09.612Z - GET /api/data-update/status
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:37:09.727Z - GET /api/launchpads/metrics
+2025-07-28T17:38:22.552Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:40:22.898Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:47:09.031Z - GET /api/data-update/status
+2025-07-28T17:47:35.150Z - GET /api/data-update/status
+2025-07-28T17:47:35.152Z - GET /api/launchpads/metrics
+2025-07-28T17:47:35.543Z - GET /api/data-update/status
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:47:35.664Z - GET /api/launchpads/metrics
+2025-07-28T17:49:33.929Z - GET /api/launchpads/metrics
+Fetched 515 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-28. Records: 515 -> 514
+2025-07-28T17:57:35.136Z - GET /api/data-update/status
+2025-07-28T18:07:35.729Z - GET /api/data-update/status
+2025-07-28T18:17:35.755Z - GET /api/data-update/status
+2025-07-28T18:27:35.758Z - GET /api/data-update/status
+2025-07-28T18:37:35.764Z - GET /api/data-update/status
+2025-07-28T18:47:35.725Z - GET /api/data-update/status
+2025-07-28T18:58:11.737Z - GET /api/data-update/status
+2025-07-28T19:08:11.746Z - GET /api/data-update/status
+2025-07-28T19:18:11.749Z - GET /api/data-update/status
+2025-07-28T19:28:11.762Z - GET /api/data-update/status
+2025-07-28T19:38:11.746Z - GET /api/data-update/status
+2025-07-28T19:48:11.734Z - GET /api/data-update/status
+2025-07-28T19:58:11.820Z - GET /api/data-update/status
+2025-07-28T20:08:11.788Z - GET /api/data-update/status
+2025-07-28T20:18:11.701Z - GET /api/data-update/status
+2025-07-28T20:28:11.770Z - GET /api/data-update/status
+2025-07-28T20:38:11.770Z - GET /api/data-update/status
+2025-07-28T20:48:11.760Z - GET /api/data-update/status
+2025-07-28T20:58:11.803Z - GET /api/data-update/status
+2025-07-28T21:08:11.810Z - GET /api/data-update/status
+2025-07-28T21:18:11.817Z - GET /api/data-update/status
+2025-07-28T21:28:11.877Z - GET /api/data-update/status
+2025-07-28T21:38:11.844Z - GET /api/data-update/status
+2025-07-28T21:48:11.801Z - GET /api/data-update/status
+2025-07-28T21:58:11.759Z - GET /api/data-update/status
+2025-07-28T22:08:11.772Z - GET /api/data-update/status
+2025-07-28T22:18:11.792Z - GET /api/data-update/status
+2025-07-28T22:28:11.768Z - GET /api/data-update/status
+2025-07-28T22:38:11.770Z - GET /api/data-update/status
+2025-07-28T22:48:11.769Z - GET /api/data-update/status
+2025-07-28T22:58:11.790Z - GET /api/data-update/status
+2025-07-28T23:08:11.800Z - GET /api/data-update/status
+2025-07-28T23:18:11.816Z - GET /api/data-update/status
+2025-07-28T23:28:11.798Z - GET /api/data-update/status
+2025-07-28T23:38:11.785Z - GET /api/data-update/status
+2025-07-28T23:48:11.778Z - GET /api/data-update/status
+2025-07-28T23:58:11.769Z - GET /api/data-update/status
+2025-07-29T00:08:11.750Z - GET /api/data-update/status
+2025-07-29T00:18:11.802Z - GET /api/data-update/status
+2025-07-29T00:28:11.749Z - GET /api/data-update/status
+2025-07-29T00:38:11.874Z - GET /api/data-update/status
+2025-07-29T00:48:11.847Z - GET /api/data-update/status
+2025-07-29T00:58:11.818Z - GET /api/data-update/status
+2025-07-29T01:08:11.789Z - GET /api/data-update/status
+2025-07-29T01:18:11.786Z - GET /api/data-update/status
+2025-07-29T01:28:11.751Z - GET /api/data-update/status
+2025-07-29T01:38:11.779Z - GET /api/data-update/status
+2025-07-29T01:48:11.794Z - GET /api/data-update/status
+2025-07-29T01:58:11.798Z - GET /api/data-update/status
+2025-07-29T02:08:11.781Z - GET /api/data-update/status
+2025-07-29T02:18:11.810Z - GET /api/data-update/status
+2025-07-29T02:28:11.750Z - GET /api/data-update/status
+2025-07-29T02:38:11.729Z - GET /api/data-update/status
+2025-07-29T02:48:11.815Z - GET /api/data-update/status
+2025-07-29T02:58:11.878Z - GET /api/data-update/status
+2025-07-29T03:08:11.798Z - GET /api/data-update/status
+2025-07-29T03:18:11.731Z - GET /api/data-update/status
+2025-07-29T03:28:11.821Z - GET /api/data-update/status
+2025-07-29T03:38:11.847Z - GET /api/data-update/status
+2025-07-29T03:48:11.802Z - GET /api/data-update/status
+2025-07-29T03:58:11.837Z - GET /api/data-update/status
+2025-07-29T04:08:11.825Z - GET /api/data-update/status
+2025-07-29T04:18:11.787Z - GET /api/data-update/status
+2025-07-29T04:28:11.752Z - GET /api/data-update/status
+2025-07-29T04:38:11.782Z - GET /api/data-update/status
+2025-07-29T04:48:11.840Z - GET /api/data-update/status
+2025-07-29T04:58:11.842Z - GET /api/data-update/status
+2025-07-29T05:08:11.827Z - GET /api/data-update/status
+2025-07-29T05:18:11.827Z - GET /api/data-update/status
+2025-07-29T05:28:11.801Z - GET /api/data-update/status
+2025-07-29T05:38:11.828Z - GET /api/data-update/status
+2025-07-29T05:48:11.788Z - GET /api/data-update/status
+2025-07-29T05:58:11.750Z - GET /api/data-update/status
+2025-07-29T06:08:11.781Z - GET /api/data-update/status
+2025-07-29T06:18:11.781Z - GET /api/data-update/status
+2025-07-29T06:28:11.743Z - GET /api/data-update/status
+2025-07-29T06:38:11.731Z - GET /api/data-update/status
+2025-07-29T06:48:11.797Z - GET /api/data-update/status
+2025-07-29T06:58:11.799Z - GET /api/data-update/status
+2025-07-29T07:08:11.854Z - GET /api/data-update/status
+2025-07-29T07:18:11.823Z - GET /api/data-update/status
+2025-07-29T07:28:11.809Z - GET /api/data-update/status
+2025-07-29T07:38:11.819Z - GET /api/data-update/status
+2025-07-29T07:48:11.802Z - GET /api/data-update/status
+2025-07-29T07:58:11.912Z - GET /api/data-update/status
+2025-07-29T08:08:11.759Z - GET /api/data-update/status
+2025-07-29T08:18:11.812Z - GET /api/data-update/status
+2025-07-29T08:28:11.776Z - GET /api/data-update/status
+2025-07-29T08:38:11.835Z - GET /api/data-update/status
+2025-07-29T08:47:35.151Z - GET /api/data-update/status
+2025-07-29T08:57:35.150Z - GET /api/data-update/status
+2025-07-29T09:08:11.776Z - GET /api/data-update/status
+2025-07-29T09:17:35.138Z - GET /api/data-update/status
+2025-07-29T09:28:11.774Z - GET /api/data-update/status
+2025-07-29T09:37:35.124Z - GET /api/data-update/status
+2025-07-29T09:47:35.179Z - GET /api/data-update/status
+2025-07-29T09:57:35.770Z - GET /api/data-update/status
+2025-07-29T10:08:11.814Z - GET /api/data-update/status
+2025-07-29T10:18:11.806Z - GET /api/data-update/status
+2025-07-29T10:28:11.797Z - GET /api/data-update/status
+2025-07-29T10:38:11.900Z - GET /api/data-update/status
+2025-07-29T10:48:11.805Z - GET /api/data-update/status
+2025-07-29T10:58:11.772Z - GET /api/data-update/status
+2025-07-29T11:08:11.817Z - GET /api/data-update/status
+2025-07-29T11:18:11.786Z - GET /api/data-update/status
+2025-07-29T11:24:12.778Z - GET /api/protocol-config
+2025-07-29T11:24:12.780Z - GET /api/protocols/sync-status
+2025-07-29T11:24:13.637Z - GET /api/protocol-config
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
 }
+2025-07-29T11:24:13.736Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T11:24:13.976Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T11:24:14.568Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T11:26:12.165Z - GET /api/unified/chain-breakdown
+2025-07-29T11:26:12.176Z - GET /api/unified/metrics
+2025-07-29T11:26:12.178Z - GET /api/unified/metrics
+UnifiedAPI: Total records fetched: 0
+2025-07-29T11:26:13.643Z - GET /api/unified/metrics
+UnifiedAPI: Total records fetched: 0
+2025-07-29T11:26:13.656Z - GET /api/unified/chain-breakdown
+UnifiedAPI: Total records fetched: 0
+2025-07-29T11:26:14.115Z - GET /api/unified/metrics
+2025-07-29T11:26:24.254Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 181, total so far: 181
+UnifiedAPI: Total records fetched: 181
+UnifiedAPI: Filtered out most recent date 2025-07-29. Records: 181 -> 180
+2025-07-29T11:26:24.922Z - GET /api/unified/metrics
+2025-07-29T11:26:24.924Z - GET /api/unified/metrics
+2025-07-29T11:26:24.996Z - GET /api/unified/metrics
+2025-07-29T11:26:35.692Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database with pagination...
+2025-07-29T11:26:35.694Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database with pagination...
+Fetched 1000 total records for aggregation (page 1)...
+Fetched 2000 total records for aggregation (page 2)...
+Fetched 1000 total records for aggregation (page 1)...
+Fetched 3000 total records for aggregation (page 3)...
+Fetched 2000 total records for aggregation (page 2)...
+Fetched 4000 total records for aggregation (page 4)...
+Fetched 3000 total records for aggregation (page 3)...
+Fetched 5000 total records for aggregation (page 5)...
+Fetched 4000 total records for aggregation (page 4)...
+Fetched 6000 total records for aggregation (page 6)...
+Fetched 5000 total records for aggregation (page 5)...
+Fetched 6848 total records for aggregation (page 7)...
+Total records fetched for aggregation: 6848
+Aggregated data for 703 unique dates (excluding latest date)
+2025-07-29T11:26:39.137Z - GET /api/unified/metrics
+Fetched 6000 total records for aggregation (page 6)...
+UnifiedAPI: Fetched page 1, records: 1000, total so far: 1000
+Fetched 6848 total records for aggregation (page 7)...
+Total records fetched for aggregation: 6848
+Aggregated data for 703 unique dates (excluding latest date)
+UnifiedAPI: Fetched page 2, records: 1000, total so far: 2000
+UnifiedAPI: Fetched page 3, records: 1000, total so far: 3000
+UnifiedAPI: Fetched page 4, records: 1000, total so far: 4000
+UnifiedAPI: Fetched page 5, records: 1000, total so far: 5000
+UnifiedAPI: Fetched page 6, records: 1000, total so far: 6000
+UnifiedAPI: Fetched page 7, records: 1000, total so far: 7000
+UnifiedAPI: Fetched page 8, records: 1000, total so far: 8000
+UnifiedAPI: Fetched page 9, records: 1000, total so far: 9000
+UnifiedAPI: Fetched page 10, records: 545, total so far: 9545
+UnifiedAPI: Total records fetched: 9545
+UnifiedAPI: Filtered out most recent date 2025-07-29. Records: 9545 -> 9527
+2025-07-29T11:26:43.768Z - GET /api/unified/metrics
+2025-07-29T11:27:35.193Z - GET /api/data-update/status
+1:28:47 PM [tsx] change in ./src/routes/dataUpdateRoutes.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+1:29:04 PM [tsx] change in ./src/routes/dataUpdateRoutes.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-29T11:30:04.748Z - GET /api/data-update/status
+2025-07-29T11:30:04.753Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database with pagination...
+Fetched 1000 total records for aggregation (page 1)...
+Fetched 2000 total records for aggregation (page 2)...
+Fetched 3000 total records for aggregation (page 3)...
+Fetched 4000 total records for aggregation (page 4)...
+Fetched 5000 total records for aggregation (page 5)...
+Fetched 6000 total records for aggregation (page 6)...
+Fetched 6848 total records for aggregation (page 7)...
+Total records fetched for aggregation: 6848
+Aggregated data for 703 unique dates (excluding latest date)
+2025-07-29T11:30:08.237Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 1000, total so far: 1000
+UnifiedAPI: Fetched page 2, records: 1000, total so far: 2000
+UnifiedAPI: Fetched page 3, records: 1000, total so far: 3000
+UnifiedAPI: Fetched page 4, records: 1000, total so far: 4000
+UnifiedAPI: Fetched page 5, records: 1000, total so far: 5000
+UnifiedAPI: Fetched page 6, records: 1000, total so far: 6000
+UnifiedAPI: Fetched page 7, records: 1000, total so far: 7000
+UnifiedAPI: Fetched page 8, records: 1000, total so far: 8000
+UnifiedAPI: Fetched page 9, records: 1000, total so far: 9000
+UnifiedAPI: Fetched page 10, records: 545, total so far: 9545
+UnifiedAPI: Total records fetched: 9545
+UnifiedAPI: Filtered out most recent date 2025-07-29. Records: 9545 -> 9527
+2025-07-29T11:31:49.518Z - GET /health
+2025-07-29T11:32:02.177Z - POST /api/data-update/sync/launchpad/pumpfun
+Starting data sync for launchpad: pumpfun...
 
-Node.js v20.5.0
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: pumpfun
+============================
+
+Using query IDs: 4894656
+Starting data sync for launchpad: pumpfun...
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19399 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,226,10
+2025-07-28 00:00:00.000 UTC,4198,25
+2025-07-27 00:00:00.000 UTC,4732,10
+2025-07-26 00:00:00.000 UTC,5252,29
+2025-07-25 00:
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '226',
+  token_migrations: '10'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded data for pumpfun successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for pumpfun...
+Successfully deleted existing data for pumpfun
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 516 rows for pumpfun
+2025-07-29T11:32:15.415Z - POST /api/data-update/sync/launchpads
+Starting data sync for protocol: launchpads with private data...
+
+=== SYNC DEBUG ===
+Protocol: launchpads
+Data Type: private
+==================
+
+Error syncing data for protocol launchpads: Error: Protocol 'launchpads' not found in protocol sources for data type 'private'
+    at DataManagementService.syncProtocolData (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/services/dataManagementService.ts:150:15)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/routes/dataUpdateRoutes.ts:83:48)
+    at Layer.handle [as handle_request] (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/index.js:284:15
+    at param (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/index.js:365:14)
+    at param (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/index.js:376:14)
+    at Function.process_params (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/router/index.js:421:3)
+Failed to update sync status for launchpads: {}
+1:33:02 PM [tsx] change in ./src/routes/dataUpdateRoutes.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-29T11:33:12.547Z - POST /api/data-update/sync/launchpads
+Starting launchpad data sync...
+Starting complete launchpad data sync process...
+--- Downloading CSV files from Dune API ---
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19399 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,226,10
+2025-07-28 00:00:00.000 UTC,4198,25
+2025-07-27 00:00:00.000 UTC,4732,10
+2025-07-26 00:00:00.000 UTC,5252,29
+2025-07-25 00:
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '226',
+  token_migrations: '10'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded 1/1 CSV files successfully
+--- Importing CSV files to database ---
+--- Deleting existing launchpad data from launchpad_stats ---
+Successfully deleted existing launchpad data
+Found 1 CSV files: [ 'pumpfun.csv' ]
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 1/1 launchpads successfully
+Total rows imported: 516
+All protocol caches cleared
+All caches cleared after successful launchpad data sync
+2025-07-29T11:40:04.753Z - GET /api/data-update/status
+2025-07-29T11:50:04.753Z - GET /api/data-update/status
+2025-07-29T12:00:04.714Z - GET /api/data-update/status
+2025-07-29T12:10:04.706Z - GET /api/data-update/status
+2025-07-29T12:20:04.744Z - GET /api/data-update/status
+2025-07-29T12:30:04.697Z - GET /api/data-update/status
+2025-07-29T12:30:21.096Z - GET /api/launchpads/metrics
+Fetched 516 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 516 -> 515
+2025-07-29T12:30:21.552Z - GET /api/launchpads/metrics
+2025-07-29T12:30:24.366Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:30:24.950Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:30:25.176Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:30:31.444Z - POST /api/data-update/sync/launchpad/pumpfun
+Starting data sync for launchpad: pumpfun...
+
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: pumpfun
+============================
+
+Using query IDs: 4894656
+Starting data sync for launchpad: pumpfun...
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19400 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,1184,15
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:00:00.000 UTC,4722,10
+2025-07-26 00:00:00.000 UTC,5223,29
+2025-07-25 00
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '1184',
+  token_migrations: '15'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded data for pumpfun successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for pumpfun...
+Successfully deleted existing data for pumpfun
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 516 rows for pumpfun
+2025-07-29T12:31:42.254Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:31:42.717Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:32:00.935Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:32:01.369Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:32:25.301Z - GET /api/data-update/status
+2025-07-29T12:32:25.302Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:32:25.710Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:33:12.534Z - POST /api/data-update/sync/launchpad/pumpfun
+Starting data sync for launchpad: pumpfun...
+
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: pumpfun
+============================
+
+Using query IDs: 4894656
+Starting data sync for launchpad: pumpfun...
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19400 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,1184,15
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:00:00.000 UTC,4722,10
+2025-07-26 00:00:00.000 UTC,5223,29
+2025-07-25 00
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '1184',
+  token_migrations: '15'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded data for pumpfun successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for pumpfun...
+Successfully deleted existing data for pumpfun
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 516 rows for pumpfun
+2025-07-29T12:33:49.169Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:33:49.591Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2:37:03 PM [tsx] change in ./src/routes/launchpads.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-29T12:37:51.089Z - POST /api/data-update/sync/launchpad/pumpfun
+Starting data sync for launchpad: pumpfun...
+
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: pumpfun
+============================
+
+Using query IDs: 4894656
+Starting data sync for launchpad: pumpfun...
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19400 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,1184,15
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:00:00.000 UTC,4722,10
+2025-07-26 00:00:00.000 UTC,5223,29
+2025-07-25 00
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '1184',
+  token_migrations: '15'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded data for pumpfun successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for pumpfun...
+Successfully deleted existing data for pumpfun
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 516 rows for pumpfun
+2025-07-29T12:39:08.004Z - POST /api/data-update/sync/launchpad/pumpfun
+Starting data sync for launchpad: pumpfun...
+
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: pumpfun
+============================
+
+Using query IDs: 4894656
+Starting data sync for launchpad: pumpfun...
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Response status: 200 OK
+CSV data length: 19400 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,1184,15
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:00:00.000 UTC,4722,10
+2025-07-26 00:00:00.000 UTC,5223,29
+2025-07-25 00
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '1184',
+  token_migrations: '15'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded data for pumpfun successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for pumpfun...
+Successfully deleted existing data for pumpfun
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 516 rows for pumpfun
+2025-07-29T12:39:10.951Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:39:14.911Z - GET /api/launchpads/metrics
+Fetched 516 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 516 -> 515
+2025-07-29T12:39:15.150Z - GET /api/launchpads/metrics
+2025-07-29T12:42:25.302Z - GET /api/data-update/status
+2025-07-29T12:52:03.196Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:52:03.649Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:52:03.875Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T12:52:25.330Z - GET /api/data-update/status
+2025-07-29T13:02:25.333Z - GET /api/data-update/status
+2025-07-29T13:12:25.334Z - GET /api/data-update/status
+3:19:05 PM [tsx] change in ./src/services/launchpadDataService.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+🚀 Sol Analytics API server running on port 3001
+📊 Health check: http://localhost:3001/health
+🔌 API endpoints:
+   - Protocols (Legacy): http://localhost:3001/api/protocols
+   - Protocols (Unified): http://localhost:3001/api/unified
+   - Data Update: http://localhost:3001/api/data-update
+   - Protocol Config: http://localhost:3001/api/protocol-config
+   - Launchpads: http://localhost:3001/api/launchpads
+protocol_configurations table verified successfully
+2025-07-29T13:20:43.120Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:20:43.503Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:21:07.585Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:21:08.014Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:21:27.069Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:21:27.533Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:22:25.333Z - GET /api/data-update/status
+2025-07-29T13:24:33.972Z - GET /api/launchpads/metrics
+Fetched 0 launchpad records for launchlab with timeframe all
+2025-07-29T13:24:35.479Z - GET /api/launchpads/metrics
+2025-07-29T13:24:54.104Z - POST /api/data-update/sync/launchpad/launchlab
+Starting data sync for launchpad: launchlab...
+
+=== LAUNCHPAD SYNC DEBUG ===
+Launchpad: launchlab
+============================
+
+Using query IDs: 5552096
+Starting data sync for launchpad: launchlab...
+Processing 1 queries for launchlab...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: launchlab
+Query ID: 5552096
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/5552096/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for launchlab query 1 (ID: 5552096)...
+Response status: 200 OK
+CSV data length: 3876 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,3986,57
+2025-07-28 00:00:00.000 UTC,22686,241
+2025-07-27 00:00:00.000 UTC,15768,136
+2025-07-26 00:00:00.000 UTC,18666,178
+2025-07
+Parse result: 106 rows, 0 errors
+Successfully fetched 106 rows for launchlab query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '3986',
+  token_migrations: '57'
+}
+Merged 106 unique date records for launchlab
+Successfully created merged file for launchlab: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv
+Downloaded data for launchlab successfully
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv ---
+
+=== LAUNCHPAD DELETE DEBUG ===
+Deleting existing data for launchlab...
+Successfully deleted existing data for launchlab
+===============================
+
+Debug: First row mapped data: { launchpad_name: 'launchlab' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 106
+First row sample: {
+  "date": "2025-04-15",
+  "launches": "18",
+  "graduations": "6",
+  "launchpad_name": "launchlab"
+}
+===============================
+
+Inserting batch 1, rows 1-106
+Sample row from batch: { launchpad_name: 'launchlab', date: '2025-04-15' }
+Batch 1 inserted successfully! Rows inserted in this batch: 106
+All data from launchlab.csv inserted successfully!
+Total rows actually inserted for launchlab.csv: 106
+Imported 106 rows for launchlab
+2025-07-29T13:24:58.907Z - GET /api/launchpads/metrics
+Fetched 516 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 516 -> 515
+2025-07-29T13:26:12.773Z - GET /api/launchpads/metrics
+Fetched 106 launchpad records for launchlab with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 106 -> 105
+2025-07-29T13:26:39.910Z - GET /api/launchpads/metrics
+2025-07-29T13:26:59.965Z - POST /api/data-update/sync/launchpads
+Starting launchpad data sync...
+Starting complete launchpad data sync process...
+--- Downloading CSV files from Dune API ---
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Processing 1 queries for launchlab...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: launchlab
+Query ID: 5552096
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/5552096/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for launchlab query 1 (ID: 5552096)...
+Response status: 200 OK
+CSV data length: 3876 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,3986,57
+2025-07-28 00:00:00.000 UTC,22686,241
+2025-07-27 00:00:00.000 UTC,15768,136
+2025-07-26 00:00:00.000 UTC,18666,178
+2025-07
+Parse result: 106 rows, 0 errors
+Successfully fetched 106 rows for launchlab query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '3986',
+  token_migrations: '57'
+}
+Merged 106 unique date records for launchlab
+Successfully created merged file for launchlab: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv
+Response status: 200 OK
+CSV data length: 19400 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-29 00:00:00.000 UTC,1184,15
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:00:00.000 UTC,4722,10
+2025-07-26 00:00:00.000 UTC,5223,29
+2025-07-25 00
+Parse result: 516 rows, 0 errors
+Successfully fetched 516 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-29 00:00:00.000 UTC',
+  token_launches: '1184',
+  token_migrations: '15'
+}
+Merged 516 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded 2/2 CSV files successfully
+--- Importing CSV files to database ---
+--- Deleting existing launchpad data from launchpad_stats ---
+Successfully deleted existing launchpad data
+Found 2 CSV files: [ 'launchlab.csv', 'pumpfun.csv' ]
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv ---
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+Debug: First row mapped data: { launchpad_name: 'launchlab' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 106
+First row sample: {
+  "date": "2025-04-15",
+  "launches": "18",
+  "graduations": "6",
+  "launchpad_name": "launchlab"
+}
+===============================
+
+Inserting batch 1, rows 1-106
+Sample row from batch: { launchpad_name: 'launchlab', date: '2025-04-15' }
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 516
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-516
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 1 inserted successfully! Rows inserted in this batch: 106
+All data from launchlab.csv inserted successfully!
+Total rows actually inserted for launchlab.csv: 106
+Batch 2 inserted successfully! Rows inserted in this batch: 16
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 516
+Imported 2/2 launchpads successfully
+Total rows imported: 622
+All protocol caches cleared
+All caches cleared after successful launchpad data sync
+2025-07-29T13:28:19.450Z - GET /api/launchpads/metrics
+Fetched 31 launchpad records for launchlab with timeframe 30d
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 31 -> 30
+2025-07-29T13:28:28.438Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:28:28.728Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:28:28.980Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-29T13:28:42.473Z - GET /api/launchpads/metrics
+Fetched 516 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 516 -> 515
+2025-07-29T13:28:42.753Z - GET /api/launchpads/metrics
+2025-07-29T13:28:48.041Z - GET /api/launchpads/metrics
+Fetched 106 launchpad records for launchlab with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 106 -> 105
+2025-07-29T13:29:33.028Z - GET /api/protocols/aggregated-stats
+Fetching aggregated protocol stats from database with pagination...
+Fetched 1000 total records for aggregation (page 1)...
+Fetched 2000 total records for aggregation (page 2)...
+Fetched 3000 total records for aggregation (page 3)...
+Fetched 4000 total records for aggregation (page 4)...
+Fetched 5000 total records for aggregation (page 5)...
+Fetched 6000 total records for aggregation (page 6)...
+Fetched 6848 total records for aggregation (page 7)...
+Total records fetched for aggregation: 6848
+Aggregated data for 703 unique dates (excluding latest date)
+2025-07-29T13:29:36.686Z - GET /api/protocols/aggregated-stats
+2025-07-29T13:29:36.693Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 1000, total so far: 1000
+UnifiedAPI: Fetched page 2, records: 1000, total so far: 2000
+UnifiedAPI: Fetched page 3, records: 1000, total so far: 3000
+UnifiedAPI: Fetched page 4, records: 1000, total so far: 4000
+UnifiedAPI: Fetched page 5, records: 1000, total so far: 5000
+UnifiedAPI: Fetched page 6, records: 1000, total so far: 6000
+UnifiedAPI: Fetched page 7, records: 1000, total so far: 7000
+UnifiedAPI: Fetched page 8, records: 1000, total so far: 8000
+UnifiedAPI: Fetched page 9, records: 1000, total so far: 9000
+UnifiedAPI: Fetched page 10, records: 545, total so far: 9545
+UnifiedAPI: Total records fetched: 9545
+UnifiedAPI: Filtered out most recent date 2025-07-29. Records: 9545 -> 9527
+2025-07-29T13:29:42.145Z - GET /api/unified/metrics
+2025-07-29T13:30:05.804Z - GET /api/launchpads/metrics
+Fetched 106 launchpad records for launchlab with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 106 -> 105
+2025-07-29T13:30:10.182Z - GET /api/launchpads/metrics
+2025-07-29T13:30:53.000Z - GET /api/launchpads/metrics
+Fetched 106 launchpad records for launchlab with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 106 -> 105
+2025-07-29T13:31:29.334Z - GET /api/launchpads/metrics
+Fetched 106 launchpad records for launchlab with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-29. Records: 106 -> 105
+2025-07-29T13:32:25.329Z - GET /api/data-update/status

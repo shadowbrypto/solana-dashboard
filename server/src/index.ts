@@ -6,6 +6,7 @@ import protocolRoutes from './routes/protocolRoutes.js';
 import unifiedProtocolRoutes from './routes/unifiedProtocolRoutes.js';
 import dataUpdateRoutes from './routes/dataUpdateRoutes.js';
 import protocolConfigRoutes from './routes/protocolConfigRoutes.js';
+import { launchpadRoutes } from './routes/launchpads.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,6 +33,7 @@ app.use('/api/protocols', protocolRoutes); // Legacy routes (backward compatibil
 app.use('/api/unified', unifiedProtocolRoutes); // New unified routes
 app.use('/api/data-update', dataUpdateRoutes);
 app.use('/api/protocol-config', protocolConfigRoutes);
+app.use('/api/launchpads', launchpadRoutes); // Launchpad routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -70,4 +72,5 @@ app.listen(PORT, () => {
   console.log(`   - Protocols (Unified): http://localhost:${PORT}/api/unified`);
   console.log(`   - Data Update: http://localhost:${PORT}/api/data-update`);
   console.log(`   - Protocol Config: http://localhost:${PORT}/api/protocol-config`);
+  console.log(`   - Launchpads: http://localhost:${PORT}/api/launchpads`);
 });

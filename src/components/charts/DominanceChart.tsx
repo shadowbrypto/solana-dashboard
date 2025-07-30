@@ -8,8 +8,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import {
-  Bar,
-  BarChart as RechartsBarChart,
+  Area,
+  AreaChart as RechartsAreaChart,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -25,7 +25,7 @@ type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 import { StackedBarChartSkeleton } from "./StackedBarChartSkeleton";
 
-interface StackedBarChartProps {
+interface DominanceChartProps {
   title: string;
   subtitle?: string;
   data: any[];
@@ -33,22 +33,17 @@ interface StackedBarChartProps {
   labels: string[];
   colors?: string[];
   xAxisKey?: string;
-  valueFormatter?: (value: number) => string;
   loading?: boolean;
   timeframe?: TimeFrame;
   onTimeframeChange?: (timeframe: TimeFrame) => void;
   disableTimeframeSelector?: boolean;
 }
 
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toFixed(0);
+function formatPercentage(value: number): string {
+  return `${value.toFixed(1)}%`;
 }
 
-export function StackedBarChart({ 
+export function DominanceChart({ 
   title, 
   subtitle,
   data,
@@ -56,12 +51,11 @@ export function StackedBarChart({
   labels,
   colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"],
   xAxisKey = "formattedDay",
-  valueFormatter = (value: number) => `${value.toLocaleString()}`,
   loading,
   timeframe: externalTimeframe,
   onTimeframeChange,
   disableTimeframeSelector = false,
-}: StackedBarChartProps) {
+}: DominanceChartProps) {
   if (loading) {
     return <StackedBarChartSkeleton />;
   }
@@ -80,6 +74,7 @@ export function StackedBarChart({
     }
   };
 
+  // Transform data to percentages with proper legend filtering
   const filteredData = useMemo(() => {
     // First filter by timeframe
     let timeFilteredData = data;
@@ -116,24 +111,35 @@ export function StackedBarChart({
       });
     }
 
-    // Then handle disabled keys by setting their values to 0
-    if (disabledKeys.length === 0) {
-      return timeFilteredData;
-    }
-
+    // Convert absolute values to percentages, excluding disabled keys from total calculation
     return timeFilteredData.map(item => {
-      const modifiedItem = { ...item };
-      disabledKeys.forEach(key => {
-        modifiedItem[key] = 0;
+      // Calculate total only from enabled keys
+      const enabledKeys = dataKeys.filter(key => !disabledKeys.includes(key));
+      const total = enabledKeys.reduce((sum, key) => sum + (item[key] || 0), 0);
+      
+      const dominanceItem: any = {
+        formattedDay: item.formattedDay,
+        date: item.date
+      };
+
+      dataKeys.forEach(key => {
+        if (disabledKeys.includes(key)) {
+          dominanceItem[key] = 0;
+        } else if (total > 0) {
+          dominanceItem[key] = ((item[key] || 0) / total) * 100;
+        } else {
+          dominanceItem[key] = 0;
+        }
       });
-      return modifiedItem;
+
+      return dominanceItem;
     });
-  }, [data, timeframe, disabledKeys]);
+  }, [data, timeframe, dataKeys, disabledKeys]);
 
   return (
     <ComponentActions 
-      componentName={`${title} Stacked Bar Chart`}
-      filename={`${title.replace(/\s+/g, '_')}_Stacked_Bar_Chart.png`}
+      componentName={`${title} Dominance Chart`}
+      filename={`${title.replace(/\s+/g, '_')}_Dominance_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
@@ -192,7 +198,7 @@ export function StackedBarChart({
         </CardHeader>
         <CardContent className="pt-6">
           <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
-            <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+            <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"
@@ -216,7 +222,8 @@ export function StackedBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                tickFormatter={(value) => formatNumberWithSuffix(value)}
+                tickFormatter={(value) => `${value.toFixed(0)}%`}
+                domain={[0, 100]}
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -245,22 +252,11 @@ export function StackedBarChart({
                                     style={{ backgroundColor: colors[dataKeyIndex] }}
                                   />
                                   <span className="text-sm text-foreground">
-                                    {labels[dataKeyIndex]}: {entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}
+                                    {labels[dataKeyIndex]}: {formatPercentage(entry.value || 0)}
                                   </span>
                                 </div>
                               );
                             })}
-                          </div>
-                          <div className="bg-muted-foreground/20 rounded px-2 py-1 mt-0">
-                            <div className="flex items-center gap-2 text-sm font-medium">
-                              <span className="text-muted-foreground">Total:</span>
-                              <span className="text-foreground">
-                                {(() => {
-                                  const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
-                                  return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);
-                                })()}
-                              </span>
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -280,14 +276,16 @@ export function StackedBarChart({
                 .filter(key => !disabledKeys.includes(key))
                 .map((key, index) => {
                   const originalIndex = dataKeys.indexOf(key);
-                  const isLastEnabled = index === dataKeys.filter(k => !disabledKeys.includes(k)).length - 1;
                   return (
-                    <Bar
+                    <Area
                       key={key}
+                      type="monotone"
                       dataKey={key}
-                      stackId="a"
+                      stackId="1"
+                      stroke={colors[originalIndex]}
                       fill={colors[originalIndex]}
-                      radius={isLastEnabled ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                      fillOpacity={0.8}
+                      strokeWidth={2}
                       name={labels[originalIndex]}
                     />
                   );
@@ -326,7 +324,7 @@ export function StackedBarChart({
                   );
                 }}
               />
-            </RechartsBarChart>
+            </RechartsAreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

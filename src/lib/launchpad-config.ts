@@ -63,15 +63,15 @@ export const launchpadConfigs: LaunchpadConfig[] = [
     chain: 'solana',
     description: 'Token launchpad on Solana',
     theme: {
-      primary: 'hsl(262, 83%, 58%)', // Purple
-      secondary: 'hsl(262, 83%, 95%)', // Light purple
-      accent: 'hsl(262, 83%, 48%)', // Darker purple
-      background: 'hsl(262, 20%, 98%)', // Very light purple background
-      cardBg: 'hsl(262, 30%, 96%)', // Light purple card background
-      text: 'hsl(262, 83%, 25%)', // Dark purple text
+      primary: 'hsl(142, 76%, 36%)', // Green
+      secondary: 'hsl(142, 76%, 95%)', // Light green
+      accent: 'hsl(142, 76%, 26%)', // Darker green
+      background: 'hsl(142, 20%, 98%)', // Very light green background
+      cardBg: 'hsl(142, 30%, 96%)', // Light green card background
+      text: 'hsl(142, 76%, 25%)', // Dark green text
       chartColors: [
-        'hsl(262, 83%, 58%)', // Primary purple for launches
-        'hsl(142, 76%, 36%)'  // Green for graduations
+        'hsl(142, 76%, 36%)', // Green for launches
+        'hsl(142, 76%, 50%)'  // Lighter green for graduations
       ]
     }
   },
@@ -90,8 +90,8 @@ export const launchpadConfigs: LaunchpadConfig[] = [
       cardBg: 'hsl(200, 30%, 96%)', // Light blue card background
       text: 'hsl(200, 95%, 25%)', // Dark blue text
       chartColors: [
-        'hsl(200, 95%, 50%)', // Primary blue for launches
-        'hsl(142, 76%, 36%)'  // Green for graduations
+        'hsl(200, 95%, 50%)', // Blue for launches
+        'hsl(200, 95%, 65%)'  // Lighter blue for graduations
       ]
     }
   },
@@ -110,8 +110,8 @@ export const launchpadConfigs: LaunchpadConfig[] = [
       cardBg: 'hsl(18, 30%, 96%)', // Light orange card background
       text: 'hsl(18, 100%, 25%)', // Dark orange text
       chartColors: [
-        'hsl(18, 100%, 55%)', // Primary orange for launches
-        'hsl(142, 76%, 36%)'  // Green for graduations
+        'hsl(18, 100%, 55%)', // Orange for launches
+        'hsl(18, 100%, 70%)'  // Lighter orange for graduations
       ]
     }
   },
@@ -130,8 +130,8 @@ export const launchpadConfigs: LaunchpadConfig[] = [
       cardBg: 'hsl(240, 30%, 96%)', // Light blue-purple card background
       text: 'hsl(240, 100%, 25%)', // Dark blue-purple text
       chartColors: [
-        'hsl(240, 100%, 60%)', // Primary blue-purple for launches
-        'hsl(142, 76%, 36%)'  // Green for graduations
+        'hsl(240, 100%, 60%)', // Purple for launches
+        'hsl(240, 100%, 75%)'  // Lighter purple for graduations
       ]
     }
   },

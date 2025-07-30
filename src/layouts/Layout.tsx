@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -16,11 +16,12 @@ import { Settings as AppSettings } from '../lib/settings';
 // Generate protocols array from centralized config
 const protocols = [
   ...getMutableProtocolConfigs(),
-  { id: 'all', name: 'All Protocols', icon: LayoutGrid, category: 'Overview' as const }
+  { id: 'all', name: 'All Trading Apps', icon: LayoutGrid, category: 'Overview' as const }
 ];
 
 const overviewPages = [
-  { id: 'comparison', name: 'Protocol Comparison', icon: GitCompare, path: '/overview/comparison' },
+  { id: 'comparison', name: 'Trading Apps Comparison', icon: GitCompare, path: '/overview/comparison' },
+  { id: 'all-launchpads', name: 'All Launchpads', icon: Rocket, path: '/overview/all-launchpads', new: true },
   // { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights', beta: true }
 ];
 
@@ -31,7 +32,7 @@ const reports = [
 ];
 
 const adminPages = [
-  { id: 'protocols', name: 'Protocol Management', icon: Settings, path: '/admin/protocols' }
+  { id: 'protocols', name: 'Trading App Management', icon: Settings, path: '/admin/protocols' }
 ];
 
 export function Layout() {
@@ -168,7 +169,7 @@ export function Layout() {
               <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center">
                 <LayoutGrid className="h-4 w-4 text-primary" />
               </div>
-              All Protocols
+              All Trading Apps
             </Button>
             
             {overviewPages.map((page) => {
@@ -191,6 +192,11 @@ export function Layout() {
                     {page.beta && (
                       <span className="px-1.5 py-0 text-[8px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
                         BETA
+                      </span>
+                    )}
+                    {page.new && (
+                      <span className="text-[10px] px-1.5 py-0 rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
+                        NEW
                       </span>
                     )}
                   </span>

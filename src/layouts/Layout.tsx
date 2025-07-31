@@ -195,7 +195,7 @@ export function Layout() {
                       </span>
                     )}
                     {page.new && (
-                      <span className="text-[8px] px-1 py-px rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
+                      <span className="text-[8px] px-1 py-0 rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
                         NEW
                       </span>
                     )}
@@ -218,7 +218,7 @@ export function Layout() {
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="font-medium">Launchpads</span>
-                  <span className="text-[8px] px-1 py-px rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
+                  <span className="text-[8px] px-1 py-0 rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
                     NEW
                   </span>
                   {/* Stacked Icons Preview - Only show when category is collapsed */}

@@ -87,10 +87,10 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
       {protocols.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-sm font-medium mb-1">
-            Drop protocols here
+            Drop trading apps here
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Drag and drop protocols to organize them
+            Drag and drop trading apps to organize them
           </p>
         </div>
       )}
@@ -357,7 +357,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Configurations Saved",
-        description: "Protocol configurations saved to database successfully!",
+        description: "Trading app configurations saved to database successfully!",
       });
       setForceRender(prev => prev + 1); // Trigger re-render to update unsaved changes indicator
     } catch (error) {
@@ -448,7 +448,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Configurations Reset",
-        description: "Protocol configurations reset to defaults!",
+        description: "Trading app configurations reset to defaults!",
       });
       setForceRender(prev => prev + 1); // Trigger re-render to show reset changes
     } catch (error) {
@@ -567,9 +567,9 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle>Protocol Configuration</CardTitle>
+              <CardTitle>Trading App Configuration</CardTitle>
               <CardDescription>
-                Current protocols organized by category. Drag protocols between categories to reorganize them.
+                Current trading apps organized by category. Drag trading apps between categories to reorganize them.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -701,7 +701,7 @@ export function ProtocolManagement() {
             <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
               <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
               <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-                This will force a complete data refresh from Dune Analytics, bypassing all time restrictions.
+                This will force a complete data refresh from Dune Analytics for all trading apps, bypassing all time restrictions.
               </p>
               <div className="flex gap-2">
                 <Button
@@ -746,7 +746,7 @@ export function ProtocolManagement() {
             <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
               <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                Check if all protocols have current data and highlight any outdated ones.
+                Check if all trading apps have current data and highlight any outdated ones.
               </p>
               <Button
                 onClick={handleCheckLatestDates}

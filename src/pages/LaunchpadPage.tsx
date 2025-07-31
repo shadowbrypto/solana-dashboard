@@ -4,11 +4,9 @@ import { format, parseISO } from 'date-fns';
 import { LaunchpadApi, LaunchpadMetrics } from '../lib/launchpad-api';
 import { getLaunchpadById, getLaunchpadLogoFilename, getLaunchpadTheme } from '../lib/launchpad-config';
 import { MetricCard } from '../components/MetricCard';
-import { MetricCardSkeleton } from '../components/MetricCardSkeleton';
 import { StackedBarChart } from '../components/charts/StackedBarChart';
-import { StackedBarChartSkeleton } from '../components/charts/StackedBarChartSkeleton';
 import { TimelineChart } from '../components/charts/TimelineChart';
-import { TimelineChartSkeleton } from '../components/charts/TimelineChartSkeleton';
+import { LaunchpadPageSkeleton } from '../components/LaunchpadPageSkeleton';
 import { Rocket, TrendingUp, TrendingDown, Calendar, Target } from 'lucide-react';
 
 interface ChartData {
@@ -187,23 +185,7 @@ export function LaunchpadPage() {
   const monthlyLaunchGrowth = calculateGrowth(stats30d.launches, previous30dStats.launches);
 
   if (loading) {
-    return (
-      <div className="p-2 sm:p-4 lg:p-6">
-        <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted animate-pulse rounded-lg" />
-          <div className="h-8 sm:h-10 w-48 bg-muted animate-pulse rounded" />
-        </div>
-        
-        <div className="mb-6 lg:mb-8 grid grid-cols-1 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-3 lg:grid-cols-3">
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-        </div>
-
-        <StackedBarChartSkeleton />
-        <TimelineChartSkeleton />
-      </div>
-    );
+    return <LaunchpadPageSkeleton />;
   }
 
   if (error) {

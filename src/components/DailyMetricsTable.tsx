@@ -813,10 +813,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 );
               })}
 
-              {/* All Protocols Total Row */}
+              {/* All Trading Apps Total Row */}
               <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
                 <TableCell className="font-medium text-xs sm:text-sm">
-                  All Protocols
+                  All Trading Apps
                 </TableCell>
                 {orderedMetrics.map((metric) => {
                   let total: number;

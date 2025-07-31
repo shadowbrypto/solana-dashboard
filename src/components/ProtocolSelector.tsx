@@ -22,7 +22,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
     { id: 'padre', name: 'Padre' },
     { id: 'moonshot', name: 'Moonshot' },
     { id: 'vector', name: 'Vector' },
-    { id: 'all', name: 'All Protocols' }
+    { id: 'all', name: 'All Trading Apps' }
   ];
 
   const handleProtocolChange = (protocolId: string) => {

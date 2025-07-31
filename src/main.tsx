@@ -12,6 +12,7 @@ import WeeklyReport from "./pages/WeeklyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
 import OneVsOne from "./pages/OneVsOne";
+import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
@@ -48,6 +49,20 @@ const router = createBrowserRouter([
                 }
               >
                 <OneVsOne />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "all-launchpads",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <AllLaunchpads />
               </React.Suspense>
             ),
           },

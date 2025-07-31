@@ -16,7 +16,7 @@ const mockAllProtocolsLocation = () => {
   });
 };
 
-describe('All Protocols Page', () => {
+describe('All Trading Apps Page', () => {
   beforeEach(() => {
     resetMocks();
     setupMockApiResponses();

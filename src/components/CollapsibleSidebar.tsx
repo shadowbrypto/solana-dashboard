@@ -178,7 +178,7 @@ export function CollapsibleSidebar() {
               <rect width="7" height="7" x="3" y="14" rx="1"/>
             </svg>
           </div>
-          <span className="truncate">All Protocols</span>
+          <span className="truncate">All Trading Apps</span>
         </button>
       </div>
 

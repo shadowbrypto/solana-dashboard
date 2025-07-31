@@ -255,27 +255,27 @@ export default function OneVsOne() {
     <div className="p-2 sm:p-4 lg:p-6">
       {/* Header */}
       <h1 className="text-2xl sm:text-3xl mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-        Protocol Comparison
+        Trading Apps Comparison
       </h1>
 
       {/* Protocol Selection */}
       <Card>
         <CardHeader>
           <div className="mb-4">
-            <h2 className="text-lg font-semibold">Select Protocols for Detailed Comparison</h2>
+            <h2 className="text-lg font-semibold">Select Trading Apps for Detailed Comparison</h2>
           </div>
           <div className="flex items-center justify-between">
             <Select value="" onValueChange={addProtocol}>
               <SelectTrigger className="w-[280px]">
                 <Plus className="w-4 h-4 mr-2" />
-                Add protocol to compare
+                Add trading app to compare
               </SelectTrigger>
               <SelectContent>
                 {filteredProtocols.length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
                     {selectedProtocols.length >= 6 
-                      ? "Maximum 6 protocols can be compared"
-                      : "No protocols found"
+                      ? "Maximum 6 trading apps can be compared"
+                      : "No trading apps found"
                     }
                   </div>
                 ) : (
@@ -412,7 +412,7 @@ export default function OneVsOne() {
               <Separator />
               
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">Selected Protocols</h3>
+                <h3 className="text-lg font-semibold">Selected Trading Apps</h3>
                 <Badge variant="secondary" className="bg-primary/10 text-primary">
                   {selectedProtocols.length} selected
                 </Badge>
@@ -594,9 +594,9 @@ export default function OneVsOne() {
         <Card className="border-dashed mt-6">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Frown className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No protocols selected</h3>
+            <h3 className="text-lg font-semibold mb-2">No trading apps selected</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Select protocols from the dropdown above to compare their performance metrics.
+              Select trading apps from the dropdown above to compare their performance metrics.
             </p>
           </CardContent>
         </Card>
@@ -606,9 +606,9 @@ export default function OneVsOne() {
         <Card className="border-dashed mt-6">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <GitCompare className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Add another protocol</h3>
+            <h3 className="text-lg font-semibold mb-2">Add another trading app</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Select at least one more protocol to start comparing metrics.
+              Select at least one more trading app to start comparing metrics.
             </p>
           </CardContent>
         </Card>

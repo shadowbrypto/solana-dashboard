@@ -73,6 +73,15 @@ async function launchpadApiRequest<T>(endpoint: string, options?: RequestInit): 
   }
 }
 
+export interface LaunchpadSummaryMetrics {
+  launchpad_name: string;
+  total_launches: number;
+  total_graduations: number;
+  success_rate: number;
+  avg_daily_launches: number;
+  avg_daily_graduations: number;
+}
+
 export class LaunchpadApi {
   /**
    * Get launchpad metrics for a specific timeframe
@@ -94,6 +103,41 @@ export class LaunchpadApi {
 
     const endpoint = `/metrics?${queryParams.toString()}`;
     return launchpadApiRequest<LaunchpadMetrics[]>(endpoint);
+  }
+
+  /**
+   * Get launchpad data for a specific launchpad and timeframe (alias for getMetrics)
+   */
+  static async getLaunchpadData(launchpad: string, timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): Promise<LaunchpadMetrics[]> {
+    return this.getMetrics({
+      launchpad,
+      timeframe,
+      all: timeframe === 'all'
+    });
+  }
+
+  /**
+   * Get aggregated metrics for a launchpad (summary statistics)
+   */
+  static async getLaunchpadMetrics(launchpad: string, timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): Promise<LaunchpadSummaryMetrics> {
+    // Get all data for the launchpad
+    const data = await this.getLaunchpadData(launchpad, timeframe);
+    
+    // Calculate summary metrics
+    const total_launches = data.reduce((sum, item) => sum + item.launches, 0);
+    const total_graduations = data.reduce((sum, item) => sum + item.graduations, 0);
+    const success_rate = total_launches > 0 ? (total_graduations / total_launches) * 100 : 0;
+    const avg_daily_launches = data.length > 0 ? total_launches / data.length : 0;
+    const avg_daily_graduations = data.length > 0 ? total_graduations / data.length : 0;
+
+    return {
+      launchpad_name: launchpad,
+      total_launches,
+      total_graduations,
+      success_rate,
+      avg_daily_launches,
+      avg_daily_graduations
+    };
   }
 
   /**

@@ -282,6 +282,7 @@ export function LaunchpadPage() {
                   {dailyLaunchGrowth.value.toFixed(1)}%
                 </div>
               </div>
+              <div className="w-full h-px bg-gradient-to-r from-blue-500/20 via-blue-500/40 to-blue-500/20 my-3"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-1">
                   <span className="text-xs font-medium text-muted-foreground/80">Launched</span>
@@ -323,6 +324,7 @@ export function LaunchpadPage() {
                   {weeklyLaunchGrowth.value.toFixed(1)}%
                 </div>
               </div>
+              <div className="w-full h-px bg-gradient-to-r from-green-500/20 via-green-500/40 to-green-500/20 my-3"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-1">
                   <span className="text-xs font-medium text-muted-foreground/80">Launched</span>
@@ -364,6 +366,7 @@ export function LaunchpadPage() {
                   {monthlyLaunchGrowth.value.toFixed(1)}%
                 </div>
               </div>
+              <div className="w-full h-px bg-gradient-to-r from-purple-500/20 via-purple-500/40 to-purple-500/20 my-3"></div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-1">
                   <span className="text-xs font-medium text-muted-foreground/80">Launched</span>

@@ -8838,3 +8838,29 @@ LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
 2025-07-31T11:19:32.987Z - GET /api/launchpads/metrics
 2025-07-31T11:19:32.989Z - GET /api/launchpads/metrics
 2025-07-31T11:22:52.271Z - GET /api/data-update/status
+2025-07-31T11:32:39.235Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T11:32:39.694Z - GET /api/launchpads/metrics
+2025-07-31T11:32:52.278Z - GET /api/data-update/status
+2025-07-31T11:33:37.183Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:33:37.187Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:33:37.190Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T11:33:37.623Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.625Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.626Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T11:33:37.705Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.707Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.709Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T11:33:37.882Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.885Z - GET /api/launchpads/metrics
+2025-07-31T11:33:37.887Z - GET /api/launchpads/metrics

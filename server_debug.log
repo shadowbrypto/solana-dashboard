@@ -7753,3 +7753,1087 @@ UnifiedAPI: Total records fetched: 1
 UnifiedAPI: Total records fetched: 0
 2025-07-31T08:41:21.825Z - GET /api/unified/daily
 2025-07-31T08:41:21.826Z - GET /api/unified/daily
+2025-07-31T08:42:39.596Z - GET /api/unified/weekly
+UnifiedAPI: Total records fetched: 0
+2025-07-31T08:42:39.930Z - GET /api/unified/weekly
+2025-07-31T08:42:42.506Z - GET /api/unified/daily
+2025-07-31T08:42:42.507Z - GET /api/unified/daily
+2025-07-31T08:42:42.508Z - GET /api/unified/daily
+2025-07-31T08:42:42.510Z - GET /api/unified/daily
+2025-07-31T08:42:42.512Z - GET /api/unified/daily
+2025-07-31T08:42:42.514Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:42.781Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:42.790Z - GET /api/unified/daily
+2025-07-31T08:42:42.792Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:42.925Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:43.028Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:43.056Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:43.066Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T08:42:43.179Z - GET /api/unified/daily
+2025-07-31T08:49:13.515Z - GET /api/data-update/status
+2025-07-31T09:00:11.859Z - GET /api/data-update/status
+2025-07-31T09:10:11.830Z - GET /api/data-update/status
+2025-07-31T09:20:11.823Z - GET /api/data-update/status
+2025-07-31T09:30:11.914Z - GET /api/data-update/status
+2025-07-31T09:40:11.886Z - GET /api/data-update/status
+2025-07-31T09:50:11.938Z - GET /api/data-update/status
+2025-07-31T10:00:11.866Z - GET /api/data-update/status
+2025-07-31T10:10:11.885Z - GET /api/data-update/status
+2025-07-31T10:20:11.890Z - GET /api/data-update/status
+2025-07-31T10:30:11.846Z - GET /api/data-update/status
+2025-07-31T10:32:23.726Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:32:23.730Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:32:23.732Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 97 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 97 -> 96
+2025-07-31T10:32:24.573Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.576Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.577Z - GET /api/launchpads/metrics
+Fetched 517 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 517 -> 516
+2025-07-31T10:32:24.597Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.599Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.601Z - GET /api/launchpads/metrics
+Fetched 35 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 35 -> 34
+2025-07-31T10:32:24.664Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.666Z - GET /api/launchpads/metrics
+2025-07-31T10:32:24.667Z - GET /api/launchpads/metrics
+2025-07-31T10:36:11.634Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:36:11.637Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:36:11.640Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 517 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 517 -> 516
+2025-07-31T10:36:12.221Z - GET /api/launchpads/metrics
+Fetched 97 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 97 -> 96
+2025-07-31T10:36:12.400Z - GET /api/launchpads/metrics
+Fetched 35 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 35 -> 34
+2025-07-31T10:36:12.681Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.920Z - GET /api/data-update/status
+2025-07-31T10:36:37.933Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.934Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.934Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.935Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.935Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.936Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.936Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.936Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.936Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.937Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.937Z - GET /api/launchpads/metrics
+2025-07-31T10:36:37.938Z - GET /api/launchpads/metrics
+2025-07-31T10:36:38.362Z - GET /api/data-update/status
+2025-07-31T10:36:49.112Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:36:49.117Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:36:49.119Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 517 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 517 -> 516
+2025-07-31T10:36:49.385Z - GET /api/launchpads/metrics
+Fetched 97 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 97 -> 96
+2025-07-31T10:36:49.514Z - GET /api/launchpads/metrics
+Fetched 35 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 35 -> 34
+2025-07-31T10:36:49.720Z - GET /api/launchpads/metrics
+2025-07-31T10:37:44.920Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:37:44.925Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:37:44.930Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 517 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 517 -> 516
+2025-07-31T10:37:45.246Z - GET /api/launchpads/metrics
+Fetched 97 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 97 -> 96
+2025-07-31T10:37:45.684Z - GET /api/launchpads/metrics
+Fetched 35 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 35 -> 34
+2025-07-31T10:37:45.690Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.718Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.719Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.720Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.721Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.722Z - GET /api/launchpads/metrics
+2025-07-31T10:38:08.722Z - GET /api/launchpads/metrics
+2025-07-31T10:38:42.695Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:38:42.697Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:38:42.700Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 35 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 35 -> 34
+2025-07-31T10:38:43.120Z - GET /api/launchpads/metrics
+Fetched 97 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 97 -> 96
+2025-07-31T10:38:43.129Z - GET /api/launchpads/metrics
+Fetched 517 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-30. Records: 517 -> 516
+2025-07-31T10:38:43.416Z - GET /api/launchpads/metrics
+2025-07-31T10:40:14.372Z - GET /api/protocol-config
+2025-07-31T10:40:14.374Z - GET /api/protocols/sync-status
+2025-07-31T10:40:14.828Z - GET /api/protocol-config
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-31T10:40:14.920Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-31T10:40:15.144Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-31T10:40:15.354Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-31T10:40:16.548Z - POST /api/data-update/sync/launchpads
+Starting launchpad data sync...
+Starting complete launchpad data sync process...
+--- Downloading CSV files from Dune API ---
+Processing 1 queries for pumpfun...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: pumpfun
+Query ID: 4894656
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4894656/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for pumpfun query 1 (ID: 4894656)...
+Processing 1 queries for launchlab...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: launchlab
+Query ID: 5552096
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/5552096/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for launchlab query 1 (ID: 5552096)...
+Processing 1 queries for letsbonk...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: letsbonk
+Query ID: 4992859
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/4992859/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for letsbonk query 1 (ID: 4992859)...
+Processing 1 queries for moonshot...
+
+=== LAUNCHPAD DOWNLOAD DEBUG ===
+Launchpad: moonshot
+Query ID: 5360634
+Query Index: 1
+URL: https://api.dune.com/api/v1/query/5360634/results/csv?api_key=[API_KEY]
+=================================
+
+Fetching data for moonshot query 1 (ID: 5360634)...
+Response status: 200 OK
+CSV data length: 1295 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_graduations
+2025-07-31 00:00:00.000 UTC,73,0
+2025-07-30 00:00:00.000 UTC,2141,0
+2025-07-29 00:00:00.000 UTC,2407,0
+2025-07-28 00:00:00.000 UTC,1580,0
+2025-07-27 00:00:0
+Parse result: 36 rows, 0 errors
+Successfully fetched 36 rows for moonshot query 1
+Sample row: {
+  block_date: '2025-07-31 00:00:00.000 UTC',
+  token_launches: '73',
+  token_graduations: '0'
+}
+Merged 36 unique date records for moonshot
+Successfully created merged file for moonshot: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/moonshot.csv
+Response status: 200 OK
+CSV data length: 3951 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-31 00:00:00.000 UTC,758,12
+2025-07-30 00:00:00.000 UTC,20922,218
+2025-07-29 00:00:00.000 UTC,19786,230
+2025-07-28 00:00:00.000 UTC,22686,241
+2025-07-
+Parse result: 108 rows, 0 errors
+Successfully fetched 108 rows for launchlab query 1
+Sample row: {
+  block_date: '2025-07-31 00:00:00.000 UTC',
+  token_launches: '758',
+  token_migrations: '12'
+}
+Merged 108 unique date records for launchlab
+Successfully created merged file for launchlab: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv
+Response status: 200 OK
+CSV data length: 3580 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-31 00:00:00.000 UTC,2761,41
+2025-07-30 00:00:00.000 UTC,20712,233
+2025-07-29 00:00:00.000 UTC,19593,246
+2025-07-28 00:00:00.000 UTC,22554,265
+2025-07
+Parse result: 98 rows, 0 errors
+Successfully fetched 98 rows for letsbonk query 1
+Sample row: {
+  block_date: '2025-07-31 00:00:00.000 UTC',
+  token_launches: '2761',
+  token_migrations: '41'
+}
+Merged 98 unique date records for letsbonk
+Successfully created merged file for letsbonk: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/letsbonk.csv
+Response status: 200 OK
+CSV data length: 19470 characters
+CSV data preview (first 200 chars): block_date,token_launches,token_migrations
+2025-07-31 00:00:00.000 UTC,220,6
+2025-07-30 00:00:00.000 UTC,4486,26
+2025-07-29 00:00:00.000 UTC,4764,35
+2025-07-28 00:00:00.000 UTC,4173,25
+2025-07-27 00:0
+Parse result: 518 rows, 0 errors
+Successfully fetched 518 rows for pumpfun query 1
+Sample row: {
+  block_date: '2025-07-31 00:00:00.000 UTC',
+  token_launches: '220',
+  token_migrations: '6'
+}
+Merged 518 unique date records for pumpfun
+Successfully created merged file for pumpfun: /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv
+Downloaded 4/4 CSV files successfully
+--- Importing CSV files to database ---
+--- Deleting existing launchpad data from launchpad_stats ---
+Successfully deleted existing launchpad data
+Found 4 CSV files: [ 'launchlab.csv', 'letsbonk.csv', 'moonshot.csv', 'pumpfun.csv' ]
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/launchlab.csv ---
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/letsbonk.csv ---
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/moonshot.csv ---
+--- Importing /Users/sairaghavaa/Documents/GitHub/sol-analytics/server/public/data/launchpads/pumpfun.csv ---
+Debug: First row mapped data: { launchpad_name: 'letsbonk' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 98
+First row sample: {
+  "date": "2025-04-25",
+  "launches": "2201",
+  "graduations": "57",
+  "launchpad_name": "letsbonk"
+}
+===============================
+
+Inserting batch 1, rows 1-98
+Sample row from batch: { launchpad_name: 'letsbonk', date: '2025-04-25' }
+Debug: First row mapped data: { launchpad_name: 'moonshot' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 36
+First row sample: {
+  "date": "2025-06-25",
+  "launches": "1",
+  "graduations": "0",
+  "launchpad_name": "moonshot"
+}
+===============================
+
+Inserting batch 1, rows 1-36
+Sample row from batch: { launchpad_name: 'moonshot', date: '2025-06-25' }
+Debug: First row mapped data: { launchpad_name: 'pumpfun' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 518
+First row sample: {
+  "date": "2024-03-01",
+  "launches": "22",
+  "graduations": "0",
+  "launchpad_name": "pumpfun"
+}
+===============================
+
+Inserting batch 1, rows 1-500
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2024-03-01' }
+Debug: First row mapped data: { launchpad_name: 'launchlab' }
+
+=== LAUNCHPAD INSERT DEBUG ===
+Total rows to insert: 108
+First row sample: {
+  "date": "2025-04-15",
+  "launches": "18",
+  "graduations": "6",
+  "launchpad_name": "launchlab"
+}
+===============================
+
+Inserting batch 1, rows 1-108
+Sample row from batch: { launchpad_name: 'launchlab', date: '2025-04-15' }
+Batch 1 inserted successfully! Rows inserted in this batch: 36
+All data from moonshot.csv inserted successfully!
+Total rows actually inserted for moonshot.csv: 36
+Batch 1 inserted successfully! Rows inserted in this batch: 98
+All data from letsbonk.csv inserted successfully!
+Total rows actually inserted for letsbonk.csv: 98
+Batch 1 inserted successfully! Rows inserted in this batch: 108
+All data from launchlab.csv inserted successfully!
+Total rows actually inserted for launchlab.csv: 108
+Batch 1 inserted successfully! Rows inserted in this batch: 500
+Inserting batch 2, rows 501-518
+Sample row from batch: { launchpad_name: 'pumpfun', date: '2025-07-14' }
+Batch 2 inserted successfully! Rows inserted in this batch: 18
+All data from pumpfun.csv inserted successfully!
+Total rows actually inserted for pumpfun.csv: 518
+Imported 4/4 launchpads successfully
+Total rows imported: 760
+All protocol caches cleared
+All caches cleared after successful launchpad data sync
+2025-07-31T10:40:19.229Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-07-31T10:40:36.024Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:40:36.427Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.474Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:40:42.477Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:40:42.479Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:40:42.736Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.739Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.740Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:40:42.906Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.909Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.911Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:40:42.993Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.995Z - GET /api/launchpads/metrics
+2025-07-31T10:40:42.996Z - GET /api/launchpads/metrics
+2025-07-31T10:42:52.239Z - GET /api/data-update/status
+2025-07-31T10:42:52.242Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:42:52.244Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:42:52.245Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:42:52.714Z - GET /api/data-update/status
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:42:52.736Z - GET /api/launchpads/metrics
+2025-07-31T10:42:52.739Z - GET /api/launchpads/metrics
+2025-07-31T10:42:52.743Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:42:53.025Z - GET /api/launchpads/metrics
+2025-07-31T10:42:53.027Z - GET /api/launchpads/metrics
+2025-07-31T10:42:53.029Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:42:53.048Z - GET /api/launchpads/metrics
+2025-07-31T10:42:53.051Z - GET /api/launchpads/metrics
+2025-07-31T10:42:53.055Z - GET /api/launchpads/metrics
+2025-07-31T10:43:24.469Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:43:24.472Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:43:24.474Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:43:24.747Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:43:24.780Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:43:24.887Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.593Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.594Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.595Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.596Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.597Z - GET /api/launchpads/metrics
+2025-07-31T10:43:45.598Z - GET /api/launchpads/metrics
+2025-07-31T10:47:18.392Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:47:18.394Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:47:18.397Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:47:18.864Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:47:18.883Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:47:18.974Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.264Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.265Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.266Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.268Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.268Z - GET /api/launchpads/metrics
+2025-07-31T10:47:30.269Z - GET /api/launchpads/metrics
+2025-07-31T10:52:52.236Z - GET /api/data-update/status
+2025-07-31T10:53:14.293Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:53:14.296Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:53:14.304Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:53:14.576Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:53:14.590Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:53:14.847Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.646Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.648Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.649Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.650Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.650Z - GET /api/launchpads/metrics
+2025-07-31T10:53:27.651Z - GET /api/launchpads/metrics
+2025-07-31T10:54:55.635Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:54:55.638Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:54:55.642Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:54:56.081Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:54:56.206Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:54:56.266Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.991Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.992Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.993Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.994Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.994Z - GET /api/launchpads/metrics
+2025-07-31T10:55:07.995Z - GET /api/launchpads/metrics
+2025-07-31T10:56:46.558Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:56:46.561Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:56:46.563Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:56:47.020Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:56:47.073Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:56:47.128Z - GET /api/launchpads/metrics
+2025-07-31T10:57:24.873Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:57:24.877Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:57:24.881Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:57:25.190Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:57:25.433Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:57:25.530Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.294Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.295Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.297Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.298Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.298Z - GET /api/launchpads/metrics
+2025-07-31T10:57:38.299Z - GET /api/launchpads/metrics
+2025-07-31T10:58:05.724Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:58:05.728Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:58:05.733Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:58:06.072Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:58:06.160Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:58:06.171Z - GET /api/launchpads/metrics
+2025-07-31T10:58:36.804Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:58:36.815Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:58:36.819Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:58:37.382Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:58:37.395Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:58:37.524Z - GET /api/launchpads/metrics
+2025-07-31T10:59:34.119Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:59:34.122Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T10:59:34.128Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T10:59:34.812Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T10:59:34.928Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T10:59:36.502Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.211Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.213Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.213Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.215Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.215Z - GET /api/launchpads/metrics
+2025-07-31T10:59:46.216Z - GET /api/launchpads/metrics
+2025-07-31T11:02:52.224Z - GET /api/data-update/status
+2025-07-31T11:08:04.906Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:08:04.909Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:08:04.911Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T11:08:05.386Z - GET /api/launchpads/metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T11:08:05.641Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T11:08:05.725Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.950Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.952Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.953Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.953Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.954Z - GET /api/launchpads/metrics
+2025-07-31T11:08:16.955Z - GET /api/launchpads/metrics
+2025-07-31T11:12:52.224Z - GET /api/data-update/status
+2025-07-31T11:19:08.300Z - GET /api/unified/daily
+2025-07-31T11:19:08.306Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:08.801Z - GET /api/unified/daily
+2025-07-31T11:19:08.803Z - GET /api/unified/daily
+2025-07-31T11:19:08.805Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.101Z - GET /api/unified/daily
+2025-07-31T11:19:09.103Z - GET /api/unified/daily
+2025-07-31T11:19:09.104Z - GET /api/unified/daily
+2025-07-31T11:19:09.106Z - GET /api/unified/daily
+2025-07-31T11:19:09.107Z - GET /api/unified/daily
+2025-07-31T11:19:09.108Z - GET /api/unified/daily
+2025-07-31T11:19:09.111Z - GET /api/unified/daily
+2025-07-31T11:19:09.115Z - GET /api/unified/daily
+2025-07-31T11:19:09.118Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.331Z - GET /api/unified/daily
+2025-07-31T11:19:09.332Z - GET /api/unified/daily
+2025-07-31T11:19:09.333Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.355Z - GET /api/unified/daily
+2025-07-31T11:19:09.356Z - GET /api/unified/daily
+2025-07-31T11:19:09.357Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.529Z - GET /api/unified/daily
+2025-07-31T11:19:09.531Z - GET /api/unified/daily
+2025-07-31T11:19:09.533Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.724Z - GET /api/unified/daily
+2025-07-31T11:19:09.726Z - GET /api/unified/daily
+2025-07-31T11:19:09.727Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.732Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:09.962Z - GET /api/unified/daily
+2025-07-31T11:19:09.964Z - GET /api/unified/daily
+2025-07-31T11:19:09.966Z - GET /api/unified/daily
+2025-07-31T11:19:10.031Z - GET /api/unified/daily
+2025-07-31T11:19:10.032Z - GET /api/unified/daily
+2025-07-31T11:19:10.032Z - GET /api/unified/daily
+2025-07-31T11:19:10.033Z - GET /api/unified/daily
+2025-07-31T11:19:10.034Z - GET /api/unified/daily
+2025-07-31T11:19:10.034Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.255Z - GET /api/unified/daily
+2025-07-31T11:19:10.256Z - GET /api/unified/daily
+2025-07-31T11:19:10.257Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:10.265Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.389Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:10.474Z - GET /api/unified/daily
+2025-07-31T11:19:10.475Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 18, total so far: 18
+UnifiedAPI: Total records fetched: 18
+2025-07-31T11:19:10.506Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.604Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.696Z - GET /api/unified/daily
+2025-07-31T11:19:10.698Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.732Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.752Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.813Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.928Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.940Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.948Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:10.969Z - GET /api/unified/daily
+2025-07-31T11:19:10.973Z - GET /api/unified/daily
+2025-07-31T11:19:10.976Z - GET /api/unified/daily
+2025-07-31T11:19:10.979Z - GET /api/unified/daily
+2025-07-31T11:19:10.980Z - GET /api/unified/daily
+2025-07-31T11:19:10.981Z - GET /api/unified/daily
+2025-07-31T11:19:10.983Z - GET /api/unified/daily
+2025-07-31T11:19:10.984Z - GET /api/unified/daily
+2025-07-31T11:19:10.985Z - GET /api/unified/daily
+2025-07-31T11:19:10.986Z - GET /api/unified/daily
+2025-07-31T11:19:10.986Z - GET /api/unified/daily
+2025-07-31T11:19:10.987Z - GET /api/unified/daily
+2025-07-31T11:19:10.988Z - GET /api/unified/daily
+2025-07-31T11:19:10.990Z - GET /api/unified/daily
+2025-07-31T11:19:10.991Z - GET /api/unified/daily
+2025-07-31T11:19:10.992Z - GET /api/unified/daily
+2025-07-31T11:19:10.994Z - GET /api/unified/daily
+2025-07-31T11:19:10.995Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:11.032Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:11.139Z - GET /api/unified/daily
+2025-07-31T11:19:11.141Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:11.174Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 19, total so far: 19
+UnifiedAPI: Total records fetched: 19
+2025-07-31T11:19:11.180Z - GET /api/unified/daily
+2025-07-31T11:19:13.688Z - GET /api/unified/daily
+2025-07-31T11:19:13.689Z - GET /api/unified/daily
+2025-07-31T11:19:13.689Z - GET /api/unified/daily
+2025-07-31T11:19:13.690Z - GET /api/unified/daily
+2025-07-31T11:19:13.691Z - GET /api/unified/daily
+2025-07-31T11:19:13.692Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:13.900Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:13.911Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:15.389Z - GET /api/unified/daily
+2025-07-31T11:19:15.393Z - GET /api/unified/daily
+2025-07-31T11:19:15.397Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:15.466Z - GET /api/unified/daily
+2025-07-31T11:19:15.469Z - GET /api/unified/daily
+2025-07-31T11:19:15.474Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:15.830Z - GET /api/unified/daily
+2025-07-31T11:19:15.832Z - GET /api/unified/daily
+2025-07-31T11:19:15.834Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:16.330Z - GET /api/unified/daily
+2025-07-31T11:19:16.333Z - GET /api/unified/daily
+2025-07-31T11:19:16.334Z - GET /api/unified/daily
+2025-07-31T11:19:16.335Z - GET /api/unified/daily
+2025-07-31T11:19:16.335Z - GET /api/unified/daily
+2025-07-31T11:19:16.336Z - GET /api/unified/daily
+2025-07-31T11:19:16.337Z - GET /api/unified/daily
+2025-07-31T11:19:16.338Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:16.765Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:16.768Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:16.791Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:16.794Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:16.926Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:16.985Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:17.189Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:17.201Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:17.233Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:17.260Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:17.361Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:17.419Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:17.617Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:17.624Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:17.671Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:17.816Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:17.861Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:18.038Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:18.044Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:18.052Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:18.102Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:18.266Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:18.304Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:18.463Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 6, total so far: 6
+UnifiedAPI: Total records fetched: 6
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+2025-07-31T11:19:18.481Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 8, total so far: 8
+UnifiedAPI: Total records fetched: 8
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:18.539Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 2, total so far: 2
+UnifiedAPI: Total records fetched: 2
+2025-07-31T11:19:18.563Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+UnifiedAPI: Fetched page 1, records: 3, total so far: 3
+UnifiedAPI: Total records fetched: 3
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:18.699Z - GET /api/unified/daily
+2025-07-31T11:19:18.703Z - GET /api/unified/daily
+2025-07-31T11:19:18.705Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 4, total so far: 4
+UnifiedAPI: Total records fetched: 4
+2025-07-31T11:19:18.754Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:18.764Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:18.923Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:18.929Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:18.937Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:18.984Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:18.997Z - GET /api/unified/daily
+2025-07-31T11:19:19.000Z - GET /api/unified/daily
+2025-07-31T11:19:19.004Z - GET /api/unified/daily
+2025-07-31T11:19:19.006Z - GET /api/unified/daily
+2025-07-31T11:19:19.008Z - GET /api/unified/daily
+2025-07-31T11:19:19.009Z - GET /api/unified/daily
+2025-07-31T11:19:19.010Z - GET /api/unified/daily
+2025-07-31T11:19:19.011Z - GET /api/unified/daily
+2025-07-31T11:19:19.012Z - GET /api/unified/daily
+2025-07-31T11:19:19.013Z - GET /api/unified/daily
+2025-07-31T11:19:19.015Z - GET /api/unified/daily
+2025-07-31T11:19:19.017Z - GET /api/unified/daily
+2025-07-31T11:19:19.019Z - GET /api/unified/daily
+2025-07-31T11:19:19.020Z - GET /api/unified/daily
+2025-07-31T11:19:19.021Z - GET /api/unified/daily
+2025-07-31T11:19:19.022Z - GET /api/unified/daily
+2025-07-31T11:19:19.023Z - GET /api/unified/daily
+2025-07-31T11:19:19.024Z - GET /api/unified/daily
+2025-07-31T11:19:19.028Z - GET /api/unified/daily
+2025-07-31T11:19:19.031Z - GET /api/unified/daily
+2025-07-31T11:19:19.032Z - GET /api/unified/daily
+2025-07-31T11:19:19.032Z - GET /api/unified/daily
+2025-07-31T11:19:19.033Z - GET /api/unified/daily
+2025-07-31T11:19:19.034Z - GET /api/unified/daily
+2025-07-31T11:19:19.035Z - GET /api/unified/daily
+2025-07-31T11:19:19.036Z - GET /api/unified/daily
+2025-07-31T11:19:19.036Z - GET /api/unified/daily
+2025-07-31T11:19:19.037Z - GET /api/unified/daily
+2025-07-31T11:19:19.038Z - GET /api/unified/daily
+2025-07-31T11:19:19.039Z - GET /api/unified/daily
+2025-07-31T11:19:19.039Z - GET /api/unified/daily
+2025-07-31T11:19:19.040Z - GET /api/unified/daily
+2025-07-31T11:19:19.041Z - GET /api/unified/daily
+2025-07-31T11:19:19.041Z - GET /api/unified/daily
+2025-07-31T11:19:19.042Z - GET /api/unified/daily
+2025-07-31T11:19:19.042Z - GET /api/unified/daily
+2025-07-31T11:19:19.043Z - GET /api/unified/daily
+2025-07-31T11:19:19.044Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:19.135Z - GET /api/unified/daily
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+UnifiedAPI: Fetched page 1, records: 1, total so far: 1
+UnifiedAPI: Total records fetched: 1
+2025-07-31T11:19:19.151Z - GET /api/unified/daily
+2025-07-31T11:19:19.152Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:19.209Z - GET /api/unified/daily
+UnifiedAPI: Total records fetched: 0
+2025-07-31T11:19:19.301Z - GET /api/unified/daily
+2025-07-31T11:19:32.471Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:19:32.473Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-07-31T11:19:32.476Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 518 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
+2025-07-31T11:19:32.760Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.761Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.762Z - GET /api/launchpads/metrics
+Fetched 98 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 98 -> 97
+2025-07-31T11:19:32.957Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.959Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.960Z - GET /api/launchpads/metrics
+Fetched 36 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 36 -> 35
+2025-07-31T11:19:32.986Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.987Z - GET /api/launchpads/metrics
+2025-07-31T11:19:32.989Z - GET /api/launchpads/metrics

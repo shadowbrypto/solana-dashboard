@@ -18,7 +18,7 @@ import { PieChartSkeleton } from '../components/charts/PieChartSkeleton';
 import { transformLaunchpadDataForStackedChart, formatChartNumber } from '../lib/launchpad-chart-utils';
 import { LaunchpadSplitBar } from '../components/LaunchpadSplitBar';
 
-type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
+type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 interface LaunchpadData {
   launchpad: string;
@@ -109,10 +109,43 @@ export default function AllLaunchpads() {
 
   // Helper function to filter data by timeframe
   const getFilteredData = (timeframe: TimeFrame) => {
+    console.log('getFilteredData called with timeframe:', timeframe);
+    
     if (timeframe === "all") {
       return launchpadData;
     }
 
+    if (timeframe === "1d") {
+      // For "1d", get only the most recent day's data across all launchpads
+      const allDates = new Set<string>();
+      launchpadData.forEach(lp => {
+        lp.data.forEach(item => allDates.add(item.date));
+      });
+      
+      if (allDates.size === 0) {
+        console.log('No dates found for 1d filter');
+        return launchpadData.map(lp => ({ ...lp, data: [] }));
+      }
+      
+      const sortedDates = Array.from(allDates).sort();
+      const mostRecentDate = sortedDates[sortedDates.length - 1];
+      console.log('Most recent date for 1d:', mostRecentDate, 'from dates:', sortedDates);
+      
+      const filtered = launchpadData.map(lp => ({
+        ...lp,
+        data: lp.data.filter(item => item.date === mostRecentDate)
+      }));
+      
+      console.log('Filtered data for 1d (most recent date):', filtered.map(lp => ({ 
+        name: lp.name, 
+        dataLength: lp.data.length, 
+        data: lp.data
+      })));
+      
+      return filtered;
+    }
+
+    // For other timeframes, use the original logic
     const now = new Date();
     let daysToSubtract: number;
 
@@ -189,6 +222,9 @@ export default function AllLaunchpads() {
   const getLaunchpadBreakdown = (days: number, metric: 'launches' | 'graduations') => {
     if (launchpadData.length === 0) return [];
 
+    // Get today's date string for comparison
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
     // Get the last N days of data (same logic as existing calculateTimeStats)
     const allData = launchpadData.flatMap(lp => lp.data.map(item => ({
       ...item,
@@ -197,7 +233,7 @@ export default function AllLaunchpads() {
       color: lp.color
     }))).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Group by date and get the last N days
+    // Group by date and get the last N days (excluding today for 7d and 30d)
     const dailyTotals = allData.reduce((acc, item) => {
       const date = item.date;
       if (!acc[date]) {
@@ -212,7 +248,9 @@ export default function AllLaunchpads() {
     }, {} as Record<string, Record<string, { launches: number; graduations: number; name: string; color: string }>>);
 
     const sortedDates = Object.keys(dailyTotals).sort();
-    const recentDates = sortedDates.slice(-days);
+    // Exclude today's data for multi-day periods
+    const datesExcludingToday = sortedDates.filter(date => date !== today);
+    const recentDates = datesExcludingToday.slice(-days);
 
     // Aggregate across the recent days for each launchpad
     const breakdown = launchpadData.map(lp => {
@@ -282,23 +320,28 @@ export default function AllLaunchpads() {
       return { launches, graduations, ratio };
     };
 
-    // Calculate time-based stats for periods
+    // Calculate time-based stats for periods (excluding today)
     const calculateTimeStats = (days: number) => {
       if (sortedDailyTotals.length === 0) return { launches: 0, graduations: 0, ratio: 0 };
       
-      // Get the last N days of data
-      const recentData = sortedDailyTotals.slice(-days);
+      // Get today's date string for comparison
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      // Filter out today's data and get the last N days
+      const dataExcludingToday = sortedDailyTotals.filter(item => item.date !== today);
+      const recentData = dataExcludingToday.slice(-days);
       
       const launches = recentData.reduce((sum, item) => sum + item.launches, 0);
       const graduations = recentData.reduce((sum, item) => sum + item.graduations, 0);
       const ratio = launches > 0 ? ((graduations / launches) * 100) : 0;
 
-      console.log(`Stats for last ${days} days:`, { 
+      console.log(`Stats for last ${days} days (excluding today):`, { 
         dataPoints: recentData.length, 
         launches, 
         graduations, 
         ratio: ratio.toFixed(1) + '%',
-        dateRange: recentData.length > 0 ? `${recentData[0].date} to ${recentData[recentData.length - 1].date}` : 'no data'
+        dateRange: recentData.length > 0 ? `${recentData[0].date} to ${recentData[recentData.length - 1].date}` : 'no data',
+        excludedToday: today
       });
 
       return { launches, graduations, ratio };
@@ -504,7 +547,26 @@ export default function AllLaunchpads() {
                 <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-sm"></div>
-                    <h4 className="font-semibold text-sm text-foreground">Last Day</h4>
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">Last Day</h4>
+                      <div className="text-[10px] text-muted-foreground font-medium">
+                        {(() => {
+                          if (recentActivity && launchpadData.length > 0) {
+                            const allDates = launchpadData.flatMap(lp => lp.data.map(item => item.date));
+                            if (allDates.length > 0) {
+                              const sortedDates = [...new Set(allDates)].sort();
+                              const mostRecentDate = sortedDates[sortedDates.length - 1];
+                              return new Date(mostRecentDate).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric' 
+                              });
+                            }
+                          }
+                          return '';
+                        })()}
+                      </div>
+                    </div>
                   </div>
                   <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
                     recentActivity.dailyGrowth.isPositive 
@@ -563,7 +625,21 @@ export default function AllLaunchpads() {
                 <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 shadow-sm"></div>
-                    <h4 className="font-semibold text-sm text-foreground">Last 7 Days</h4>
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">Last 7 Days</h4>
+                      <div className="text-[10px] text-muted-foreground font-medium">
+                        {(() => {
+                          const now = new Date();
+                          const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                          const startDate = new Date(yesterday.getTime() - 6 * 24 * 60 * 60 * 1000); // 7 days excluding today
+                          const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          });
+                          return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
+                        })()}
+                      </div>
+                    </div>
                   </div>
                   <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
                     recentActivity.weeklyGrowth.isPositive 
@@ -622,7 +698,21 @@ export default function AllLaunchpads() {
                 <div className="flex items-center justify-between pb-3 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 shadow-sm"></div>
-                    <h4 className="font-semibold text-sm text-foreground">Last 30 Days</h4>
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">Last 30 Days</h4>
+                      <div className="text-[10px] text-muted-foreground font-medium">
+                        {(() => {
+                          const now = new Date();
+                          const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                          const startDate = new Date(yesterday.getTime() - 29 * 24 * 60 * 60 * 1000); // 30 days excluding today
+                          const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          });
+                          return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
+                        })()}
+                      </div>
+                    </div>
                   </div>
                   <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
                     recentActivity.monthlyGrowth.isPositive 

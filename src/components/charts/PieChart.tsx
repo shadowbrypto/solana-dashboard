@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
+import { getLaunchpadLogoFilename, getLaunchpadById } from "../../lib/launchpad-config";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,7 @@ import {
 import { useState, useMemo } from "react";
 import { ComponentActions } from '../ComponentActions';
 
-type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
+type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 import { StackedBarChartSkeleton } from "./StackedBarChartSkeleton";
 
@@ -88,29 +89,88 @@ export function PieChart({
 
   // Transform data for pie chart
   const pieData = useMemo(() => {
-    // Sum up all values across time periods for each launchpad
-    const totals: Record<string, number> = {};
+    let totals: Record<string, number> = {};
     
-    data.forEach(item => {
+    if (timeframe === "1d" && data.length > 0) {
+      // For "Last day", use only the most recent day's data
+      const mostRecentItem = data[data.length - 1]; // Data should be sorted by date
+      console.log('PieChart 1d - Using most recent item:', mostRecentItem);
+      
       dataKeys.forEach(key => {
-        if (!totals[key]) totals[key] = 0;
-        totals[key] += item[key] || 0;
+        totals[key] = mostRecentItem[key] || 0;
       });
-    });
+    } else {
+      // For other timeframes, sum up all values across time periods
+      data.forEach(item => {
+        dataKeys.forEach(key => {
+          if (!totals[key]) totals[key] = 0;
+          totals[key] += item[key] || 0;
+        });
+      });
+    }
 
     // Filter out disabled keys and create pie chart data
     const enabledKeys = dataKeys.filter(key => !disabledKeys.includes(key));
     
-    return enabledKeys.map((key, index) => ({
+    const result = enabledKeys.map((key, index) => ({
       name: labels[dataKeys.indexOf(key)],
       value: totals[key] || 0,
       color: colors[dataKeys.indexOf(key)],
       key: key,
     })).filter(item => item.value > 0);
-  }, [data, dataKeys, labels, colors, disabledKeys]);
+    
+    if (timeframe === "1d") {
+      console.log('PieChart 1d - Final result:', result);
+    }
+    
+    return result;
+  }, [data, dataKeys, labels, colors, disabledKeys, timeframe]);
 
   // Calculate total for percentage calculations
   const total = pieData.reduce((sum, item) => sum + item.value, 0);
+
+  // Generate date range text based on timeframe
+  const getDateRangeText = () => {
+    if (timeframe === "all") return "All time";
+    
+    const now = new Date();
+    
+    if (timeframe === "1d") {
+      // Find the most recent date from the data
+      if (data.length > 0) {
+        const sortedData = data.sort((a, b) => new Date(b.date || b.formattedDay).getTime() - new Date(a.date || a.formattedDay).getTime());
+        const mostRecentDate = sortedData[0]?.date || sortedData[0]?.formattedDay;
+        if (mostRecentDate) {
+          const dateObj = new Date(mostRecentDate);
+          return dateObj.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+        }
+      }
+      return "Last day";
+    }
+    
+    let daysToSubtract: number;
+    switch (timeframe) {
+      case "7d": daysToSubtract = 7; break;
+      case "30d": daysToSubtract = 30; break;
+      case "3m": daysToSubtract = 90; break;
+      case "6m": daysToSubtract = 180; break;
+      case "1y": daysToSubtract = 365; break;
+      default: daysToSubtract = 90;
+    }
+    
+    const startDate = new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000);
+    
+    const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
+    });
+    
+    return `${formatDate(startDate)} - ${formatDate(now)}`;
+  };
 
   return (
     <ComponentActions 
@@ -162,6 +222,7 @@ export function PieChart({
               <SelectValue placeholder="Select timeframe" />
             </SelectTrigger>
             <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+              <SelectItem value="1d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last day</SelectItem>
               <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
               <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
               <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
@@ -172,7 +233,7 @@ export function PieChart({
           </Select>
           )}
         </CardHeader>
-        <CardContent className="py-2">
+        <CardContent className="py-2 relative">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative">
@@ -243,17 +304,30 @@ export function PieChart({
                   </div>
                 </div>
               )}
+              
             </div>
 
             {/* Legend and Statistics */}
             <div className="flex-shrink-0 w-full lg:w-56">
               {/* Legend Items */}
               <div className="space-y-2">
-                {dataKeys.map((key, index) => {
-                  const isDisabled = disabledKeys.includes(key);
-                  const pieItem = pieData.find(item => item.key === key);
-                  const value = pieItem?.value || 0;
-                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                {dataKeys
+                  .map((key, index) => {
+                    const isDisabled = disabledKeys.includes(key);
+                    const pieItem = pieData.find(item => item.key === key);
+                    const value = pieItem?.value || 0;
+                    const percentage = total > 0 ? ((value / total) * 100) : 0;
+                    return {
+                      key,
+                      index,
+                      isDisabled,
+                      value,
+                      percentage,
+                      originalIndex: index
+                    };
+                  })
+                  .sort((a, b) => b.percentage - a.percentage) // Sort by percentage descending
+                  .map(({ key, index, isDisabled, value, percentage, originalIndex }) => {
                   
                   return (
                     <div
@@ -264,8 +338,8 @@ export function PieChart({
                           : `hover:bg-muted/30 hover:shadow-sm border-transparent hover:border-border`
                       }`}
                       style={{
-                        backgroundColor: isDisabled ? undefined : `${colors[index]}20`,
-                        borderLeftColor: isDisabled ? undefined : colors[index],
+                        backgroundColor: isDisabled ? undefined : `${colors[originalIndex]}20`,
+                        borderLeftColor: isDisabled ? undefined : colors[originalIndex],
                         borderLeftWidth: isDisabled ? undefined : '3px'
                       }}
                       onClick={() => {
@@ -275,21 +349,55 @@ export function PieChart({
                             : [...prev, key]
                         );
                       }}
-                      title={isDisabled ? `Click to show ${labels[index]}` : `Click to hide ${labels[index]}`}
+                      title={isDisabled ? `Click to show ${labels[originalIndex]}` : `Click to hide ${labels[originalIndex]}`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div 
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${
-                            isDisabled ? 'border border-dashed border-muted-foreground' : 'shadow-sm'
-                          }`}
-                          style={{ 
-                            backgroundColor: isDisabled ? 'transparent' : colors[index]
-                          }}
-                        />
+                        {(() => {
+                          // Check if this is a launchpad (try to find launchpad by key or label)
+                          const launchpad = getLaunchpadById(key) || getLaunchpadById(labels[originalIndex].toLowerCase());
+                          
+                          if (launchpad) {
+                            // Show launchpad logo
+                            return (
+                              <div className={`w-4 h-4 bg-muted/10 rounded-full overflow-hidden ring-1 shrink-0 transition-all ${
+                                isDisabled ? 'ring-border/20 grayscale opacity-50' : 'ring-border/20'
+                              }`}>
+                                <img 
+                                  src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                                  alt={launchpad.name} 
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const container = target.parentElement;
+                                    if (container) {
+                                      container.innerHTML = '';
+                                      container.className = `w-4 h-4 rounded-full shrink-0 transition-all ${
+                                        isDisabled ? 'border border-dashed border-muted-foreground' : 'shadow-sm'
+                                      }`;
+                                      container.style.backgroundColor = isDisabled ? 'transparent' : colors[originalIndex];
+                                    }
+                                  }}
+                                />
+                              </div>
+                            );
+                          } else {
+                            // Fallback to colored dot for non-launchpad items
+                            return (
+                              <div 
+                                className={`w-2.5 h-2.5 rounded-full shrink-0 transition-all ${
+                                  isDisabled ? 'border border-dashed border-muted-foreground' : 'shadow-sm'
+                                }`}
+                                style={{ 
+                                  backgroundColor: isDisabled ? 'transparent' : colors[originalIndex]
+                                }}
+                              />
+                            );
+                          }
+                        })()}
                         <span className={`text-xs font-medium truncate transition-all ${
                           isDisabled ? 'text-muted-foreground line-through' : 'text-foreground'
                         }`}>
-                          {labels[index]}
+                          {labels[originalIndex]}
                         </span>
                       </div>
                       
@@ -301,7 +409,7 @@ export function PieChart({
                         </span>
                         {showPercentages && (
                           <span className="text-[10px] text-muted-foreground ml-1">
-                            ({isDisabled ? '0.0%' : `${percentage}%`})
+                            ({isDisabled ? '0.0%' : `${percentage.toFixed(1)}%`})
                           </span>
                         )}
                       </div>
@@ -309,6 +417,13 @@ export function PieChart({
                   );
                 })}
               </div>
+            </div>
+          </div>
+          
+          {/* Date Range Tile - Top Right of entire component */}
+          <div className="absolute top-4 right-4 lg:right-6 px-2.5 py-1.5 bg-muted/30 border border-border/50 rounded-md">
+            <div className="text-[10px] font-medium text-foreground">
+              {getDateRangeText()}
             </div>
           </div>
         </CardContent>

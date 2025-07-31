@@ -94,7 +94,7 @@ export function applyDefaultColors(launchpadData: LaunchpadData[]): LaunchpadDat
  */
 export function filterLaunchpadDataByTimeframe(
   launchpadData: LaunchpadData[],
-  timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'
+  timeframe: '1d' | '7d' | '30d' | '3m' | '6m' | '1y' | 'all'
 ): LaunchpadData[] {
   if (timeframe === 'all') {
     return launchpadData;
@@ -104,6 +104,9 @@ export function filterLaunchpadDataByTimeframe(
   let daysToSubtract: number;
 
   switch (timeframe) {
+    case '1d':
+      daysToSubtract = 1;
+      break;
     case '7d':
       daysToSubtract = 7;
       break;

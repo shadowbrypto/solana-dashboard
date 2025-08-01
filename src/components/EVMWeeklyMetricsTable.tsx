@@ -103,16 +103,33 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   useEffect(() => {
     console.log('EVM Weekly useEffect triggered with:', {
       startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd')
+      endDate: format(endDate, 'yyyy-MM-dd'),
+      startDateObject: startDate,
+      endDateObject: endDate,
+      currentYear: new Date().getFullYear()
     });
 
     const fetchData = async () => {
       setLoading(true);
       try {
         console.log(`Fetching EVM weekly data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
-        const dataType = 'public'; // Always use public for EVM data
-        const data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
-        console.log('Raw API response:', data);
+        let dataType = 'public'; // Try public first
+        let data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
+        console.log('Raw API response (public):', data);
+        
+        // If no data with public, try private
+        if (!data.dailyVolumes || Object.keys(data.dailyVolumes).length === 0) {
+          console.log('No EVM data found with public data type, trying private...');
+          dataType = 'private';
+          data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
+          console.log('Raw API response (private):', data);
+        }
+        
+        console.log('Final data to process:', {
+          dailyVolumesKeys: Object.keys(data.dailyVolumes || {}),
+          chainDistributionKeys: Object.keys(data.chainDistribution || {}),
+          dataType: dataType
+        });
         
         // Convert API data to display format
         const processedData: ProtocolWeeklyData[] = Object.entries(data.dailyVolumes).map(([protocol, dailyVolumes]) => {

@@ -666,15 +666,60 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle>Launchpad Management</CardTitle>
+              <CardTitle>Data Refresh Operations</CardTitle>
               <CardDescription>
-                Manage and refresh launchpad data from Dune Analytics
+                Force refresh data from Dune Analytics for trading apps and launchpads
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
+              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
+                Force complete data refresh from Dune Analytics for all trading apps, bypassing all time restrictions.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleHardRefresh}
+                  disabled={isRefreshingSolana}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isRefreshingSolana ? (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Refresh Solana Data
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleRefreshAllEVM}
+                  disabled={isRefreshingEVM}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isRefreshingEVM ? (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="mr-2 h-4 w-4" />
+                      Refresh EVM Data
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 p-3 border rounded-lg bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
               <RefreshCcw className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
               <p className="text-sm text-purple-800 dark:text-purple-200 flex-1">
@@ -699,7 +744,48 @@ export function ProtocolManagement() {
                 )}
               </Button>
             </div>
+            
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+                Check if all trading apps have current data and highlight any outdated ones.
+              </p>
+              <Button
+                onClick={handleCheckLatestDates}
+                disabled={isCheckingLatestDates}
+                variant="outline"
+                size="sm"
+              >
+                {isCheckingLatestDates ? (
+                  <>
+                    <Clock className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Check Latest Dates
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1.5">
+              <CardTitle>Launchpad Management</CardTitle>
+              <CardDescription>
+                View and manage individual launchpad configurations
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
             {/* Individual Launchpad Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {getAllLaunchpads().map(launchpad => (
@@ -759,9 +845,9 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle>Data Management</CardTitle>
+              <CardTitle>Data Source Settings</CardTitle>
               <CardDescription>
-                Manage data sources and force refresh protocol data
+                Configure data sources and preferences
               </CardDescription>
             </div>
             <div className="flex items-center space-x-2">
@@ -788,76 +874,6 @@ export function ProtocolManagement() {
               <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
                 Currently showing <strong>{dataTypePreference}</strong> data. Toggle above to switch between private (paid) and public (free) data sources.
               </p>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-              <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-                This will force a complete data refresh from Dune Analytics for all trading apps, bypassing all time restrictions.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleHardRefresh}
-                  disabled={isRefreshingSolana}
-                  variant="outline"
-                  size="sm"
-                >
-                  {isRefreshingSolana ? (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                      Refresh Solana Data
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleRefreshAllEVM}
-                  disabled={isRefreshingEVM}
-                  variant="outline"
-                  size="sm"
-                >
-                  {isRefreshingEVM ? (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                      Refresh EVM Data
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                Check if all trading apps have current data and highlight any outdated ones.
-              </p>
-              <Button
-                onClick={handleCheckLatestDates}
-                disabled={isCheckingLatestDates}
-                variant="outline"
-                size="sm"
-              >
-                {isCheckingLatestDates ? (
-                  <>
-                    <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  <>
-                    <Clock className="mr-2 h-4 w-4" />
-                    Check Latest Dates
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </CardContent>

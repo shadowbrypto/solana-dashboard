@@ -3,7 +3,7 @@ import { RefreshCw, Clock, AlertCircle } from 'lucide-react';
 import { useDataSync } from '../hooks/useDataSync';
 import { useToast } from '../hooks/use-toast';
 import { cn } from '../lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface DataSyncButtonProps {
   isCollapsed?: boolean;
@@ -22,6 +22,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
   } = useDataSync();
   
   const { toast } = useToast();
+  const [syncStep, setSyncStep] = useState<string>('');
+  const [syncProgress, setSyncProgress] = useState<number>(0);
   
   // Show toast notifications when sync completes
   useEffect(() => {
@@ -94,15 +96,34 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               variant={getButtonVariant() as any}
               size="icon"
               onClick={() => syncData(
-                () => toast({
-                  title: "Refreshing Solana Data",
-                  description: "Fetching latest Solana protocol data...",
-                }),
-                (result) => toast({
-                  variant: "success",
-                  title: "Solana Data Sync Complete",
-                  description: `Successfully refreshed Solana data (${result.csvFilesFetched} protocols synced)`,
-                })
+                () => {
+                  setSyncStep('Starting comprehensive data refresh...');
+                  setSyncProgress(0);
+                  toast({
+                    title: "Starting Data Refresh",
+                    description: "Refreshing all data sources (Solana, EVM, Launchpads)...",
+                  });
+                },
+                (result) => {
+                  setSyncStep('');
+                  setSyncProgress(0);
+                  toast({
+                    variant: "success",
+                    title: "All Data Synced Successfully",
+                    description: `Complete refresh finished! (${result.csvFilesFetched} sources synced, ${result.rowsImported} rows imported)`,
+                  });
+                },
+                (step, progress) => {
+                  setSyncStep(step);
+                  setSyncProgress(progress);
+                },
+                (stepName, result) => {
+                  toast({
+                    variant: "success",
+                    title: `${stepName} Data Synced`,
+                    description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols${result.rowsImported ? `, ${result.rowsImported} rows` : ''})`,
+                  });
+                }
               )}
               disabled={!canSync || isLoading}
               className={cn(
@@ -141,24 +162,40 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               )}
             </div>
             
-            {/* Countdown or Status */}
-            {timeUntilNext && !canSync && !error && (
+            {/* Countdown, Status or Progress */}
+            {isLoading && syncStep ? (
+              <div className="text-xs text-center space-y-1">
+                <div className="text-[10px] text-muted-foreground truncate max-w-16">
+                  {syncStep.replace('Refreshing ', '').replace(' data...', '')}
+                </div>
+                <div className="text-[10px] font-mono font-medium text-foreground">
+                  {syncProgress}%
+                </div>
+              </div>
+            ) : timeUntilNext && !canSync && !error ? (
               <div className="text-xs font-mono text-foreground font-medium">
                 {timeUntilNext}
               </div>
-            )}
+            ) : null}
             
           </div>
           
           {/* Mini Progress Bar */}
-          {!canSync && !error && timeUntilNext && (
+          {isLoading && syncStep ? (
+            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden shadow-sm border border-border/50">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300 ease-out shadow-sm"
+                style={{ width: `${Math.max(2, syncProgress)}%` }}
+              />
+            </div>
+          ) : !canSync && !error && timeUntilNext ? (
             <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden shadow-sm border border-border/50">
               <div 
                 className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 shadow-sm"
                 style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
               />
             </div>
-          )}
+          ) : null}
         </div>
       </>
     );
@@ -193,15 +230,34 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             variant={getButtonVariant() as any}
             size="sm"
             onClick={() => syncData(
-              () => toast({
-                title: "Refreshing Solana Data", 
-                description: "Fetching latest Solana protocol data...",
-              }),
-              (result) => toast({
-                variant: "success",
-                title: "Solana Data Sync Complete",
-                description: `Successfully refreshed Solana data (${result.csvFilesFetched} protocols synced)`,
-              })
+              () => {
+                setSyncStep('Starting comprehensive data refresh...');
+                setSyncProgress(0);
+                toast({
+                  title: "Starting Data Refresh",
+                  description: "Refreshing all data sources (Solana, EVM, Launchpads)...",
+                });
+              },
+              (result) => {
+                setSyncStep('');
+                setSyncProgress(0);
+                toast({
+                  variant: "success",
+                  title: "All Data Synced Successfully",
+                  description: `Complete refresh finished! (${result.csvFilesFetched} sources synced, ${result.rowsImported} rows imported)`,
+                });
+              },
+              (step, progress) => {
+                setSyncStep(step);
+                setSyncProgress(progress);
+              },
+              (stepName, result) => {
+                toast({
+                  variant: "success",
+                  title: `${stepName} Data Synced`,
+                  description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols${result.rowsImported ? `, ${result.rowsImported} rows` : ''})`,
+                });
+              }
             )}
             disabled={!canSync || isLoading}
             className={cn(
@@ -232,9 +288,27 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
         )}
         
         {/* Status Message */}
-        {canSync && (
+        {/* Progress Display During Sync */}
+        {isLoading && syncStep && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">{syncStep}</span>
+              <span className="text-xs font-mono font-medium text-foreground">
+                {syncProgress}%
+              </span>
+            </div>
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden shadow-sm border border-border/50">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300 ease-out shadow-sm"
+                style={{ width: `${Math.max(2, syncProgress)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        
+        {canSync && !isLoading && (
           <p className="text-xs text-green-700 dark:text-green-400 font-medium">
-            ✨ Ready to fetch latest Solana data
+            ✨ Ready to refresh
           </p>
         )}
         

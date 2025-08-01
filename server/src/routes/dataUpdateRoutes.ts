@@ -23,6 +23,7 @@ router.post('/sync', async (req: Request, res: Response) => {
         message: 'Data sync completed successfully',
         data: {
           csvFilesFetched: result.csvFilesFetched,
+          rowsImported: 0, // Solana sync doesn't import rows, just fetches CSV files
           timestamp: result.timestamp
         }
       });

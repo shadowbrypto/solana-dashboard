@@ -115,7 +115,12 @@ export function useDataSync() {
     }));
   }, [getNextAvailableTime, formatTimeUntilNext]);
 
-  const syncData = useCallback(async (onSyncStart?: () => void, onSyncSuccess?: (result: { csvFilesFetched: number; timestamp: string }) => void) => {
+  const syncData = useCallback(async (
+    onSyncStart?: () => void, 
+    onSyncSuccess?: (result: { csvFilesFetched: number; rowsImported: number; timestamp: string }) => void,
+    onStepUpdate?: (step: string, progress: number) => void,
+    onStepComplete?: (step: string, result: { csvFilesFetched: number; rowsImported: number }) => void
+  ) => {
     if (state.isLoading || !state.canSync) {
       return;
     }
@@ -127,8 +132,69 @@ export function useDataSync() {
       onSyncStart();
     }
 
+    let currentStep = 'initialization';
     try {
-      const data = await dataSyncApi.syncData();
+      let totalSynced = 0;
+      let totalRowsImported = 0;
+      
+      // Step 1: Sync Solana data
+      currentStep = 'Solana sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Solana data...', 20);
+      const solanaResult = await dataSyncApi.syncData();
+      console.log('Solana sync raw result:', solanaResult);
+      
+      if (!solanaResult || typeof solanaResult.csvFilesFetched === 'undefined') {
+        throw new Error('Invalid Solana sync response - missing csvFilesFetched');
+      }
+      
+      totalSynced += solanaResult.csvFilesFetched || 0;
+      totalRowsImported += solanaResult.rowsImported || 0;
+      console.log('Solana sync completed:', solanaResult);
+      if (onStepComplete) onStepComplete('Solana', { csvFilesFetched: solanaResult.csvFilesFetched || 0, rowsImported: solanaResult.rowsImported || 0 });
+      
+      // Wait 3 seconds before EVM sync
+      currentStep = 'EVM preparation';
+      if (onStepUpdate) onStepUpdate('Preparing EVM sync...', 35);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Step 2: Sync EVM data (this can take longer)
+      currentStep = 'EVM sync';
+      if (onStepUpdate) onStepUpdate('Refreshing EVM data...', 50);
+      const evmResult = await dataSyncApi.syncEVMData();
+      console.log('EVM sync raw result:', evmResult);
+      
+      if (!evmResult || typeof evmResult.csvFilesFetched === 'undefined') {
+        throw new Error(`Invalid EVM sync response - missing csvFilesFetched. Got: ${JSON.stringify(evmResult)}`);
+      }
+      
+      totalSynced += evmResult.csvFilesFetched || 0;
+      totalRowsImported += evmResult.rowsImported || 0;
+      console.log('EVM sync completed:', evmResult);
+      if (onStepComplete) onStepComplete('EVM', { csvFilesFetched: evmResult.csvFilesFetched || 0, rowsImported: evmResult.rowsImported || 0 });
+      
+      // Wait 5 seconds after EVM sync (it's more intensive)
+      currentStep = 'Launchpad preparation';
+      if (onStepUpdate) onStepUpdate('Preparing Launchpad sync...', 75);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Step 3: Sync Launchpad data
+      currentStep = 'Launchpad sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Launchpad data...', 85);
+      const launchpadResult = await dataSyncApi.syncAllLaunchpadData();
+      console.log('Launchpad sync raw result:', launchpadResult);
+      
+      if (!launchpadResult || typeof launchpadResult.csvFilesFetched === 'undefined') {
+        throw new Error('Invalid Launchpad sync response - missing csvFilesFetched');
+      }
+      
+      totalSynced += launchpadResult.csvFilesFetched || 0;
+      totalRowsImported += launchpadResult.rowsImported || 0;
+      console.log('Launchpad sync completed:', launchpadResult);
+      if (onStepComplete) onStepComplete('Launchpad', { csvFilesFetched: launchpadResult.csvFilesFetched || 0, rowsImported: launchpadResult.rowsImported || 0 });
+      
+      // Complete
+      currentStep = 'completion';
+      if (onStepUpdate) onStepUpdate('Sync completed successfully!', 100);
       
       // Store the sync time
       const now = getCETDate();
@@ -141,21 +207,34 @@ export function useDataSync() {
         error: null
       }));
 
-      // Call the optional success callback with Solana sync results
+      // Call the optional success callback with combined results
       if (onSyncSuccess) {
         onSyncSuccess({ 
-          csvFilesFetched: data.csvFilesFetched, 
-          timestamp: data.timestamp 
+          csvFilesFetched: totalSynced,
+          rowsImported: totalRowsImported,
+          timestamp: now.toISOString()
         });
       }
 
       // Update state after successful sync
       setTimeout(updateSyncState, 100);
     } catch (error) {
+      console.error('Sync error details:', error);
+      
+      let errorMessage = 'Network error';
+      if (error instanceof ApiError) {
+        errorMessage = error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // Log which step failed for debugging
+      console.error('Sync failed during step:', currentStep || 'unknown step', 'Error:', errorMessage);
+      
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof ApiError ? error.message : 'Network error'
+        error: errorMessage
       }));
     }
   }, [state.isLoading, state.canSync, getCETDate, updateSyncState]);

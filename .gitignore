@@ -39,3 +39,27 @@ public/data/data.db
 .env
 server/.env
 server/node_modules/
+
+# CSV data files (generated/downloaded data)
+server/public/data/*.csv
+server/public/data/**/*.csv
+
+# Log files
+*.log
+server/*.log
+server_*.log
+frontend.log
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+.tmp/
+temp/
+
+# OS generated files
+Thumbs.db

@@ -240,9 +240,9 @@ export const protocolApi = {
 
 export const dataSyncApi = {
   // Sync data from Dune API to database
-  async syncData(dataType?: string): Promise<{ csvFilesFetched: number; timestamp: string }> {
+  async syncData(dataType?: string): Promise<{ csvFilesFetched: number; rowsImported: number; timestamp: string }> {
     const endpoint = dataType ? `/data-update/sync?dataType=${dataType}` : '/data-update/sync';
-    return apiRequest<{ csvFilesFetched: number; timestamp: string }>(endpoint, {
+    return apiRequest<{ csvFilesFetched: number; rowsImported: number; timestamp: string }>(endpoint, {
       method: 'POST'
     });
   },
@@ -313,22 +313,8 @@ export const dataSyncApi = {
   },
 
   // Sync all EVM protocol data
-  async syncEVMData(): Promise<{ 
-    message: string; 
-    data: { 
-      csvFilesFetched: number; 
-      rowsImported: number; 
-      timestamp: string 
-    } 
-  }> {
-    return apiRequest<{ 
-      message: string; 
-      data: { 
-        csvFilesFetched: number; 
-        rowsImported: number; 
-        timestamp: string 
-      } 
-    }>('/protocols/sync-evm', {
+  async syncEVMData(): Promise<{ csvFilesFetched: number; rowsImported: number; timestamp: string }> {
+    return apiRequest<{ csvFilesFetched: number; rowsImported: number; timestamp: string }>('/protocols/sync-evm', {
       method: 'POST'
     });
   },
@@ -355,16 +341,8 @@ export const dataSyncApi = {
   },
 
   // Sync all launchpad data
-  async syncAllLaunchpadData(): Promise<{ 
-    csvFilesFetched: number; 
-    rowsImported: number; 
-    timestamp: string 
-  }> {
-    return apiRequest<{ 
-      csvFilesFetched: number; 
-      rowsImported: number; 
-      timestamp: string 
-    }>('/data-update/sync/launchpads', {
+  async syncAllLaunchpadData(): Promise<{ csvFilesFetched: number; rowsImported: number; timestamp: string }> {
+    return apiRequest<{ csvFilesFetched: number; rowsImported: number; timestamp: string }>('/data-update/sync/launchpads', {
       method: 'POST'
     });
   },

@@ -15,7 +15,7 @@ import {
   getProtocolLogoFilename
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock, Database, Eye } from 'lucide-react';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { useToast } from '../hooks/use-toast';
@@ -937,39 +937,49 @@ export function ProtocolManagement() {
         </CardContent>
       </Card>
 
+      {/* Data Source Settings */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle>Data Source Settings</CardTitle>
+              <CardTitle>
+                Data Source Settings ({dataTypePreference === 'private' ? 'Private' : 'Public'} Active)
+              </CardTitle>
               <CardDescription>
-                Configure data sources and preferences
+                Configure data sources and preferences for analytics
               </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Database className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="data-type-toggle" className="text-sm font-medium">
-                Private Data
-              </Label>
-              <Switch
-                id="data-type-toggle"
-                checked={dataTypePreference === 'public'}
-                onCheckedChange={handleDataTypeChange}
-              />
-              <Label htmlFor="data-type-toggle" className="text-sm font-medium">
-                Public Data
-              </Label>
-              <Eye className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-              <Database className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                Currently showing <strong>{dataTypePreference}</strong> data. Toggle above to switch between private (paid) and public (free) data sources.
-              </p>
+          <div className="space-y-6">
+            {/* Data Source Toggle */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-background to-muted/30">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${dataTypePreference === 'private' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                    <h4 className="text-sm font-semibold">Active Data Source</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Switch between private (paid) and public (free) data sources
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    Private
+                  </div>
+                  <Switch
+                    id="data-type-toggle"
+                    checked={dataTypePreference === 'public'}
+                    onCheckedChange={handleDataTypeChange}
+                    className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-blue-500"
+                  />
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    Public
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

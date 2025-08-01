@@ -1014,6 +1014,15 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
   console.log(`Effective Data Type:`, effectiveDataType);
   
   try {
+    // First, let's check what EVM data actually exists in the database
+    const { data: evmDataCheck, error: checkError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, chain, data_type, date')
+      .neq('chain', 'solana')
+      .limit(10);
+    
+    console.log('Sample EVM data in database:', evmDataCheck);
+    
     // Query database for the date range across all EVM chains and protocols
     const { data: weeklyData, error: weeklyError } = await supabase
       .from('protocol_stats')
@@ -1042,6 +1051,16 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
         startDate,
         endDate
       });
+      
+      // Try broader query to see what EVM data exists
+      const { data: broadQuery, error: broadError } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, chain, data_type, count(*)')
+        .neq('chain', 'solana')
+        .gte('date', startDate)
+        .lte('date', endDate);
+      
+      console.log('Broader EVM data query results:', broadQuery?.slice(0, 10));
     }
 
     // Process the data by protocol and date

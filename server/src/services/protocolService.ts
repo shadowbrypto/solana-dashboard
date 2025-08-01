@@ -1004,10 +1004,21 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
 }> {
   console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
   
+  // Use the actual chain names as stored in database
   const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
-  const evmProtocols = ['banana', 'bloom', 'maestro', 'sigma']; // Hard-coded for now
-  // Default to 'public' for EVM data
-  const effectiveDataType = dataType || 'public';
+  // Don't hard-code protocols - get all EVM protocols dynamically
+  const { data: availableProtocols, error: protocolError } = await supabase
+    .from('protocol_stats')
+    .select('protocol_name')
+    .neq('chain', 'solana')
+    .gte('date', startDate)
+    .lte('date', endDate);
+  
+  const evmProtocols = availableProtocols ? 
+    [...new Set(availableProtocols.map(p => p.protocol_name))] : 
+    ['banana', 'bloom', 'maestro', 'sigma']; // Fallback
+  // Try both data types if none specified
+  const effectiveDataType = dataType;
   
   console.log(`EVM Chains:`, evmChains);
   console.log(`EVM Protocols:`, evmProtocols);
@@ -1019,21 +1030,49 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
       .from('protocol_stats')
       .select('protocol_name, chain, data_type, date')
       .neq('chain', 'solana')
-      .limit(10);
+      .order('date', { ascending: false })
+      .limit(20);
     
-    console.log('Sample EVM data in database:', evmDataCheck);
+    console.log('Sample EVM data in database (most recent first):', evmDataCheck);
+    
+    // Also check date range of available EVM data
+    const { data: dateRangeCheck, error: rangeError } = await supabase
+      .from('protocol_stats')
+      .select('date')
+      .neq('chain', 'solana')
+      .order('date', { ascending: false })
+      .limit(1);
+    
+    const { data: oldestDateCheck, error: oldestError } = await supabase
+      .from('protocol_stats')
+      .select('date')
+      .neq('chain', 'solana')
+      .order('date', { ascending: true })
+      .limit(1);
+    
+    console.log('EVM data date range:', {
+      mostRecent: dateRangeCheck?.[0]?.date,
+      oldest: oldestDateCheck?.[0]?.date,
+      requestedRange: `${startDate} to ${endDate}`
+    });
     
     // Query database for the date range across all EVM chains and protocols
-    let { data: weeklyData, error: weeklyError } = await supabase
+    let query = supabase
       .from('protocol_stats')
       .select('protocol_name, date, chain, volume_usd')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
-      .eq('data_type', effectiveDataType)
       .gte('date', startDate)
       .lte('date', endDate)
       .order('protocol_name')
       .order('date');
+    
+    // Add data_type filter only if specified
+    if (effectiveDataType) {
+      query = query.eq('data_type', effectiveDataType);
+    }
+    
+    let { data: weeklyData, error: weeklyError } = await query;
 
     if (weeklyError) {
       console.error('Error fetching EVM weekly data:', weeklyError);
@@ -1052,7 +1091,8 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
         endDate
       });
       
-      // Try broader query to see what EVM data exists
+      // Log what data exists for debugging
+      console.log('No data found with current query, checking what exists...');
       const { data: broadQuery, error: broadError } = await supabase
         .from('protocol_stats')
         .select('protocol_name, chain, data_type')
@@ -1060,27 +1100,7 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
         .gte('date', startDate)
         .lte('date', endDate);
       
-      console.log('Broader EVM data query results:', broadQuery?.slice(0, 10));
-      
-      // Try with different data types
-      const { data: privateDataQuery, error: privateError } = await supabase
-        .from('protocol_stats')
-        .select('protocol_name, date, chain, volume_usd')
-        .in('chain', evmChains)
-        .in('protocol_name', evmProtocols)
-        .eq('data_type', 'private')
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('protocol_name')
-        .order('date');
-      
-      console.log(`EVM data with private data type: ${privateDataQuery?.length || 0} records`);
-      
-      // If we found data with private data type, use that instead
-      if (privateDataQuery && privateDataQuery.length > 0) {
-        console.log('Found EVM data with private data type, using that instead');
-        weeklyData = privateDataQuery;
-      }
+      console.log('Available EVM data in date range:', broadQuery?.slice(0, 10));
     }
 
     // Process the data by protocol and date

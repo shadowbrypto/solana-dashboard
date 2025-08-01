@@ -693,10 +693,7 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle className="flex items-center gap-2">
-                <RefreshCcw className="h-5 w-5 text-primary" />
-                Data Refresh Operations
-              </CardTitle>
+              <CardTitle>Data Refresh Operations</CardTitle>
               <CardDescription>
                 Force refresh data from Dune Analytics for trading apps and launchpads
               </CardDescription>
@@ -707,9 +704,13 @@ export function ProtocolManagement() {
           <div className="space-y-6">
             {/* Trading Apps Section */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                <h4 className="text-sm font-semibold text-foreground">Trading Apps</h4>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/30"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground font-medium">Trading Apps</span>
+                </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">

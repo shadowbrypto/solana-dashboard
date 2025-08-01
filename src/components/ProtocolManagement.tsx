@@ -14,7 +14,7 @@ import {
   loadProtocolConfigurations
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Calendar, Clock, Database, Eye } from 'lucide-react';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock, Database, Eye } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { useToast } from '../hooks/use-toast';
@@ -201,7 +201,6 @@ export function ProtocolManagement() {
   const [syncStatuses, setSyncStatuses] = useState<Map<string, ProtocolSyncStatus>>(new Map());
   const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
   const [latestDates, setLatestDates] = useState<Map<string, ProtocolLatestDate>>(new Map());
-  const [isCheckingLatestDates, setIsCheckingLatestDates] = useState(false);
   const [dataTypePreference, setDataTypePreference] = useState<'private' | 'public'>('private');
   const { toast } = useToast();
   
@@ -462,46 +461,6 @@ export function ProtocolManagement() {
     }
   };
 
-  const handleCheckLatestDates = async () => {
-    if (isCheckingLatestDates) return;
-    
-    setIsCheckingLatestDates(true);
-    try {
-      // Don't pass dataTypePreference to getLatestDataDates so it can handle both chains properly
-      // (Solana uses 'private' by default, EVM uses 'public' by default)
-      const dates = await protocolApi.getLatestDataDates();
-      const datesMap = new Map(dates.map(d => [d.protocol_name, d]));
-      setLatestDates(datesMap);
-      
-      const outdatedSolProtocols = dates.filter(d => !d.is_current && d.chain === 'solana').length;
-      const outdatedEvmProtocols = dates.filter(d => !d.is_current && d.chain === 'evm').length;
-      const totalOutdated = outdatedSolProtocols + outdatedEvmProtocols;
-      
-      let description = '';
-      if (totalOutdated === 0) {
-        description = "All protocols have current data";
-      } else {
-        const parts = [];
-        if (outdatedSolProtocols > 0) parts.push(`${outdatedSolProtocols} SOL`);
-        if (outdatedEvmProtocols > 0) parts.push(`${outdatedEvmProtocols} EVM`);
-        description = `Found ${parts.join(' and ')} protocol(s) with outdated data`;
-      }
-      
-      toast({
-        variant: totalOutdated > 0 ? "destructive" : "success",
-        title: "Latest Dates Checked",
-        description,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Check Failed",
-        description: error instanceof Error ? error.message : "Failed to check latest dates",
-      });
-    } finally {
-      setIsCheckingLatestDates(false);
-    }
-  };
 
   const handleRefreshAllLaunchpads = async () => {
     if (isRefreshingLaunchpads) return;
@@ -666,6 +625,74 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
+              <CardTitle>Launchpad Management</CardTitle>
+              <CardDescription>
+                View and manage individual launchpad configurations
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Individual Launchpad Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {getAllLaunchpads().map(launchpad => (
+                <div
+                  key={launchpad.id}
+                  className="flex items-center gap-3 p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
+                >
+                  <div className="w-10 h-10 bg-muted/20 rounded-lg overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                    <img 
+                      src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                      alt={launchpad.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to icon if logo not found
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center';
+                          const iconElement = document.createElement('div');
+                          iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                          container.appendChild(iconElement);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground">{launchpad.name}</p>
+                      <Badge variant="secondary" className="h-5 px-2 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                        {launchpad.chain.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{launchpad.description || launchpad.id}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRefreshLaunchpad(launchpad.id);
+                    }}
+                    disabled={refreshingLaunchpads.has(launchpad.id)}
+                    className="h-8 w-8 p-0"
+                    title={`Refresh ${launchpad.name} data`}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${refreshingLaunchpads.has(launchpad.id) ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1.5">
               <CardTitle>Data Refresh Operations</CardTitle>
               <CardDescription>
                 Force refresh data from Dune Analytics for trading apps and launchpads
@@ -745,98 +772,6 @@ export function ProtocolManagement() {
               </Button>
             </div>
             
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
-                Check if all trading apps have current data and highlight any outdated ones.
-              </p>
-              <Button
-                onClick={handleCheckLatestDates}
-                disabled={isCheckingLatestDates}
-                variant="outline"
-                size="sm"
-              >
-                {isCheckingLatestDates ? (
-                  <>
-                    <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  <>
-                    <Clock className="mr-2 h-4 w-4" />
-                    Check Latest Dates
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>Launchpad Management</CardTitle>
-              <CardDescription>
-                View and manage individual launchpad configurations
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Individual Launchpad Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {getAllLaunchpads().map(launchpad => (
-                <div
-                  key={launchpad.id}
-                  className="flex items-center gap-3 p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="w-10 h-10 bg-muted/20 rounded-lg overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                    <img 
-                      src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
-                      alt={launchpad.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to icon if logo not found
-                        const target = e.target as HTMLImageElement;
-                        const container = target.parentElement;
-                        if (container) {
-                          container.innerHTML = '';
-                          container.className = 'w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center';
-                          const iconElement = document.createElement('div');
-                          iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                          container.appendChild(iconElement);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">{launchpad.name}</p>
-                      <Badge variant="secondary" className="h-5 px-2 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                        {launchpad.chain.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{launchpad.description || launchpad.id}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRefreshLaunchpad(launchpad.id);
-                    }}
-                    disabled={refreshingLaunchpads.has(launchpad.id)}
-                    className="h-8 w-8 p-0"
-                    title={`Refresh ${launchpad.name} data`}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${refreshingLaunchpads.has(launchpad.id) ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>

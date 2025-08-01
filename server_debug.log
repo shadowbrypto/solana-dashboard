@@ -8864,3 +8864,225 @@ LaunchpadAPI: Filtered out most recent date 2025-07-31. Records: 518 -> 517
 2025-07-31T11:33:37.882Z - GET /api/launchpads/metrics
 2025-07-31T11:33:37.885Z - GET /api/launchpads/metrics
 2025-07-31T11:33:37.887Z - GET /api/launchpads/metrics
+2025-07-31T11:42:52.281Z - GET /api/data-update/status
+2025-07-31T11:53:11.879Z - GET /api/data-update/status
+2025-07-31T12:02:52.298Z - GET /api/data-update/status
+2025-07-31T12:12:52.303Z - GET /api/data-update/status
+2025-07-31T12:22:52.287Z - GET /api/data-update/status
+2025-07-31T12:32:52.283Z - GET /api/data-update/status
+2025-07-31T12:42:52.283Z - GET /api/data-update/status
+2025-07-31T12:52:52.293Z - GET /api/data-update/status
+2025-07-31T13:02:52.297Z - GET /api/data-update/status
+2025-07-31T13:13:12.000Z - GET /api/data-update/status
+2025-07-31T13:23:11.932Z - GET /api/data-update/status
+2025-07-31T13:32:52.298Z - GET /api/data-update/status
+2025-07-31T13:42:52.299Z - GET /api/data-update/status
+2025-07-31T13:52:52.293Z - GET /api/data-update/status
+2025-07-31T14:02:52.299Z - GET /api/data-update/status
+2025-07-31T14:12:52.298Z - GET /api/data-update/status
+2025-07-31T14:22:52.280Z - GET /api/data-update/status
+2025-07-31T14:32:52.276Z - GET /api/data-update/status
+2025-07-31T14:42:52.275Z - GET /api/data-update/status
+2025-07-31T14:52:52.245Z - GET /api/data-update/status
+2025-07-31T15:02:52.237Z - GET /api/data-update/status
+2025-07-31T15:13:11.854Z - GET /api/data-update/status
+2025-07-31T15:23:11.945Z - GET /api/data-update/status
+2025-07-31T15:32:52.280Z - GET /api/data-update/status
+2025-07-31T15:42:52.288Z - GET /api/data-update/status
+2025-07-31T15:52:52.289Z - GET /api/data-update/status
+2025-07-31T16:03:11.910Z - GET /api/data-update/status
+2025-07-31T16:13:11.964Z - GET /api/data-update/status
+2025-07-31T16:23:11.892Z - GET /api/data-update/status
+2025-07-31T16:33:11.857Z - GET /api/data-update/status
+2025-07-31T16:43:11.862Z - GET /api/data-update/status
+2025-07-31T16:53:11.855Z - GET /api/data-update/status
+2025-07-31T17:03:11.886Z - GET /api/data-update/status
+2025-07-31T17:13:11.890Z - GET /api/data-update/status
+2025-07-31T17:23:11.895Z - GET /api/data-update/status
+2025-07-31T17:33:11.873Z - GET /api/data-update/status
+2025-07-31T17:43:11.874Z - GET /api/data-update/status
+2025-07-31T17:53:11.822Z - GET /api/data-update/status
+2025-07-31T18:03:11.818Z - GET /api/data-update/status
+2025-07-31T18:13:11.865Z - GET /api/data-update/status
+2025-07-31T18:23:11.870Z - GET /api/data-update/status
+2025-07-31T18:33:11.935Z - GET /api/data-update/status
+2025-07-31T18:43:11.976Z - GET /api/data-update/status
+2025-07-31T18:53:11.977Z - GET /api/data-update/status
+2025-07-31T19:03:11.880Z - GET /api/data-update/status
+2025-07-31T19:13:12.001Z - GET /api/data-update/status
+2025-07-31T19:23:11.948Z - GET /api/data-update/status
+2025-07-31T19:33:11.931Z - GET /api/data-update/status
+2025-07-31T19:43:11.957Z - GET /api/data-update/status
+2025-07-31T19:53:11.882Z - GET /api/data-update/status
+2025-07-31T20:03:11.862Z - GET /api/data-update/status
+2025-07-31T20:13:11.904Z - GET /api/data-update/status
+2025-07-31T20:23:11.895Z - GET /api/data-update/status
+2025-07-31T20:33:11.946Z - GET /api/data-update/status
+2025-07-31T20:43:11.907Z - GET /api/data-update/status
+2025-07-31T20:53:11.891Z - GET /api/data-update/status
+2025-07-31T21:03:11.895Z - GET /api/data-update/status
+2025-07-31T21:13:11.898Z - GET /api/data-update/status
+2025-07-31T21:23:11.904Z - GET /api/data-update/status
+2025-07-31T21:33:11.988Z - GET /api/data-update/status
+2025-07-31T21:43:11.927Z - GET /api/data-update/status
+2025-07-31T21:53:11.942Z - GET /api/data-update/status
+2025-07-31T22:03:11.984Z - GET /api/data-update/status
+2025-07-31T22:13:11.905Z - GET /api/data-update/status
+2025-07-31T22:23:11.935Z - GET /api/data-update/status
+2025-07-31T22:33:11.881Z - GET /api/data-update/status
+2025-07-31T22:43:11.825Z - GET /api/data-update/status
+2025-07-31T22:53:11.859Z - GET /api/data-update/status
+2025-07-31T23:03:11.853Z - GET /api/data-update/status
+2025-07-31T23:13:11.940Z - GET /api/data-update/status
+2025-07-31T23:23:11.902Z - GET /api/data-update/status
+2025-07-31T23:33:11.956Z - GET /api/data-update/status
+2025-07-31T23:43:11.906Z - GET /api/data-update/status
+2025-07-31T23:53:11.925Z - GET /api/data-update/status
+2025-08-01T00:03:11.958Z - GET /api/data-update/status
+2025-08-01T00:13:11.921Z - GET /api/data-update/status
+2025-08-01T00:23:11.853Z - GET /api/data-update/status
+2025-08-01T00:33:11.894Z - GET /api/data-update/status
+2025-08-01T00:43:11.736Z - GET /api/data-update/status
+2025-08-01T00:53:11.722Z - GET /api/data-update/status
+2025-08-01T01:03:11.670Z - GET /api/data-update/status
+2025-08-01T01:13:11.667Z - GET /api/data-update/status
+2025-08-01T01:23:11.658Z - GET /api/data-update/status
+2025-08-01T01:33:11.598Z - GET /api/data-update/status
+2025-08-01T01:43:11.634Z - GET /api/data-update/status
+2025-08-01T01:53:11.621Z - GET /api/data-update/status
+2025-08-01T02:03:11.546Z - GET /api/data-update/status
+2025-08-01T02:13:11.887Z - GET /api/data-update/status
+2025-08-01T02:23:11.869Z - GET /api/data-update/status
+2025-08-01T02:33:11.896Z - GET /api/data-update/status
+2025-08-01T02:43:11.867Z - GET /api/data-update/status
+2025-08-01T02:53:11.893Z - GET /api/data-update/status
+2025-08-01T03:03:11.842Z - GET /api/data-update/status
+2025-08-01T03:13:11.863Z - GET /api/data-update/status
+2025-08-01T03:23:11.812Z - GET /api/data-update/status
+2025-08-01T03:33:11.917Z - GET /api/data-update/status
+2025-08-01T03:43:11.884Z - GET /api/data-update/status
+2025-08-01T03:53:11.973Z - GET /api/data-update/status
+2025-08-01T04:03:11.933Z - GET /api/data-update/status
+2025-08-01T04:13:11.940Z - GET /api/data-update/status
+2025-08-01T04:23:11.928Z - GET /api/data-update/status
+2025-08-01T04:33:11.903Z - GET /api/data-update/status
+2025-08-01T04:43:11.931Z - GET /api/data-update/status
+2025-08-01T04:53:11.883Z - GET /api/data-update/status
+2025-08-01T05:03:11.889Z - GET /api/data-update/status
+2025-08-01T05:13:11.925Z - GET /api/data-update/status
+2025-08-01T05:23:11.926Z - GET /api/data-update/status
+2025-08-01T05:33:11.986Z - GET /api/data-update/status
+2025-08-01T05:43:11.905Z - GET /api/data-update/status
+2025-08-01T05:53:11.927Z - GET /api/data-update/status
+2025-08-01T06:03:11.911Z - GET /api/data-update/status
+2025-08-01T06:13:11.995Z - GET /api/data-update/status
+2025-08-01T06:23:11.911Z - GET /api/data-update/status
+2025-08-01T06:33:11.969Z - GET /api/data-update/status
+2025-08-01T06:43:11.936Z - GET /api/data-update/status
+2025-08-01T06:53:11.928Z - GET /api/data-update/status
+2025-08-01T07:03:11.938Z - GET /api/data-update/status
+2025-08-01T07:13:11.940Z - GET /api/data-update/status
+2025-08-01T07:23:11.958Z - GET /api/data-update/status
+2025-08-01T07:33:11.932Z - GET /api/data-update/status
+2025-08-01T07:43:11.982Z - GET /api/data-update/status
+2025-08-01T07:53:11.949Z - GET /api/data-update/status
+2025-08-01T08:03:11.954Z - GET /api/data-update/status
+2025-08-01T08:11:07.589Z - GET /api/protocol-config
+2025-08-01T08:13:11.915Z - GET /api/data-update/status
+2025-08-01T08:23:11.901Z - GET /api/data-update/status
+2025-08-01T08:33:11.920Z - GET /api/data-update/status
+2025-08-01T08:43:11.898Z - GET /api/data-update/status
+2025-08-01T08:53:11.915Z - GET /api/data-update/status
+2025-08-01T09:03:11.956Z - GET /api/data-update/status
+2025-08-01T09:13:11.937Z - GET /api/data-update/status
+2025-08-01T09:23:11.946Z - GET /api/data-update/status
+2025-08-01T09:33:11.987Z - GET /api/data-update/status
+2025-08-01T09:43:05.164Z - GET /api/data-update/status
+2025-08-01T09:43:09.800Z - GET /api/data-update/status
+2025-08-01T09:43:09.805Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-08-01T09:43:09.808Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+2025-08-01T09:43:09.811Z - GET /api/launchpads/metrics
+Fetching all launchpad data for lifetime metrics
+Fetched 99 launchpad records for letsbonk with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-08-01. Records: 99 -> 98
+2025-08-01T09:43:10.180Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.185Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.187Z - GET /api/launchpads/metrics
+Fetched 519 launchpad records for pumpfun with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-08-01. Records: 519 -> 518
+2025-08-01T09:43:10.200Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.203Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.205Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.660Z - GET /api/data-update/status
+Fetched 37 launchpad records for moonshot with timeframe all
+LaunchpadAPI: Filtered out most recent date 2025-08-01. Records: 37 -> 36
+2025-08-01T09:43:10.672Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.674Z - GET /api/launchpads/metrics
+2025-08-01T09:43:10.676Z - GET /api/launchpads/metrics
+2025-08-01T09:46:23.409Z - GET /api/protocols/sync-status
+2025-08-01T09:46:23.412Z - GET /api/protocol-config
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:23.933Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:24.816Z - GET /api/protocol-config
+2025-08-01T09:46:24.829Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:25.133Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:39.891Z - GET /api/protocols/latest-dates
+2025-08-01T09:46:47.328Z - GET /api/data-update/status
+2025-08-01T09:46:47.345Z - GET /api/protocols/sync-status
+2025-08-01T09:46:47.347Z - GET /api/protocol-config
+2025-08-01T09:46:47.674Z - GET /api/data-update/status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:47.689Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:48.227Z - GET /api/protocol-config
+2025-08-01T09:46:48.240Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:48.548Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:46:50.068Z - GET /api/protocols/latest-dates
+2025-08-01T09:47:05.781Z - GET /api/protocols/latest-dates

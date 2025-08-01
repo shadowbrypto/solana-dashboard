@@ -1024,7 +1024,7 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
     console.log('Sample EVM data in database:', evmDataCheck);
     
     // Query database for the date range across all EVM chains and protocols
-    const { data: weeklyData, error: weeklyError } = await supabase
+    let { data: weeklyData, error: weeklyError } = await supabase
       .from('protocol_stats')
       .select('protocol_name, date, chain, volume_usd')
       .in('chain', evmChains)
@@ -1055,12 +1055,32 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
       // Try broader query to see what EVM data exists
       const { data: broadQuery, error: broadError } = await supabase
         .from('protocol_stats')
-        .select('protocol_name, chain, data_type, count(*)')
+        .select('protocol_name, chain, data_type')
         .neq('chain', 'solana')
         .gte('date', startDate)
         .lte('date', endDate);
       
       console.log('Broader EVM data query results:', broadQuery?.slice(0, 10));
+      
+      // Try with different data types
+      const { data: privateDataQuery, error: privateError } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, date, chain, volume_usd')
+        .in('chain', evmChains)
+        .in('protocol_name', evmProtocols)
+        .eq('data_type', 'private')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('protocol_name')
+        .order('date');
+      
+      console.log(`EVM data with private data type: ${privateDataQuery?.length || 0} records`);
+      
+      // If we found data with private data type, use that instead
+      if (privateDataQuery && privateDataQuery.length > 0) {
+        console.log('Found EVM data with private data type, using that instead');
+        weeklyData = privateDataQuery;
+      }
     }
 
     // Process the data by protocol and date

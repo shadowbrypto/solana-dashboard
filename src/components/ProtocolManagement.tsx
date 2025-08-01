@@ -693,7 +693,10 @@ export function ProtocolManagement() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
-              <CardTitle>Data Refresh Operations</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCcw className="h-5 w-5 text-primary" />
+                Data Refresh Operations
+              </CardTitle>
               <CardDescription>
                 Force refresh data from Dune Analytics for trading apps and launchpads
               </CardDescription>
@@ -701,75 +704,129 @@ export function ProtocolManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-              <p className="text-sm text-orange-800 dark:text-orange-200 flex-1">
-                Force complete data refresh from Dune Analytics for all trading apps, bypassing all time restrictions.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleHardRefresh}
-                  disabled={isRefreshingSolana}
-                  variant="outline"
-                  size="sm"
-                >
-                  {isRefreshingSolana ? (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                      Refresh Solana Data
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleRefreshAllEVM}
-                  disabled={isRefreshingEVM}
-                  variant="outline"
-                  size="sm"
-                >
-                  {isRefreshingEVM ? (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                      Refresh EVM Data
-                    </>
-                  )}
-                </Button>
+          <div className="space-y-6">
+            {/* Trading Apps Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                <h4 className="text-sm font-semibold text-foreground">Trading Apps</h4>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                        <span className="text-sm font-medium text-foreground">Solana Protocols</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Refresh all Solana trading apps data
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleHardRefresh}
+                      disabled={isRefreshingSolana}
+                      variant="outline"
+                      size="sm"
+                      className="ml-4 shrink-0"
+                    >
+                      {isRefreshingSolana ? (
+                        <>
+                          <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCcw className="mr-2 h-4 w-4" />
+                          Refresh Solana
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-blue-50/30 dark:to-blue-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-500/20 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span className="text-sm font-medium text-foreground">EVM Protocols</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Refresh all EVM trading apps data
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleRefreshAllEVM}
+                      disabled={isRefreshingEVM}
+                      variant="outline"
+                      size="sm"
+                      className="ml-4 shrink-0"
+                    >
+                      {isRefreshingEVM ? (
+                        <>
+                          <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCcw className="mr-2 h-4 w-4" />
+                          Refresh EVM
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
-              <RefreshCcw className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-              <p className="text-sm text-purple-800 dark:text-purple-200 flex-1">
-                Refresh all launchpad data from Dune Analytics. This will update PumpFun and other launchpad metrics.
-              </p>
-              <Button
-                onClick={handleRefreshAllLaunchpads}
-                disabled={isRefreshingLaunchpads}
-                variant="outline"
-                size="sm"
-              >
-                {isRefreshingLaunchpads ? (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4" />
-                    Refresh All Launchpads
-                  </>
-                )}
-              </Button>
+            {/* Separator */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/30"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground font-medium">Launchpads</span>
+              </div>
+            </div>
+
+            {/* Launchpads Section */}
+            <div className="space-y-3">
+              <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      <span className="text-sm font-medium text-foreground">All Launchpads</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Refresh data for PumpFun, Moonshot, and other launchpad metrics
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleRefreshAllLaunchpads}
+                    disabled={isRefreshingLaunchpads}
+                    variant="outline"
+                    size="sm"
+                    className="ml-4 shrink-0"
+                  >
+                    {isRefreshingLaunchpads ? (
+                      <>
+                        <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        Refresh Launchpads
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
             
           </div>

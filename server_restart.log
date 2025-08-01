@@ -1157,3 +1157,17 @@ Failed to fetch protocol sync status: {
   hint: null,
   message: 'relation "public.protocol_sync_status" does not exist'
 }
+2025-08-01T10:07:11.229Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T10:07:11.885Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}

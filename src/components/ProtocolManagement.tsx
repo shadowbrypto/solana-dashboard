@@ -717,9 +717,44 @@ export function ProtocolManagement() {
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center justify-between">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                         <span className="text-sm font-medium text-foreground">Solana Protocols</span>
+                        <div className="flex -space-x-1">
+                          {getMutableProtocolConfigs()
+                            .filter(p => p.chain === 'solana')
+                            .slice(0, 4)
+                            .map((protocol, index) => (
+                            <div 
+                              key={protocol.id}
+                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
+                              style={{ zIndex: 4 - index }}
+                              title={protocol.name}
+                            >
+                              <img 
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                alt={protocol.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const container = target.parentElement;
+                                  if (container) {
+                                    container.innerHTML = '';
+                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                    const iconEl = document.createElement('div');
+                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                    container.appendChild(iconEl);
+                                  }
+                                }}
+                              />
+                            </div>
+                          ))}
+                          {getMutableProtocolConfigs().filter(p => p.chain === 'solana').length > 4 && (
+                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                              +{getMutableProtocolConfigs().filter(p => p.chain === 'solana').length - 4}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">
                         Refresh all Solana trading apps data
@@ -751,9 +786,44 @@ export function ProtocolManagement() {
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center justify-between">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                         <span className="text-sm font-medium text-foreground">EVM Protocols</span>
+                        <div className="flex -space-x-1">
+                          {getMutableProtocolConfigs()
+                            .filter(p => p.chain === 'evm')
+                            .slice(0, 4)
+                            .map((protocol, index) => (
+                            <div 
+                              key={protocol.id}
+                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
+                              style={{ zIndex: 4 - index }}
+                              title={protocol.name}
+                            >
+                              <img 
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                alt={protocol.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const container = target.parentElement;
+                                  if (container) {
+                                    container.innerHTML = '';
+                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                    const iconEl = document.createElement('div');
+                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                    container.appendChild(iconEl);
+                                  }
+                                }}
+                              />
+                            </div>
+                          ))}
+                          {getMutableProtocolConfigs().filter(p => p.chain === 'evm').length > 4 && (
+                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                              +{getMutableProtocolConfigs().filter(p => p.chain === 'evm').length - 4}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">
                         Refresh all EVM trading apps data
@@ -799,9 +869,41 @@ export function ProtocolManagement() {
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                       <span className="text-sm font-medium text-foreground">All Launchpads</span>
+                      <div className="flex -space-x-1">
+                        {getAllLaunchpads().slice(0, 4).map((launchpad, index) => (
+                          <div 
+                            key={launchpad.id}
+                            className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
+                            style={{ zIndex: 4 - index }}
+                            title={launchpad.name}
+                          >
+                            <img 
+                              src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                              alt={launchpad.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
+                        ))}
+                        {getAllLaunchpads().length > 4 && (
+                          <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                            +{getAllLaunchpads().length - 4}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Refresh data for PumpFun, Moonshot, and other launchpad metrics

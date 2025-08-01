@@ -1213,3 +1213,7 @@ Failed to fetch protocol sync status: {
   hint: null,
   message: 'relation "public.protocol_sync_status" does not exist'
 }
+2025-08-01T10:10:12.407Z - GET /api/data-update/status
+2025-08-01T10:10:12.789Z - GET /api/data-update/status
+2025-08-01T10:10:32.314Z - GET /api/data-update/status
+2025-08-01T10:10:32.906Z - GET /api/data-update/status

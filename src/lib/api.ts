@@ -218,23 +218,16 @@ export const protocolApi = {
     dailyVolumes: Record<Protocol, Record<string, number>>;
     chainDistribution: Record<Protocol, Record<string, number>>;
   }> {
-    try {
-      // Try unified API first
-      return await unifiedApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
-    } catch (error) {
-      console.warn('Unified API failed, falling back to legacy API:', error);
-      
-      // Fallback to legacy API
-      const startDateStr = format(startDate, 'yyyy-MM-dd');
-      const endDateStr = format(endDate, 'yyyy-MM-dd');
-      const dataTypeParam = dataType ? `&dataType=${dataType}` : '';
-      const endpoint = `/protocols/evm-weekly-metrics?startDate=${startDateStr}&endDate=${endDateStr}${dataTypeParam}`;
-      
-      return apiRequest<{
-        dailyVolumes: Record<Protocol, Record<string, number>>;
-        chainDistribution: Record<Protocol, Record<string, number>>;
-      }>(endpoint);
-    }
+    // Use legacy API directly for EVM weekly metrics (always uses 'public' data type)
+    const startDateStr = format(startDate, 'yyyy-MM-dd');
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    const dataTypeParam = dataType ? `&dataType=${dataType}` : '';
+    const endpoint = `/protocols/evm-weekly-metrics?startDate=${startDateStr}&endDate=${endDateStr}${dataTypeParam}`;
+    
+    return apiRequest<{
+      dailyVolumes: Record<Protocol, Record<string, number>>;
+      chainDistribution: Record<Protocol, Record<string, number>>;
+    }>(endpoint);
   }
 };
 

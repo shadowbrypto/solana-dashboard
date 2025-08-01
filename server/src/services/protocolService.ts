@@ -1004,21 +1004,9 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
 }> {
   console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
   
-  // Use the actual chain names as stored in database
   const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
-  // Don't hard-code protocols - get all EVM protocols dynamically
-  const { data: availableProtocols, error: protocolError } = await supabase
-    .from('protocol_stats')
-    .select('protocol_name')
-    .neq('chain', 'solana')
-    .gte('date', startDate)
-    .lte('date', endDate);
-  
-  const evmProtocols = availableProtocols ? 
-    [...new Set(availableProtocols.map(p => p.protocol_name))] : 
-    ['banana', 'bloom', 'maestro', 'sigma']; // Fallback
-  // Try both data types if none specified
-  const effectiveDataType = dataType;
+  const evmProtocols = ['banana', 'bloom', 'maestro', 'sigma'];
+  const effectiveDataType = dataType || 'private'; // Default to private
   
   console.log(`EVM Chains:`, evmChains);
   console.log(`EVM Protocols:`, evmProtocols);
@@ -1057,22 +1045,16 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
     });
     
     // Query database for the date range across all EVM chains and protocols
-    let query = supabase
+    const { data: weeklyData, error: weeklyError } = await supabase
       .from('protocol_stats')
       .select('protocol_name, date, chain, volume_usd')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
+      .eq('data_type', effectiveDataType)
       .gte('date', startDate)
       .lte('date', endDate)
       .order('protocol_name')
       .order('date');
-    
-    // Add data_type filter only if specified
-    if (effectiveDataType) {
-      query = query.eq('data_type', effectiveDataType);
-    }
-    
-    let { data: weeklyData, error: weeklyError } = await query;
 
     if (weeklyError) {
       console.error('Error fetching EVM weekly data:', weeklyError);

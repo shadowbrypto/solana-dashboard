@@ -113,16 +113,16 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       setLoading(true);
       try {
         console.log(`Fetching EVM weekly data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
-        let dataType = 'public'; // Try public first
+        let dataType = 'private'; // Try private first (default for most data)
         let data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
-        console.log('Raw API response (public):', data);
+        console.log('Raw API response (private):', data);
         
-        // If no data with public, try private
+        // If no data with private, try public
         if (!data.dailyVolumes || Object.keys(data.dailyVolumes).length === 0) {
-          console.log('No EVM data found with public data type, trying private...');
-          dataType = 'private';
+          console.log('No EVM data found with private data type, trying public...');
+          dataType = 'public';
           data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, dataType);
-          console.log('Raw API response (private):', data);
+          console.log('Raw API response (public):', data);
         }
         
         console.log('Final data to process:', {

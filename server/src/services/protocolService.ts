@@ -73,8 +73,10 @@ export function formatDate(isoDate: string): string {
 }
 
 export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string, dataType?: string) {
-  // Default to 'public' for EVM chains, 'private' for others
-  const effectiveDataType = dataType || (chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '') ? 'public' : 'private');
+  // ALWAYS use 'public' for EVM chains, regardless of dataType parameter
+  // Default to 'private' for Solana protocols
+  const isEVMChain = chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '');
+  const effectiveDataType = isEVMChain ? 'public' : (dataType || 'private');
   const cacheKey = Array.isArray(protocolName) 
     ? protocolName.sort().join(',') + '_' + (chainFilter || 'default') + '_' + effectiveDataType
     : (protocolName || 'all') + '_' + (chainFilter || 'default') + '_' + effectiveDataType;
@@ -1006,7 +1008,7 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
   
   const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
   const evmProtocols = ['banana', 'bloom', 'maestro', 'sigma'];
-  const effectiveDataType = dataType || 'private'; // Default to private
+  const effectiveDataType = 'public'; // ALWAYS use public for EVM protocols
   
   console.log(`EVM Chains:`, evmChains);
   console.log(`EVM Protocols:`, evmProtocols);
@@ -1022,6 +1024,17 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
       .limit(20);
     
     console.log('Sample EVM data in database (most recent first):', evmDataCheck);
+    
+    // Quick test query for Sigma specifically
+    const { data: sigmaTest, error: sigmaError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, chain, volume_usd, data_type')
+      .eq('protocol_name', 'sigma')
+      .gte('date', '2025-07-25')
+      .lte('date', '2025-07-31')
+      .limit(10);
+    
+    console.log('Sigma test query results:', sigmaTest);
     
     // Also check date range of available EVM data
     const { data: dateRangeCheck, error: rangeError } = await supabase

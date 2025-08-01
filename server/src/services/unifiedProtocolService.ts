@@ -188,14 +188,21 @@ export class UnifiedProtocolService {
                       .lte('date', format(endDate, 'yyyy-MM-dd'));
         }
         
-        // Apply data type filter (default to public for EVM, private for Solana)
+        // Apply data type filter (ALWAYS use public for EVM, private for Solana)
         if (params.dataType) {
-          query = query.eq('data_type', params.dataType);
+          // Check if this is an EVM query - if so, force public dataType
+          const isEVMQuery = params.chain === 'evm' || 
+            (chainFilter && chainFilter.some(chain => 
+              ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].includes(chain)
+            ));
+          
+          query = query.eq('data_type', isEVMQuery ? 'public' : params.dataType);
         } else {
-          // Check if this is an EVM chain query
-          const isEVMQuery = chainFilter && chainFilter.some(chain => 
-            ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].includes(chain)
-          );
+          // Default dataType based on chain type
+          const isEVMQuery = params.chain === 'evm' || 
+            (chainFilter && chainFilter.some(chain => 
+              ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].includes(chain)
+            ));
           
           query = query.eq('data_type', isEVMQuery ? 'public' : 'private');
         }

@@ -208,7 +208,7 @@ export const protocolApi = {
     return apiRequest<ProtocolSyncStatus>(`/protocols/sync-status/${protocolName}`);
   },
 
-  // Get latest data dates for SOL protocols only
+  // Get latest data dates for all protocols (SOL and EVM) using their respective default data types
   async getLatestDataDates(): Promise<ProtocolLatestDate[]> {
     return apiRequest<ProtocolLatestDate[]>('/protocols/latest-dates');
   },

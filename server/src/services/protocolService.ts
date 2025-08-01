@@ -915,12 +915,20 @@ export async function getLatestDataDates(dataType?: string): Promise<{
   chain: string;
 }[]> {
   try {
-    // Get the latest date for each protocol (both SOL and EVM)
-    const { data: latestDates, error } = await supabase
+    // Get the latest date for each protocol (both SOL and EVM) with proper data type handling
+    // EVM protocols use 'public' data by default, Solana protocols use 'private' by default
+    let query = supabase
       .from('protocol_stats')
-      .select('protocol_name, date, chain')
-      .eq('data_type', dataType || 'private')
+      .select('protocol_name, date, chain, data_type')
       .order('date', { ascending: false });
+
+    // If no specific data type is requested, get both public and private
+    // If a specific data type is requested, filter by it
+    if (dataType) {
+      query = query.eq('data_type', dataType);
+    }
+
+    const { data: latestDates, error } = await query;
 
     if (error) throw error;
 
@@ -928,19 +936,35 @@ export async function getLatestDataDates(dataType?: string): Promise<{
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
-    // Group by protocol and chain to get the latest date for each
+    // Group by protocol and chain to get the latest date for each, considering proper data types
     const protocolLatestDates = new Map<string, { date: string; chain: string }>();
     
     latestDates?.forEach(row => {
       const protocol = row.protocol_name;
       const date = row.date;
       const chain = row.chain;
+      const recordDataType = row.data_type;
       
       // Normalize protocol names - remove _evm suffix if present for consistency
       const normalizedProtocol = protocol.endsWith('_evm') ? protocol.slice(0, -4) : protocol;
       
       // Create unique key for each protocol/chain combination
       const key = chain === 'solana' ? normalizedProtocol : `${normalizedProtocol}_evm`;
+      
+      // Skip if we have a specific dataType filter and this record doesn't match
+      if (dataType && recordDataType !== dataType) {
+        return;
+      }
+      
+      // For proper data type handling when no specific filter is applied:
+      // - Solana protocols should use 'private' data type
+      // - EVM protocols should use 'public' data type
+      if (!dataType) {
+        const expectedDataType = chain === 'solana' ? 'private' : 'public';
+        if (recordDataType !== expectedDataType) {
+          return;
+        }
+      }
       
       if (!protocolLatestDates.has(key) || date > protocolLatestDates.get(key)!.date) {
         protocolLatestDates.set(key, { date, chain: chain === 'solana' ? 'solana' : 'evm' });

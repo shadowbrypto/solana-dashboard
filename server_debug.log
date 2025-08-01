@@ -9088,3 +9088,216 @@ Failed to fetch protocol sync status: {
 2025-08-01T09:47:05.781Z - GET /api/protocols/latest-dates
 2025-08-01T09:49:33.651Z - GET /api/data-update/status
 2025-08-01T09:49:34.202Z - GET /api/data-update/status
+2025-08-01T09:50:49.682Z - GET /api/data-update/status
+2025-08-01T09:50:49.697Z - GET /api/protocol-config
+2025-08-01T09:50:49.699Z - GET /api/protocols/sync-status
+2025-08-01T09:50:50.056Z - GET /api/data-update/status
+2025-08-01T09:50:50.069Z - GET /api/protocol-config
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:50:50.074Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:50:50.390Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:50:50.694Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:50:52.610Z - GET /api/protocols/latest-dates
+2025-08-01T09:51:08.785Z - GET /api/unified/metrics
+2025-08-01T09:51:08.787Z - GET /api/unified/chain-breakdown
+2025-08-01T09:51:08.789Z - GET /api/unified/metrics
+UnifiedAPI: Total records fetched: 0
+2025-08-01T09:51:09.183Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 362, total so far: 362
+UnifiedAPI: Total records fetched: 362
+UnifiedAPI: Filtered out most recent date 2025-08-01. Records: 362 -> 359
+2025-08-01T09:51:09.199Z - GET /api/unified/metrics
+UnifiedAPI: Fetched page 1, records: 1000, total so far: 1000
+UnifiedAPI: Fetched page 2, records: 1000, total so far: 2000
+UnifiedAPI: Fetched page 3, records: 195, total so far: 2195
+UnifiedAPI: Total records fetched: 2195
+UnifiedAPI: Filtered out most recent date 2025-08-01. Records: 2195 -> 2192
+2025-08-01T09:51:10.478Z - GET /api/unified/chain-breakdown
+2025-08-01T09:52:23.324Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:52:23.851Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T09:52:24.181Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+11:53:22 AM [tsx] change in ./src/services/evmDataMigrationServiceSimple.ts Restarting...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at Server.listen (node:net:2008:7)
+    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:67:5)
+    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
+    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
+    at async loadESM (node:internal/process/esm_loader:40:7)
+    at async handleMainPromise (node:internal/modules/run_main:66:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1899:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v20.5.0
+11:53:32 AM [tsx] change in ./src/services/protocolService.ts Rerunning...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at Server.listen (node:net:2008:7)
+    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:67:5)
+    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
+    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
+    at async loadESM (node:internal/process/esm_loader:40:7)
+    at async handleMainPromise (node:internal/modules/run_main:66:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1899:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v20.5.0
+11:53:44 AM [tsx] change in ./src/services/protocolService.ts Rerunning...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at Server.listen (node:net:2008:7)
+    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:67:5)
+    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
+    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
+    at async loadESM (node:internal/process/esm_loader:40:7)
+    at async handleMainPromise (node:internal/modules/run_main:66:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1899:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v20.5.0
+11:54:55 AM [tsx] change in ./src/services/evmDataMigrationServiceSimple.ts Rerunning...
+cSupabase Environment Check: {
+  hasSupabaseUrl: true,
+  hasSupabaseKey: true,
+  urlSource: 'REACT_APP_SUPABASE_URL',
+  keySource: 'REACT_APP_SUPABASE_ANON_KEY',
+  urlLength: 40,
+  keyLength: 208
+}
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3001
+    at __node_internal_captureLargerStackTrace (node:internal/errors:496:5)
+    at __node_internal_uvExceptionWithHostPort (node:internal/errors:593:12)
+    at Server.setupListenHandle [as _listen2] (node:net:1872:16)
+    at listenInCluster (node:net:1920:12)
+    at Server.listen (node:net:2008:7)
+    at Function.listen (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/node_modules/express/lib/application.js:635:24)
+    at <anonymous> (/Users/sairaghavaa/Documents/GitHub/sol-analytics/server/src/index.ts:67:5)
+    at ModuleJob.run (node:internal/modules/esm/module_job:192:25)
+    at async CustomizedModuleLoader.import (node:internal/modules/esm/loader:228:24)
+    at async loadESM (node:internal/process/esm_loader:40:7)
+    at async handleMainPromise (node:internal/modules/run_main:66:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1899:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+
+Node.js v20.5.0

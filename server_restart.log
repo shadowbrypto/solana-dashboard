@@ -1217,3 +1217,26 @@ Failed to fetch protocol sync status: {
 2025-08-01T10:10:12.789Z - GET /api/data-update/status
 2025-08-01T10:10:32.314Z - GET /api/data-update/status
 2025-08-01T10:10:32.906Z - GET /api/data-update/status
+2025-08-01T10:12:02.108Z - GET /api/data-update/status
+2025-08-01T10:12:02.121Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T10:12:02.989Z - GET /api/protocols/sync-status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}
+2025-08-01T10:12:03.298Z - GET /api/protocols/sync-status
+2025-08-01T10:12:03.542Z - GET /api/data-update/status
+Failed to fetch protocol sync status: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.protocol_sync_status" does not exist'
+}

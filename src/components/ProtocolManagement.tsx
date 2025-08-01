@@ -11,7 +11,8 @@ import {
   saveProtocolConfigurations,
   resetProtocolConfigurations,
   hasUnsavedChanges,
-  loadProtocolConfigurations
+  loadProtocolConfigurations,
+  getProtocolLogoFilename
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
 import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock, Database, Eye } from 'lucide-react';

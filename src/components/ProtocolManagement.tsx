@@ -79,7 +79,7 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
               onRefresh={onRefresh}
               isRefreshing={refreshingProtocols.has(protocol.id)}
               syncStatus={syncStatuses.get(protocol.id)}
-              latestDate={latestDates.get(protocol.id)}
+              latestDate={latestDates.get(protocol.id) || latestDates.get(protocol.id.replace('_evm', ''))}
             />
           ))}
         </div>
@@ -162,19 +162,14 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
             </span>
           </div>
         )}
-        {(() => {
-          // Handle EVM protocol name mapping - backend strips _evm suffix
-          const normalizedProtocolId = protocol.id.replace('_evm', '');
-          const latestDateData = latestDate || latestDates.get(normalizedProtocolId);
-          return latestDateData && !latestDateData.is_current && (
-            <div className="flex items-center gap-1 mt-1" title={`${latestDateData.days_behind} days behind current date`}>
-              <Clock className="h-3 w-3 text-red-500" />
-              <span className="text-xs text-red-500">
-                Latest: {new Date(latestDateData.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
-            </div>
-          );
-        })()}
+        {latestDate && !latestDate.is_current && (
+          <div className="flex items-center gap-1 mt-1" title={`${latestDate.days_behind} days behind current date`}>
+            <Clock className="h-3 w-3 text-red-500" />
+            <span className="text-xs text-red-500">
+              Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        )}
       </div>
       <Button
         size="sm"

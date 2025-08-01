@@ -9086,3 +9086,5 @@ Failed to fetch protocol sync status: {
 }
 2025-08-01T09:46:50.068Z - GET /api/protocols/latest-dates
 2025-08-01T09:47:05.781Z - GET /api/protocols/latest-dates
+2025-08-01T09:49:33.651Z - GET /api/data-update/status
+2025-08-01T09:49:34.202Z - GET /api/data-update/status

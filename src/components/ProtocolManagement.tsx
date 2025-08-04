@@ -164,19 +164,12 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
           </div>
         )}
         {latestDate && (
-          <div className={`flex items-center gap-1 mt-1 ${
-            latestDate.is_current ? '' : `title="${latestDate.days_behind} days behind current date"`
-          }`}>
-            <Clock className={`h-3 w-3 ${
-              latestDate.is_current ? 'text-green-500' : 'text-red-500'
+          <div className="flex items-center gap-1 mt-1" title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
+            <div className={`w-2 h-2 rounded-full ${
+              latestDate.is_current ? 'bg-green-500' : 'bg-red-500'
             }`} />
-            <span className={`text-xs ${
-              latestDate.is_current ? 'text-green-600' : 'text-red-500'
-            }`}>
-              Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              {latestDate.is_current && (
-                <span className="ml-1 text-green-600">✓</span>
-              )}
+            <span className="text-xs text-muted-foreground">
+              {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
         )}

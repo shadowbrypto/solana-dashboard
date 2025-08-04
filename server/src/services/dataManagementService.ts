@@ -31,8 +31,8 @@ interface ProtocolSource {
 const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // Solana protocols
   "trojan": { queryIds: [5500774], chain: 'solana' },
-  "photon": { queryIds: [5500907], chain: 'solana' },
-  "bullx": { queryIds: [5500910], chain: 'solana' },
+  "photon": { queryIds: [5500907, 5579135], chain: 'solana' },
+  "bullx": { queryIds: [5500910, 5579188], chain: 'solana' },
   "axiom": { queryIds: [5556317, 5376750, 5376740, 5376694, 4663709], chain: 'solana' },
   "gmgnai": { queryIds: [4231939], chain: 'solana' },
   "bloom": { queryIds: [4340509], chain: 'solana' },

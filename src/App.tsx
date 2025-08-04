@@ -96,34 +96,46 @@ const MetricCards = ({
     ) : (
       <>
         <MetricCard
-          title="Volume"
+          title="Lifetime Volume"
           type="volume"
           value={totalMetrics.total_volume_usd ?? 0}
           prefix="$"
           subtitle={protocolName}
           subtitleIcon={protocolLogo}
+          protocolName={protocolName || "All Protocols"}
+          protocolLogo={protocolLogo}
+          latestDate={new Date()}
         />
         <MetricCard
-          title="Users"
+          title="Lifetime Users"
           type="users"
           value={totalMetrics.numberOfNewUsers ?? 0}
           subtitle={protocolName}
           subtitleIcon={protocolLogo}
+          protocolName={protocolName || "All Protocols"}
+          protocolLogo={protocolLogo}
+          latestDate={new Date()}
         />
         <MetricCard
-          title="Trades"
+          title="Lifetime Trades"
           type="trades"
           value={totalMetrics.daily_trades ?? 0}
           subtitle={protocolName}
           subtitleIcon={protocolLogo}
+          protocolName={protocolName || "All Protocols"}
+          protocolLogo={protocolLogo}
+          latestDate={new Date()}
         />
         <MetricCard
-          title="Fees"
+          title="Lifetime Fees"
           type="fees"
           value={totalMetrics.total_fees_usd ?? 0}
           prefix="$"
           subtitle={protocolName}
           subtitleIcon={protocolLogo}
+          protocolName={protocolName || "All Protocols"}
+          protocolLogo={protocolLogo}
+          latestDate={new Date()}
         />
       </>
     )}

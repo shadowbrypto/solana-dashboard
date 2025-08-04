@@ -1,4 +1,4 @@
-import { LucideIcon, TrendingDown, TrendingUp, Sparkles, Coins, Users, BarChart2, DollarSign, UsersRound, CircleDollarSign, Hash, HandCoins, Rocket, Trophy, Percent } from "lucide-react";
+import { LucideIcon, TrendingDown, TrendingUp, Sparkles, Coins, Users, BarChart2, DollarSign, UsersRound, CircleDollarSign, Hash, HandCoins, Rocket, Trophy, Percent, CheckCircle2, AlertCircle, Database } from "lucide-react";
 import { ComponentActions } from "./ComponentActions";
 
 interface MetricCardProps {
@@ -12,6 +12,10 @@ interface MetricCardProps {
   prefix?: string;
   subtitle?: string;
   subtitleIcon?: string;
+  protocolName?: string;
+  protocolLogo?: string;
+  latestDate?: Date | string;
+  isDataCurrent?: boolean;
 }
 
 export function MetricCard({
@@ -25,6 +29,10 @@ export function MetricCard({
   prefix,
   subtitle,
   subtitleIcon,
+  protocolName = "All Protocols",
+  protocolLogo,
+  latestDate,
+  isDataCurrent = true,
 }: MetricCardProps) {
   const isNegative = percentageChange && percentageChange < 0;
   const TrendIcon = isNegative ? TrendingDown : TrendingUp;
@@ -62,78 +70,99 @@ export function MetricCard({
     }
   };
 
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getDataFreshness = () => {
+    if (!latestDate) return null;
+    
+    const date = typeof latestDate === 'string' ? new Date(latestDate) : latestDate;
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return {
+      isCurrent: diffDays <= 1,
+      daysAgo: diffDays,
+      dateStr: formatDate(date)
+    };
+  };
+
+  const dataFreshness = getDataFreshness();
+
   return (
     <ComponentActions 
       componentName={`${title} Metric`}
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
-      <div className="group relative rounded-xl border bg-gradient-to-br from-background via-background/95 to-muted/30 p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5 cursor-default overflow-hidden">
-        {/* Subtle accent line */}
-        <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r transition-opacity duration-300 ${
-          type === 'volume' ? 'from-blue-500 to-cyan-500' :
-          type === 'users' ? 'from-green-500 to-emerald-500' :
-          type === 'trades' ? 'from-purple-500 to-violet-500' :
-          type === 'launches' ? 'from-orange-500 to-red-500' :
-          type === 'graduations' ? 'from-yellow-500 to-orange-500' :
-          type === 'graduation_rate' ? 'from-indigo-500 to-purple-500' :
-          'from-orange-500 to-amber-500'
-        } opacity-0 group-hover:opacity-100`} />
-        
-        <div className="flex flex-col gap-3 mb-4 sm:mb-6">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2">
-              <div className={`p-2 rounded-lg transition-all duration-300 ${
-                type === 'volume' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20' :
-                type === 'users' ? 'bg-green-500/10 text-green-600 dark:text-green-400 group-hover:bg-green-500/20' :
-                type === 'trades' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-500/20' :
-                'bg-orange-500/10 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500/20'
-              }`}>
-                {getIcon()}
+      <div className="group relative rounded-xl border-2 border-border/80 bg-card p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-xl cursor-default overflow-hidden">
+        {/* Content Container */}
+        <div className="flex flex-col h-full">
+          {/* Top Section - Title */}
+          <div className="mb-auto">
+            <h3 className="text-lg font-semibold text-foreground">
+              {title}
+            </h3>
+          </div>
+
+          {/* Middle Section - Large Value */}
+          <div className="flex-1 flex items-center justify-center py-4">
+            <div className="text-center">
+              <div className="text-4xl lg:text-5xl font-semibold tracking-tight bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                {typeof value === 'number' ? formatNumber(value) : value}
               </div>
-              <h3 className="text-foreground text-base sm:text-lg font-semibold truncate">{title}</h3>
             </div>
-            
-            <div className="flex flex-col items-end gap-2">
-              <div className="inline-flex items-center rounded-lg bg-muted/50 border border-border/50 px-2.5 py-1 text-xs font-medium transition-all duration-200 text-muted-foreground group-hover:bg-muted/70 group-hover:border-border/70">
-                Lifetime
-              </div>
-              {percentageChange && (
-                <div className={`flex items-center gap-1 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 transition-all duration-200 ${
-                  isNegative 
-                    ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                    : 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
-                }`}>
-                  <TrendIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  <span className="text-[10px] sm:text-xs font-medium">
-                    {isNegative ? "" : "+"}
-                    {percentageChange.toFixed(1)}%
+          </div>
+
+          {/* Bottom Section - Protocol Name and Data Freshness */}
+          <div className="flex items-center justify-between mt-auto">
+            {/* Protocol Name */}
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
+                {protocolLogo ? (
+                  <img 
+                    src={`/assets/logos/${protocolLogo}`}
+                    alt={protocolName} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = `<span class="text-[8px] font-medium text-muted-foreground">${protocolName.slice(0, 2).toUpperCase()}</span>`;
+                      }
+                    }}
+                  />
+                ) : (
+                  <span className="text-[8px] font-medium text-muted-foreground">
+                    {protocolName.slice(0, 2).toUpperCase()}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">
+                {protocolName}
+              </span>
             </div>
+
+            {/* Data Freshness Indicator */}
+            {dataFreshness && (
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-md border transition-all duration-200 ${
+                dataFreshness.isCurrent 
+                  ? 'bg-green-50/50 border-green-200/50 dark:bg-green-950/20 dark:border-green-800/30' 
+                  : 'bg-amber-50/50 border-amber-200/50 dark:bg-amber-950/20 dark:border-amber-800/30'
+              }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  dataFreshness.isCurrent 
+                    ? 'bg-green-500' 
+                    : 'bg-amber-500'
+                }`} />
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  {dataFreshness.dateStr}
+                </span>
+              </div>
+            )}
           </div>
-        </div>
-        
-        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            {typeof value === 'number' ? `${prefix || ''}${formatNumber(value)}` : value}
-          </div>
-          
-          {(duration || description) && (
-            <div className="space-y-1">
-              {duration && (
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                  {duration}
-                  <TrendIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                </div>
-              )}
-              {description && (
-                <div className="text-muted-foreground text-xs sm:text-sm">
-                  {description}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </ComponentActions>

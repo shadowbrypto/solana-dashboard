@@ -163,11 +163,20 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
             </span>
           </div>
         )}
-        {latestDate && !latestDate.is_current && (
-          <div className="flex items-center gap-1 mt-1" title={`${latestDate.days_behind} days behind current date`}>
-            <Clock className="h-3 w-3 text-red-500" />
-            <span className="text-xs text-red-500">
+        {latestDate && (
+          <div className={`flex items-center gap-1 mt-1 ${
+            latestDate.is_current ? '' : `title="${latestDate.days_behind} days behind current date"`
+          }`}>
+            <Clock className={`h-3 w-3 ${
+              latestDate.is_current ? 'text-green-500' : 'text-red-500'
+            }`} />
+            <span className={`text-xs ${
+              latestDate.is_current ? 'text-green-600' : 'text-red-500'
+            }`}>
               Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {latestDate.is_current && (
+                <span className="ml-1 text-green-600">✓</span>
+              )}
             </span>
           </div>
         )}
@@ -273,23 +282,31 @@ export function ProtocolManagement() {
     }
   };
 
-  // Load sync statuses
+  // Load sync statuses and latest dates
   useEffect(() => {
-    const loadSyncStatuses = async () => {
+    const loadSyncData = async () => {
       try {
         setLoadingSyncStatus(true);
+        
+        // Load sync statuses
         const statuses = await protocolApi.getAllSyncStatus();
         const statusMap = new Map(statuses.map(s => [s.protocol_name, s]));
         setSyncStatuses(statusMap);
+        
+        // Load latest dates
+        const latestDatesData = await protocolApi.getLatestDataDates();
+        const latestDatesMap = new Map(latestDatesData.map(d => [d.protocol_name, d]));
+        setLatestDates(latestDatesMap);
+        
       } catch (error) {
-        console.error('Failed to load sync statuses:', error);
+        console.error('Failed to load sync data:', error);
       } finally {
         setLoadingSyncStatus(false);
       }
     };
 
-    loadSyncStatuses();
-    // Reload sync statuses after any refresh
+    loadSyncData();
+    // Reload sync data after any refresh
   }, [forceRender]);
 
   const handleDragStart = (event: DragStartEvent) => {

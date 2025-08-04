@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataSyncApi, ApiError } from '../lib/api';
+import { resetAllCaches } from '../lib/protocol';
 
 interface DataSyncState {
   isLoading: boolean;
@@ -199,6 +200,10 @@ export function useDataSync() {
       // Store the sync time
       const now = getCETDate();
       localStorage.setItem(STORAGE_KEY, now.toISOString());
+      
+      // Reset all caches and settings after successful data refresh
+      resetAllCaches();
+      console.log('All caches reset after successful data sync');
       
       setState(prev => ({
         ...prev,

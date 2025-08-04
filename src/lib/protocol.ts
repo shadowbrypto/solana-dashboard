@@ -14,7 +14,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_EXPIRY = 30 * 1000; // 30 seconds cache for fresh data
+const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes cache for better performance
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();
@@ -26,11 +26,14 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
 
 // Clear all frontend caches
 export function clearAllFrontendCaches(): void {
-  protocolStatsCache.clear();
-  totalStatsCache.clear();
-  dailyMetricsCache.clear();
-  aggregatedStatsCache.clear();
+  cacheManager.clearAll();
   console.log('All frontend caches cleared');
+}
+
+// Reset all caches and settings (for after data refresh)
+export function resetAllCaches(): void {
+  cacheManager.reset();
+  console.log('All caches reset to default state');
 }
 
 // Clear cache for specific protocol
@@ -40,22 +43,17 @@ export function clearProtocolFrontendCache(protocolName?: string): void {
     return;
   }
 
-  // Clear entries that contain this protocol
-  const keysToDelete: string[] = [];
-  
-  protocolStatsCache.forEach((_, key) => {
-    if (key === protocolName || key.includes(protocolName) || key === 'all') {
-      keysToDelete.push(key);
-    }
+  // Clear entries for this protocol across all namespaces
+  Object.values(CACHE_NAMESPACES).forEach(namespace => {
+    // Clear direct protocol entries
+    cacheManager.delete(namespace, protocolName);
+    cacheManager.delete(namespace, `${protocolName}_stats`);
+    cacheManager.delete(namespace, `${protocolName}_metrics`);
+    
+    // Clear 'all' entries that would include this protocol
+    cacheManager.delete(namespace, 'all');
+    cacheManager.delete(namespace, 'all_protocols');
   });
-  
-  keysToDelete.forEach(key => protocolStatsCache.delete(key));
-  
-  // Clear related caches
-  totalStatsCache.delete(protocolName);
-  totalStatsCache.delete('all');
-  dailyMetricsCache.clear();
-  aggregatedStatsCache.clear();
   
   console.log(`Frontend cache cleared for protocol: ${protocolName}`);
 }
@@ -65,12 +63,11 @@ export function clearEVMProtocolsCaches(): void {
   const evmProtocols = ['sigma', 'maestro', 'bloom', 'banana']; // Clean names without _evm suffix
   
   evmProtocols.forEach(protocol => {
-    // Clear caches for each EVM protocol
     clearProtocolFrontendCache(protocol);
   });
   
-  // Also clear any caches that might include EVM data
-  clearAllFrontendCaches();
+  // Clear EVM-specific namespace
+  cacheManager.clearNamespace(CACHE_NAMESPACES.EVM_DATA);
   
   console.log('Frontend caches cleared for all EVM protocols');
 }
@@ -81,28 +78,20 @@ export async function getProtocolStats(protocolName?: string | string[], chain?:
     ? protocolName.sort().join(',') 
     : (protocolName || 'all') + '_' + (chain || 'default') + '_' + dataType;
 
-  // Check local cache first
-  const cachedData = protocolStatsCache.get(cacheKey);
-  if (cachedData && isCacheValid(cachedData)) {
-    return cachedData.data;
+  // Check cache first
+  const cachedData = cacheManager.get<ProtocolStats[]>(CACHE_NAMESPACES.PROTOCOL_STATS, cacheKey);
+  if (cachedData) {
+    return cachedData;
   }
 
   try {
     const stats = await protocolApi.getProtocolStats(protocolName, chain, dataType);
     
-    // Cache the results locally
-    protocolStatsCache.set(cacheKey, {
-      data: stats,
-      timestamp: Date.now()
-    });
+    // Cache the results
+    cacheManager.set(CACHE_NAMESPACES.PROTOCOL_STATS, cacheKey, stats, { ttl: CACHE_TTL });
 
     return stats;
   } catch (error) {
-    // Return cached data if available, even if expired
-    if (cachedData) {
-      return cachedData.data;
-    }
-    
     throw error;
   }
 }
@@ -111,30 +100,20 @@ export async function getTotalProtocolStats(protocolName?: string, chain?: strin
   const dataType = Settings.getDataTypePreference();
   const cacheKey = (protocolName || 'all') + '_' + (chain || 'default') + '_' + dataType;
   
-  // Check local cache first
-  const cachedData = totalStatsCache.get(cacheKey);
-  if (cachedData && isCacheValid(cachedData)) {
-    return cachedData.data;
+  // Check cache first
+  const cachedData = cacheManager.get<ProtocolMetrics>(CACHE_NAMESPACES.TOTAL_STATS, cacheKey);
+  if (cachedData) {
+    return cachedData;
   }
 
   try {
     const totalStats = await protocolApi.getTotalProtocolStats(protocolName, chain, dataType);
     
-    // Cache the results locally
-    totalStatsCache.set(cacheKey, {
-      data: totalStats,
-      timestamp: Date.now()
-    });
+    // Cache the results
+    cacheManager.set(CACHE_NAMESPACES.TOTAL_STATS, cacheKey, totalStats, { ttl: CACHE_TTL });
 
     return totalStats;
   } catch (error) {
-    // Handle error silently
-    
-    // Return cached data if available, even if expired
-    if (cachedData) {
-      return cachedData.data;
-    }
-    
     throw error;
   }
 }
@@ -153,30 +132,20 @@ export async function getDailyMetrics(date: Date): Promise<Record<Protocol, Prot
   const dataType = Settings.getDataTypePreference();
   const cacheKey = `${formattedDate}_${dataType}`;
 
-  // Check local cache first
-  const cachedData = dailyMetricsCache.get(cacheKey);
-  if (cachedData && isCacheValid(cachedData)) {
-    return cachedData.data;
+  // Check cache first
+  const cachedData = cacheManager.get<Record<Protocol, ProtocolMetrics>>(CACHE_NAMESPACES.DAILY_METRICS, cacheKey);
+  if (cachedData) {
+    return cachedData;
   }
 
   try {
     const dailyMetrics = await protocolApi.getDailyMetrics(date, dataType);
     
-    // Cache the results locally
-    dailyMetricsCache.set(cacheKey, {
-      data: dailyMetrics,
-      timestamp: Date.now()
-    });
+    // Cache the results
+    cacheManager.set(CACHE_NAMESPACES.DAILY_METRICS, cacheKey, dailyMetrics, { ttl: CACHE_TTL });
 
     return dailyMetrics;
   } catch (error) {
-    // Handle error silently
-    
-    // Return cached data if available, even if expired
-    if (cachedData) {
-      return cachedData.data;
-    }
-    
     throw error;
   }
 }

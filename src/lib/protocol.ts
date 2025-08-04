@@ -2,6 +2,7 @@ import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
 import { protocolApi } from './api';
 import { format } from 'date-fns';
 import { Settings } from './settings';
+import { cacheManager, CACHE_NAMESPACES } from './cache-manager';
 
 export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
   formattedDay: string;
@@ -14,6 +15,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache for better performance
 const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes cache for better performance
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
@@ -27,12 +29,22 @@ function isCacheValid<T>(cache: CacheEntry<T>): boolean {
 // Clear all frontend caches
 export function clearAllFrontendCaches(): void {
   cacheManager.clearAll();
+  // Also clear legacy caches
+  protocolStatsCache.clear();
+  totalStatsCache.clear();
+  dailyMetricsCache.clear();
+  aggregatedStatsCache.clear();
   console.log('All frontend caches cleared');
 }
 
 // Reset all caches and settings (for after data refresh)
 export function resetAllCaches(): void {
   cacheManager.reset();
+  // Also clear legacy caches
+  protocolStatsCache.clear();
+  totalStatsCache.clear();
+  dailyMetricsCache.clear();
+  aggregatedStatsCache.clear();
   console.log('All caches reset to default state');
 }
 
@@ -154,20 +166,17 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
   const dataType = Settings.getDataTypePreference();
   const cacheKey = `all-protocols-aggregated_${dataType}`;
   
-  // Check local cache first
-  const cachedData = aggregatedStatsCache.get(cacheKey);
-  if (cachedData && isCacheValid(cachedData)) {
-    return cachedData.data;
+  // Check centralized cache first
+  const cachedData = cacheManager.get<any[]>(CACHE_NAMESPACES.AGGREGATED_STATS, cacheKey);
+  if (cachedData) {
+    return cachedData;
   }
 
   try {
     const aggregatedStats = await protocolApi.getAggregatedProtocolStats(dataType);
     
-    // Cache the results locally
-    aggregatedStatsCache.set(cacheKey, {
-      data: aggregatedStats,
-      timestamp: Date.now()
-    });
+    // Cache the results
+    cacheManager.set(CACHE_NAMESPACES.AGGREGATED_STATS, cacheKey, aggregatedStats, { ttl: CACHE_TTL });
 
     return aggregatedStats;
   } catch (error) {
@@ -221,16 +230,14 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       // Cache the fallback results
-      aggregatedStatsCache.set(cacheKey, {
-        data: fallbackData,
-        timestamp: Date.now()
-      });
+      cacheManager.set(CACHE_NAMESPACES.AGGREGATED_STATS, cacheKey, fallbackData, { ttl: CACHE_TTL });
 
       return fallbackData;
     } catch (fallbackError) {
       // Return cached data if available, even if expired
-      if (cachedData) {
-        return cachedData.data;
+      const expiredCache = cacheManager.get<any[]>(CACHE_NAMESPACES.AGGREGATED_STATS, cacheKey);
+      if (expiredCache) {
+        return expiredCache;
       }
       
       throw fallbackError;

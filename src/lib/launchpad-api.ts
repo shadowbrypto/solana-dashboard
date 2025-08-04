@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
+import { cacheManager, CACHE_NAMESPACES } from './cache-manager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache
 
 export interface LaunchpadMetrics {
   date: string;
@@ -171,7 +173,20 @@ export class LaunchpadApi {
    * Get latest data dates for all launchpads
    */
   static async getLatestDataDates(): Promise<LaunchpadLatestDate[]> {
-    return launchpadApiRequest<LaunchpadLatestDate[]>('/latest-dates');
+    const cacheKey = 'launchpad-latest-dates';
+    
+    // Check cache first
+    const cachedData = cacheManager.get<LaunchpadLatestDate[]>(CACHE_NAMESPACES.LAUNCHPAD_DATA, cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+    
+    const result = await launchpadApiRequest<LaunchpadLatestDate[]>('/latest-dates');
+    
+    // Cache the results
+    cacheManager.set(CACHE_NAMESPACES.LAUNCHPAD_DATA, cacheKey, result, { ttl: CACHE_TTL });
+    
+    return result;
   }
 
   /**

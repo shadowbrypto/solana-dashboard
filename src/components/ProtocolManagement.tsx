@@ -145,6 +145,16 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
               SOL
             </Badge>
           )}
+          {latestDate && (
+            <div className="flex items-center gap-1" title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
+              <div className={`w-2 h-2 rounded-full ${
+                latestDate.is_current ? 'bg-green-500' : 'bg-red-500'
+              }`} />
+              <span className="text-xs text-muted-foreground">
+                {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">{protocol.id}</p>
         {syncStatus && !syncStatus.sync_success && (
@@ -160,16 +170,6 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
               {syncStatus.latest_data_date 
                 ? `Latest: ${new Date(syncStatus.latest_data_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                 : 'No recent data'}
-            </span>
-          </div>
-        )}
-        {latestDate && (
-          <div className="flex items-center gap-1 mt-1" title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
-            <div className={`w-2 h-2 rounded-full ${
-              latestDate.is_current ? 'bg-green-500' : 'bg-red-500'
-            }`} />
-            <span className="text-xs text-muted-foreground">
-              {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
         )}

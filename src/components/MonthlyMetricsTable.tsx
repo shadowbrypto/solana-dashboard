@@ -280,8 +280,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
           const isNeutralCategory = Math.abs(value) < 0.001;
           
           return (
-            <div className="flex items-center justify-end w-full gap-8">
-              <div className="w-[50px] h-[20px]">
+            <div className="flex items-center justify-center w-full gap-6">
+              <div className="w-[55px] h-[28px] flex-shrink-0 -my-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={aggregatedData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
                     <Area 
@@ -304,7 +304,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              {!isNeutralCategory && (
+              {!isNeutralCategory ? (
                 <div className={cn(
                   "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
                   isPositive 
@@ -312,16 +312,18 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                     : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                 )}>
                   {isPositive ? (
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                     </svg>
                   ) : (
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                     </svg>
                   )}
                   <span>{absPercentage.toFixed(1)}%</span>
                 </div>
+              ) : (
+                <span className="text-muted-foreground text-xs">—</span>
               )}
             </div>
           );
@@ -336,8 +338,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
         }
         
         return (
-          <div className="flex items-center justify-end w-full gap-8">
-            <div className="w-[50px] h-[20px]">
+          <div className="flex items-center justify-center w-full gap-6">
+            <div className="w-[55px] h-[28px] flex-shrink-0 -my-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={getMonthlyVolumeChart(protocol)} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
                   <Area 
@@ -360,7 +362,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            {!isNeutral && (
+            {!isNeutral ? (
               <div className={cn(
                 "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
                 isPositive 
@@ -368,16 +370,18 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                   : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
               )}>
                 {isPositive ? (
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                   </svg>
                 ) : (
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                   </svg>
                 )}
                 <span>{absPercentage.toFixed(1)}%</span>
               </div>
+            ) : (
+              <span className="text-muted-foreground text-xs">—</span>
             )}
           </div>
         );
@@ -1003,8 +1007,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                         key={metric.key} 
                         className="text-right font-bold text-xs sm:text-sm"
                       >
-                        <div className="flex items-center justify-end w-full gap-8">
-                          <div className="w-[50px] h-[20px]">
+                        <div className="flex items-center justify-center w-full gap-6">
+                          <div className="w-[55px] h-[28px] flex-shrink-0 -my-2">
                             <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={aggregatedMonthlyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
                                 <Area 
@@ -1027,15 +1031,15 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             )}>
                               {isPositive ? (
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                                 </svg>
                               ) : (
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                                 </svg>
                               )}
-                              {absPercentage.toFixed(2)}%
+                              {absPercentage.toFixed(1)}%
                             </div>
                           )}
                           {isNeutral && (

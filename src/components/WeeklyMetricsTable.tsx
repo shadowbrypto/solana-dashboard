@@ -719,7 +719,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 {selectedMetric !== 'daily_users' && (
                   <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
                 )}
-                <TableHead className="text-center min-w-[140px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                <TableHead className="text-center min-w-[120px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
                   {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
                 </TableHead>
               </TableRow>
@@ -809,9 +809,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             }, 0))}
                           </TableCell>
                         )}
-                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                          <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                            <div className="w-[70px] h-[40px]">
+                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[120px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="w-[50px] h-[30px] flex-shrink-0">
                               <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart 
                                   data={getCategoryMetricData(categoryName)} 
@@ -838,16 +838,18 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 </ComposedChart>
                               </ResponsiveContainer>
                             </div>
-                            {selectedMetric !== 'daily_users' && (
+                            {selectedMetric !== 'daily_users' ? (
                               <Badge 
                                 variant="secondary" 
                                 className={cn(
-                                  "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                  "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
                                   getGrowthBadgeClasses(calculateCategoryWeekOnWeekGrowth(categoryName))
                                 )}
                               >
                                 {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
                               </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
                             )}
                           </div>
                         </TableCell>
@@ -936,9 +938,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 }, 0))}
                               </TableCell>
                             )}
-                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm">
-                              <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                                <div className="w-[70px] h-[40px]">
+                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[120px]">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="w-[50px] h-[30px] flex-shrink-0">
                                   <ResponsiveContainer width="100%" height="100%">
                                     <ComposedChart 
                                       data={getWeeklyMetricData(protocol.id)} 
@@ -965,16 +967,18 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                     </ComposedChart>
                                   </ResponsiveContainer>
                                 </div>
-                                {selectedMetric !== 'daily_users' && (
+                                {selectedMetric !== 'daily_users' ? (
                                   <Badge 
                                     variant="secondary" 
                                     className={cn(
-                                      "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                                      "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
                                       getGrowthBadgeClasses(calculateWeekOnWeekGrowth(protocol.id))
                                     )}
                                   >
                                     {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
                                   </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
                                 )}
                               </div>
                             </TableCell>
@@ -1023,9 +1027,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       }, 0))}
                     </TableCell>
                   )}
-                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors">
-                    <div className={`flex items-center justify-center ${selectedMetric === 'daily_users' ? '' : 'gap-2'}`}>
-                      <div className="w-[70px] h-[40px]">
+                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[120px]">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="w-[50px] h-[30px] flex-shrink-0">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart 
                             data={getTotalMetricData()} 
@@ -1052,16 +1056,18 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           </ComposedChart>
                         </ResponsiveContainer>
                       </div>
-                      {selectedMetric !== 'daily_users' && (
+                      {selectedMetric !== 'daily_users' ? (
                         <Badge 
                           variant="secondary" 
                           className={cn(
-                            "h-5 px-2 text-xs font-medium flex-shrink-0 hover:bg-transparent",
+                            "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
                             getGrowthBadgeClasses(calculateTotalWeekOnWeekGrowth())
                           )}
                         >
                           {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
                         </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
                       )}
                     </div>
                   </TableCell>

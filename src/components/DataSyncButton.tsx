@@ -110,7 +110,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                   toast({
                     variant: "success",
                     title: "All Data Synced Successfully",
-                    description: `Complete refresh finished! (${result.csvFilesFetched} sources synced, ${result.rowsImported} rows imported)`,
+                    description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
                   });
                 },
                 (step, progress) => {
@@ -121,7 +121,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                   toast({
                     variant: "success",
                     title: `${stepName} Data Synced`,
-                    description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols${result.rowsImported ? `, ${result.rowsImported} rows` : ''})`,
+                    description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
                   });
                 }
               )}
@@ -244,7 +244,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 toast({
                   variant: "success",
                   title: "All Data Synced Successfully",
-                  description: `Complete refresh finished! (${result.csvFilesFetched} sources synced, ${result.rowsImported} rows imported)`,
+                  description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
                 });
               },
               (step, progress) => {
@@ -255,7 +255,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 toast({
                   variant: "success",
                   title: `${stepName} Data Synced`,
-                  description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols${result.rowsImported ? `, ${result.rowsImported} rows` : ''})`,
+                  description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
                 });
               }
             )}

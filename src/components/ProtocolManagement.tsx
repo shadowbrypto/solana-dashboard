@@ -473,7 +473,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Launchpad Data Refresh Complete",
-        description: `Successfully refreshed ${result.csvFilesFetched} launchpads with ${result.rowsImported} total rows`,
+        description: `Successfully refreshed ${result.csvFilesFetched} launchpads`,
       });
       
       // Reload sync statuses after successful refresh
@@ -500,7 +500,7 @@ export function ProtocolManagement() {
       toast({
         variant: "success",
         title: "Launchpad Refreshed",
-        description: `Successfully refreshed data for ${launchpadId} with ${result.rowsImported} rows`,
+        description: `Successfully refreshed data for ${launchpadId}`,
       });
       
       // Reload sync statuses after successful refresh

@@ -56,8 +56,7 @@ const formatNumber = (value: number): string => {
 
 const formatGrowthPercentage = (growth: number): string => {
   const percentage = growth * 100;
-  const sign = percentage >= 0 ? '+' : '';
-  return `${sign}${percentage.toFixed(1)}%`;
+  return `${Math.abs(percentage).toFixed(1)}%`;
 };
 
 const getGrowthBadgeClasses = (growth: number): string => {
@@ -719,7 +718,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 {selectedMetric !== 'daily_users' && (
                   <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
                 )}
-                <TableHead className="text-center min-w-[120px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                <TableHead className="text-center min-w-[150px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
                   {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
                 </TableHead>
               </TableRow>
@@ -809,9 +808,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             }, 0))}
                           </TableCell>
                         )}
-                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[120px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                           <div className="flex items-center justify-between w-full">
-                            <div className="w-[50px] h-[30px] flex-shrink-0">
+                            <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                               <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart 
                                   data={getCategoryMetricData(categoryName)} 
@@ -839,17 +838,25 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               </ResponsiveContainer>
                             </div>
                             {selectedMetric !== 'daily_users' ? (
-                              <Badge 
-                                variant="secondary" 
-                                className={cn(
-                                  "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
-                                  getGrowthBadgeClasses(calculateCategoryWeekOnWeekGrowth(categoryName))
+                              <div className={cn(
+                                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                                calculateCategoryWeekOnWeekGrowth(categoryName) >= 0
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              )}>
+                                {calculateCategoryWeekOnWeekGrowth(categoryName) >= 0 ? (
+                                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                                  </svg>
                                 )}
-                              >
                                 {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
-                              </Badge>
+                              </div>
                             ) : (
-                              <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
+                              <span className="text-muted-foreground text-xs -ml-8">—</span>
                             )}
                           </div>
                         </TableCell>
@@ -938,9 +945,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 }, 0))}
                               </TableCell>
                             )}
-                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[120px]">
+                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[150px]">
                               <div className="flex items-center justify-between w-full">
-                                <div className="w-[50px] h-[30px] flex-shrink-0">
+                                <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                                   <ResponsiveContainer width="100%" height="100%">
                                     <ComposedChart 
                                       data={getWeeklyMetricData(protocol.id)} 
@@ -968,17 +975,25 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                   </ResponsiveContainer>
                                 </div>
                                 {selectedMetric !== 'daily_users' ? (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className={cn(
-                                      "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
-                                      getGrowthBadgeClasses(calculateWeekOnWeekGrowth(protocol.id))
+                                  <div className={cn(
+                                    "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                                    calculateWeekOnWeekGrowth(protocol.id) >= 0
+                                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  )}>
+                                    {calculateWeekOnWeekGrowth(protocol.id) >= 0 ? (
+                                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                                      </svg>
+                                    ) : (
+                                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                                      </svg>
                                     )}
-                                  >
                                     {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
-                                  </Badge>
+                                  </div>
                                 ) : (
-                                  <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
+                                  <span className="text-muted-foreground text-xs -ml-8">—</span>
                                 )}
                               </div>
                             </TableCell>
@@ -1027,9 +1042,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       }, 0))}
                     </TableCell>
                   )}
-                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[120px]">
+                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]">
                     <div className="flex items-center justify-between w-full">
-                      <div className="w-[50px] h-[30px] flex-shrink-0">
+                      <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart 
                             data={getTotalMetricData()} 
@@ -1057,17 +1072,25 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         </ResponsiveContainer>
                       </div>
                       {selectedMetric !== 'daily_users' ? (
-                        <Badge 
-                          variant="secondary" 
-                          className={cn(
-                            "h-5 px-1.5 text-[10px] font-medium min-w-[45px] text-center hover:bg-transparent",
-                            getGrowthBadgeClasses(calculateTotalWeekOnWeekGrowth())
+                        <div className={cn(
+                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                          calculateTotalWeekOnWeekGrowth() >= 0
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        )}>
+                          {calculateTotalWeekOnWeekGrowth() >= 0 ? (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                            </svg>
+                          ) : (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                            </svg>
                           )}
-                        >
                           {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
-                        </Badge>
+                        </div>
                       ) : (
-                        <span className="text-muted-foreground text-[10px] min-w-[45px] text-center">—</span>
+                        <span className="text-muted-foreground text-xs -ml-8">—</span>
                       )}
                     </div>
                   </TableCell>

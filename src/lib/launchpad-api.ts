@@ -82,6 +82,13 @@ export interface LaunchpadSummaryMetrics {
   avg_daily_graduations: number;
 }
 
+export interface LaunchpadLatestDate {
+  launchpad_name: string;
+  latest_date: string;
+  is_current: boolean;
+  days_behind: number;
+}
+
 export class LaunchpadApi {
   /**
    * Get launchpad metrics for a specific timeframe
@@ -158,6 +165,13 @@ export class LaunchpadApi {
    */
   static async getLaunchpadsList(): Promise<string[]> {
     return launchpadApiRequest<string[]>('/list');
+  }
+
+  /**
+   * Get latest data dates for all launchpads
+   */
+  static async getLatestDataDates(): Promise<LaunchpadLatestDate[]> {
+    return launchpadApiRequest<LaunchpadLatestDate[]>('/latest-dates');
   }
 
   /**

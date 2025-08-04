@@ -18,6 +18,7 @@ import { Button } from './ui/button';
 import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
+import { LaunchpadApi, LaunchpadLatestDate } from '../lib/launchpad-api';
 import { useToast } from '../hooks/use-toast';
 import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
 import { Switch } from './ui/switch';
@@ -129,8 +130,8 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
       <div {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-accent p-1.5 rounded transition-colors">
         <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
       </div>
-      <div className="p-1 bg-muted/20 rounded-sm w-10 h-10 flex items-center justify-center">
-        <protocol.icon size={32} className="text-muted-foreground" />
+      <div className="bg-muted/20 rounded-sm w-12 h-12 flex items-center justify-center">
+        <protocol.icon size={48} className="w-12 h-12 text-muted-foreground" style={{ width: '48px', height: '48px' }} />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
@@ -145,18 +146,21 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
               SOL
             </Badge>
           )}
-          {latestDate && (
-            <div className="flex items-center gap-1" title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
-              <div className={`w-2 h-2 rounded-full ${
-                latestDate.is_current ? 'bg-green-500' : 'bg-red-500'
-              }`} />
-              <span className="text-xs text-muted-foreground">
-                {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          )}
         </div>
-        <p className="text-sm text-muted-foreground">{protocol.id}</p>
+        {latestDate && (
+          <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${
+            latestDate.is_current 
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          }`} title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
+            <div className={`w-1 h-1 rounded-full ${
+              latestDate.is_current ? 'bg-green-600' : 'bg-red-600'
+            }`} />
+            <span className="font-medium">
+              Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+        )}
         {syncStatus && !syncStatus.sync_success && (
           <div className="flex items-center gap-1 mt-1">
             <AlertCircle className="h-3 w-3 text-red-500" />
@@ -204,6 +208,7 @@ export function ProtocolManagement() {
   const [syncStatuses, setSyncStatuses] = useState<Map<string, ProtocolSyncStatus>>(new Map());
   const [loadingSyncStatus, setLoadingSyncStatus] = useState(true);
   const [latestDates, setLatestDates] = useState<Map<string, ProtocolLatestDate>>(new Map());
+  const [launchpadLatestDates, setLaunchpadLatestDates] = useState<Map<string, LaunchpadLatestDate>>(new Map());
   const [dataTypePreference, setDataTypePreference] = useState<'private' | 'public'>('private');
   const { toast } = useToast();
   
@@ -290,6 +295,11 @@ export function ProtocolManagement() {
         const latestDatesData = await protocolApi.getLatestDataDates();
         const latestDatesMap = new Map(latestDatesData.map(d => [d.protocol_name, d]));
         setLatestDates(latestDatesMap);
+        
+        // Load launchpad latest dates
+        const launchpadLatestDatesData = await LaunchpadApi.getLatestDataDates();
+        const launchpadLatestDatesMap = new Map(launchpadLatestDatesData.map(d => [d.launchpad_name, d]));
+        setLaunchpadLatestDates(launchpadLatestDatesMap);
         
       } catch (error) {
         console.error('Failed to load sync data:', error);
@@ -652,7 +662,7 @@ export function ProtocolManagement() {
                   key={launchpad.id}
                   className="flex items-center gap-3 p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="w-10 h-10 bg-muted/20 rounded-lg overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
                     <img 
                       src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
                       alt={launchpad.name} 
@@ -663,7 +673,7 @@ export function ProtocolManagement() {
                         const container = target.parentElement;
                         if (container) {
                           container.innerHTML = '';
-                          container.className = 'w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center';
+                          container.className = 'w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center';
                           const iconElement = document.createElement('div');
                           iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
                           container.appendChild(iconElement);
@@ -678,7 +688,20 @@ export function ProtocolManagement() {
                         {launchpad.chain.toUpperCase()}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{launchpad.description || launchpad.id}</p>
+                    {launchpadLatestDates.get(launchpad.id) && (
+                      <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${
+                        launchpadLatestDates.get(launchpad.id)!.is_current 
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      }`} title={launchpadLatestDates.get(launchpad.id)!.is_current ? 'Data is current' : `${launchpadLatestDates.get(launchpad.id)!.days_behind} days behind`}>
+                        <div className={`w-1 h-1 rounded-full ${
+                          launchpadLatestDates.get(launchpad.id)!.is_current ? 'bg-green-600' : 'bg-red-600'
+                        }`} />
+                        <span className="font-medium">
+                          Latest: {new Date(launchpadLatestDates.get(launchpad.id)!.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <Button
                     size="sm"

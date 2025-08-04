@@ -276,6 +276,76 @@ router.get('/list', async (req, res) => {
   }
 });
 
+// Get latest data dates for all launchpads
+router.get('/latest-dates', async (req, res) => {
+  try {
+    const cacheKey = 'latest_dates';
+    const cachedData = launchpadCache.get(cacheKey);
+
+    if (cachedData && isCacheValid(cachedData)) {
+      return res.json({
+        success: true,
+        data: cachedData.data,
+        cached: true
+      });
+    }
+
+    // Get the latest date for each launchpad
+    const { data, error } = await supabase
+      .from('launchpad_stats')
+      .select('launchpad_name, date')
+      .order('date', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Group by launchpad and get the latest date for each
+    const latestDatesMap = new Map();
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    data?.forEach((row: { launchpad_name: string; date: string }) => {
+      if (!latestDatesMap.has(row.launchpad_name)) {
+        const latestDate = new Date(row.date);
+        latestDate.setHours(0, 0, 0, 0);
+        
+        // Calculate days behind
+        const timeDiff = currentDate.getTime() - latestDate.getTime();
+        const daysBehind = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        
+        latestDatesMap.set(row.launchpad_name, {
+          launchpad_name: row.launchpad_name,
+          latest_date: row.date,
+          is_current: daysBehind <= 1, // Consider current if within 1 day
+          days_behind: Math.max(0, daysBehind)
+        });
+      }
+    });
+
+    const result = Array.from(latestDatesMap.values());
+
+    // Cache the result
+    launchpadCache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now()
+    });
+
+    res.json({
+      success: true,
+      data: result,
+      cached: false
+    });
+
+  } catch (error) {
+    console.error('Error fetching launchpad latest dates:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Clear cache endpoint (useful for development)
 router.post('/clear-cache', (req, res) => {
   launchpadCache.clear();

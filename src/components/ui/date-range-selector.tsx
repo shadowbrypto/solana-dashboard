@@ -24,6 +24,7 @@ export function DateRangeSelector({
   const [tempRange, setTempRange] = useState<{ start: number; end: number } | null>(null);
   const [isMovingRange, setIsMovingRange] = useState(false);
   const [moveStartOffset, setMoveStartOffset] = useState<number>(0);
+  const [originalDuration, setOriginalDuration] = useState<number>(0);
   const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +115,9 @@ export function DateRangeSelector({
     // Calculate offset from the start of the selected range
     setMoveStartOffset(clickPosition - startPosition);
     setIsMovingRange(true);
+    
+    // Store the original duration in milliseconds for precise preservation
+    setOriginalDuration(endDate.getTime() - startDate.getTime());
   };
 
   useEffect(() => {
@@ -165,7 +169,6 @@ export function DateRangeSelector({
         // Calculate new start position (mouse position minus the initial offset)
         const newStartPosition = mousePosition - moveStartOffset;
         const rangeWidth = endPosition - startPosition;
-        const newEndPosition = newStartPosition + rangeWidth;
         
         // Constrain to boundaries
         const constrainedStart = Math.max(0, Math.min(100 - rangeWidth, newStartPosition));
@@ -179,9 +182,10 @@ export function DateRangeSelector({
 
       const handleMouseUp = () => {
         setTempRange(currentTempRange => {
-          if (currentTempRange) {
+          if (currentTempRange && originalDuration > 0) {
+            // Use the stored original duration to preserve exact duration
             const newStartDate = startOfDay(positionToDate(currentTempRange.start));
-            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            const newEndDate = new Date(newStartDate.getTime() + originalDuration);
             onRangeChange(newStartDate, newEndDate);
           }
           return null;
@@ -189,6 +193,7 @@ export function DateRangeSelector({
         
         setIsMovingRange(false);
         setMoveStartOffset(0);
+        setOriginalDuration(0);
       };
 
       document.addEventListener('mousemove', handleMouseMove);
@@ -199,7 +204,7 @@ export function DateRangeSelector({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isMovingRange, moveStartOffset, startPosition, endPosition, onRangeChange, effectiveMinDate, maxDate]);
+  }, [isMovingRange, moveStartOffset, startPosition, endPosition, originalDuration, onRangeChange, effectiveMinDate, maxDate]);
 
   useEffect(() => {
     if (isResizing) {
@@ -301,14 +306,14 @@ export function DateRangeSelector({
         </div>
 
         {/* Clean month markers */}
-        <div className="relative mt-2 h-4">
+        <div className="relative mt-1 h-4">
           {monthMarkers.map((marker, index) => (
             <div
               key={index}
               className="absolute flex flex-col items-center"
               style={{ left: `${marker.position}%`, transform: 'translateX(-50%)' }}
             >
-              <div className="w-px h-2 bg-border/40 mb-1" />
+              <div className="w-px h-2 bg-border/40 mb-0.5" />
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                 {marker.label}
               </span>

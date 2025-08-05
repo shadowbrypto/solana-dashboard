@@ -105,6 +105,10 @@ export function DateRangeSelector({
   };
 
   const handleCalendarDateMouseDown = (date: Date) => {
+    // Check if date is valid (within range and not in future)
+    const isValidDate = date >= (minDate || effectiveMinDate) && date <= maxDate;
+    if (!isValidDate) return;
+    
     // If we already have a start date but no end date, set this as end date
     if (calendarStartDate && !calendarEndDate && !isCalendarDragging) {
       const startDate = calendarStartDate <= date ? calendarStartDate : date;
@@ -125,6 +129,10 @@ export function DateRangeSelector({
 
   const handleCalendarDateMouseEnter = (date: Date) => {
     if (isCalendarDragging && dragStartDate) {
+      // Check if date is valid (within range and not in future)
+      const isValidDate = date >= (minDate || effectiveMinDate) && date <= maxDate;
+      if (!isValidDate) return;
+      
       const startDate = dragStartDate <= date ? dragStartDate : date;
       const endDate = dragStartDate <= date ? date : dragStartDate;
       setCalendarStartDate(startDate);
@@ -149,7 +157,10 @@ export function DateRangeSelector({
       const days = parseInt(daysInput);
       if (!isNaN(days) && days > 0) {
         const newEndDate = endOfDay(new Date(displayStartDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000));
-        onRangeChange(displayStartDate, newEndDate);
+        // Validate the new end date is within bounds
+        if (newEndDate <= maxDate && displayStartDate >= (minDate || effectiveMinDate)) {
+          onRangeChange(displayStartDate, newEndDate);
+        }
       }
       setIsEditingDays(false);
     } else if (e.key === 'Escape') {
@@ -374,7 +385,7 @@ export function DateRangeSelector({
       <div className="flex items-center justify-center">
         <div className="flex items-center gap-1.5">
           <span 
-            className={`text-xs font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
+            className={`text-sm font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
             onDoubleClick={handleDateDoubleClick}
             title="Double-click to select date range"
           >
@@ -388,14 +399,14 @@ export function DateRangeSelector({
               onChange={(e) => setDaysInput(e.target.value)}
               onKeyDown={handleDaysSubmit}
               onBlur={() => setIsEditingDays(false)}
-              className="text-[10px] w-16 bg-background border border-border rounded px-1.5 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="text-xs w-16 bg-background border border-border rounded px-1.5 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="days"
               min="1"
               autoFocus
             />
           ) : (
             <span 
-              className={`text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 cursor-pointer hover:bg-primary/20 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}
+              className={`text-xs px-1.5 py-0.5 rounded-full transition-colors duration-200 cursor-pointer hover:bg-primary/20 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}
               onDoubleClick={handleDaysDoubleClick}
               title="Double-click to edit duration"
             >
@@ -452,6 +463,8 @@ export function DateRangeSelector({
                 const isStart = calendarStartDate && isSameDay(day, calendarStartDate);
                 const isEnd = calendarEndDate && isSameDay(day, calendarEndDate);
                 const isTodayDate = isToday(day);
+                const isValidDate = day >= (minDate || effectiveMinDate) && day <= maxDate;
+                const isDisabled = !isCurrentMonth || !isValidDate;
 
                 let roundedClass = 'rounded-md';
                 if (isStart && isEnd) {
@@ -469,21 +482,22 @@ export function DateRangeSelector({
                     key={index}
                     onMouseDown={() => handleCalendarDateMouseDown(day)}
                     onMouseEnter={() => handleCalendarDateMouseEnter(day)}
+                    disabled={isDisabled}
                     className={`
                       relative p-2 text-xs font-medium ${roundedClass} select-none
-                      ${!isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground'}
-                      ${isInRange ? 'bg-muted/40 text-muted-foreground/40' : ''}
-                      ${isStart ? 'bg-foreground text-background relative' : ''}
-                      ${isEnd ? 'bg-foreground text-background relative' : ''}
-                      ${isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
-                      ${isCalendarDragging ? 'cursor-grabbing' : 'cursor-pointer'}
+                      ${isDisabled ? 'text-muted-foreground/20 cursor-not-allowed' : 'text-foreground'}
+                      ${!isDisabled && isInRange ? 'bg-muted/40 text-muted-foreground/40' : ''}
+                      ${!isDisabled && isStart ? 'bg-foreground text-background relative' : ''}
+                      ${!isDisabled && isEnd ? 'bg-foreground text-background relative' : ''}
+                      ${!isDisabled && isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
+                      ${!isDisabled && isCalendarDragging ? 'cursor-grabbing' : !isDisabled ? 'cursor-pointer' : ''}
                     `}
                   >
                     {format(day, 'd')}
-                    {isStart && (
+                    {isStart && !isDisabled && (
                       <div className="absolute inset-y-0 -right-0.5 w-0.5 bg-foreground"></div>
                     )}
-                    {isEnd && (
+                    {isEnd && !isDisabled && (
                       <div className="absolute inset-y-0 -left-0.5 w-0.5 bg-foreground"></div>
                     )}
                   </button>

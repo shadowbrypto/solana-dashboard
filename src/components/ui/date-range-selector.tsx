@@ -254,13 +254,13 @@ export function DateRangeSelector({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Minimal header */}
+      {/* Compact header */}
       <div className="flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-xs font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
             {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
           </span>
-          <span className={`text-xs px-2 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}>
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}>
             {displayDays} days
           </span>
         </div>

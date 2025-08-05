@@ -7,6 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
+import { Badge } from "../ui/badge";
+import { Calendar } from "lucide-react";
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -21,7 +24,7 @@ import {
 import { useState, useMemo } from "react";
 import { ComponentActions } from '../ComponentActions';
 
-type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
+type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
 import { StackedBarChartSkeleton } from "./StackedBarChartSkeleton";
 
@@ -90,6 +93,9 @@ export function StackedBarChart({
       let daysToSubtract: number;
 
       switch (timeframe) {
+        case "1d":
+          daysToSubtract = 1;
+          break;
         case "7d":
           daysToSubtract = 7;
           break;
@@ -177,19 +183,58 @@ export function StackedBarChart({
             )}
           </div>
           {!disableTimeframeSelector && (
-          <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
-            <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-              <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
-              <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
-              <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
-              <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
-              <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
-              <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Time Period</span>
+              </div>
+              <Tabs value={timeframe} onValueChange={(value) => handleTimeframeChange(value as TimeFrame)}>
+                <TabsList className="grid grid-cols-7 h-8 sm:h-9 p-1 bg-muted/60 rounded-lg border border-border/50 shadow-sm">
+                  <TabsTrigger 
+                    value="1d" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    1D
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="7d" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    7D
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="30d" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    30D
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="3m" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    3M
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="6m" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    6M
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="1y" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    1Y
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="all" 
+                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
+                  >
+                    ALL
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           )}
         </CardHeader>
         <CardContent className="pt-6">
@@ -247,7 +292,7 @@ export function StackedBarChart({
                                     style={{ backgroundColor: colors[dataKeyIndex] }}
                                   />
                                   <span className="text-sm text-foreground">
-                                    {labels[dataKeyIndex]}: {entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}
+                                    {labels[dataKeyIndex]}: <span className="font-mono">{entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}</span>
                                   </span>
                                 </div>
                               );
@@ -256,7 +301,7 @@ export function StackedBarChart({
                           <div className="bg-muted-foreground/20 rounded px-2 py-1 mt-0">
                             <div className="flex items-center gap-2 text-sm font-medium">
                               <span className="text-muted-foreground">Total:</span>
-                              <span className="text-foreground">
+                              <span className="text-foreground font-mono">
                                 {(() => {
                                   const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
                                   return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);

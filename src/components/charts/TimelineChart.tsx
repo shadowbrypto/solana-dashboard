@@ -259,7 +259,7 @@ export function TimelineChart({
               }`}
               title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
             >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
               </svg>
             </button>

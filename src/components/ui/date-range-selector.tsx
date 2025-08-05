@@ -32,7 +32,7 @@ export function DateRangeSelector({
   const [calendarEndDate, setCalendarEndDate] = useState<Date | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [isSelectingEnd, setIsSelectingEnd] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isCalendarDragging, setIsCalendarDragging] = useState(false);
   const [dragStartDate, setDragStartDate] = useState<Date | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -105,7 +105,7 @@ export function DateRangeSelector({
   };
 
   const handleCalendarDateMouseDown = (date: Date) => {
-    setIsDragging(true);
+    setIsCalendarDragging(true);
     setDragStartDate(date);
     setCalendarStartDate(date);
     setCalendarEndDate(null);
@@ -113,7 +113,7 @@ export function DateRangeSelector({
   };
 
   const handleCalendarDateMouseEnter = (date: Date) => {
-    if (isDragging && dragStartDate) {
+    if (isCalendarDragging && dragStartDate) {
       const startDate = dragStartDate <= date ? dragStartDate : date;
       const endDate = dragStartDate <= date ? date : dragStartDate;
       setCalendarStartDate(startDate);
@@ -122,7 +122,7 @@ export function DateRangeSelector({
   };
 
   const handleCalendarDateMouseUp = () => {
-    setIsDragging(false);
+    setIsCalendarDragging(false);
     setDragStartDate(null);
   };
 
@@ -333,16 +333,16 @@ export function DateRangeSelector({
   // Handle drag events
   useEffect(() => {
     const handleMouseUp = () => {
-      if (isDragging) {
+      if (isCalendarDragging) {
         handleCalendarDateMouseUp();
       }
     };
 
-    if (isDragging) {
+    if (isCalendarDragging) {
       document.addEventListener('mouseup', handleMouseUp);
       return () => document.removeEventListener('mouseup', handleMouseUp);
     }
-  }, [isDragging]);
+  }, [isCalendarDragging]);
 
 
   // Generate calendar days
@@ -465,7 +465,7 @@ export function DateRangeSelector({
                       ${isStart ? 'bg-foreground text-background relative' : ''}
                       ${isEnd ? 'bg-foreground text-background relative' : ''}
                       ${isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
-                      ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'}
+                      ${isCalendarDragging ? 'cursor-grabbing' : 'cursor-pointer'}
                     `}
                   >
                     {format(day, 'd')}

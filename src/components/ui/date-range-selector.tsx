@@ -22,6 +22,8 @@ export function DateRangeSelector({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [tempRange, setTempRange] = useState<{ start: number; end: number } | null>(null);
+  const [isMovingRange, setIsMovingRange] = useState(false);
+  const [moveStartOffset, setMoveStartOffset] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate the date range in days
@@ -89,43 +91,102 @@ export function DateRangeSelector({
     setTempRange({ start: position, end: position });
   };
 
-  useEffect(() => {
-    if (!isDragging || dragStart === null) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      
-      const rect = containerRef.current.getBoundingClientRect();
-      const position = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-      
-      setTempRange({
-        start: Math.min(dragStart, position),
-        end: Math.max(dragStart, position)
-      });
-    };
-
-    const handleMouseUp = () => {
-      setTempRange(currentTempRange => {
-        if (currentTempRange && Math.abs(currentTempRange.end - currentTempRange.start) >= 0.5) {
-          const newStartDate = startOfDay(positionToDate(currentTempRange.start));
-          const newEndDate = endOfDay(positionToDate(currentTempRange.end));
-          onRangeChange(newStartDate, newEndDate);
-        }
-        return null;
-      });
-      
-      setIsDragging(false);
-      setDragStart(null);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+  const handleRangeMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!containerRef.current) return;
     
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+    const rect = containerRef.current.getBoundingClientRect();
+    const clickPosition = ((e.clientX - rect.left) / rect.width) * 100;
+    
+    // Calculate offset from the start of the selected range
+    setMoveStartOffset(clickPosition - startPosition);
+    setIsMovingRange(true);
+  };
+
+  useEffect(() => {
+    if (isDragging && dragStart !== null) {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!containerRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        const position = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        
+        setTempRange({
+          start: Math.min(dragStart, position),
+          end: Math.max(dragStart, position)
+        });
+      };
+
+      const handleMouseUp = () => {
+        setTempRange(currentTempRange => {
+          if (currentTempRange && Math.abs(currentTempRange.end - currentTempRange.start) >= 0.5) {
+            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
+            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            onRangeChange(newStartDate, newEndDate);
+          }
+          return null;
+        });
+        
+        setIsDragging(false);
+        setDragStart(null);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
   }, [isDragging, dragStart, onRangeChange, effectiveMinDate, maxDate]);
+
+  useEffect(() => {
+    if (isMovingRange) {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!containerRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        const mousePosition = ((e.clientX - rect.left) / rect.width) * 100;
+        
+        // Calculate new start position (mouse position minus the initial offset)
+        const newStartPosition = mousePosition - moveStartOffset;
+        const rangeWidth = endPosition - startPosition;
+        const newEndPosition = newStartPosition + rangeWidth;
+        
+        // Constrain to boundaries
+        const constrainedStart = Math.max(0, Math.min(100 - rangeWidth, newStartPosition));
+        const constrainedEnd = constrainedStart + rangeWidth;
+        
+        setTempRange({
+          start: constrainedStart,
+          end: constrainedEnd
+        });
+      };
+
+      const handleMouseUp = () => {
+        setTempRange(currentTempRange => {
+          if (currentTempRange) {
+            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
+            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            onRangeChange(newStartDate, newEndDate);
+          }
+          return null;
+        });
+        
+        setIsMovingRange(false);
+        setMoveStartOffset(0);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isMovingRange, moveStartOffset, startPosition, endPosition, onRangeChange, effectiveMinDate, maxDate]);
 
 
   return (
@@ -152,11 +213,12 @@ export function DateRangeSelector({
         >
           {/* Selected range */}
           <div
-            className="absolute top-0.5 bottom-0.5 bg-primary/20 border border-primary/50 rounded-md"
+            className={`absolute top-0.5 bottom-0.5 bg-primary/20 border border-primary/50 rounded-md ${isMovingRange ? 'cursor-grabbing' : 'cursor-grab'}`}
             style={{
               left: `${tempRange ? tempRange.start : startPosition}%`,
               width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
             }}
+            onMouseDown={handleRangeMouseDown}
           >
             {/* Simple handles */}
             <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4 bg-primary rounded-sm cursor-ew-resize" />

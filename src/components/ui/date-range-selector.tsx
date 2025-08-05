@@ -313,7 +313,7 @@ export function DateRangeSelector({
               className="absolute flex flex-col items-center"
               style={{ left: `${marker.position}%`, transform: 'translateX(-50%)' }}
             >
-              <div className="w-px h-2 bg-border/40 mb-0.5" />
+              <div className="w-px h-1 bg-border/40 mb-0.5" />
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                 {marker.label}
               </span>

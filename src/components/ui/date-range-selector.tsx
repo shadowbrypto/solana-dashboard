@@ -280,21 +280,21 @@ export function DateRangeSelector({
           >
             {/* Left resize handle */}
             <div 
-              className={`absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'start' ? 'scale-110' : ''}`}
+              className={`absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'start' ? 'scale-110' : ''}`}
               onMouseDown={handleStartHandleMouseDown}
             />
             
             {/* Middle drag area */}
             <div 
-              className={`absolute inset-0 mx-3 rounded-sm transition-colors duration-200 ${
-                isMovingRange ? 'cursor-grabbing' : 'cursor-grab hover:bg-black/5'
+              className={`absolute inset-0 mx-2 rounded-sm ${
+                isMovingRange ? 'cursor-grabbing' : 'cursor-grab'
               }`}
               onMouseDown={handleRangeMouseDown}
             />
             
             {/* Right resize handle */}
             <div 
-              className={`absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'end' ? 'scale-110' : ''}`}
+              className={`absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'end' ? 'scale-110' : ''}`}
               onMouseDown={handleEndHandleMouseDown}
             />
           </div>

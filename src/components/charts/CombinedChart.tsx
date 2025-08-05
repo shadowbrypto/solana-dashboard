@@ -63,6 +63,8 @@ export function CombinedChart({
 
 
   const filteredData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
     if (timeframe === "all") return [...data];
 
     const now = new Date();

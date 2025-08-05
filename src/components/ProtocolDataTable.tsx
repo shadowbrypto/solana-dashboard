@@ -131,6 +131,8 @@ export function ProtocolDataTable({ data, protocols }: ProtocolDataTableProps) {
   );
 
   const tableData = React.useMemo(() => {
+    if (!data || Object.keys(data).length === 0) return [];
+    
     // Convert to array in chronological order (oldest to newest), then map to table format
     return Object.entries(data)
       .map(([date, protocolData]) => ({

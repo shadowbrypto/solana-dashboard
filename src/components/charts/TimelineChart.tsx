@@ -21,11 +21,10 @@ import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/date-range-selector';
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 
 type ChartDataKey = string;
@@ -255,8 +254,8 @@ export function TimelineChart({
           />
           
           {/* Date Range Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
               <button
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                   showDateRangeSelector
@@ -269,16 +268,16 @@ export function TimelineChart({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem 
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48 p-2">
+              <button
                 onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className="cursor-pointer"
+                className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted transition-colors cursor-pointer"
               >
                 {showDateRangeSelector ? 'Hide' : 'Show'} Date Range Selector
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </CardHeader>
       <CardContent>

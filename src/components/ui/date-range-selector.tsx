@@ -60,16 +60,15 @@ export function DateRangeSelector({
     const totalMonths = differenceInMonths(maxDate, effectiveMinDate);
     const markers = [];
     
-    // Determine interval based on total months - more aggressive showing
+    // Determine interval based on total months - show more tickers
     let interval = 1;
-    if (totalMonths > 36) interval = 4; // Show every 4 months if > 3 years
-    else if (totalMonths > 24) interval = 3; // Show every 3 months if > 2 years
-    else if (totalMonths > 18) interval = 2; // Show every 2 months if > 1.5 years
+    if (totalMonths > 60) interval = 3; // Show every 3 months if > 5 years
+    else if (totalMonths > 36) interval = 2; // Show every 2 months if > 3 years
     // Otherwise show every month (interval = 1)
     
     let currentDate = startOfMonth(effectiveMinDate);
     
-    while (isBefore(currentDate, maxDate) && markers.length < 15) {
+    while (isBefore(currentDate, maxDate) && markers.length < 25) {
       markers.push({
         date: currentDate,
         position: dateToPosition(currentDate),
@@ -256,16 +255,20 @@ export function DateRangeSelector({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Clean header */}
+      {/* Polished header */}
       <div className="flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className={`text-sm font-medium ${tempRange ? 'text-primary' : 'text-foreground'}`}>
-            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
-          </span>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}>
-            {displayDays} days
-          </span>
+        <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-lg px-4 py-2.5 border border-border/40 shadow-sm">
+          <div className={`p-1.5 rounded-md transition-colors duration-200 ${tempRange ? 'bg-primary/10 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
+            <Calendar className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+              {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
+            </span>
+            <div className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${tempRange ? 'text-primary bg-primary/15 scale-105' : 'text-muted-foreground bg-muted/60'}`}>
+              {displayDays} days
+            </div>
+          </div>
         </div>
       </div>
 

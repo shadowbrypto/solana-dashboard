@@ -117,7 +117,7 @@ export function MetricCard({
           {/* Middle Section - Large Value */}
           <div className="flex-1 flex items-center justify-center py-4">
             <div className="text-center">
-              <div className="text-4xl lg:text-5xl font-semibold tracking-tight bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <div className="text-4xl lg:text-5xl font-semibold tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                 {typeof value === 'number' ? formatNumber(value) : value}
               </div>
             </div>

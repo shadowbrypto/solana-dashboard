@@ -80,11 +80,18 @@ export function MetricCard({
     
     const date = typeof latestDate === 'string' ? new Date(latestDate) : latestDate;
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
+    
+    // Normalize dates to midnight for accurate day comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = Math.abs(nowOnly.getTime() - dateOnly.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     return {
-      isCurrent: diffDays <= 1,
+      isCurrent: diffDays === 0,  // Green - same day
+      isOneDayOld: diffDays === 1, // Amber - one day old
+      isOld: diffDays > 7,         // Red - older than a week
       daysAgo: diffDays,
       dateStr: formatDate(date)
     };
@@ -150,11 +157,19 @@ export function MetricCard({
               <div className={`flex items-center gap-1 px-2 py-1 rounded-md border transition-all duration-200 ${
                 dataFreshness.isCurrent 
                   ? 'bg-green-50/50 border-green-200/50 dark:bg-green-950/20 dark:border-green-800/30' 
+                  : dataFreshness.isOneDayOld
+                  ? 'bg-amber-50/50 border-amber-200/50 dark:bg-amber-950/20 dark:border-amber-800/30'
+                  : dataFreshness.isOld
+                  ? 'bg-red-50/50 border-red-200/50 dark:bg-red-950/20 dark:border-red-800/30'
                   : 'bg-amber-50/50 border-amber-200/50 dark:bg-amber-950/20 dark:border-amber-800/30'
               }`}>
                 <div className={`w-1.5 h-1.5 rounded-full ${
                   dataFreshness.isCurrent 
                     ? 'bg-green-500' 
+                    : dataFreshness.isOneDayOld
+                    ? 'bg-amber-500'
+                    : dataFreshness.isOld
+                    ? 'bg-red-500'
                     : 'bg-amber-500'
                 }`} />
                 <span className="text-[10px] font-medium text-muted-foreground">

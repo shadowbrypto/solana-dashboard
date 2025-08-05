@@ -27,6 +27,7 @@ import { MultiAreaChart } from "./components/charts/MultiAreaChart";
 import { CategoryStackedBarChartSkeleton, CategoryStackedAreaChartSkeleton, CategoryMultiAreaChartSkeleton } from "./components/charts/CategoryMetricsSkeletons";
 import { Protocol } from "./types/protocol";
 import { getProtocolStats, getTotalProtocolStats, formatDate, getAggregatedProtocolStats } from "./lib/protocol";
+import { dataSyncApi } from "./lib/api";
 import { HorizontalBarChart } from "./components/charts/HorizontalBarChart";
 import { CategoryHorizontalBarChart } from "./components/charts/CategoryHorizontalBarChart";
 import { VolumeMilestoneChart } from "./components/charts/VolumeMilestoneChart";
@@ -81,8 +82,25 @@ const MetricCards = ({
   loading?: boolean;
   protocol?: string;
 }) => {
+  const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
   const protocolName = protocol && protocol !== 'all' ? getProtocolName(protocol as Protocol) : undefined;
   const protocolLogo = protocol && protocol !== 'all' ? getProtocolLogoFilename(protocol as Protocol) : undefined;
+  
+  // Fetch last sync date
+  useEffect(() => {
+    const fetchLastSyncDate = async () => {
+      try {
+        const syncStatus = await dataSyncApi.getSyncStatus();
+        if (syncStatus.lastSync) {
+          setLastSyncDate(new Date(syncStatus.lastSync));
+        }
+      } catch (error) {
+        console.error('Failed to fetch sync status:', error);
+      }
+    };
+    
+    fetchLastSyncDate();
+  }, []);
   
   return (
   <div className="mb-6 lg:mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -104,7 +122,7 @@ const MetricCards = ({
           subtitleIcon={protocolLogo}
           protocolName={protocolName || "All Protocols"}
           protocolLogo={protocolLogo}
-          latestDate={new Date()}
+          latestDate={lastSyncDate}
         />
         <MetricCard
           title="Lifetime Users"
@@ -114,7 +132,7 @@ const MetricCards = ({
           subtitleIcon={protocolLogo}
           protocolName={protocolName || "All Protocols"}
           protocolLogo={protocolLogo}
-          latestDate={new Date()}
+          latestDate={lastSyncDate}
         />
         <MetricCard
           title="Lifetime Trades"
@@ -124,7 +142,7 @@ const MetricCards = ({
           subtitleIcon={protocolLogo}
           protocolName={protocolName || "All Protocols"}
           protocolLogo={protocolLogo}
-          latestDate={new Date()}
+          latestDate={lastSyncDate}
         />
         <MetricCard
           title="Lifetime Fees"
@@ -135,7 +153,7 @@ const MetricCards = ({
           subtitleIcon={protocolLogo}
           protocolName={protocolName || "All Protocols"}
           protocolLogo={protocolLogo}
-          latestDate={new Date()}
+          latestDate={lastSyncDate}
         />
       </>
     )}

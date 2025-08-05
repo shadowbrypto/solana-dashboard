@@ -19,6 +19,8 @@ import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-con
 import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
+import { DateRangeSelector } from '../ui/date-range-selector';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
 
 type ChartDataKey = string;
 
@@ -66,6 +68,9 @@ export function TimelineChart({
   }
 
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [isCustomRange, setIsCustomRange] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
+  const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
     new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
   );
@@ -73,35 +78,8 @@ export function TimelineChart({
   const filteredData = useMemo(() => {
     let processedData = [...data];
 
-    // Apply timeframe filter
-    if (timeframe !== "all") {
-      const now = new Date();
-      let daysToSubtract: number;
-
-      switch (timeframe) {
-        case "7d":
-          daysToSubtract = 7;
-          break;
-        case "30d":
-          daysToSubtract = 30;
-          break;
-        case "3m":
-          daysToSubtract = 90;
-          break;
-        case "6m":
-          daysToSubtract = 180;
-          break;
-        case "1y":
-          daysToSubtract = 365;
-          break;
-        default:
-          daysToSubtract = 90;
-      }
-
-      const cutoffDate = new Date(
-        now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000
-      );
-
+    if (isCustomRange) {
+      // Apply custom date range filter
       processedData = processedData.filter((item) => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(
@@ -109,8 +87,48 @@ export function TimelineChart({
           parseInt(month) - 1,
           parseInt(day)
         );
-        return itemDate >= cutoffDate;
+        return itemDate >= customStartDate && itemDate <= customEndDate;
       });
+    } else {
+      // Apply predefined timeframe filter
+      if (timeframe !== "all") {
+        const now = new Date();
+        let daysToSubtract: number;
+
+        switch (timeframe) {
+          case "7d":
+            daysToSubtract = 7;
+            break;
+          case "30d":
+            daysToSubtract = 30;
+            break;
+          case "3m":
+            daysToSubtract = 90;
+            break;
+          case "6m":
+            daysToSubtract = 180;
+            break;
+          case "1y":
+            daysToSubtract = 365;
+            break;
+          default:
+            daysToSubtract = 90;
+        }
+
+        const cutoffDate = new Date(
+          now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000
+        );
+
+        processedData = processedData.filter((item) => {
+          const [day, month, year] = item.formattedDay.split("-");
+          const itemDate = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day)
+          );
+          return itemDate >= cutoffDate;
+        });
+      }
     }
 
     // Sort data in chronological order if it's not a multi-line chart
@@ -133,7 +151,7 @@ export function TimelineChart({
     }
 
     return processedData;
-  }, [data, timeframe]);
+  }, [data, timeframe, isCustomRange, customStartDate, customEndDate]);
 
   return (
     <ComponentActions 
@@ -183,7 +201,10 @@ export function TimelineChart({
         </div>
         <TimeframeSelector 
           value={timeframe}
-          onChange={setTimeframe}
+          onChange={(value) => {
+            setTimeframe(value);
+            setIsCustomRange(false); // Switch to predefined timeframe mode
+          }}
         />
       </CardHeader>
       <CardContent>
@@ -461,6 +482,29 @@ export function TimelineChart({
             )}
           </AreaChart>
         </ResponsiveContainer>
+        
+        {/* Date range selector - always visible below the chart */}
+        <div className="mt-6 pt-6 border-t border-border">
+          <DateRangeSelector
+            startDate={customStartDate}
+            endDate={customEndDate}
+            onRangeChange={(start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+              setIsCustomRange(true); // Switch to custom range mode
+            }}
+            minDate={(() => {
+              // Find the earliest date in the data
+              if (data.length === 0) return undefined;
+              const dates = data.map(item => {
+                const [day, month, year] = item.formattedDay.split("-");
+                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+              });
+              return new Date(Math.min(...dates.map(d => d.getTime())));
+            })()}
+            maxDate={new Date()}
+          />
+        </div>
       </CardContent>
     </Card>
     </ComponentActions>

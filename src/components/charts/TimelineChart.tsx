@@ -542,7 +542,6 @@ export function TimelineChart({
               return new Date(Math.min(...dates.map(d => d.getTime())));
             })()}
             maxDate={new Date()}
-            isControlledByTimeframe={!isCustomRange}
           />
         </div>
       </CardContent>

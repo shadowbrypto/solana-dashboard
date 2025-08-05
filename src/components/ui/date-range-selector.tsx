@@ -9,7 +9,6 @@ interface DateRangeSelectorProps {
   minDate?: Date;
   maxDate?: Date;
   className?: string;
-  isControlledByTimeframe?: boolean;
 }
 
 export function DateRangeSelector({
@@ -18,14 +17,14 @@ export function DateRangeSelector({
   onRangeChange,
   minDate,
   maxDate = new Date(),
-  className = "",
-  isControlledByTimeframe = false
+  className = ""
 }: DateRangeSelectorProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [tempRange, setTempRange] = useState<{ start: number; end: number } | null>(null);
   const [isMovingRange, setIsMovingRange] = useState(false);
   const [moveStartOffset, setMoveStartOffset] = useState<number>(0);
+  const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate the date range in days
@@ -91,6 +90,18 @@ export function DateRangeSelector({
     setIsDragging(true);
     setDragStart(position);
     setTempRange({ start: position, end: position });
+  };
+
+  const handleStartHandleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing('start');
+    setTempRange({ start: startPosition, end: endPosition });
+  };
+
+  const handleEndHandleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing('end');
+    setTempRange({ start: startPosition, end: endPosition });
   };
 
   const handleRangeMouseDown = (e: React.MouseEvent) => {
@@ -190,6 +201,52 @@ export function DateRangeSelector({
     }
   }, [isMovingRange, moveStartOffset, startPosition, endPosition, onRangeChange, effectiveMinDate, maxDate]);
 
+  useEffect(() => {
+    if (isResizing) {
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!containerRef.current) return;
+        
+        const rect = containerRef.current.getBoundingClientRect();
+        const mousePosition = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        
+        if (isResizing === 'start') {
+          // Resize from the start (left) handle
+          setTempRange(prev => ({
+            start: Math.min(mousePosition, endPosition - 1), // Ensure minimum 1% width
+            end: endPosition
+          }));
+        } else if (isResizing === 'end') {
+          // Resize from the end (right) handle
+          setTempRange(prev => ({
+            start: startPosition,
+            end: Math.max(mousePosition, startPosition + 1) // Ensure minimum 1% width
+          }));
+        }
+      };
+
+      const handleMouseUp = () => {
+        setTempRange(currentTempRange => {
+          if (currentTempRange) {
+            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
+            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            onRangeChange(newStartDate, newEndDate);
+          }
+          return null;
+        });
+        
+        setIsResizing(null);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing, startPosition, endPosition, onRangeChange, effectiveMinDate, maxDate]);
+
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -215,24 +272,31 @@ export function DateRangeSelector({
         >
           {/* Selected range */}
           <div
-            className={`absolute top-0.5 bottom-0.5 rounded-md border transition-colors duration-200 ${
-              isControlledByTimeframe 
-                ? 'bg-blue-500/20 border-blue-500/50' 
-                : 'bg-primary/20 border-primary/50'
-            } ${isMovingRange ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className="absolute top-0.5 bottom-0.5 rounded-md border bg-primary/20 border-primary/50"
             style={{
               left: `${tempRange ? tempRange.start : startPosition}%`,
               width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
             }}
-            onMouseDown={handleRangeMouseDown}
           >
-            {/* Simple handles */}
-            <div className={`absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4 rounded-sm cursor-ew-resize transition-colors duration-200 ${
-              isControlledByTimeframe ? 'bg-blue-500' : 'bg-primary'
-            }`} />
-            <div className={`absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-4 rounded-sm cursor-ew-resize transition-colors duration-200 ${
-              isControlledByTimeframe ? 'bg-blue-500' : 'bg-primary'
-            }`} />
+            {/* Left resize handle */}
+            <div 
+              className={`absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'start' ? 'scale-110' : ''}`}
+              onMouseDown={handleStartHandleMouseDown}
+            />
+            
+            {/* Middle drag area */}
+            <div 
+              className={`absolute inset-0 mx-3 rounded-sm transition-colors duration-200 ${
+                isMovingRange ? 'cursor-grabbing' : 'cursor-grab hover:bg-black/5'
+              }`}
+              onMouseDown={handleRangeMouseDown}
+            />
+            
+            {/* Right resize handle */}
+            <div 
+              className={`absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'end' ? 'scale-110' : ''}`}
+              onMouseDown={handleEndHandleMouseDown}
+            />
           </div>
         </div>
 

@@ -44,7 +44,7 @@ export function MetricCardSkeleton({
           <div className="text-center">
             <div className="relative">
               {/* Skeleton with gradient background to match the actual component */}
-              <div className="text-4xl lg:text-5xl font-semibold tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+              <div className="text-4xl lg:text-5xl font-semibold font-mono tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                 <Skeleton className="h-12 lg:h-16 w-32 lg:w-40 mx-auto bg-gradient-to-br from-purple-600/20 via-purple-500/20 to-teal-500/20" />
               </div>
             </div>

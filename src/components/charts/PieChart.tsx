@@ -277,12 +277,12 @@ export function PieChart({
                             <div className="space-y-0.5 text-xs">
                               <div className="flex justify-between gap-3">
                                 <span className="text-muted-foreground">Value:</span>
-                                <span className="font-semibold text-popover-foreground tabular-nums">{formatNumberWithSuffix(data.value)}</span>
+                                <span className="font-semibold text-popover-foreground font-mono">{formatNumberWithSuffix(data.value)}</span>
                               </div>
                               {showPercentages && (
                                 <div className="flex justify-between gap-3">
                                   <span className="text-muted-foreground">Share:</span>
-                                  <span className="font-semibold text-popover-foreground tabular-nums">{percentage}%</span>
+                                  <span className="font-semibold text-popover-foreground font-mono">{percentage}%</span>
                                 </div>
                               )}
                             </div>
@@ -300,7 +300,7 @@ export function PieChart({
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                   <div className="text-center">
                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{centerLabel}</div>
-                    <div className="text-2xl font-bold text-foreground tabular-nums">{formatNumberWithSuffix(total)}</div>
+                    <div className="text-2xl font-bold text-foreground font-mono">{formatNumberWithSuffix(total)}</div>
                   </div>
                 </div>
               )}
@@ -402,13 +402,13 @@ export function PieChart({
                       </div>
                       
                       <div className="flex items-center gap-1 text-right shrink-0">
-                        <span className={`text-xs font-semibold transition-all ${
+                        <span className={`text-xs font-semibold font-mono transition-all ${
                           isDisabled ? 'text-muted-foreground' : 'text-foreground'
                         }`}>
                           {isDisabled ? '0' : formatNumberWithSuffix(value)}
                         </span>
                         {showPercentages && (
-                          <span className="text-[10px] text-muted-foreground ml-1">
+                          <span className="text-[10px] text-muted-foreground font-mono ml-1">
                             ({isDisabled ? '0.0%' : `${percentage.toFixed(1)}%`})
                           </span>
                         )}

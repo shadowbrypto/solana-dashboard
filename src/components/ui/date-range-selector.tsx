@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { format, startOfDay, endOfDay, subDays, startOfMonth, addMonths, isBefore, differenceInMonths } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, addMonths, isBefore, differenceInMonths, addDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -25,11 +25,15 @@ export function DateRangeSelector({
   const [moveStartOffset, setMoveStartOffset] = useState<number>(0);
   const [originalDuration, setOriginalDuration] = useState<number>(0);
   const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
-  const [isEditingDate, setIsEditingDate] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [isEditingDays, setIsEditingDays] = useState(false);
-  const [dateInput, setDateInput] = useState('');
   const [daysInput, setDaysInput] = useState('');
+  const [calendarStartDate, setCalendarStartDate] = useState<Date | null>(null);
+  const [calendarEndDate, setCalendarEndDate] = useState<Date | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [isSelectingEnd, setIsSelectingEnd] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   // Calculate the date range in days
   const totalDays = minDate 
@@ -86,8 +90,11 @@ export function DateRangeSelector({
   const monthMarkers = generateMonthMarkers();
 
   const handleDateDoubleClick = () => {
-    setIsEditingDate(true);
-    setDateInput(`${format(displayStartDate, 'yyyy-MM-dd')} - ${format(displayEndDate, 'yyyy-MM-dd')}`);
+    setCalendarStartDate(startDate);
+    setCalendarEndDate(endDate);
+    setCalendarMonth(startDate);
+    setIsSelectingEnd(false);
+    setShowCalendar(true);
   };
 
   const handleDaysDoubleClick = () => {
@@ -95,25 +102,31 @@ export function DateRangeSelector({
     setDaysInput(displayDays.toString());
   };
 
-  const handleDateSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      try {
-        const parts = dateInput.split(' - ');
-        if (parts.length === 2) {
-          const newStartDate = startOfDay(new Date(parts[0]));
-          const newEndDate = endOfDay(new Date(parts[1]));
-          
-          if (!isNaN(newStartDate.getTime()) && !isNaN(newEndDate.getTime()) && newStartDate < newEndDate) {
-            onRangeChange(newStartDate, newEndDate);
-          }
-        }
-      } catch (error) {
-        // Invalid input, ignore
+  const handleCalendarDateClick = (date: Date) => {
+    if (!isSelectingEnd && !calendarStartDate) {
+      setCalendarStartDate(date);
+      setIsSelectingEnd(true);
+    } else if (isSelectingEnd) {
+      if (calendarStartDate && date >= calendarStartDate) {
+        setCalendarEndDate(date);
+        setIsSelectingEnd(false);
+      } else if (calendarStartDate && date < calendarStartDate) {
+        setCalendarStartDate(date);
+        setCalendarEndDate(calendarStartDate);
+        setIsSelectingEnd(false);
       }
-      setIsEditingDate(false);
-    } else if (e.key === 'Escape') {
-      setIsEditingDate(false);
+    } else {
+      setCalendarStartDate(date);
+      setCalendarEndDate(null);
+      setIsSelectingEnd(true);
     }
+  };
+
+  const handleCalendarCancel = () => {
+    setShowCalendar(false);
+    setCalendarStartDate(null);
+    setCalendarEndDate(null);
+    setIsSelectingEnd(false);
   };
 
   const handleDaysSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -299,32 +312,45 @@ export function DateRangeSelector({
     }
   }, [isResizing, startPosition, endPosition, onRangeChange, effectiveMinDate, maxDate]);
 
+  // Handle click outside calendar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        handleCalendarCancel();
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showCalendar]);
+
+
+  // Generate calendar days
+  const generateCalendarDays = () => {
+    const monthStart = startOfMonth(calendarMonth);
+    const monthEnd = endOfMonth(calendarMonth);
+    const calendarStart = startOfWeek(monthStart);
+    const calendarEnd = endOfWeek(monthEnd);
+    
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  };
+
+  const calendarDays = generateCalendarDays();
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3 ${className} relative`}>
       {/* Compact header */}
       <div className="flex items-center justify-center">
         <div className="flex items-center gap-1.5">
-          {isEditingDate ? (
-            <input
-              type="text"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-              onKeyDown={handleDateSubmit}
-              onBlur={() => setIsEditingDate(false)}
-              className="text-xs font-medium bg-background border border-border rounded px-2 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="YYYY-MM-DD - YYYY-MM-DD"
-              autoFocus
-            />
-          ) : (
-            <span 
-              className={`text-xs font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
-              onDoubleClick={handleDateDoubleClick}
-              title="Double-click to edit date range"
-            >
-              {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
-            </span>
-          )}
+          <span 
+            className={`text-xs font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
+            onDoubleClick={handleDateDoubleClick}
+            title="Double-click to select date range"
+          >
+            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
+          </span>
           
           {isEditingDays ? (
             <input
@@ -349,6 +375,98 @@ export function DateRangeSelector({
           )}
         </div>
       </div>
+
+      {/* Calendar Popup */}
+      {showCalendar && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">
+          <div 
+            ref={calendarRef}
+            className="bg-card border border-border rounded-lg shadow-lg p-4 w-80"
+          >
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
+                className="p-1.5 hover:bg-muted rounded-md transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <h3 className="text-sm font-semibold">
+                {format(calendarMonth, 'MMMM yyyy')}
+              </h3>
+              <button
+                onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
+                className="p-1.5 hover:bg-muted rounded-md transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="text-center text-xs font-medium text-muted-foreground p-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, index) => {
+                const isCurrentMonth = isSameMonth(day, calendarMonth);
+                const isInRange = calendarStartDate && calendarEndDate && day >= calendarStartDate && day <= calendarEndDate;
+                const isStart = calendarStartDate && isSameDay(day, calendarStartDate);
+                const isEnd = calendarEndDate && isSameDay(day, calendarEndDate);
+                const isTodayDate = isToday(day);
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleCalendarDateClick(day)}
+                    className={`
+                      relative p-2 text-xs rounded-md transition-all duration-200 font-medium
+                      ${!isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground'}
+                      ${isInRange ? 'bg-foreground text-background' : 'hover:bg-muted'}
+                      ${isStart || isEnd ? 'bg-foreground text-background' : ''}
+                      ${isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
+                    `}
+                  >
+                    {format(day, 'd')}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Calendar Footer */}
+            <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t">
+              <button
+                onClick={handleCalendarCancel}
+                className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (calendarStartDate && calendarEndDate) {
+                    onRangeChange(startOfDay(calendarStartDate), endOfDay(calendarEndDate));
+                  }
+                  setShowCalendar(false);
+                  setIsSelectingEnd(false);
+                }}
+                disabled={!calendarStartDate || !calendarEndDate}
+                className="px-3 py-1.5 text-xs bg-foreground text-background hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground rounded-md transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Simple timeline slider */}
       <div className="relative">

@@ -2,20 +2,28 @@ import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
 
-export function LifetimeVolumeBreakdownSkeleton() {
+interface LifetimeVolumeBreakdownSkeletonProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export function LifetimeVolumeBreakdownSkeleton({ 
+  title = "Lifetime Volume Breakdown",
+  subtitle = "Active Protocols" 
+}: LifetimeVolumeBreakdownSkeletonProps) {
   return (
     <Card className="w-full">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="space-y-3">
-            <Skeleton className="h-9 w-48" /> {/* Lifetime Volume title */}
+            <h3 className="text-3xl font-bold text-foreground">{title}</h3>
             <div className="flex items-center gap-2.5">
-              <Skeleton className="w-2.5 h-2.5 rounded-full" /> {/* Green dot */}
-              <Skeleton className="h-4 w-32" /> {/* Active Protocols text */}
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />
+              <span className="text-sm text-muted-foreground">{subtitle}</span>
             </div>
           </div>
           <div className="text-right">
-            <Skeleton className="h-9 w-24 mb-2" /> {/* Total volume */}
+            <Skeleton className="h-9 w-24 mb-2 animate-pulse" /> {/* Loading total volume */}
             <div className="flex gap-1 justify-end">
               {/* Stacked avatar skeletons */}
               {Array.from({ length: 8 }).map((_, index) => (
@@ -27,7 +35,7 @@ export function LifetimeVolumeBreakdownSkeleton() {
                     zIndex: 8 - index
                   }}
                 >
-                  <Skeleton className="w-6 h-6 rounded-full" />
+                  <Skeleton className="w-6 h-6 rounded-full animate-pulse" />
                 </div>
               ))}
             </div>
@@ -36,7 +44,7 @@ export function LifetimeVolumeBreakdownSkeleton() {
         
         {/* Horizontal Bar Chart Skeleton */}
         <div className="space-y-4">
-          <Skeleton className="h-8 w-full rounded" /> {/* Progress bar */}
+          <Skeleton className="h-8 w-full rounded animate-pulse" /> {/* Loading progress bar */}
 
           {/* Protocol Details Skeleton - 3 Rows with 5 Items Each */}
           <div className="grid grid-cols-5 gap-2">
@@ -46,12 +54,12 @@ export function LifetimeVolumeBreakdownSkeleton() {
                 className="flex items-center justify-between p-2 rounded-lg"
               >
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Skeleton className="w-3 h-3 rounded-full" /> {/* Color dot */}
-                  <Skeleton className="h-3 w-12" /> {/* Protocol name */}
+                  <Skeleton className="w-3 h-3 rounded-full animate-pulse" /> {/* Loading color */}
+                  <Skeleton className="h-3 w-12 animate-pulse" /> {/* Loading protocol name */}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Skeleton className="h-3 w-8" /> {/* Volume */}
-                  <Skeleton className="h-3 w-6" /> {/* Percentage */}
+                  <Skeleton className="h-3 w-8 animate-pulse" /> {/* Loading volume */}
+                  <Skeleton className="h-3 w-6 animate-pulse" /> {/* Loading percentage */}
                 </div>
               </div>
             ))}

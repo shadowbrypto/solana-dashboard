@@ -106,10 +106,10 @@ const MetricCards = ({
   <div className="mb-6 lg:mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
     {loading ? (
       <>
-        <MetricCardSkeleton />
-        <MetricCardSkeleton />
-        <MetricCardSkeleton />
-        <MetricCardSkeleton />
+        <MetricCardSkeleton title="Lifetime Volume" type="volume" protocolName={protocolName || "All Protocols"} />
+        <MetricCardSkeleton title="Lifetime Users" type="users" protocolName={protocolName || "All Protocols"} />
+        <MetricCardSkeleton title="Lifetime Trades" type="trades" protocolName={protocolName || "All Protocols"} />
+        <MetricCardSkeleton title="Lifetime Fees" type="fees" protocolName={protocolName || "All Protocols"} />
       </>
     ) : (
       <>

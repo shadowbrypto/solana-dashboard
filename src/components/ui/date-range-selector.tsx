@@ -25,6 +25,10 @@ export function DateRangeSelector({
   const [moveStartOffset, setMoveStartOffset] = useState<number>(0);
   const [originalDuration, setOriginalDuration] = useState<number>(0);
   const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
+  const [isEditingDate, setIsEditingDate] = useState(false);
+  const [isEditingDays, setIsEditingDays] = useState(false);
+  const [dateInput, setDateInput] = useState('');
+  const [daysInput, setDaysInput] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate the date range in days
@@ -80,6 +84,50 @@ export function DateRangeSelector({
   };
 
   const monthMarkers = generateMonthMarkers();
+
+  const handleDateDoubleClick = () => {
+    setIsEditingDate(true);
+    setDateInput(`${format(displayStartDate, 'yyyy-MM-dd')} - ${format(displayEndDate, 'yyyy-MM-dd')}`);
+  };
+
+  const handleDaysDoubleClick = () => {
+    setIsEditingDays(true);
+    setDaysInput(displayDays.toString());
+  };
+
+  const handleDateSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      try {
+        const parts = dateInput.split(' - ');
+        if (parts.length === 2) {
+          const newStartDate = startOfDay(new Date(parts[0]));
+          const newEndDate = endOfDay(new Date(parts[1]));
+          
+          if (!isNaN(newStartDate.getTime()) && !isNaN(newEndDate.getTime()) && newStartDate < newEndDate) {
+            onRangeChange(newStartDate, newEndDate);
+          }
+        }
+      } catch (error) {
+        // Invalid input, ignore
+      }
+      setIsEditingDate(false);
+    } else if (e.key === 'Escape') {
+      setIsEditingDate(false);
+    }
+  };
+
+  const handleDaysSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const days = parseInt(daysInput);
+      if (!isNaN(days) && days > 0) {
+        const newEndDate = endOfDay(new Date(displayStartDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000));
+        onRangeChange(displayStartDate, newEndDate);
+      }
+      setIsEditingDays(false);
+    } else if (e.key === 'Escape') {
+      setIsEditingDays(false);
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -257,12 +305,48 @@ export function DateRangeSelector({
       {/* Compact header */}
       <div className="flex items-center justify-center">
         <div className="flex items-center gap-1.5">
-          <span className={`text-xs font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
-            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
-          </span>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}>
-            {displayDays} days
-          </span>
+          {isEditingDate ? (
+            <input
+              type="text"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+              onKeyDown={handleDateSubmit}
+              onBlur={() => setIsEditingDate(false)}
+              className="text-xs font-medium bg-background border border-border rounded px-2 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="YYYY-MM-DD - YYYY-MM-DD"
+              autoFocus
+            />
+          ) : (
+            <span 
+              className={`text-xs font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
+              onDoubleClick={handleDateDoubleClick}
+              title="Double-click to edit date range"
+            >
+              {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
+            </span>
+          )}
+          
+          {isEditingDays ? (
+            <input
+              type="number"
+              value={daysInput}
+              onChange={(e) => setDaysInput(e.target.value)}
+              onKeyDown={handleDaysSubmit}
+              onBlur={() => setIsEditingDays(false)}
+              className="text-[10px] w-16 bg-background border border-border rounded px-1.5 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="days"
+              min="1"
+              autoFocus
+            />
+          ) : (
+            <span 
+              className={`text-[10px] px-1.5 py-0.5 rounded-full transition-colors duration-200 cursor-pointer hover:bg-primary/20 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}
+              onDoubleClick={handleDaysDoubleClick}
+              title="Double-click to edit duration"
+            >
+              {displayDays} days
+            </span>
+          )}
         </div>
       </div>
 

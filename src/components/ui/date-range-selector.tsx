@@ -46,6 +46,11 @@ export function DateRangeSelector({
   const startPosition = dateToPosition(startDate);
   const endPosition = dateToPosition(endDate);
 
+  // Calculate display values (live updates during drag)
+  const displayStartDate = tempRange ? positionToDate(tempRange.start) : startDate;
+  const displayEndDate = tempRange ? positionToDate(tempRange.end) : endDate;
+  const displayDays = Math.ceil((displayEndDate.getTime() - displayStartDate.getTime()) / (1000 * 60 * 60 * 24));
+
   // Generate month markers
   const generateMonthMarkers = () => {
     const totalMonths = differenceInMonths(maxDate, effectiveMinDate);
@@ -129,11 +134,11 @@ export function DateRangeSelector({
       <div className="flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">
-            {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+          <span className={`text-sm font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
           </span>
-          <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
-            {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days
+          <span className={`text-xs bg-muted/50 px-2 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}>
+            {displayDays} days
           </span>
         </div>
       </div>

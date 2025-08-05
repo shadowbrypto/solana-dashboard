@@ -419,24 +419,42 @@ export function DateRangeSelector({
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, index) => {
                 const isCurrentMonth = isSameMonth(day, calendarMonth);
-                const isInRange = calendarStartDate && calendarEndDate && day >= calendarStartDate && day <= calendarEndDate;
+                const isInRange = calendarStartDate && calendarEndDate && day > calendarStartDate && day < calendarEndDate;
                 const isStart = calendarStartDate && isSameDay(day, calendarStartDate);
                 const isEnd = calendarEndDate && isSameDay(day, calendarEndDate);
                 const isTodayDate = isToday(day);
+
+                let roundedClass = 'rounded-md';
+                if (isStart && isEnd) {
+                  roundedClass = 'rounded-md'; // Single day selection
+                } else if (isStart) {
+                  roundedClass = 'rounded-l-md rounded-r-none'; // Start of range
+                } else if (isEnd) {
+                  roundedClass = 'rounded-r-md rounded-l-none'; // End of range  
+                } else if (isInRange) {
+                  roundedClass = 'rounded-none'; // Middle of range
+                }
 
                 return (
                   <button
                     key={index}
                     onClick={() => handleCalendarDateClick(day)}
                     className={`
-                      relative p-2 text-xs rounded-md transition-all duration-200 font-medium
+                      relative p-2 text-xs font-medium ${roundedClass}
                       ${!isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground'}
-                      ${isInRange ? 'bg-foreground text-background' : 'hover:bg-muted'}
-                      ${isStart || isEnd ? 'bg-foreground text-background' : ''}
+                      ${isInRange ? 'bg-muted/80 text-muted-foreground/80' : ''}
+                      ${isStart ? 'bg-foreground text-background relative' : ''}
+                      ${isEnd ? 'bg-foreground text-background relative' : ''}
                       ${isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
                     `}
                   >
                     {format(day, 'd')}
+                    {isStart && (
+                      <div className="absolute inset-y-0 -right-0.5 w-0.5 bg-foreground"></div>
+                    )}
+                    {isEnd && (
+                      <div className="absolute inset-y-0 -left-0.5 w-0.5 bg-foreground"></div>
+                    )}
                   </button>
                 );
               })}

@@ -69,6 +69,7 @@ export function TimelineChart({
 
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [isCustomRange, setIsCustomRange] = useState(false);
+  const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
@@ -199,52 +200,72 @@ export function TimelineChart({
             </p>
           )}
         </div>
-        <TimeframeSelector 
-          value={timeframe}
-          onChange={(value) => {
-            setTimeframe(value);
-            setIsCustomRange(false); // Switch to predefined timeframe mode
-            
-            // Update custom date range to match the selected timeframe
-            const now = new Date();
-            let daysToSubtract: number;
-            
-            switch (value) {
-              case "7d":
-                daysToSubtract = 7;
-                break;
-              case "30d":
-                daysToSubtract = 30;
-                break;
-              case "3m":
-                daysToSubtract = 90;
-                break;
-              case "6m":
-                daysToSubtract = 180;
-                break;
-              case "1y":
-                daysToSubtract = 365;
-                break;
-              default:
-                // For "all", use the full data range
-                if (data.length > 0) {
-                  const dates = data.map(item => {
-                    const [day, month, year] = item.formattedDay.split("-");
-                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                  });
-                  const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-                  setCustomStartDate(startOfDay(earliestDate));
-                  setCustomEndDate(endOfDay(now));
-                  return;
-                }
-                daysToSubtract = 90;
-            }
-            
-            const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
-            setCustomStartDate(newStartDate);
-            setCustomEndDate(endOfDay(now));
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <TimeframeSelector 
+            value={timeframe}
+            onChange={(value) => {
+              setTimeframe(value);
+              setIsCustomRange(false); // Switch to predefined timeframe mode
+              
+              // Update custom date range to match the selected timeframe
+              const now = new Date();
+              let daysToSubtract: number;
+              
+              switch (value) {
+                case "7d":
+                  daysToSubtract = 7;
+                  break;
+                case "30d":
+                  daysToSubtract = 30;
+                  break;
+                case "3m":
+                  daysToSubtract = 90;
+                  break;
+                case "6m":
+                  daysToSubtract = 180;
+                  break;
+                case "1y":
+                  daysToSubtract = 365;
+                  break;
+                default:
+                  // For "all", use the full data range
+                  if (data.length > 0) {
+                    const dates = data.map(item => {
+                      const [day, month, year] = item.formattedDay.split("-");
+                      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                    });
+                    const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                    setCustomStartDate(startOfDay(earliestDate));
+                    setCustomEndDate(endOfDay(now));
+                    return;
+                  }
+                  daysToSubtract = 90;
+              }
+              
+              const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+              setCustomStartDate(newStartDate);
+              setCustomEndDate(endOfDay(now));
+            }}
+          />
+          
+          {/* Date Range Toggle */}
+          <button
+            onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+              showDateRangeSelector
+                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            }`}
+            title="Toggle custom date range selector"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+              <line x1="16" x2="16" y1="2" y2="6"/>
+              <line x1="8" x2="8" y1="2" y2="6"/>
+              <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+          </button>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
@@ -522,28 +543,30 @@ export function TimelineChart({
           </AreaChart>
         </ResponsiveContainer>
         
-        {/* Date range selector - always visible below the chart */}
-        <div className="mt-6 pt-6 border-t border-border">
-          <DateRangeSelector
-            startDate={customStartDate}
-            endDate={customEndDate}
-            onRangeChange={(start, end) => {
-              setCustomStartDate(start);
-              setCustomEndDate(end);
-              setIsCustomRange(true); // Switch to custom range mode
-            }}
-            minDate={(() => {
-              // Find the earliest date in the data
-              if (data.length === 0) return undefined;
-              const dates = data.map(item => {
-                const [day, month, year] = item.formattedDay.split("-");
-                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-              });
-              return new Date(Math.min(...dates.map(d => d.getTime())));
-            })()}
-            maxDate={new Date()}
-          />
-        </div>
+        {/* Date range selector - conditionally visible below the chart */}
+        {showDateRangeSelector && (
+          <div className="mt-6 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-200">
+            <DateRangeSelector
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onRangeChange={(start, end) => {
+                setCustomStartDate(start);
+                setCustomEndDate(end);
+                setIsCustomRange(true); // Switch to custom range mode
+              }}
+              minDate={(() => {
+                // Find the earliest date in the data
+                if (data.length === 0) return undefined;
+                const dates = data.map(item => {
+                  const [day, month, year] = item.formattedDay.split("-");
+                  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                });
+                return new Date(Math.min(...dates.map(d => d.getTime())));
+              })()}
+              maxDate={new Date()}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
     </ComponentActions>

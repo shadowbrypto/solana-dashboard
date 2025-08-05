@@ -249,19 +249,21 @@ export function TimelineChart({
           />
           
           {/* Date Range Toggle Button */}
-          <button
-            onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 min-w-fit ${
-              showDateRangeSelector
-                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-            }`}
-            title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
-            </svg>
-          </button>
+          <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+            <button
+              onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                showDateRangeSelector
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+              </svg>
+            </button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

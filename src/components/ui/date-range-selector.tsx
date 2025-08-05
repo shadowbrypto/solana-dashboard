@@ -57,41 +57,43 @@ export function DateRangeSelector({
     setTempRange({ start: position, end: position });
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || dragStart === null || !containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const position = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    
-    setTempRange({
-      start: Math.min(dragStart, position),
-      end: Math.max(dragStart, position)
-    });
-  };
-
-  const handleMouseUp = () => {
-    if (tempRange && Math.abs(tempRange.end - tempRange.start) >= 0.5) {
-      const newStartDate = startOfDay(positionToDate(tempRange.start));
-      const newEndDate = endOfDay(positionToDate(tempRange.end));
-      onRangeChange(newStartDate, newEndDate);
-    }
-    
-    setIsDragging(false);
-    setDragStart(null);
-    setTempRange(null);
-  };
-
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    if (!isDragging || dragStart === null) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
       
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart]);
+      const rect = containerRef.current.getBoundingClientRect();
+      const position = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      
+      setTempRange({
+        start: Math.min(dragStart, position),
+        end: Math.max(dragStart, position)
+      });
+    };
+
+    const handleMouseUp = () => {
+      setTempRange(currentTempRange => {
+        if (currentTempRange && Math.abs(currentTempRange.end - currentTempRange.start) >= 0.5) {
+          const newStartDate = startOfDay(positionToDate(currentTempRange.start));
+          const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+          onRangeChange(newStartDate, newEndDate);
+        }
+        return null;
+      });
+      
+      setIsDragging(false);
+      setDragStart(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, onRangeChange, effectiveMinDate, maxDate]);
 
 
   return (

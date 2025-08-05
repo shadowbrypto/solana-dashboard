@@ -261,13 +261,11 @@ export function DateRangeSelector({
           <div className={`p-1.5 rounded-md transition-colors duration-200 ${tempRange ? 'bg-primary/10 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
             <Calendar className="w-3.5 h-3.5" />
           </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
-              {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
-            </span>
-            <div className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${tempRange ? 'text-primary bg-primary/15 scale-105' : 'text-muted-foreground bg-muted/60'}`}>
-              {displayDays} days
-            </div>
+          <span className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
+          </span>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${tempRange ? 'text-primary bg-primary/15 scale-105' : 'text-muted-foreground bg-muted/60'}`}>
+            {displayDays} days
           </div>
         </div>
       </div>

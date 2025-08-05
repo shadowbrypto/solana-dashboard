@@ -56,9 +56,9 @@ export function MultiAreaChart({
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
 
   const filteredData = useMemo(() => {
-    // Create a copy and reverse the data array
-    const reversedData = [...data].reverse();
-    let timeFilteredData = reversedData;
+    // Create a copy of the data array (already sorted chronologically)
+    const sortedData = [...data];
+    let timeFilteredData = sortedData;
 
     if (timeframe !== "all") {
       const now = new Date();

@@ -63,7 +63,7 @@ export function CombinedChart({
 
 
   const filteredData = useMemo(() => {
-    if (timeframe === "all") return [...data].reverse();
+    if (timeframe === "all") return [...data];
 
     const now = new Date();
     let daysToSubtract: number;
@@ -95,8 +95,7 @@ export function CombinedChart({
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         return itemDate >= cutoffDate;
-      })
-      .reverse();
+      });
   }, [data, timeframe]);
 
   return (

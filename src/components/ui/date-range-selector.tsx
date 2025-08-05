@@ -73,7 +73,7 @@ export function DateRangeSelector({
       markers.push({
         date: currentDate,
         position: dateToPosition(currentDate),
-        label: format(currentDate, totalMonths > 24 ? 'MMM yy' : 'MMM')
+        label: format(currentDate, 'MMM yy')
       });
       currentDate = addMonths(currentDate, interval);
     }

@@ -381,16 +381,22 @@ export function DateRangeSelector({
 
   return (
     <div className={`space-y-3 ${className} relative`}>
-      {/* Compact header */}
-      <div className="flex items-center justify-center">
-        <div className="flex items-center gap-1.5">
+      {/* Header with custom time period text and controls */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">
+          Select custom time period
+        </span>
+        
+        <div className="flex items-center gap-4">
           <span 
             className={`text-sm font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
             onDoubleClick={handleDateDoubleClick}
             title="Double-click to select date range"
           >
-            {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
+            {format(displayStartDate, 'MMM d')} — {format(displayEndDate, 'MMM d, yyyy')}
           </span>
+          
+          <div className="w-px h-4 bg-border/40"></div>
           
           {isEditingDays ? (
             <input
@@ -399,14 +405,14 @@ export function DateRangeSelector({
               onChange={(e) => setDaysInput(e.target.value)}
               onKeyDown={handleDaysSubmit}
               onBlur={() => setIsEditingDays(false)}
-              className="text-xs w-16 bg-background border border-border rounded px-1.5 py-0.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="text-xs w-16 bg-background border border-border rounded-md px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
               placeholder="days"
               min="1"
               autoFocus
             />
           ) : (
             <span 
-              className={`text-xs px-1.5 py-0.5 rounded-full transition-colors duration-200 cursor-pointer hover:bg-primary/20 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}
+              className={`text-xs font-medium px-3 py-1 rounded-lg transition-all duration-200 cursor-pointer border ${tempRange ? 'text-primary bg-primary/5 border-primary/20 hover:bg-primary/10' : 'text-muted-foreground bg-background/50 border-border/40 hover:bg-muted/40 hover:text-foreground'}`}
               onDoubleClick={handleDaysDoubleClick}
               title="Double-click to edit duration"
             >

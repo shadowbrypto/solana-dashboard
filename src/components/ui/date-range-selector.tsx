@@ -32,6 +32,8 @@ export function DateRangeSelector({
   const [calendarEndDate, setCalendarEndDate] = useState<Date | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [isSelectingEnd, setIsSelectingEnd] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartDate, setDragStartDate] = useState<Date | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
@@ -102,24 +104,26 @@ export function DateRangeSelector({
     setDaysInput(displayDays.toString());
   };
 
-  const handleCalendarDateClick = (date: Date) => {
-    if (!isSelectingEnd && !calendarStartDate) {
-      setCalendarStartDate(date);
-      setIsSelectingEnd(true);
-    } else if (isSelectingEnd) {
-      if (calendarStartDate && date >= calendarStartDate) {
-        setCalendarEndDate(date);
-        setIsSelectingEnd(false);
-      } else if (calendarStartDate && date < calendarStartDate) {
-        setCalendarStartDate(date);
-        setCalendarEndDate(calendarStartDate);
-        setIsSelectingEnd(false);
-      }
-    } else {
-      setCalendarStartDate(date);
-      setCalendarEndDate(null);
-      setIsSelectingEnd(true);
+  const handleCalendarDateMouseDown = (date: Date) => {
+    setIsDragging(true);
+    setDragStartDate(date);
+    setCalendarStartDate(date);
+    setCalendarEndDate(null);
+    setIsSelectingEnd(false);
+  };
+
+  const handleCalendarDateMouseEnter = (date: Date) => {
+    if (isDragging && dragStartDate) {
+      const startDate = dragStartDate <= date ? dragStartDate : date;
+      const endDate = dragStartDate <= date ? date : dragStartDate;
+      setCalendarStartDate(startDate);
+      setCalendarEndDate(endDate);
     }
+  };
+
+  const handleCalendarDateMouseUp = () => {
+    setIsDragging(false);
+    setDragStartDate(null);
   };
 
   const handleCalendarCancel = () => {
@@ -326,6 +330,20 @@ export function DateRangeSelector({
     }
   }, [showCalendar]);
 
+  // Handle drag events
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isDragging) {
+        handleCalendarDateMouseUp();
+      }
+    };
+
+    if (isDragging) {
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => document.removeEventListener('mouseup', handleMouseUp);
+    }
+  }, [isDragging]);
+
 
   // Generate calendar days
   const generateCalendarDays = () => {
@@ -438,14 +456,16 @@ export function DateRangeSelector({
                 return (
                   <button
                     key={index}
-                    onClick={() => handleCalendarDateClick(day)}
+                    onMouseDown={() => handleCalendarDateMouseDown(day)}
+                    onMouseEnter={() => handleCalendarDateMouseEnter(day)}
                     className={`
-                      relative p-2 text-xs font-medium ${roundedClass}
+                      relative p-2 text-xs font-medium ${roundedClass} select-none
                       ${!isCurrentMonth ? 'text-muted-foreground/40' : 'text-foreground'}
-                      ${isInRange ? 'bg-muted/80 text-muted-foreground/80' : ''}
+                      ${isInRange ? 'bg-muted/40 text-muted-foreground/40' : ''}
                       ${isStart ? 'bg-foreground text-background relative' : ''}
                       ${isEnd ? 'bg-foreground text-background relative' : ''}
                       ${isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
+                      ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'}
                     `}
                   >
                     {format(day, 'd')}

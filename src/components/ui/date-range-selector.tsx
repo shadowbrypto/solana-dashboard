@@ -105,6 +105,17 @@ export function DateRangeSelector({
   };
 
   const handleCalendarDateMouseDown = (date: Date) => {
+    // If we already have a start date but no end date, set this as end date
+    if (calendarStartDate && !calendarEndDate && !isCalendarDragging) {
+      const startDate = calendarStartDate <= date ? calendarStartDate : date;
+      const endDate = calendarStartDate <= date ? date : calendarStartDate;
+      setCalendarStartDate(startDate);
+      setCalendarEndDate(endDate);
+      setIsSelectingEnd(false);
+      return;
+    }
+    
+    // Otherwise start new drag selection
     setIsCalendarDragging(true);
     setDragStartDate(date);
     setCalendarStartDate(date);

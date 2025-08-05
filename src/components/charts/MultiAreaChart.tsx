@@ -88,7 +88,7 @@ export function MultiAreaChart({
 
       const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
 
-      timeFilteredData = reversedData.filter(item => {
+      timeFilteredData = sortedData.filter(item => {
         const [day, month, year] = item.formattedDay.split("-");
         const itemDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         return itemDate >= cutoffDate;

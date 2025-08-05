@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar } from 'lucide-react';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, addMonths, isBefore, differenceInMonths } from 'date-fns';
 
 interface DateRangeSelectorProps {
@@ -255,18 +254,15 @@ export function DateRangeSelector({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Polished header */}
+      {/* Minimal header */}
       <div className="flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-lg px-4 py-2.5 border border-border/40 shadow-sm">
-          <div className={`p-1.5 rounded-md transition-colors duration-200 ${tempRange ? 'bg-primary/10 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
-            <Calendar className="w-3.5 h-3.5" />
-          </div>
-          <span className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
             {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
           </span>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${tempRange ? 'text-primary bg-primary/15 scale-105' : 'text-muted-foreground bg-muted/60'}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-muted/50'}`}>
             {displayDays} days
-          </div>
+          </span>
         </div>
       </div>
 

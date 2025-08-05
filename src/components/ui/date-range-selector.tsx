@@ -9,6 +9,7 @@ interface DateRangeSelectorProps {
   minDate?: Date;
   maxDate?: Date;
   className?: string;
+  isControlledByTimeframe?: boolean;
 }
 
 export function DateRangeSelector({
@@ -17,7 +18,8 @@ export function DateRangeSelector({
   onRangeChange,
   minDate,
   maxDate = new Date(),
-  className = ""
+  className = "",
+  isControlledByTimeframe = false
 }: DateRangeSelectorProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
@@ -213,7 +215,11 @@ export function DateRangeSelector({
         >
           {/* Selected range */}
           <div
-            className={`absolute top-0.5 bottom-0.5 bg-primary/20 border border-primary/50 rounded-md ${isMovingRange ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`absolute top-0.5 bottom-0.5 rounded-md border transition-colors duration-200 ${
+              isControlledByTimeframe 
+                ? 'bg-blue-500/20 border-blue-500/50' 
+                : 'bg-primary/20 border-primary/50'
+            } ${isMovingRange ? 'cursor-grabbing' : 'cursor-grab'}`}
             style={{
               left: `${tempRange ? tempRange.start : startPosition}%`,
               width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
@@ -221,8 +227,12 @@ export function DateRangeSelector({
             onMouseDown={handleRangeMouseDown}
           >
             {/* Simple handles */}
-            <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4 bg-primary rounded-sm cursor-ew-resize" />
-            <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-4 bg-primary rounded-sm cursor-ew-resize" />
+            <div className={`absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4 rounded-sm cursor-ew-resize transition-colors duration-200 ${
+              isControlledByTimeframe ? 'bg-blue-500' : 'bg-primary'
+            }`} />
+            <div className={`absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-4 rounded-sm cursor-ew-resize transition-colors duration-200 ${
+              isControlledByTimeframe ? 'bg-blue-500' : 'bg-primary'
+            }`} />
           </div>
         </div>
 

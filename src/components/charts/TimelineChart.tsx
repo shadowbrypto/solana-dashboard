@@ -204,6 +204,45 @@ export function TimelineChart({
           onChange={(value) => {
             setTimeframe(value);
             setIsCustomRange(false); // Switch to predefined timeframe mode
+            
+            // Update custom date range to match the selected timeframe
+            const now = new Date();
+            let daysToSubtract: number;
+            
+            switch (value) {
+              case "7d":
+                daysToSubtract = 7;
+                break;
+              case "30d":
+                daysToSubtract = 30;
+                break;
+              case "3m":
+                daysToSubtract = 90;
+                break;
+              case "6m":
+                daysToSubtract = 180;
+                break;
+              case "1y":
+                daysToSubtract = 365;
+                break;
+              default:
+                // For "all", use the full data range
+                if (data.length > 0) {
+                  const dates = data.map(item => {
+                    const [day, month, year] = item.formattedDay.split("-");
+                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  });
+                  const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                  setCustomStartDate(startOfDay(earliestDate));
+                  setCustomEndDate(endOfDay(now));
+                  return;
+                }
+                daysToSubtract = 90;
+            }
+            
+            const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+            setCustomStartDate(newStartDate);
+            setCustomEndDate(endOfDay(now));
           }}
         />
       </CardHeader>
@@ -503,6 +542,7 @@ export function TimelineChart({
               return new Date(Math.min(...dates.map(d => d.getTime())));
             })()}
             maxDate={new Date()}
+            isControlledByTimeframe={!isCustomRange}
           />
         </div>
       </CardContent>

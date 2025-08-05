@@ -1,15 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { Badge } from "../ui/badge";
-import { Calendar } from "lucide-react";
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -23,8 +14,7 @@ import {
 } from "recharts";
 import { useState, useMemo } from "react";
 import { ComponentActions } from '../ComponentActions';
-
-type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
+import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 
 import { StackedBarChartSkeleton } from "./StackedBarChartSkeleton";
 
@@ -93,9 +83,6 @@ export function StackedBarChart({
       let daysToSubtract: number;
 
       switch (timeframe) {
-        case "1d":
-          daysToSubtract = 1;
-          break;
         case "7d":
           daysToSubtract = 7;
           break;
@@ -183,63 +170,16 @@ export function StackedBarChart({
             )}
           </div>
           {!disableTimeframeSelector && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Time Period</span>
-              </div>
-              <Tabs value={timeframe} onValueChange={(value) => handleTimeframeChange(value as TimeFrame)}>
-                <TabsList className="grid grid-cols-7 h-8 sm:h-9 p-1 bg-muted/60 rounded-lg border border-border/50 shadow-sm">
-                  <TabsTrigger 
-                    value="1d" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    1D
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="7d" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    7D
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="30d" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    30D
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="3m" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    3M
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="6m" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    6M
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="1y" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    1Y
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="all" 
-                    className="text-xs font-medium px-1 sm:px-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border/50 transition-all duration-200 hover:text-foreground/80 rounded-md"
-                  >
-                    ALL
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <TimeframeSelector 
+              value={timeframe}
+              onChange={handleTimeframeChange}
+            />
           )}
         </CardHeader>
         <CardContent className="pt-6">
-          <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
-            <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+          <div className="transition-all duration-500 ease-out">
+            <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
+              <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"
@@ -375,6 +315,7 @@ export function StackedBarChart({
               />
             </RechartsBarChart>
           </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
     </ComponentActions>

@@ -1,13 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
   Bar,
   BarChart as RechartsBarChart,
   CartesianGrid,
@@ -19,6 +12,9 @@ import {
   YAxis,
 } from "recharts";
 import { ComponentActions } from '../ComponentActions';
+import { TimeframeSelector } from '../ui/timeframe-selector';
+
+type EVMTimeFrame = "7d" | "30d" | "90d" | "1y";
 
 interface EVMDailyChartProps {
   title: string;
@@ -29,8 +25,8 @@ interface EVMDailyChartProps {
   colors?: string[];
   valueFormatter?: (value: number) => string;
   loading?: boolean;
-  timeframe: string;
-  onTimeframeChange: (timeframe: string) => void;
+  timeframe: EVMTimeFrame;
+  onTimeframeChange: (timeframe: EVMTimeFrame) => void;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -110,17 +106,11 @@ export function EVMDailyChart({
               </p>
             )}
           </div>
-          <Select value={timeframe} onValueChange={onTimeframeChange}>
-            <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/50 border-muted-foreground/20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="7d">7 days</SelectItem>
-              <SelectItem value="30d">30 days</SelectItem>
-              <SelectItem value="90d">90 days</SelectItem>
-              <SelectItem value="1y">1 year</SelectItem>
-            </SelectContent>
-          </Select>
+          <TimeframeSelector 
+            value={timeframe as any}
+            onChange={(value) => onTimeframeChange(value as EVMTimeFrame)}
+            options={["7d", "30d", "90d", "1y" as any]}
+          />
         </CardHeader>
         <CardContent className="p-6">
           <ResponsiveContainer width="100%" height={400}>

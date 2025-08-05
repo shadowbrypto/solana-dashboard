@@ -14,16 +14,8 @@ import {
 } from "recharts";
 import { ComponentActions } from '../ComponentActions';
 import { useState, useMemo } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { getProtocolById, getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
-
-type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
+import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 
 import { HorizontalBarChartSkeleton } from "./HorizontalBarChartSkeleton";
 
@@ -159,19 +151,10 @@ export function HorizontalBarChart({
             </p>
           )}
         </div>
-        <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value as TimeFrame)}>
-          <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-            <SelectValue placeholder="Select timeframe" />
-          </SelectTrigger>
-          <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-            <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
-            <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
-            <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
-            <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
-            <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
-            <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
-          </SelectContent>
-        </Select>
+        <TimeframeSelector 
+          value={timeframe}
+          onChange={setTimeframe}
+        />
       </CardHeader>
       <CardContent className="pt-2 px-2">
         <ResponsiveContainer width="100%" height={filteredData.length * 35 + 20}>

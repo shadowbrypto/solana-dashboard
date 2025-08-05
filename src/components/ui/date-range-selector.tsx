@@ -60,19 +60,20 @@ export function DateRangeSelector({
     const totalMonths = differenceInMonths(maxDate, effectiveMinDate);
     const markers = [];
     
-    // Determine interval based on total months
+    // Determine interval based on total months - more aggressive showing
     let interval = 1;
-    if (totalMonths > 24) interval = 6; // Show every 6 months if > 2 years
-    else if (totalMonths > 12) interval = 3; // Show every 3 months if > 1 year
-    else if (totalMonths > 6) interval = 2; // Show every 2 months if > 6 months
+    if (totalMonths > 36) interval = 4; // Show every 4 months if > 3 years
+    else if (totalMonths > 24) interval = 3; // Show every 3 months if > 2 years
+    else if (totalMonths > 18) interval = 2; // Show every 2 months if > 1.5 years
+    // Otherwise show every month (interval = 1)
     
     let currentDate = startOfMonth(effectiveMinDate);
     
-    while (isBefore(currentDate, maxDate) && markers.length < 10) {
+    while (isBefore(currentDate, maxDate) && markers.length < 15) {
       markers.push({
         date: currentDate,
         position: dateToPosition(currentDate),
-        label: format(currentDate, totalMonths > 12 ? 'MMM yy' : 'MMM')
+        label: format(currentDate, totalMonths > 24 ? 'MMM yy' : 'MMM')
       });
       currentDate = addMonths(currentDate, interval);
     }

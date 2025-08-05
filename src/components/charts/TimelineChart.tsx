@@ -20,11 +20,6 @@ import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/date-range-selector';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 
 type ChartDataKey = string;
@@ -253,31 +248,20 @@ export function TimelineChart({
             }}
           />
           
-          {/* Date Range Dropdown */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                  showDateRangeSelector
-                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                } gap-1`}
-              >
-                Custom Range
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-2">
-              <button
-                onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted transition-colors cursor-pointer"
-              >
-                {showDateRangeSelector ? 'Hide' : 'Show'} Date Range Selector
-              </button>
-            </PopoverContent>
-          </Popover>
+          {/* Date Range Toggle Button */}
+          <button
+            onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 min-w-fit ${
+              showDateRangeSelector
+                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            }`}
+            title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+            </svg>
+          </button>
         </div>
       </CardHeader>
       <CardContent>

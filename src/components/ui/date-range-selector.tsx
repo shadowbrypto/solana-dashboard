@@ -129,71 +129,74 @@ export function DateRangeSelector({
 
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Compact header with date range */}
+    <div className={`space-y-4 ${className}`}>
+      {/* Elegant header with date range */}
       <div className="flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className={`text-sm font-medium transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-foreground'}`}>
+        <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-border/50">
+          <Calendar className={`w-4 h-4 transition-colors duration-200 ${tempRange ? 'text-primary' : 'text-muted-foreground'}`} />
+          <span className={`text-sm font-semibold transition-all duration-200 ${tempRange ? 'text-primary scale-105' : 'text-foreground'}`}>
             {format(displayStartDate, 'MMM d')} - {format(displayEndDate, 'MMM d, yyyy')}
           </span>
-          <span className={`text-xs bg-muted/50 px-2 py-0.5 rounded-full transition-colors duration-200 ${tempRange ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${tempRange ? 'text-primary bg-primary/15 shadow-sm scale-105' : 'text-muted-foreground bg-muted/60'}`}>
             {displayDays} days
-          </span>
+          </div>
         </div>
       </div>
 
-      {/* Compact timeline slider */}
+      {/* Refined timeline slider */}
       <div className="relative">
         <div 
           ref={containerRef}
-          className="relative h-8 bg-gradient-to-r from-muted/30 to-muted/60 rounded-full cursor-crosshair overflow-hidden border border-border/30"
+          className={`relative h-10 bg-gradient-to-r from-muted/20 via-muted/40 to-muted/20 rounded-xl cursor-crosshair overflow-hidden border transition-all duration-200 ${isDragging ? 'border-primary/50 shadow-lg shadow-primary/20' : 'border-border/40 hover:border-border/60'}`}
           onMouseDown={handleMouseDown}
         >
-          {/* Subtle grid marks */}
-          <div className="absolute inset-0 flex items-center">
-            {[...Array(8)].map((_, i) => (
+          {/* Refined grid marks */}
+          <div className="absolute inset-0 flex items-center px-2">
+            {[...Array(12)].map((_, i) => (
               <div 
                 key={i} 
                 className="flex-1 flex justify-center"
               >
-                <div className="w-px h-2 bg-border/30" />
+                <div className={`w-px transition-all duration-200 ${i % 3 === 0 ? 'h-3 bg-border/50' : 'h-2 bg-border/30'}`} />
               </div>
             ))}
           </div>
 
-          {/* Selected range with gradient */}
+          {/* Enhanced selected range */}
           <div
-            className="absolute top-0.5 bottom-0.5 bg-gradient-to-r from-primary/20 to-primary/30 border border-primary/60 rounded-full transition-all duration-200 shadow-sm"
+            className={`absolute top-1 bottom-1 bg-gradient-to-r from-primary/25 via-primary/35 to-primary/25 border rounded-lg transition-all duration-200 ${isDragging ? 'shadow-lg shadow-primary/30 border-primary/70' : 'shadow-md border-primary/60'}`}
             style={{
               left: `${tempRange ? tempRange.start : startPosition}%`,
               width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
             }}
           >
-            {/* Sleek handles */}
-            <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4 bg-primary rounded-full cursor-ew-resize shadow-md border border-background" />
-            <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-4 bg-primary rounded-full cursor-ew-resize shadow-md border border-background" />
+            {/* Premium handles */}
+            <div className={`absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-5 bg-primary rounded-full cursor-ew-resize shadow-lg border-2 border-background transition-all duration-200 ${isDragging ? 'scale-110' : 'hover:scale-105'}`} />
+            <div className={`absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-5 bg-primary rounded-full cursor-ew-resize shadow-lg border-2 border-background transition-all duration-200 ${isDragging ? 'scale-110' : 'hover:scale-105'}`} />
+            
+            {/* Inner glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent rounded-lg" />
           </div>
 
-          {/* Drag indicator */}
+          {/* Enhanced drag indicator */}
           {isDragging && dragStart !== null && (
             <div 
-              className="absolute top-1 bottom-1 w-0.5 bg-primary rounded-full pointer-events-none"
+              className="absolute top-2 bottom-2 w-0.5 bg-primary rounded-full pointer-events-none shadow-sm animate-pulse"
               style={{ left: `${dragStart}%` }}
             />
           )}
         </div>
 
-        {/* Month markers */}
-        <div className="relative mt-2 h-4">
+        {/* Refined month markers */}
+        <div className="relative mt-3 h-5">
           {monthMarkers.map((marker, index) => (
             <div
               key={index}
-              className="absolute flex flex-col items-center"
+              className="absolute flex flex-col items-center group"
               style={{ left: `${marker.position}%`, transform: 'translateX(-50%)' }}
             >
-              <div className="w-px h-2 bg-border/40 mb-1" />
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+              <div className="w-px h-2.5 bg-gradient-to-b from-border/60 to-border/30 mb-1.5 group-hover:from-primary/60 group-hover:to-primary/30 transition-colors duration-200" />
+              <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap group-hover:text-foreground transition-colors duration-200 px-1 py-0.5 rounded bg-background/80 backdrop-blur-sm border border-border/30">
                 {marker.label}
               </span>
             </div>

@@ -375,18 +375,19 @@ export function ProtocolHighlights({
             return (
               <div 
                 key={index}
-                className={`relative group p-4 transition-colors hover:bg-muted/50 ${
+                className={`relative group p-4 transition-all duration-200 hover:bg-muted/30 ${
                   !isRightColumn ? 'border-r' : ''
                 } ${
                   !isBottomRow ? 'border-b' : ''
                 }`}
               >
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${
-                      highlight.type === 'milestone' ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20' :
-                      highlight.type === 'record' ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20' :
-                      'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20'
+                <div className="flex flex-col space-y-4 h-full min-h-[90px]">
+                  {/* Top row: Icon and Title side by side */}
+                  <div className="flex items-start gap-2.5">
+                    <div className={`flex-shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-xl shadow-sm ${
+                      highlight.type === 'milestone' ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200/50 dark:border-amber-700/30' :
+                      highlight.type === 'record' ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/50 dark:border-blue-700/30' :
+                      'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200/50 dark:border-emerald-700/30'
                     }`}>
                       <IconComponent className={`h-3.5 w-3.5 ${
                         highlight.type === 'milestone' ? 'text-amber-600 dark:text-amber-400' :
@@ -394,31 +395,37 @@ export function ProtocolHighlights({
                         'text-emerald-600 dark:text-emerald-400'
                       }`} />
                     </div>
-                    {highlight.type === 'milestone' && (
-                      <Badge variant="outline" className="h-4 text-xs font-medium bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-800 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-700 dark:text-amber-200 shadow-sm">
-                        <Star className="w-2 h-2 mr-1 fill-current" />
-                        Milestone
-                      </Badge>
-                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className="text-sm font-semibold text-foreground leading-tight">
+                          {highlight.label}
+                        </h4>
+                        {highlight.type === 'milestone' && (
+                          <Badge variant="outline" className="h-4 text-[10px] font-medium bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:border-amber-700 dark:text-amber-300 shadow-sm ml-2 flex-shrink-0">
+                            <Star className="w-2 h-2 mr-0.5 fill-current" />
+                            Milestone
+                          </Badge>
+                        )}
+                      </div>
+                      {highlight.date && (
+                        <p className="text-xs text-muted-foreground/70 font-medium">
+                          {highlight.date}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-medium leading-none text-muted-foreground">
-                      {highlight.label}
-                    </h4>
-                    <p className="text-lg font-bold tracking-tight">
+                  {/* Value on new line */}
+                  <div className="text-center pb-2">
+                    <p className="text-3xl font-medium tracking-tight text-foreground leading-tight">
                       {highlight.value}
                     </p>
-                    {highlight.date && (
-                      <p className="text-xs text-muted-foreground/70">
-                        {highlight.date}
-                      </p>
-                    )}
                   </div>
                 </div>
                 
                 {/* Subtle hover effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             );
           })}

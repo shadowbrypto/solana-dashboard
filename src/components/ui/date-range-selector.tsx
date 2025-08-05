@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
-import { format, startOfDay, endOfDay, subDays } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, startOfMonth, addMonths, isBefore, differenceInMonths } from 'date-fns';
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -45,6 +45,33 @@ export function DateRangeSelector({
 
   const startPosition = dateToPosition(startDate);
   const endPosition = dateToPosition(endDate);
+
+  // Generate month markers
+  const generateMonthMarkers = () => {
+    const totalMonths = differenceInMonths(maxDate, effectiveMinDate);
+    const markers = [];
+    
+    // Determine interval based on total months
+    let interval = 1;
+    if (totalMonths > 24) interval = 6; // Show every 6 months if > 2 years
+    else if (totalMonths > 12) interval = 3; // Show every 3 months if > 1 year
+    else if (totalMonths > 6) interval = 2; // Show every 2 months if > 6 months
+    
+    let currentDate = startOfMonth(effectiveMinDate);
+    
+    while (isBefore(currentDate, maxDate) && markers.length < 10) {
+      markers.push({
+        date: currentDate,
+        position: dateToPosition(currentDate),
+        label: format(currentDate, totalMonths > 12 ? 'MMM yy' : 'MMM')
+      });
+      currentDate = addMonths(currentDate, interval);
+    }
+    
+    return markers;
+  };
+
+  const monthMarkers = generateMonthMarkers();
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
@@ -152,14 +179,20 @@ export function DateRangeSelector({
           )}
         </div>
 
-        {/* Minimalist date labels */}
-        <div className="flex justify-between mt-1 px-1">
-          <span className="text-[9px] text-muted-foreground">
-            {format(effectiveMinDate, 'MMM yyyy')}
-          </span>
-          <span className="text-[9px] text-muted-foreground">
-            {format(maxDate, 'MMM yyyy')}
-          </span>
+        {/* Month markers */}
+        <div className="relative mt-2 h-4">
+          {monthMarkers.map((marker, index) => (
+            <div
+              key={index}
+              className="absolute flex flex-col items-center"
+              style={{ left: `${marker.position}%`, transform: 'translateX(-50%)' }}
+            >
+              <div className="w-px h-2 bg-border/40 mb-1" />
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                {marker.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

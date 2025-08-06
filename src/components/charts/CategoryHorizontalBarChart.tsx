@@ -21,6 +21,8 @@ import {
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
+import { DateRangeSelector } from '../ui/DateRangeSelector';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
 type MetricType = "volume" | "new_users" | "trades" | "fees";
 
 interface CategoryHorizontalBarChartProps {
@@ -68,21 +70,40 @@ export function CategoryHorizontalBarChart({
 }: CategoryHorizontalBarChartProps) {
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("volume");
+  const [isCustomRange, setIsCustomRange] = useState(false);
+  const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
+  const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
 
   // Early return if no data
   if (!data || !Array.isArray(data)) {
     return null;
   }
 
-  const chartData = useMemo(() => {
-    if (data.length === 0) return [];
+  const filteredData = useMemo(() => {
+    if (!data || data.length === 0) return [];
     
-    const categories = getMutableAllCategories();
-    const now = new Date();
-    let filteredData = data.filter(d => d && (d.date || d.formattedDay));
+    let timeFilteredData = data.filter(d => d && (d.date || d.formattedDay));
 
-    // Filter data by timeframe
-    if (timeframe !== "all") {
+    if (isCustomRange) {
+      // Apply custom date range filter
+      timeFilteredData = timeFilteredData.filter((item) => {
+        if (item.formattedDay) {
+          const [day, month, year] = item.formattedDay.split("-");
+          const itemDate = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day)
+          );
+          return itemDate >= customStartDate && itemDate <= customEndDate;
+        } else if (item.date) {
+          const itemDate = new Date(item.date);
+          return itemDate >= customStartDate && itemDate <= customEndDate;
+        }
+        return false;
+      });
+    } else if (timeframe !== "all") {
+      const now = new Date();
       let daysToSubtract: number;
       switch (timeframe) {
         case "7d": daysToSubtract = 7; break;
@@ -95,7 +116,7 @@ export function CategoryHorizontalBarChart({
 
       const cutoffDate = new Date(now.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
       
-      filteredData = filteredData.filter(day => {
+      timeFilteredData = timeFilteredData.filter(day => {
         // For aggregated data, we need to parse the formattedDay (DD-MM-YYYY format)
         if (day.formattedDay) {
           const [dayPart, monthPart, yearPart] = day.formattedDay.split('-');
@@ -108,6 +129,12 @@ export function CategoryHorizontalBarChart({
         return false;
       });
     }
+
+    return timeFilteredData;
+  }, [data, timeframe, isCustomRange, customStartDate, customEndDate]);
+
+  const chartData = useMemo(() => {
+    const categories = getMutableAllCategories();
 
     // Calculate totals for each category
     const categoryTotals = categories.map((category, index) => {
@@ -135,7 +162,7 @@ export function CategoryHorizontalBarChart({
     return categoryTotals
       .filter(item => item.value > 0)
       .sort((a, b) => b.value - a.value);
-  }, [data, timeframe, selectedMetric]);
+  }, [filteredData, selectedMetric]);
 
   if (loading) {
     return (
@@ -218,8 +245,72 @@ export function CategoryHorizontalBarChart({
             </Select>
             <TimeframeSelector 
               value={timeframe}
-              onChange={setTimeframe}
+              onChange={(value) => {
+                setTimeframe(value);
+                setIsCustomRange(false); // Switch to predefined timeframe mode
+                
+                // Update custom date range to match the selected timeframe
+                const now = new Date();
+                let daysToSubtract: number;
+                
+                switch (value) {
+                  case "7d":
+                    daysToSubtract = 7;
+                    break;
+                  case "30d":
+                    daysToSubtract = 30;
+                    break;
+                  case "3m":
+                    daysToSubtract = 90;
+                    break;
+                  case "6m":
+                    daysToSubtract = 180;
+                    break;
+                  case "1y":
+                    daysToSubtract = 365;
+                    break;
+                  default:
+                    // For "all", use the full data range
+                    if (data && data.length > 0) {
+                      const dates = data.map(item => {
+                        if (item.formattedDay) {
+                          const [day, month, year] = item.formattedDay.split("-");
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        } else if (item.date) {
+                          return new Date(item.date);
+                        }
+                        return new Date();
+                      });
+                      const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                      setCustomStartDate(startOfDay(earliestDate));
+                      setCustomEndDate(endOfDay(now));
+                      return;
+                    }
+                    daysToSubtract = 90;
+                }
+                
+                const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+                setCustomStartDate(newStartDate);
+                setCustomEndDate(endOfDay(now));
+              }}
             />
+            
+            {/* Date Range Toggle Button */}
+            <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+              <button
+                onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                  showDateRangeSelector
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
+                </svg>
+              </button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-2 px-2">
@@ -390,6 +481,42 @@ export function CategoryHorizontalBarChart({
               </Bar>
             </RechartsBarChart>
           </ResponsiveContainer>
+          
+          {/* Date range selector - animated smooth reveal */}
+          <div 
+            className={`transition-all duration-200 ease-out ${
+              showDateRangeSelector 
+                ? 'max-h-96 opacity-100 mt-6 pt-6 border-t border-border' 
+                : 'max-h-0 opacity-0 overflow-hidden'
+            }`}
+          >
+            <DateRangeSelector
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onRangeChange={(start, end) => {
+                setCustomStartDate(start);
+                setCustomEndDate(end);
+                setIsCustomRange(true); // Switch to custom range mode
+              }}
+              minDate={(() => {
+                // Find the earliest date in the data
+                if (!data || data.length === 0) return undefined;
+                const dates = data.map(item => {
+                  if (item.formattedDay) {
+                    const [day, month, year] = item.formattedDay.split("-");
+                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  } else if (item.date) {
+                    return new Date(item.date);
+                  }
+                  return new Date();
+                });
+                return new Date(Math.min(...dates.map(d => d.getTime())));
+              })()}
+              maxDate={new Date()}
+              data={data}
+              dataKey={`${getMutableProtocolsByCategory(getMutableAllCategories()[0])[0]?.id.replace(/\s+/g, '_')}_${selectedMetric}`} // Use first protocol and selected metric
+            />
+          </div>
         </CardContent>
       </Card>
     </ComponentActions>

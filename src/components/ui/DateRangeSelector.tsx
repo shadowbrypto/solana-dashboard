@@ -523,18 +523,18 @@ export function DateRangeSelector({
                       relative p-2 text-xs font-medium ${roundedClass} select-none
                       ${isDisabled ? 'text-muted-foreground/20 cursor-not-allowed' : 'text-foreground'}
                       ${!isDisabled && isInRange ? 'bg-muted/40 text-muted-foreground/40' : ''}
-                      ${!isDisabled && isStart ? 'bg-foreground text-background relative' : ''}
-                      ${!isDisabled && isEnd ? 'bg-foreground text-background relative' : ''}
+                      ${!isDisabled && isStart ? 'bg-primary text-primary-foreground relative' : ''}
+                      ${!isDisabled && isEnd ? 'bg-primary text-primary-foreground relative' : ''}
                       ${!isDisabled && isTodayDate && !isInRange && !isStart && !isEnd ? 'border border-foreground' : ''}
                       ${!isDisabled && isCalendarDragging ? 'cursor-grabbing' : !isDisabled ? 'cursor-pointer' : ''}
                     `}
                   >
                     {format(day, 'd')}
                     {isStart && !isDisabled && (
-                      <div className="absolute inset-y-0 -right-0.5 w-0.5 bg-foreground"></div>
+                      <div className="absolute inset-y-0 -right-0.5 w-0.5 bg-primary"></div>
                     )}
                     {isEnd && !isDisabled && (
-                      <div className="absolute inset-y-0 -left-0.5 w-0.5 bg-foreground"></div>
+                      <div className="absolute inset-y-0 -left-0.5 w-0.5 bg-primary"></div>
                     )}
                   </button>
                 );

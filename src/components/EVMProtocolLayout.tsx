@@ -277,6 +277,9 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const chainLabels = availableChains.map(chain => chainNames[chain] || chain);
   const chainDominanceKeys = availableChains.map(chain => `${chain}_dominance`);
   const chartColors = availableChains.map(chain => chainColors[chain] || '#6B7280');
+  
+  // Prioritize ethereum for the timeline chart, fallback to first available chain
+  const timelineDataKey = availableChains.includes('ethereum') ? 'ethereum_dominance' : chainDominanceKeys[0];
 
   // Debug chart data
   console.log('Chart data length:', chartData.length);
@@ -402,6 +405,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           xAxisKey="formattedDay"
           valueFormatter={(value) => formatVolume(value)}
           loading={dailyLoading}
+          timelineDataKey={availableChains.includes('ethereum') ? 'ethereum' : availableChains[0]}
         />
       ) : dailyLoading ? (
         <Card className="bg-card border-border rounded-xl">
@@ -433,6 +437,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           colors={chartColors}
           valueFormatter={(value) => `${value.toFixed(1)}%`}
           loading={dailyLoading}
+          timelineDataKey={timelineDataKey}
         />
       ) : dailyLoading ? (
         <Card className="bg-card border-border rounded-xl">

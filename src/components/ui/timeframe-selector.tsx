@@ -30,7 +30,7 @@ export function TimeframeSelector({
   const buttonCount = options.length;
 
   return (
-    <div className={`relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit ${className}`}>
+    <div className={`relative inline-flex items-center rounded-lg bg-muted p-1 ${className}`}>
       {/* Sliding background indicator */}
       <div 
         className="absolute bg-background rounded-md shadow-sm transition-all duration-300 ease-out"
@@ -47,7 +47,7 @@ export function TimeframeSelector({
           <button
             key={period}
             onClick={() => onChange(period)}
-            className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+            className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
               value === period
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

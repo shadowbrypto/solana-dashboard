@@ -29,6 +29,7 @@ interface StackedAreaChartProps {
   xAxisKey?: string;
   valueFormatter?: (value: number) => string;
   loading?: boolean;
+  timelineDataKey?: string;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -48,7 +49,8 @@ export function StackedAreaChart({
   colors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"],
   xAxisKey = "formattedDay",
   valueFormatter = (value: number) => `${(value * 100).toFixed(2)}%`,
-  loading
+  loading,
+  timelineDataKey
 }: StackedAreaChartProps) {
   if (loading) {
     return <StackedAreaChartSkeleton />;
@@ -434,7 +436,7 @@ export function StackedAreaChart({
               })()}
               maxDate={new Date()}
               data={data}
-              dataKey={keys[0]} // Use first key for the timeline chart
+              dataKey={timelineDataKey || keys[0]} // Use specified timeline key or fallback to first
             />
           </div>
         </CardContent>

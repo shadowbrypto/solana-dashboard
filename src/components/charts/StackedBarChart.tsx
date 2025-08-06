@@ -34,6 +34,7 @@ interface StackedBarChartProps {
   onTimeframeChange?: (timeframe: TimeFrame) => void;
   disableTimeframeSelector?: boolean;
   defaultDisabledKeys?: string[];
+  timelineDataKey?: string;
 }
 
 function formatNumberWithSuffix(value: number): string {
@@ -58,6 +59,7 @@ export function StackedBarChart({
   onTimeframeChange,
   disableTimeframeSelector = false,
   defaultDisabledKeys = [],
+  timelineDataKey,
 }: StackedBarChartProps) {
   if (loading) {
     return <StackedBarChartSkeleton />;
@@ -431,7 +433,7 @@ export function StackedBarChart({
                 })()}
                 maxDate={new Date()}
                 data={data}
-                dataKey={dataKeys[0]} // Use first data key for the timeline chart
+                dataKey={timelineDataKey || dataKeys[0]} // Use specified timeline key or fallback to first
               />
             </div>
           )}

@@ -106,7 +106,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const [loading, setLoading] = useState(true);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y' | 'all'>('90d'); // Default to 90d to match chart's 3m default
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y' | 'all'>('1y'); // Default to 1y to get good amount of data
   const [dataTypeChangeKey, setDataTypeChangeKey] = useState(0);
 
   // Listen for data type changes
@@ -181,36 +181,6 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       setDailyData([]);
     } finally {
       setDailyLoading(false);
-    }
-  };
-
-  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '6m' | '1y' | 'all') => {
-    setSelectedTimeframe(newTimeframe);
-    fetchDailyData(newTimeframe);
-  };
-  
-  // Map timeframe to StackedBarChart's TimeFrame type
-  const mapTimeframeToChartTimeframe = (timeframe: '7d' | '30d' | '90d' | '6m' | '1y'): '7d' | '30d' | '3m' | '6m' | '1y' => {
-    switch (timeframe) {
-      case '7d': return '7d';
-      case '30d': return '30d';
-      case '90d': return '3m';
-      case '6m': return '6m';
-      case '1y': return '1y';
-      default: return '30d';
-    }
-  };
-  
-  // Map StackedBarChart's TimeFrame type back to our API timeframe
-  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '6m' | '1y' | 'all' => {
-    switch (timeframe) {
-      case '7d': return '7d';
-      case '30d': return '30d';
-      case '3m': return '90d';
-      case '6m': return '6m'; // Now properly maps to 6m
-      case '1y': return '1y';
-      case 'all': return 'all'; // Map 'all' to fetch all available data
-      default: return '30d';
     }
   };
 
@@ -432,8 +402,6 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
           xAxisKey="formattedDay"
           valueFormatter={(value) => formatVolume(value)}
           loading={dailyLoading}
-          timeframe={mapTimeframeToChartTimeframe(selectedTimeframe)}
-          onTimeframeChange={(newTimeframe) => handleTimeframeChange(mapChartTimeframeToAPITimeframe(newTimeframe))}
         />
       ) : dailyLoading ? (
         <Card className="bg-card border-border rounded-xl">

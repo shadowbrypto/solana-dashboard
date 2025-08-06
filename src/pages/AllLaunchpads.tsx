@@ -792,7 +792,7 @@ export default function AllLaunchpads() {
             {/* Launches Stacked Bar Chart */}
             {(() => {
               const launchesChartData = transformLaunchpadDataForStackedChart(
-                getFilteredData(launchesTimeframe),
+                getFilteredData("all"), // Always pass full data for DateRangeSelector
                 'launches'
               );
               return (
@@ -813,7 +813,7 @@ export default function AllLaunchpads() {
             {/* Launches Dominance Chart */}
             {(() => {
               const launchesChartData = transformLaunchpadDataForStackedChart(
-                getFilteredData(launchesDominanceTimeframe),
+                getFilteredData("all"), // Always pass full data for DateRangeSelector
                 'launches'
               );
               return (
@@ -833,7 +833,7 @@ export default function AllLaunchpads() {
             {/* Graduations Stacked Bar Chart */}
             {(() => {
               const graduationsChartData = transformLaunchpadDataForStackedChart(
-                getFilteredData(graduationsTimeframe),
+                getFilteredData("all"), // Always pass full data for DateRangeSelector
                 'graduations'
               );
               return (
@@ -854,7 +854,7 @@ export default function AllLaunchpads() {
             {/* Graduations Dominance Chart */}
             {(() => {
               const graduationsChartData = transformLaunchpadDataForStackedChart(
-                getFilteredData(graduationsDominanceTimeframe),
+                getFilteredData("all"), // Always pass full data for DateRangeSelector
                 'graduations'
               );
               return (

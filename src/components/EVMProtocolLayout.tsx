@@ -106,7 +106,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const [loading, setLoading] = useState(true);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y'>('90d'); // Default to 90d to match chart's 3m default
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | '6m' | '1y' | 'all'>('90d'); // Default to 90d to match chart's 3m default
   const [dataTypeChangeKey, setDataTypeChangeKey] = useState(0);
 
   // Listen for data type changes
@@ -153,7 +153,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     }
   }, [protocol, dataTypeChangeKey]);
 
-  const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '6m' | '1y') => {
+  const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '6m' | '1y' | 'all') => {
     try {
       setDailyLoading(true);
       
@@ -184,7 +184,7 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
     }
   };
 
-  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '6m' | '1y') => {
+  const handleTimeframeChange = (newTimeframe: '7d' | '30d' | '90d' | '6m' | '1y' | 'all') => {
     setSelectedTimeframe(newTimeframe);
     fetchDailyData(newTimeframe);
   };
@@ -202,14 +202,14 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   };
   
   // Map StackedBarChart's TimeFrame type back to our API timeframe
-  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '6m' | '1y' => {
+  const mapChartTimeframeToAPITimeframe = (timeframe: '7d' | '30d' | '3m' | '6m' | '1y' | 'all'): '7d' | '30d' | '90d' | '6m' | '1y' | 'all' => {
     switch (timeframe) {
       case '7d': return '7d';
       case '30d': return '30d';
       case '3m': return '90d';
       case '6m': return '6m'; // Now properly maps to 6m
       case '1y': return '1y';
-      case 'all': return '1y'; // Map 'all' to 1y as the maximum
+      case 'all': return 'all'; // Map 'all' to fetch all available data
       default: return '30d';
     }
   };

@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, addMonths, isBefore, differenceInMonths, addDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -8,6 +9,8 @@ interface DateRangeSelectorProps {
   minDate?: Date;
   maxDate?: Date;
   className?: string;
+  data?: Array<{ formattedDay: string; [key: string]: any }>;
+  dataKey?: string;
 }
 
 export function DateRangeSelector({
@@ -16,7 +19,9 @@ export function DateRangeSelector({
   onRangeChange,
   minDate,
   maxDate = new Date(),
-  className = ""
+  className = "",
+  data,
+  dataKey = "value"
 }: DateRangeSelectorProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
@@ -81,7 +86,7 @@ export function DateRangeSelector({
       markers.push({
         date: currentDate,
         position: dateToPosition(currentDate),
-        label: format(currentDate, 'MMM yy')
+        label: format(currentDate, "MMM ''yy")
       });
       currentDate = addMonths(currentDate, interval);
     }
@@ -91,18 +96,27 @@ export function DateRangeSelector({
 
   const monthMarkers = generateMonthMarkers();
 
-  const handleDateDoubleClick = () => {
-    setCalendarStartDate(startDate);
-    setCalendarEndDate(endDate);
-    setCalendarMonth(startDate);
-    setIsSelectingEnd(false);
-    setShowCalendar(true);
-  };
+  // Prepare timeline chart data - full dataset formatted for Recharts
+  const timelineChartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
+    return data
+      .map(item => ({
+        date: item.formattedDay,
+        value: dataKey && item[dataKey] !== undefined ? item[dataKey] : 0,
+        timestamp: (() => {
+          const [day, month, year] = item.formattedDay.split("-");
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
+        })()
+      }))
+      .filter(item => {
+        const itemDate = new Date(item.timestamp);
+        return itemDate >= effectiveMinDate && itemDate <= maxDate;
+      })
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }, [data, dataKey, effectiveMinDate, maxDate]);
 
-  const handleDaysDoubleClick = () => {
-    setIsEditingDays(true);
-    setDaysInput(displayDays.toString());
-  };
+
 
   const handleCalendarDateMouseDown = (date: Date) => {
     // Check if date is valid (within range and not in future)
@@ -388,13 +402,27 @@ export function DateRangeSelector({
         </span>
         
         <div className="flex items-center gap-4">
-          <span 
-            className={`text-sm font-medium transition-colors duration-200 cursor-pointer hover:text-primary ${tempRange ? 'text-primary' : 'text-foreground'}`}
-            onDoubleClick={handleDateDoubleClick}
-            title="Double-click to select date range"
+          <div 
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
+              tempRange 
+                ? 'border-primary/50 bg-primary/5 text-primary' 
+                : 'border-border/50 bg-background/50 text-foreground hover:border-primary/30 hover:bg-primary/5'
+            }`}
+            onClick={() => {
+              setCalendarStartDate(startDate);
+              setCalendarEndDate(endDate);
+              setCalendarMonth(startDate);
+              setIsSelectingEnd(false);
+              setShowCalendar(true);
+            }}
           >
-            {format(displayStartDate, 'MMM d')} — {format(displayEndDate, 'MMM d, yyyy')}
-          </span>
+            <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-medium">
+              {format(displayStartDate, 'MMM d')} — {format(displayEndDate, 'MMM d, yyyy')}
+            </span>
+          </div>
           
           <div className="w-px h-4 bg-border/40"></div>
           
@@ -405,16 +433,18 @@ export function DateRangeSelector({
               onChange={(e) => setDaysInput(e.target.value)}
               onKeyDown={handleDaysSubmit}
               onBlur={() => setIsEditingDays(false)}
-              className="text-xs w-16 bg-background border border-border rounded-md px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              className="text-sm w-20 bg-background border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
               placeholder="days"
               min="1"
               autoFocus
             />
           ) : (
             <span 
-              className={`text-xs font-medium px-3 py-1 rounded-lg transition-all duration-200 cursor-pointer border ${tempRange ? 'text-primary bg-primary/5 border-primary/20 hover:bg-primary/10' : 'text-muted-foreground bg-background/50 border-border/40 hover:bg-muted/40 hover:text-foreground'}`}
-              onDoubleClick={handleDaysDoubleClick}
-              title="Double-click to edit duration"
+              className={`text-sm font-medium px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer border ${tempRange ? 'text-primary bg-primary/5 border-primary/20 hover:bg-primary/10' : 'text-muted-foreground bg-background/50 border-border/50 hover:bg-muted/40 hover:text-foreground'}`}
+              onClick={() => {
+                setIsEditingDays(true);
+                setDaysInput(displayDays.toString());
+              }}
             >
               {displayDays} days
             </span>
@@ -537,57 +567,146 @@ export function DateRangeSelector({
         </div>
       )}
 
-      {/* Simple timeline slider */}
+      {/* Timeline Chart with Range Selector Overlay */}
       <div className="relative">
         <div 
           ref={containerRef}
-          className="relative h-8 bg-muted/30 rounded-lg cursor-crosshair border border-border/50"
-          onMouseDown={handleMouseDown}
+          className="relative h-20 bg-card rounded-lg border border-border overflow-hidden"
         >
-          {/* Selected range */}
+          {/* Area Chart Background */}
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={timelineChartData}
+              margin={{ top: 3, right: 0, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="timelineGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="hsl(var(--primary))"
+                    stopOpacity={0.25}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="hsl(var(--primary))"
+                    stopOpacity={0.05}
+                  />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="hsl(var(--primary))"
+                strokeWidth={1}
+                strokeOpacity={0.6}
+                fill="url(#timelineGradient)"
+                dot={false}
+                activeDot={false}
+              />
+              <XAxis 
+                dataKey="date"
+                hide={true}
+              />
+              <YAxis 
+                hide={true}
+                domain={[0, 'dataMax']}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+          
+          {/* Range Selection Overlay */}
           <div
-            className="absolute top-0.5 bottom-0.5 rounded-md border bg-primary/20 border-primary/50"
-            style={{
-              left: `${tempRange ? tempRange.start : startPosition}%`,
-              width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
-            }}
+            className="absolute inset-0 pointer-events-auto"
           >
-            {/* Left resize handle */}
-            <div 
-              className={`absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'start' ? 'scale-110' : ''}`}
-              onMouseDown={handleStartHandleMouseDown}
+            
+            {/* Selected range */}
+            <div
+              className="absolute top-0.5 bottom-0.5 rounded-md border pointer-events-auto"
+              style={{
+                left: `${tempRange ? tempRange.start : startPosition}%`,
+                width: `${Math.max(2, tempRange ? tempRange.end - tempRange.start : endPosition - startPosition)}%`,
+                backgroundColor: 'hsl(var(--primary) / 0.2)',
+                borderColor: 'hsl(var(--primary) / 0.5)',
+              }}
+            >
+              {/* Left resize handle */}
+              <div 
+                className={`absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 ${isResizing === 'start' ? 'scale-110' : ''}`}
+                style={{ backgroundColor: 'hsl(var(--primary))' }}
+                onMouseDown={handleStartHandleMouseDown}
+              />
+              
+              {/* Middle drag area */}
+              <div 
+                className={`absolute inset-0 mx-2 rounded-sm ${
+                  isMovingRange ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
+                onMouseDown={handleRangeMouseDown}
+              />
+              
+              {/* Right resize handle */}
+              <div 
+                className={`absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 ${isResizing === 'end' ? 'scale-110' : ''}`}
+                style={{ backgroundColor: 'hsl(var(--primary))' }}
+                onMouseDown={handleEndHandleMouseDown}
+              />
+            </div>
+            
+            {/* Clickable background areas for new selections */}
+            <div
+              className="absolute top-0 bottom-0 left-0 pointer-events-auto cursor-crosshair"
+              style={{
+                width: `${tempRange ? tempRange.start : startPosition}%`,
+              }}
+              onMouseDown={handleMouseDown}
             />
             
-            {/* Middle drag area */}
-            <div 
-              className={`absolute inset-0 mx-2 rounded-sm ${
-                isMovingRange ? 'cursor-grabbing' : 'cursor-grab'
-              }`}
-              onMouseDown={handleRangeMouseDown}
-            />
-            
-            {/* Right resize handle */}
-            <div 
-              className={`absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm cursor-ew-resize transition-all duration-200 hover:scale-110 bg-primary ${isResizing === 'end' ? 'scale-110' : ''}`}
-              onMouseDown={handleEndHandleMouseDown}
+            <div
+              className="absolute top-0 bottom-0 right-0 pointer-events-auto cursor-crosshair"
+              style={{
+                width: `${100 - (tempRange ? tempRange.end : endPosition)}%`,
+              }}
+              onMouseDown={handleMouseDown}
             />
           </div>
         </div>
 
-        {/* Clean month markers */}
-        <div className="relative mt-1 h-4">
-          {monthMarkers.map((marker, index) => (
-            <div
-              key={index}
-              className="absolute flex flex-col items-center"
-              style={{ left: `${marker.position}%`, transform: 'translateX(-50%)' }}
-            >
-              <div className="w-px h-1 bg-border/40 mb-0.5" />
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                {marker.label}
-              </span>
-            </div>
-          ))}
+        {/* Timeline Labels */}
+        <div className="relative mt-1 h-6 overflow-visible px-2">
+          {monthMarkers.map((marker, index) => {
+            // More aggressive overflow prevention
+            let transform = 'translateX(-50%)';
+            let textAlign = 'center';
+            
+            if (marker.position < 8) {
+              transform = 'translateX(0%)';
+              textAlign = 'left';
+            } else if (marker.position > 92) {
+              transform = 'translateX(-100%)';
+              textAlign = 'right';
+            }
+            
+            return (
+              <div
+                key={index}
+                className="absolute flex flex-col items-center"
+                style={{ 
+                  left: `${Math.max(0, Math.min(100, marker.position))}%`, 
+                  transform,
+                  maxWidth: '60px', // Fixed max width
+                  minWidth: '40px'
+                }}
+              >
+                <div className="w-px h-2 bg-border/40 mb-1" />
+                <span 
+                  className="text-[10px] text-muted-foreground whitespace-nowrap truncate"
+                  style={{ textAlign }}
+                >
+                  {marker.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

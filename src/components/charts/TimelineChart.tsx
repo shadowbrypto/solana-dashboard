@@ -19,7 +19,7 @@ import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-con
 import { ProtocolStats, ProtocolMetrics } from '../../types/protocol';
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
-import { DateRangeSelector } from '../ui/date-range-selector';
+import { DateRangeSelector } from '../ui/DateRangeSelector';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 
 type ChartDataKey = string;
@@ -542,30 +542,36 @@ export function TimelineChart({
           </AreaChart>
         </ResponsiveContainer>
         
-        {/* Date range selector - conditionally visible below the chart */}
-        {showDateRangeSelector && (
-          <div className="mt-6 pt-6 border-t border-border animate-in slide-in-from-top-2 duration-200">
-            <DateRangeSelector
-              startDate={customStartDate}
-              endDate={customEndDate}
-              onRangeChange={(start, end) => {
-                setCustomStartDate(start);
-                setCustomEndDate(end);
-                setIsCustomRange(true); // Switch to custom range mode
-              }}
-              minDate={(() => {
-                // Find the earliest date in the data
-                if (data.length === 0) return undefined;
-                const dates = data.map(item => {
-                  const [day, month, year] = item.formattedDay.split("-");
-                  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                });
-                return new Date(Math.min(...dates.map(d => d.getTime())));
-              })()}
-              maxDate={new Date()}
-            />
-          </div>
-        )}
+        {/* Date range selector - animated smooth reveal */}
+        <div 
+          className={`transition-all duration-200 ease-out ${
+            showDateRangeSelector 
+              ? 'max-h-96 opacity-100 mt-6 pt-6 border-t border-border' 
+              : 'max-h-0 opacity-0 overflow-hidden'
+          }`}
+        >
+          <DateRangeSelector
+            startDate={customStartDate}
+            endDate={customEndDate}
+            onRangeChange={(start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+              setIsCustomRange(true); // Switch to custom range mode
+            }}
+            minDate={(() => {
+              // Find the earliest date in the data
+              if (data.length === 0) return undefined;
+              const dates = data.map(item => {
+                const [day, month, year] = item.formattedDay.split("-");
+                return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+              });
+              return new Date(Math.min(...dates.map(d => d.getTime())));
+            })()}
+            maxDate={new Date()}
+            data={data}
+            dataKey={dataKey}
+          />
+        </div>
       </CardContent>
     </Card>
     </ComponentActions>

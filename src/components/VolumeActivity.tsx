@@ -278,7 +278,7 @@ export function VolumeActivity({
             <span>Learn how we count contributions</span>
           </div>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-24 h-8 text-sm">
+            <SelectTrigger className="w-20 h-8 text-sm pl-2 pr-1.5 gap-0 justify-start [&>svg]:ml-2">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -418,10 +418,10 @@ export function VolumeActivity({
                 <span className="text-muted-foreground">{activeDays} active days</span>
               </div>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-20 h-6 text-[10px] sm:w-24 sm:h-8 sm:text-sm px-2 sm:px-3">
+                <SelectTrigger className="w-16 h-6 text-[10px] sm:w-20 sm:h-8 sm:text-sm pl-1.5 pr-1 sm:pl-2 sm:pr-1.5 gap-0 justify-start [&>svg]:ml-2">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-16 sm:w-20 min-w-0">
                   {availableYears.map(year => (
                     <SelectItem key={year} value={year} className="text-[10px] sm:text-sm">
                       {year}

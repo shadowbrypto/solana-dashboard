@@ -103,7 +103,7 @@ const MetricCards = ({
   }, []);
   
   return (
-  <div className="mb-6 lg:mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="mb-4 sm:mb-6 lg:mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-4">
     {loading ? (
       <>
         <MetricCardSkeleton title="Lifetime Volume" type="volume" protocolName={protocolName || "All Protocols"} />
@@ -654,7 +654,7 @@ const MainContent = (): JSX.Element => {
         </div>
       )}
 
-        <div className="space-y-4 lg:space-y-6">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           {protocol === "all" ? (
             <>
               <Accordion 

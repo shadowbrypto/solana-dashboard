@@ -314,7 +314,7 @@ export function VolumeActivity({
                   {week.map((day, dayIndex) => (
                     <div
                       key={`${weekIndex}-${dayIndex}`}
-                      className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
+                      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                         !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                       }`}
                     >
@@ -354,9 +354,9 @@ export function VolumeActivity({
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-1">
-                <div className="w-4 h-4 bg-muted rounded-sm" />
+                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted rounded-sm" />
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                  <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                  <div key={level} className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${getGreenColorClass(level)}`} />
                 ))}
               </div>
               <span className="text-muted-foreground">More</span>
@@ -373,12 +373,12 @@ export function VolumeActivity({
       filename="Volume_Activity.png"
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="border-b">
+        <CardHeader className="border-b p-3 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
               {subtitle && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                   {(() => {
                     // Check if subtitle is a protocol name
                     const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
@@ -412,18 +412,18 @@ export function VolumeActivity({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <Activity className="w-3 h-3" />
+            <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 <span className="text-muted-foreground">{activeDays} active days</span>
               </div>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-24 h-8 text-sm">
+                <SelectTrigger className="w-20 h-6 text-[10px] sm:w-24 sm:h-8 sm:text-sm px-2 sm:px-3">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {availableYears.map(year => (
-                    <SelectItem key={year} value={year} className="text-sm">
+                    <SelectItem key={year} value={year} className="text-[10px] sm:text-sm">
                       {year}
                     </SelectItem>
                   ))}
@@ -432,14 +432,14 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-2 px-3 pb-0 sm:py-4 sm:px-6">
           {/* Month headers for card mode */}
-          <div className="relative w-full mb-4">
+          <div className="relative w-full mb-2 sm:mb-4">
             <div className="grid grid-cols-12 gap-1 w-full">
               {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
                 <div
                   key={month}
-                  className="text-xs text-muted-foreground text-center"
+                  className="text-[10px] sm:text-xs text-muted-foreground text-center"
                 >
                   {month}
                 </div>
@@ -456,7 +456,7 @@ export function VolumeActivity({
                     {week.map((day, dayIndex) => (
                       <div
                         key={`${weekIndex}-${dayIndex}`}
-                        className={`w-4 h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
+                        className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                           !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                         }`}
                       >
@@ -492,13 +492,13 @@ export function VolumeActivity({
             </div>
             
             {/* Legend - bottom right */}
-            <div className="flex items-center justify-end text-xs mt-4">
+            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-1 sm:mt-4">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Less</span>
                 <div className="flex space-x-1">
-                  <div className="w-4 h-4 bg-muted rounded-sm" />
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted rounded-sm" />
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                    <div key={level} className={`w-4 h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                    <div key={level} className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${getGreenColorClass(level)}`} />
                   ))}
                 </div>
                 <span className="text-muted-foreground">More</span>

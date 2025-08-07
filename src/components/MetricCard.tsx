@@ -104,20 +104,20 @@ export function MetricCard({
       componentName={`${title} Metric`}
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
-      <div className="group relative rounded-xl border-2 border-border/80 bg-card p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-xl cursor-default overflow-hidden">
+      <div className="group relative rounded-lg sm:rounded-xl border-2 border-border/80 bg-card p-2 sm:p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-xl cursor-default overflow-hidden">
         {/* Content Container */}
         <div className="flex flex-col h-full">
           {/* Top Section - Title */}
           <div className="mb-auto">
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-sm sm:text-lg font-semibold text-foreground">
               {title}
             </h3>
           </div>
 
           {/* Middle Section - Large Value */}
-          <div className="flex-1 flex items-center justify-center py-4">
+          <div className="flex-1 flex items-center justify-center py-1 sm:py-4">
             <div className="text-center">
-              <div className="text-4xl lg:text-5xl font-semibold font-mono tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+              <div className="text-2xl sm:text-4xl lg:text-5xl font-semibold font-mono tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                 {typeof value === 'number' ? formatNumber(value) : value}
               </div>
             </div>
@@ -147,14 +147,14 @@ export function MetricCard({
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">
                 {protocolName}
               </span>
             </div>
 
             {/* Data Freshness Indicator */}
             {dataFreshness && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-md border transition-all duration-200 ${
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border transition-all duration-200 ${
                 dataFreshness.isCurrent 
                   ? 'bg-green-50/50 border-green-200/50 dark:bg-green-950/20 dark:border-green-800/30' 
                   : dataFreshness.isOneDayOld
@@ -172,7 +172,7 @@ export function MetricCard({
                     ? 'bg-red-500'
                     : 'bg-amber-500'
                 }`} />
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-[8px] sm:text-[10px] font-medium text-muted-foreground">
                   {dataFreshness.dateStr}
                 </span>
               </div>

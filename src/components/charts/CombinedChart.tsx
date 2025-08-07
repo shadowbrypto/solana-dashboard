@@ -144,11 +144,11 @@ export function CombinedChart({
       filename={`${title.replace(/\s+/g, '_')}_Combined_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0 p-3 sm:p-6">
+        <CardHeader className="flex flex-row items-start sm:items-center justify-between border-b gap-2 sm:gap-0 p-3 sm:p-6">
           <div className="space-y-1">
             <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
             {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                 {(() => {
                   // Check if subtitle is a protocol name
                   const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
@@ -182,9 +182,10 @@ export function CombinedChart({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0 sm:gap-2 flex-shrink-0">
             <TimeframeSelector 
               value={timeframe}
+              className=""
               onChange={(value) => {
                 setTimeframe(value);
                 setIsCustomRange(false); // Switch to predefined timeframe mode
@@ -231,17 +232,17 @@ export function CombinedChart({
             />
             
             {/* Date Range Toggle Button */}
-            <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+            <div className="relative inline-flex items-center rounded-lg bg-muted p-0.5 sm:p-1">
               <button
                 onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                   showDateRangeSelector
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
                 title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
                 </svg>
               </button>
@@ -249,8 +250,8 @@ export function CombinedChart({
           </div>
         </CardHeader>
         <CardContent className="pt-3 sm:pt-6 p-3 sm:p-6">
-          <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
-            <ComposedChart data={filteredData} margin={{ top: 10, right: 15, left: 0, bottom: 8 }} className="sm:m-[20px_30px_12px_0px]">
+          <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
+            <ComposedChart data={filteredData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }} className="sm:m-[20px_30px_12px_0px]">
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -267,8 +268,8 @@ export function CombinedChart({
                 dataKey="formattedDay"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-                interval={Math.ceil(filteredData.length / 4) - 1}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                interval={Math.ceil(filteredData.length / 6) - 1}
                 className="sm:text-xs"
                 tickFormatter={(value: string) => {
                   const [day, month, year] = value.split('-');
@@ -292,7 +293,8 @@ export function CombinedChart({
                 }}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                width={30}
                 className="sm:text-xs"
               />
               <YAxis
@@ -307,7 +309,8 @@ export function CombinedChart({
                 }}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                width={30}
                 className="sm:text-xs"
               />
               <Tooltip
@@ -381,14 +384,14 @@ export function CombinedChart({
               />
               <Legend
                 verticalAlign="bottom"
-                height={32}
+                height={24}
                 iconType="circle"
-                iconSize={8}
+                iconSize={6}
                 wrapperStyle={{
-                  paddingTop: "12px"
+                  paddingTop: "6px"
                 }}
                 formatter={(value) => (
-                  <span className="text-sm text-muted-foreground">{value}</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{value}</span>
                 )}
               />
             </ComposedChart>

@@ -324,9 +324,9 @@ export function ProtocolHighlights({
       filename={`${title.replace(/\s+/g, '_')}_Protocol_Highlights.png`}
     >
       <Card className="overflow-hidden">
-      <CardHeader>
+      <CardHeader className="pt-3 pb-2 sm:py-6">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
+          <div className="space-y-0.5 sm:space-y-1">
             <CardTitle className="text-base font-medium">{title}</CardTitle>
             {subtitle ? (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -365,23 +365,29 @@ export function ProtocolHighlights({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 border-t sm:border-t-0">
           {highlights.map((highlight, index) => {
             const IconComponent = highlight.icon;
             const isLast = index === highlights.length - 1;
-            const isRightColumn = (index + 1) % 3 === 0;
-            const isBottomRow = index >= highlights.length - (highlights.length % 3 || 3);
+            const isRightColumnDesktop = (index + 1) % 3 === 0;
+            const isRightColumnMobile = (index + 1) % 2 === 0;
+            const isBottomRowDesktop = index >= highlights.length - (highlights.length % 3 || 3);
+            const isBottomRowMobile = index >= highlights.length - (highlights.length % 2 || 2);
             
             return (
               <div 
                 key={index}
-                className={`relative group p-4 transition-all duration-200 hover:bg-muted/30 ${
-                  !isRightColumn ? 'border-r' : ''
+                className={`relative group p-2 sm:p-4 transition-all duration-200 hover:bg-muted/30 ${
+                  !isRightColumnMobile ? 'border-r lg:border-r-0' : ''
                 } ${
-                  !isBottomRow ? 'border-b' : ''
+                  !isRightColumnDesktop ? 'lg:border-r' : ''
+                } ${
+                  !isBottomRowMobile ? 'border-b lg:border-b-0' : ''
+                } ${
+                  !isBottomRowDesktop ? 'lg:border-b' : ''
                 }`}
               >
-                <div className="flex flex-col space-y-4 h-full min-h-[90px]">
+                <div className="flex flex-col space-y-0.5 sm:space-y-4 h-full min-h-[50px] sm:min-h-[90px]">
                   {/* Top row: Icon and Title side by side */}
                   <div className="flex items-start gap-2.5">
                     <div className={`flex-shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-xl shadow-sm ${
@@ -398,18 +404,18 @@ export function ProtocolHighlights({
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="text-sm font-semibold text-foreground leading-tight">
+                        <h4 className="text-xs sm:text-sm font-semibold text-foreground leading-tight">
                           {highlight.label}
                         </h4>
                         {highlight.type === 'milestone' && (
                           <Badge variant="outline" className="h-4 text-[10px] font-medium bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:border-amber-700 dark:text-amber-300 shadow-sm ml-2 flex-shrink-0">
-                            <Star className="w-2 h-2 mr-0.5 fill-current" />
-                            Milestone
+                            <Star className="w-2 h-2 sm:mr-0.5 fill-current" />
+                            <span className="hidden sm:inline">Milestone</span>
                           </Badge>
                         )}
                       </div>
                       {highlight.date && (
-                        <p className="text-xs text-muted-foreground/70 font-medium">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 font-medium">
                           {highlight.date}
                         </p>
                       )}
@@ -417,8 +423,8 @@ export function ProtocolHighlights({
                   </div>
                   
                   {/* Value on new line */}
-                  <div className="text-center pb-2">
-                    <p className="text-3xl font-medium tracking-tight text-foreground leading-tight">
+                  <div className="text-center pb-0 sm:pb-2 pt-1 sm:pt-0">
+                    <p className="text-lg sm:text-3xl font-medium tracking-tight text-foreground leading-tight">
                       {highlight.value}
                     </p>
                   </div>

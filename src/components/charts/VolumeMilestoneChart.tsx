@@ -187,12 +187,12 @@ export function VolumeMilestoneChart({
       filename={`${title.replace(/\s+/g, '_')}_Volume_Milestone_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="border-b">
+        <CardHeader className="border-b p-3 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
               {subtitle && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                   {(() => {
                     // Check if subtitle is a protocol name
                     const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
@@ -226,24 +226,25 @@ export function VolumeMilestoneChart({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full border">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="font-medium">Active since {(milestoneData[milestoneData.length - 1]?.daysToReach || 0) + 1} days</span>
+            <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 sm:gap-2 bg-muted/30 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-full border">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="font-medium text-[10px] sm:text-sm">Active since {(milestoneData[milestoneData.length - 1]?.daysToReach || 0) + 1} days</span>
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4 px-2 pb-2">
-          <ResponsiveContainer width="100%" height={400}>
+        <CardContent className="pt-2 px-1 pb-0 sm:pt-4 sm:px-4 sm:pb-2">
+          <ResponsiveContainer width="100%" height={200} className="sm:h-[350px] lg:h-[400px]">
             <RechartsBarChart
               data={milestoneData}
               margin={{
-                top: 20,
-                right: 10,
-                bottom: 45,
-                left: 10,
+                top: 10,
+                right: 5,
+                bottom: 5,
+                left: 0,
               }}
+              className="sm:m-[20px_10px_45px_10px]"
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -256,16 +257,18 @@ export function VolumeMilestoneChart({
                 dataKey="milestone"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 500 }}
+                angle={0}
+                textAnchor="middle"
+                height={25}
+                interval="preserveStartEnd"
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                tickFormatter={(value) => `${value} days`}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tickFormatter={(value) => `${value}`}
+                width={25}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -315,24 +318,24 @@ export function VolumeMilestoneChart({
           </ResponsiveContainer>
           
           {/* Summary Stats */}
-          <div className="mt-0 grid grid-cols-3 gap-4 border-t pt-0">
-            <div className="text-center py-4">
-              <div className="text-2xl font-bold text-foreground">
+          <div className="mt-0 grid grid-cols-3 gap-2 sm:gap-4 border-t pt-0">
+            <div className="text-center py-2 sm:py-4">
+              <div className="text-lg sm:text-2xl font-bold text-foreground">
                 {milestoneData.length}
               </div>
-              <div className="text-sm text-muted-foreground">Milestones</div>
+              <div className="text-[10px] sm:text-sm text-muted-foreground">Milestones</div>
             </div>
-            <div className="text-center py-4">
-              <div className="text-2xl font-bold text-foreground">
+            <div className="text-center py-2 sm:py-4">
+              <div className="text-lg sm:text-2xl font-bold text-foreground">
                 {milestoneData.length > 0 ? Math.round((milestoneData[milestoneData.length - 1]?.daysToReach || 0) / milestoneData.length) : 0}
               </div>
-              <div className="text-sm text-muted-foreground">Avg Days/Billion</div>
+              <div className="text-[10px] sm:text-sm text-muted-foreground">Avg Days/Billion</div>
             </div>
-            <div className="text-center py-4">
-              <div className="text-2xl font-bold text-foreground">
+            <div className="text-center py-2 sm:py-4">
+              <div className="text-lg sm:text-2xl font-bold text-foreground">
                 ${((milestoneData[milestoneData.length - 1]?.volume || 0) / 1e9).toFixed(2)}B
               </div>
-              <div className="text-sm text-muted-foreground">Total Volume</div>
+              <div className="text-[10px] sm:text-sm text-muted-foreground">Total Volume</div>
             </div>
           </div>
         </CardContent>

@@ -267,7 +267,7 @@ export function TimelineChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+        <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
           <AreaChart
             data={filteredData}
             margin={{ top: 20, right: 0, left: 0, bottom: 0 }}

@@ -67,18 +67,11 @@ export function TimelineChart({
     return <TimelineChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
-    // Check if mobile layout (screen width < 640px)
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return "30d";
-    }
-    return "3m";
-  });
+  const [timeframe, setTimeframe] = useState<TimeFrame>("30d");
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => {
-    const days = (typeof window !== 'undefined' && window.innerWidth < 640) ? 30 : 90;
-    return startOfDay(subDays(new Date(), days));
+    return startOfDay(subDays(new Date(), 30));
   });
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(

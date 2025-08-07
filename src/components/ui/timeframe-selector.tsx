@@ -47,7 +47,7 @@ export function TimeframeSelector({
           <button
             key={period}
             onClick={() => onChange(period)}
-            className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1 sm:px-2.5 sm:py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+            className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1 sm:px-2.5 sm:py-1.5 text-[9px] sm:text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
               value === period
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'

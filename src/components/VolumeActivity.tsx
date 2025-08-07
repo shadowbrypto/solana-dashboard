@@ -350,7 +350,7 @@ export function VolumeActivity({
           </div>
           
           {/* Legend - bottom right */}
-          <div className="flex items-center justify-end text-xs mt-4">
+          <div className="flex items-center justify-end text-xs mt-4 mb-2 sm:mb-0">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-1">
@@ -492,7 +492,7 @@ export function VolumeActivity({
             </div>
             
             {/* Legend - bottom right */}
-            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-1 sm:mt-4">
+            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-1 sm:mt-4 mb-2 sm:mb-0">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Less</span>
                 <div className="flex space-x-1">

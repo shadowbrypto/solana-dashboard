@@ -390,12 +390,12 @@ export function ProtocolHighlights({
                 <div className="flex flex-col space-y-0.5 sm:space-y-4 h-full min-h-[50px] sm:min-h-[90px]">
                   {/* Top row: Icon and Title side by side */}
                   <div className="flex items-start gap-2.5">
-                    <div className={`flex-shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-xl shadow-sm ${
+                    <div className={`flex-shrink-0 inline-flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-xl shadow-sm ${
                       highlight.type === 'milestone' ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200/50 dark:border-amber-700/30' :
                       highlight.type === 'record' ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/50 dark:border-blue-700/30' :
                       'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200/50 dark:border-emerald-700/30'
                     }`}>
-                      <IconComponent className={`h-3.5 w-3.5 ${
+                      <IconComponent className={`h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 ${
                         highlight.type === 'milestone' ? 'text-amber-600 dark:text-amber-400' :
                         highlight.type === 'record' ? 'text-blue-600 dark:text-blue-400' :
                         'text-emerald-600 dark:text-emerald-400'
@@ -424,7 +424,7 @@ export function ProtocolHighlights({
                   
                   {/* Value on new line */}
                   <div className="text-center pb-0 sm:pb-2 pt-1 sm:pt-0">
-                    <p className="text-lg sm:text-3xl font-medium tracking-tight text-foreground leading-tight">
+                    <p className="text-lg sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent leading-tight">
                       {highlight.value}
                     </p>
                   </div>

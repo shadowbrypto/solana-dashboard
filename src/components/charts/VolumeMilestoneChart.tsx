@@ -241,7 +241,7 @@ export function VolumeMilestoneChart({
               margin={{
                 top: 10,
                 right: 5,
-                bottom: 2,
+                bottom: 8,
                 left: 0,
               }}
               className="sm:m-[20px_10px_45px_10px]"

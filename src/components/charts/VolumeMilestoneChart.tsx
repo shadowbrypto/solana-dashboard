@@ -268,7 +268,8 @@ export function VolumeMilestoneChart({
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 tickFormatter={(value) => `${value}`}
-                width={25}
+                width={20}
+                className="sm:!w-[25px]"
               />
               <Tooltip
                 content={({ active, payload }) => {

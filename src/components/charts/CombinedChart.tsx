@@ -294,8 +294,8 @@ export function CombinedChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
-                width={30}
-                className="sm:text-xs"
+                width={20}
+                className="sm:text-xs sm:!w-[30px]"
               />
               <YAxis
                 yAxisId="right"
@@ -310,8 +310,8 @@ export function CombinedChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
-                width={30}
-                className="sm:text-xs"
+                width={20}
+                className="sm:text-xs sm:!w-[30px]"
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {

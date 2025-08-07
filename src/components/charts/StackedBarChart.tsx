@@ -266,7 +266,7 @@ export function StackedBarChart({
         </CardHeader>
         <CardContent className="pt-6">
           <div className="transition-all duration-500 ease-out">
-            <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
+            <ResponsiveContainer width="100%" height={400}>
               <RechartsBarChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -278,7 +278,7 @@ export function StackedBarChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 interval="preserveStartEnd"
                 tickCount={Math.min(8, filteredData.length)}
                 tickFormatter={(value) => {
@@ -290,7 +290,7 @@ export function StackedBarChart({
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 tickFormatter={(value) => formatNumberWithSuffix(value)}
               />
               <Tooltip

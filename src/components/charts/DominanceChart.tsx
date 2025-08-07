@@ -263,7 +263,7 @@ export function DominanceChart({
           )}
         </CardHeader>
         <CardContent className="pt-6">
-          <ResponsiveContainer width="100%" height={400} className="sm:h-[500px]">
+          <ResponsiveContainer width="100%" height={400}>
             <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -275,7 +275,7 @@ export function DominanceChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 interval="preserveStartEnd"
                 tickCount={Math.min(8, filteredData.length)}
                 tickFormatter={(value) => {
@@ -287,7 +287,7 @@ export function DominanceChart({
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 tickFormatter={(value) => `${value.toFixed(0)}%`}
                 domain={[0, 100]}
               />

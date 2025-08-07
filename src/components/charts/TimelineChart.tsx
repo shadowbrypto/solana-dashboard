@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -67,16 +67,43 @@ export function TimelineChart({
     return <TimelineChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>("30d");
+  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640 ? "30d" : "3m";
+    }
+    return "30d";
+  });
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => {
-    return startOfDay(subDays(new Date(), 30));
+    const days = typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 90;
+    return startOfDay(subDays(new Date(), days));
   });
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
     new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
   );
+
+  // Handle responsive timeframe changes
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 640;
+      const newTimeframe = isMobile ? "30d" : "3m";
+      const days = isMobile ? 30 : 90;
+      
+      if (timeframe !== newTimeframe) {
+        setTimeframe(newTimeframe);
+        setCustomStartDate(startOfDay(subDays(new Date(), days)));
+        setCustomEndDate(endOfDay(new Date()));
+        setIsCustomRange(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [timeframe]);
 
   const filteredData = useMemo(() => {
     let processedData = [...data];
@@ -270,11 +297,11 @@ export function TimelineChart({
         </div>
       </CardHeader>
       <CardContent className="pt-1 pb-1 px-3 sm:pt-6 sm:pb-6 sm:px-6">
-        <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
+        <ResponsiveContainer width="100%" height={400}>
           <AreaChart
             data={filteredData}
-            margin={{ top: 10, right: 5, left: 10, bottom: 2 }}
-            className="sm:m-[20px_0px_0px_0px]"
+            margin={{ top: 10, right: 5, left: 15, bottom: 2 }}
+            className="sm:m-[20px_5px_0px_5px]"
           >
             <defs>
               {isMultiLine ? (
@@ -331,8 +358,7 @@ export function TimelineChart({
               dataKey="formattedDay"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
-              className="sm:text-xs"
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               interval={Math.ceil(filteredData.length / 6) - 1}
               tickFormatter={(value: string) => {
                 const [day, month, year] = value.split("-");
@@ -346,8 +372,8 @@ export function TimelineChart({
               className="sm:!dy-[10px]"
             />
             <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
-              className="sm:text-xs sm:!w-[30px]"
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              className="sm:!w-[70px]"
               width={20}
               axisLine={false}
               tickLine={false}
@@ -357,8 +383,8 @@ export function TimelineChart({
                   compactDisplay: "short",
                 }).format(value)
               }
-              dx={-5}
-              className="sm:!dx-[-10px]"
+              dx={0}
+              className="sm:!dx-[0px]"
             />
             <Tooltip
               content={({

@@ -377,14 +377,14 @@ export function ProtocolHighlights({
             return (
               <div 
                 key={index}
-                className={`relative group p-2 sm:p-4 transition-all duration-200 hover:bg-muted/30 ${
-                  !isRightColumnMobile ? 'border-r lg:border-r-0' : ''
+                className={`relative group p-2 sm:p-4 transition-all duration-200 hover:bg-muted/30 border-r border-b ${
+                  isRightColumnMobile ? 'border-r-0' : ''
                 } ${
-                  !isRightColumnDesktop ? 'lg:border-r' : ''
+                  isRightColumnDesktop ? 'lg:border-r-0' : 'lg:border-r'
                 } ${
-                  !isBottomRowMobile ? 'border-b lg:border-b-0' : ''
+                  isBottomRowMobile ? 'border-b-0' : ''
                 } ${
-                  !isBottomRowDesktop ? 'lg:border-b' : ''
+                  isBottomRowDesktop ? 'lg:border-b-0' : 'lg:border-b'
                 }`}
               >
                 <div className="flex flex-col space-y-0.5 sm:space-y-4 h-full min-h-[50px] sm:min-h-[90px]">

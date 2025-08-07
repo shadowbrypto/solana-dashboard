@@ -18,6 +18,7 @@ import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/DateRangeSelector';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { useEffect } from 'react';
 
 import { CombinedChartSkeleton } from "./CombinedChartSkeleton";
 
@@ -52,13 +53,40 @@ export function CombinedChart({
     return <CombinedChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>("30d");
+  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640 ? "30d" : "3m";
+    }
+    return "30d";
+  });
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => {
-    return startOfDay(subDays(new Date(), 30));
+    const days = typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 90;
+    return startOfDay(subDays(new Date(), days));
   });
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
+
+  // Handle responsive timeframe changes
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 640;
+      const newTimeframe = isMobile ? "30d" : "3m";
+      const days = isMobile ? 30 : 90;
+      
+      if (timeframe !== newTimeframe) {
+        setTimeframe(newTimeframe);
+        setCustomStartDate(startOfDay(subDays(new Date(), days)));
+        setCustomEndDate(endOfDay(new Date()));
+        setIsCustomRange(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [timeframe]);
 
 
 
@@ -252,8 +280,8 @@ export function CombinedChart({
           </div>
         </CardHeader>
         <CardContent className="pt-1 pb-1 px-3 sm:pt-6 sm:pb-6 sm:px-6">
-          <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
-            <ComposedChart data={filteredData} margin={{ top: 5, right: 5, left: 0, bottom: 2 }} className="sm:m-[20px_30px_12px_0px]">
+          <ResponsiveContainer width="100%" height={400}>
+            <ComposedChart data={filteredData} margin={{ top: 5, right: 10, left: 10, bottom: 2 }} className="sm:m-[20px_20px_12px_5px]">
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -270,9 +298,9 @@ export function CombinedChart({
                 dataKey="formattedDay"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 interval={Math.ceil(filteredData.length / 6) - 1}
-                className="sm:text-xs sm:!dy-[10px]"
+                className="sm:!dy-[10px]"
                 tickFormatter={(value: string) => {
                   const [day, month, year] = value.split('-');
                   const date = new Date(`${year}-${month}-${day}`);
@@ -295,9 +323,9 @@ export function CombinedChart({
                 }}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 width={20}
-                className="sm:text-xs sm:!w-[30px]"
+                className="sm:!w-[70px]"
               />
               <YAxis
                 yAxisId="right"
@@ -311,9 +339,9 @@ export function CombinedChart({
                 }}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                 width={20}
-                className="sm:text-xs sm:!w-[30px]"
+                className="sm:!w-[70px]"
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -338,15 +366,20 @@ export function CombinedChart({
                                   className="w-2 h-2 rounded-lg" 
                                   style={{ 
                                     backgroundColor: entry.name === barChartLabel
-                                      ? "hsl(var(--chart-1))" 
-                                      : "hsl(var(--chart-2))"
+                                      ? (colors?.[0] || "hsl(var(--chart-3))")
+                                      : "hsl(var(--muted-foreground))"
                                   }}
                                 />
                                 <span className="text-sm text-foreground">
                                   {entry.name}: {typeof entry.value === 'number'
-                                    ? entry.name === barChartLabel
-                                      ? leftAxisFormatter(entry.value)
-                                      : rightAxisFormatter(entry.value)
+                                    ? (() => {
+                                        const value = entry.value;
+                                        const absValue = Math.abs(value);
+                                        if (absValue >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+                                        if (absValue >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+                                        if (absValue >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
+                                        return `$${value.toFixed(2)}`;
+                                      })()
                                     : entry.value
                                   }
                                 </span>

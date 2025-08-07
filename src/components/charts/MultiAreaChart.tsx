@@ -235,7 +235,7 @@ export function MultiAreaChart({
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
+        <ResponsiveContainer width="100%" height={400}>
           <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -247,7 +247,7 @@ export function MultiAreaChart({
               dataKey={xAxisKey}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               tickFormatter={(value) => {
                 const [day, month] = value.split('-');
                 const date = new Date(2025, parseInt(month) - 1, parseInt(day));
@@ -257,7 +257,7 @@ export function MultiAreaChart({
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               tickFormatter={(value) => `${value.toFixed(0)}%`}
               domain={[0, 'dataMax']}
             />

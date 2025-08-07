@@ -235,7 +235,7 @@ export function VolumeMilestoneChart({
           </div>
         </CardHeader>
         <CardContent className="pt-2 px-1 pb-0 sm:pt-4 sm:px-4 sm:pb-2">
-          <ResponsiveContainer width="100%" height={200} className="sm:h-[350px] lg:h-[400px]">
+          <ResponsiveContainer width="100%" height={400}>
             <RechartsBarChart
               data={milestoneData}
               margin={{
@@ -257,11 +257,11 @@ export function VolumeMilestoneChart({
                 dataKey="milestone"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8, fontWeight: 500 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 500 }}
                 angle={0}
                 textAnchor="middle"
                 height={20}
-                className="sm:!h-[25px] sm:!text-[10px]"
+                className="sm:!h-[25px]"
                 interval="preserveStartEnd"
                 dy={5}
               />
@@ -269,9 +269,9 @@ export function VolumeMilestoneChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                className="sm:!w-[40px]"
                 tickFormatter={(value) => `${value}`}
                 width={20}
-                className="sm:!w-[25px]"
               />
               <Tooltip
                 content={({ active, payload }) => {

@@ -324,9 +324,9 @@ export function ProtocolHighlights({
       filename={`${title.replace(/\s+/g, '_')}_Protocol_Highlights.png`}
     >
       <Card className="overflow-hidden">
-      <CardHeader className="pt-3 pb-2 sm:py-6">
+      <CardHeader className="pt-3 pb-4 sm:py-6">
         <div className="flex items-center justify-between">
-          <div className="space-y-0.5 sm:space-y-1">
+          <div className="space-y-1.5 sm:space-y-1">
             <CardTitle className="text-base font-medium">{title}</CardTitle>
             {subtitle ? (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -377,7 +377,7 @@ export function ProtocolHighlights({
             return (
               <div 
                 key={index}
-                className={`relative group p-2 sm:p-4 transition-all duration-200 hover:bg-muted/30 border-r border-b ${
+                className={`relative group py-4 px-2 sm:p-4 transition-all duration-300 hover:bg-gradient-to-br hover:from-muted/20 hover:to-muted/40 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 border-r border-b ${
                   isRightColumnMobile ? 'border-r-0' : ''
                 } ${
                   isRightColumnDesktop ? 'lg:border-r-0' : 'lg:border-r'
@@ -385,17 +385,27 @@ export function ProtocolHighlights({
                   isBottomRowMobile ? 'border-b-0' : ''
                 } ${
                   isBottomRowDesktop ? 'lg:border-b-0' : 'lg:border-b'
+                } ${
+                  highlight.type === 'milestone' 
+                    ? 'bg-gradient-to-br from-amber-50/40 via-yellow-50/20 to-orange-50/30 dark:from-amber-950/15 dark:via-yellow-950/8 dark:to-orange-950/12 border-amber-300/40 dark:border-amber-700/30 overflow-hidden' 
+                    : ''
                 }`}
               >
-                <div className="flex flex-col space-y-0.5 sm:space-y-4 h-full min-h-[50px] sm:min-h-[90px]">
-                  {/* Top row: Icon and Title side by side */}
+                {/* Simple star in top right for milestone */}
+                {highlight.type === 'milestone' && (
+                  <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                    <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
+                  </div>
+                )}
+                <div className="flex flex-col space-y-2 sm:space-y-4 h-full min-h-[50px] sm:min-h-[90px]">
+                  {/* Top row: Icon, Title and Date in same line */}
                   <div className="flex items-start gap-2.5">
-                    <div className={`flex-shrink-0 inline-flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-xl shadow-sm ${
+                    <div className={`flex-shrink-0 inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-lg shadow-sm ${
                       highlight.type === 'milestone' ? 'bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200/50 dark:border-amber-700/30' :
                       highlight.type === 'record' ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200/50 dark:border-blue-700/30' :
                       'bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200/50 dark:border-emerald-700/30'
                     }`}>
-                      <IconComponent className={`h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 ${
+                      <IconComponent className={`h-3 w-3 sm:h-4 sm:w-4 ${
                         highlight.type === 'milestone' ? 'text-amber-600 dark:text-amber-400' :
                         highlight.type === 'record' ? 'text-blue-600 dark:text-blue-400' :
                         'text-emerald-600 dark:text-emerald-400'
@@ -403,35 +413,32 @@ export function ProtocolHighlights({
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="text-xs sm:text-sm font-semibold text-foreground leading-tight">
-                          {highlight.label}
-                        </h4>
-                        {highlight.type === 'milestone' && (
-                          <Badge variant="outline" className="h-4 text-[10px] font-medium bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:border-amber-700 dark:text-amber-300 shadow-sm ml-2 flex-shrink-0">
-                            <Star className="w-2 h-2 sm:mr-0.5 fill-current" />
-                            <span className="hidden sm:inline">Milestone</span>
-                          </Badge>
-                        )}
-                      </div>
-                      {highlight.date && (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 font-medium">
-                          {highlight.date}
-                        </p>
-                      )}
+                      <h4 className="text-sm sm:text-base font-semibold text-foreground leading-tight mb-0.5">
+                        {highlight.label}
+                      </h4>
                     </div>
                   </div>
                   
-                  {/* Value on new line */}
-                  <div className="text-center pb-0 sm:pb-2 pt-1 sm:pt-0">
+                  {/* Value and Date */}
+                  <div className="text-center pb-0 sm:pb-2 pt-1 sm:pt-0 flex-1 flex flex-col justify-center">
                     <p className="text-lg sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent leading-tight">
                       {highlight.value}
                     </p>
+                    {highlight.date && (
+                      <div className="mt-1 sm:mt-2 flex justify-center">
+                        <div className="bg-primary/8 dark:bg-slate-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md text-[10px] sm:text-xs text-primary dark:text-slate-200 border border-primary/20 dark:border-slate-600">
+                          <span className="font-semibold">
+                            {highlight.date}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                {/* Subtle hover effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {/* Enhanced hover effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-sm" />
+                <div className="absolute inset-0 ring-1 ring-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-sm" />
               </div>
             );
           })}

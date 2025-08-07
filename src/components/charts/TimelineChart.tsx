@@ -67,10 +67,19 @@ export function TimelineChart({
     return <TimelineChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
+    // Check if mobile layout (screen width < 640px)
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return "30d";
+    }
+    return "3m";
+  });
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
-  const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const days = (typeof window !== 'undefined' && window.innerWidth < 640) ? 30 : 90;
+    return startOfDay(subDays(new Date(), days));
+  });
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [selectedDataKeys, setSelectedDataKeys] = useState<Set<ChartDataKey>>(
     new Set(multipleDataKeys ? Object.values(multipleDataKeys) : [dataKey])
@@ -160,13 +169,13 @@ export function TimelineChart({
       filename={`${title.replace(/\s+/g, '_')}_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
+      <CardHeader className="flex flex-row items-start sm:items-center justify-between border-b gap-2 sm:gap-0 p-3 sm:p-6">
         <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">
+          <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
             {title}
           </CardTitle>
           {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
               {(() => {
                 // Check if subtitle is a protocol name
                 const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
@@ -200,9 +209,10 @@ export function TimelineChart({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <TimeframeSelector 
             value={timeframe}
+            className=""
             onChange={(value) => {
               setTimeframe(value);
               setIsCustomRange(false); // Switch to predefined timeframe mode
@@ -249,28 +259,29 @@ export function TimelineChart({
           />
           
           {/* Date Range Toggle Button */}
-          <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+          <div className="relative inline-flex items-center rounded-lg bg-muted p-0.5 sm:p-1">
             <button
               onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                 showDateRangeSelector
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
               </svg>
             </button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-1 pb-1 px-3 sm:pt-6 sm:pb-6 sm:px-6">
         <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
           <AreaChart
             data={filteredData}
-            margin={{ top: 20, right: 0, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: 5, left: 10, bottom: 2 }}
+            className="sm:m-[20px_0px_0px_0px]"
           >
             <defs>
               {isMultiLine ? (
@@ -327,8 +338,9 @@ export function TimelineChart({
               dataKey="formattedDay"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              interval={Math.ceil(filteredData.length / 10) - 1}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+              className="sm:text-xs"
+              interval={Math.ceil(filteredData.length / 6) - 1}
               tickFormatter={(value: string) => {
                 const [day, month, year] = value.split("-");
                 const date = new Date(`${year}-${month}-${day}`);
@@ -337,10 +349,13 @@ export function TimelineChart({
                   day: "numeric",
                 }).format(date);
               }}
-              dy={10}
+              dy={5}
+              className="sm:!dy-[10px]"
             />
             <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+              className="sm:text-xs sm:!w-[30px]"
+              width={20}
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) =>
@@ -349,7 +364,8 @@ export function TimelineChart({
                   compactDisplay: "short",
                 }).format(value)
               }
-              dx={-10}
+              dx={-5}
+              className="sm:!dx-[-10px]"
             />
             <Tooltip
               content={({
@@ -454,11 +470,13 @@ export function TimelineChart({
             {isMultiLine && (
               <Legend
                 wrapperStyle={{
-                  paddingTop: 20,
+                  paddingTop: "0px",
+                  paddingBottom: "4px",
                   color: "#E5E7EB",
-                  fontSize: "14px",
+                  fontSize: "10px",
                   cursor: "pointer",
                 }}
+                className="sm:!pt-[20px] sm:!pb-[0px] sm:!text-[14px]"
                 verticalAlign="bottom"
                 content={() => {
                   const legendItems = Object.entries(
@@ -497,7 +515,7 @@ export function TimelineChart({
                             color: "hsl(var(--muted-foreground))",
                           }}
                         />
-                        <span className="ml-2 text-sm text-muted-foreground">
+                        <span className="ml-2 text-[10px] sm:text-sm text-muted-foreground">
                           All
                         </span>
                       </div>
@@ -529,7 +547,7 @@ export function TimelineChart({
                               color: item.color,
                             }}
                           />
-                          <span className="ml-2 text-sm text-muted-foreground">
+                          <span className="ml-2 text-[10px] sm:text-sm text-muted-foreground">
                             {item.name}
                           </span>
                         </div>

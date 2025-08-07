@@ -241,7 +241,7 @@ export function VolumeMilestoneChart({
               margin={{
                 top: 10,
                 right: 5,
-                bottom: 8,
+                bottom: 12,
                 left: 0,
               }}
               className="sm:m-[20px_10px_45px_10px]"
@@ -257,12 +257,13 @@ export function VolumeMilestoneChart({
                 dataKey="milestone"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 500 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8, fontWeight: 500 }}
                 angle={0}
                 textAnchor="middle"
-                height={15}
-                className="sm:!h-[25px]"
+                height={20}
+                className="sm:!h-[25px] sm:!text-[10px]"
                 interval="preserveStartEnd"
+                dy={5}
               />
               <YAxis
                 axisLine={false}

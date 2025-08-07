@@ -52,10 +52,19 @@ export function CombinedChart({
     return <CombinedChartSkeleton />;
   }
 
-  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
+    // Check if mobile layout (screen width < 640px)
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return "30d";
+    }
+    return "3m";
+  });
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
-  const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const days = (typeof window !== 'undefined' && window.innerWidth < 640) ? 30 : 90;
+    return startOfDay(subDays(new Date(), days));
+  });
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
 
 
@@ -249,7 +258,7 @@ export function CombinedChart({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-3 sm:pt-6 p-3 sm:p-6">
+        <CardContent className="pt-1 pb-1 px-3 sm:pt-6 sm:pb-6 sm:px-6">
           <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
             <ComposedChart data={filteredData} margin={{ top: 5, right: 5, left: 0, bottom: 2 }} className="sm:m-[20px_30px_12px_0px]">
               <defs>
@@ -388,8 +397,10 @@ export function CombinedChart({
                 iconType="circle"
                 iconSize={6}
                 wrapperStyle={{
-                  paddingTop: "6px"
+                  paddingTop: "0px",
+                  paddingBottom: "4px"
                 }}
+                className="sm:!pt-[6px] sm:!pb-[0px]"
                 formatter={(value) => (
                   <span className="text-xs sm:text-sm text-muted-foreground">{value}</span>
                 )}

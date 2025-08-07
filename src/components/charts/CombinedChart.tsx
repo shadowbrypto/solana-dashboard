@@ -251,7 +251,7 @@ export function CombinedChart({
         </CardHeader>
         <CardContent className="pt-3 sm:pt-6 p-3 sm:p-6">
           <ResponsiveContainer width="100%" height={250} className="sm:h-[350px] lg:h-[400px]">
-            <ComposedChart data={filteredData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }} className="sm:m-[20px_30px_12px_0px]">
+            <ComposedChart data={filteredData} margin={{ top: 5, right: 5, left: 0, bottom: 2 }} className="sm:m-[20px_30px_12px_0px]">
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2} />
@@ -270,7 +270,7 @@ export function CombinedChart({
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 interval={Math.ceil(filteredData.length / 6) - 1}
-                className="sm:text-xs"
+                className="sm:text-xs sm:!dy-[10px]"
                 tickFormatter={(value: string) => {
                   const [day, month, year] = value.split('-');
                   const date = new Date(`${year}-${month}-${day}`);
@@ -279,7 +279,7 @@ export function CombinedChart({
                     day: 'numeric'
                   }).format(date);
                 }}
-                dy={10}
+                dy={5}
               />
               <YAxis
                 yAxisId="left"

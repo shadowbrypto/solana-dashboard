@@ -167,16 +167,25 @@ export function CategoryHorizontalBarChart({
   if (loading) {
     return (
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="border-b">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+        <CardHeader className="flex flex-col gap-3 border-b p-3 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-32 sm:h-5 sm:w-40 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex justify-between items-center w-full">
+            <div className="w-[90px] sm:w-32 h-8 bg-muted animate-pulse rounded-lg" />
+            <div className="flex gap-1">
+              <div className="w-16 sm:w-20 h-8 bg-muted animate-pulse rounded-lg" />
+              <div className="w-8 h-8 bg-muted animate-pulse rounded-lg" />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-3">
+        <CardContent className="pt-0 pb-0 px-2 sm:pt-6 sm:pb-6 sm:px-6">
+          <div className="space-y-2 sm:space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center space-x-3">
-                <div className="w-20 h-4 bg-muted animate-pulse rounded" />
-                <div className="flex-1 h-6 bg-muted animate-pulse rounded" />
-                <div className="w-16 h-4 bg-muted animate-pulse rounded" />
+              <div key={i} className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-16 sm:w-20 h-3 sm:h-4 bg-muted animate-pulse rounded" />
+                <div className="flex-1 h-5 sm:h-6 bg-muted animate-pulse rounded" />
+                <div className="w-12 sm:w-16 h-3 sm:h-4 bg-muted animate-pulse rounded" />
               </div>
             ))}
           </div>
@@ -191,9 +200,9 @@ export function CategoryHorizontalBarChart({
       filename={`${title.replace(/\s+/g, '_')}_Category_Horizontal_Bar_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium text-card-foreground">
+        <CardHeader className="flex flex-col gap-3 border-b p-3 sm:p-6">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
               {title} - {metricLabels[selectedMetric]}
             </CardTitle>
             {subtitle && (
@@ -231,98 +240,100 @@ export function CategoryHorizontalBarChart({
               </p>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex justify-between items-center w-full">
             <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
-              <SelectTrigger className="w-full sm:w-[120px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
+              <SelectTrigger className="w-[90px] sm:flex-1 h-8 text-xs bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-lg">
                 <SelectValue placeholder="Select metric" />
               </SelectTrigger>
-              <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-                <SelectItem value="volume" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Volume</SelectItem>
-                <SelectItem value="new_users" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">New Users</SelectItem>
-                <SelectItem value="trades" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Trades</SelectItem>
-                <SelectItem value="fees" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Fees</SelectItem>
+              <SelectContent className="bg-background border-border text-foreground rounded-lg overflow-hidden">
+                <SelectItem value="volume" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Volume</SelectItem>
+                <SelectItem value="new_users" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">New Users</SelectItem>
+                <SelectItem value="trades" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Trades</SelectItem>
+                <SelectItem value="fees" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Fees</SelectItem>
               </SelectContent>
             </Select>
-            <TimeframeSelector 
-              value={timeframe}
-              onChange={(value) => {
-                setTimeframe(value);
-                setIsCustomRange(false); // Switch to predefined timeframe mode
-                
-                // Update custom date range to match the selected timeframe
-                const now = new Date();
-                let daysToSubtract: number;
-                
-                switch (value) {
-                  case "7d":
-                    daysToSubtract = 7;
-                    break;
-                  case "30d":
-                    daysToSubtract = 30;
-                    break;
-                  case "3m":
-                    daysToSubtract = 90;
-                    break;
-                  case "6m":
-                    daysToSubtract = 180;
-                    break;
-                  case "1y":
-                    daysToSubtract = 365;
-                    break;
-                  default:
-                    // For "all", use the full data range
-                    if (data && data.length > 0) {
-                      const dates = data.map(item => {
-                        if (item.formattedDay) {
-                          const [day, month, year] = item.formattedDay.split("-");
-                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                        } else if (item.date) {
-                          return new Date(item.date);
-                        }
-                        return new Date();
-                      });
-                      const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-                      setCustomStartDate(startOfDay(earliestDate));
-                      setCustomEndDate(endOfDay(now));
-                      return;
-                    }
-                    daysToSubtract = 90;
-                }
-                
-                const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
-                setCustomStartDate(newStartDate);
-                setCustomEndDate(endOfDay(now));
-              }}
-            />
             
-            {/* Date Range Toggle Button */}
-            <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+            <div className="flex gap-1">
+              <TimeframeSelector 
+                value={timeframe}
+                className="text-xs"
+                onChange={(value) => {
+                  setTimeframe(value);
+                  setIsCustomRange(false); // Switch to predefined timeframe mode
+                  
+                  // Update custom date range to match the selected timeframe
+                  const now = new Date();
+                  let daysToSubtract: number;
+                  
+                  switch (value) {
+                    case "7d":
+                      daysToSubtract = 7;
+                      break;
+                    case "30d":
+                      daysToSubtract = 30;
+                      break;
+                    case "3m":
+                      daysToSubtract = 90;
+                      break;
+                    case "6m":
+                      daysToSubtract = 180;
+                      break;
+                    case "1y":
+                      daysToSubtract = 365;
+                      break;
+                    default:
+                      // For "all", use the full data range
+                      if (data && data.length > 0) {
+                        const dates = data.map(item => {
+                          if (item.formattedDay) {
+                            const [day, month, year] = item.formattedDay.split("-");
+                            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          } else if (item.date) {
+                            return new Date(item.date);
+                          }
+                          return new Date();
+                        });
+                        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                        setCustomStartDate(startOfDay(earliestDate));
+                        setCustomEndDate(endOfDay(now));
+                        return;
+                      }
+                      daysToSubtract = 90;
+                  }
+                  
+                  const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+                  setCustomStartDate(newStartDate);
+                  setCustomEndDate(endOfDay(now));
+                }}
+              />
+              
+              {/* Date Range Toggle Button */}
               <button
                 onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                className={`inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium bg-muted transition-colors duration-200 ${
                   showDateRangeSelector
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-background text-foreground shadow-sm border border-border'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
                 title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
                 </svg>
               </button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2 px-2">
-          <ResponsiveContainer width="100%" height={Math.max(chartData.length * 50 + 40, 200)}>
+        <CardContent className="pt-0 pb-0 px-2 sm:pt-6 sm:pb-6 sm:px-6">
+          <ResponsiveContainer width="100%" height={Math.max(chartData.length * (window.innerWidth < 640 ? 40 : 50) + 40, 160)}>
             <RechartsBarChart
               data={chartData}
               layout="vertical"
               margin={{
-                top: 20,
-                right: 180,
-                bottom: 20,
-                left: 10,
+                top: 15,
+                right: window.innerWidth < 640 ? 120 : 180,
+                bottom: 15,
+                left: 5,
               }}
             >
               <CartesianGrid
@@ -336,7 +347,7 @@ export function CategoryHorizontalBarChart({
                 type="number"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: window.innerWidth < 640 ? 9 : 11 }}
                 tickFormatter={metricFormatters[selectedMetric]}
               />
               <YAxis
@@ -344,8 +355,8 @@ export function CategoryHorizontalBarChart({
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                width={100}
+                tick={window.innerWidth < 640 ? false : { fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                width={window.innerWidth < 640 ? 0 : 100}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -378,10 +389,10 @@ export function CategoryHorizontalBarChart({
               />
               <Bar
                 dataKey="value"
-                barSize={30}
+                barSize={window.innerWidth < 640 ? 24 : 30}
                 fill="none"
                 radius={[4, 4, 4, 4]}
-                maxBarSize={30}
+                maxBarSize={window.innerWidth < 640 ? 24 : 30}
               >
                 <LabelList
                   dataKey="protocols"
@@ -390,10 +401,11 @@ export function CategoryHorizontalBarChart({
                     const { x, y, width, height, value } = props;
                     if (!value || !Array.isArray(value)) return null;
                     
-                    const protocols = value.slice(0, 3);
-                    const avatarSize = 22;
-                    const overlap = 8; // How much avatars overlap
-                    const startX = (x as number) + (width as number) + 15; // Position outside bar with proper spacing
+                    const isMobile = window.innerWidth < 640;
+                    const protocols = value.slice(0, isMobile ? 2 : 3);
+                    const avatarSize = isMobile ? 18 : 22;
+                    const overlap = isMobile ? 6 : 8;
+                    const startX = (x as number) + (width as number) + (isMobile ? 8 : 15);
                     const centerY = (y as number) + (height as number) / 2;
                     
                     return (
@@ -408,7 +420,7 @@ export function CategoryHorizontalBarChart({
                                 <div style={{
                                   width: `${avatarSize}px`,
                                   height: `${avatarSize}px`,
-                                  borderRadius: '8px',
+                                  borderRadius: isMobile ? '6px' : '8px',
                                   overflow: 'hidden',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -434,23 +446,23 @@ export function CategoryHorizontalBarChart({
                             </g>
                           );
                         })}
-                        {value.length > 3 && (
-                          <g transform={`translate(${startX + 3 * (avatarSize - overlap)}, ${centerY - avatarSize / 2})`}>
+                        {value.length > (isMobile ? 2 : 3) && (
+                          <g transform={`translate(${startX + (isMobile ? 2 : 3) * (avatarSize - overlap)}, ${centerY - avatarSize / 2})`}>
                             <foreignObject x="0" y="0" width={avatarSize} height={avatarSize}>
                               <div style={{
                                 width: `${avatarSize}px`,
                                 height: `${avatarSize}px`,
-                                borderRadius: '8px',
+                                borderRadius: isMobile ? '6px' : '8px',
                                 backgroundColor: 'hsl(var(--muted))',
                                 border: '1px solid hsl(var(--border))',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: 'hsl(var(--muted-foreground))',
-                                fontSize: '10px',
+                                fontSize: isMobile ? '8px' : '10px',
                                 fontWeight: '500'
                               }}>
-                                +{value.length - 3}
+                                +{value.length - (isMobile ? 2 : 3)}
                               </div>
                             </foreignObject>
                           </g>
@@ -462,11 +474,11 @@ export function CategoryHorizontalBarChart({
                 <LabelList
                   dataKey="value"
                   position="right"
-                  offset={90}
+                  offset={window.innerWidth < 640 ? 60 : 90}
                   formatter={metricFormatters[selectedMetric]}
                   style={{
                     fill: "hsl(var(--foreground))",
-                    fontSize: "13px",
+                    fontSize: window.innerWidth < 640 ? "11px" : "13px",
                     fontWeight: "500",
                   }}
                 />
@@ -486,7 +498,7 @@ export function CategoryHorizontalBarChart({
           <div 
             className={`transition-all duration-200 ease-out ${
               showDateRangeSelector 
-                ? 'max-h-96 opacity-100 mt-6 pt-6 border-t border-border' 
+                ? 'max-h-96 opacity-100 mt-2 pt-3 sm:mt-6 sm:pt-6 border-t border-border' 
                 : 'max-h-0 opacity-0 overflow-hidden'
             }`}
           >

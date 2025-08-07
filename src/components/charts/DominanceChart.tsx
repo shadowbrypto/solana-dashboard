@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/DateRangeSelector';
@@ -56,12 +56,30 @@ export function DominanceChart({
     return <StackedBarChartSkeleton />;
   }
 
-  const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>("3m");
+  const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640 ? "30d" : "3m";
+    }
+    return "30d";
+  });
   const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
+  
+  // Handle window resize for responsive timeframe
+  useEffect(() => {
+    const handleResize = () => {
+      if (!externalTimeframe && typeof window !== 'undefined') {
+        const newTimeframe = window.innerWidth < 640 ? "30d" : "3m";
+        setInternalTimeframe(newTimeframe);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [externalTimeframe]);
   
   // Use external timeframe if provided, otherwise use internal
   const timeframe = externalTimeframe || internalTimeframe;
@@ -198,73 +216,74 @@ export function DominanceChart({
       filename={`${title.replace(/\s+/g, '_')}_Dominance_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                {(() => {
-                  // Check if subtitle is a protocol name
-                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                  if (protocolMatch) {
-                    return (
-                      <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {subtitle}
-                      </>
-                    );
-                  }
-                  return subtitle;
-                })()}
-              </p>
-            )}
-          </div>
-          {!disableTimeframeSelector && (
-            <div className="flex items-center gap-2">
-              <TimeframeSelector 
-                value={timeframe}
-                onChange={handleTimeframeChange}
-              />
-              
-              {/* Date Range Toggle Button */}
-              <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+        <CardHeader className="flex flex-col border-b gap-3 p-3 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
+              {subtitle && (
+                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                  {(() => {
+                    // Check if subtitle is a protocol name
+                    const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                    if (protocolMatch) {
+                      return (
+                        <>
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                              alt={subtitle} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-3 h-3 sm:w-4 sm:h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
+                          {subtitle}
+                        </>
+                      );
+                    }
+                    return subtitle;
+                  })()}
+                </p>
+              )}
+            </div>
+            {!disableTimeframeSelector && (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <TimeframeSelector 
+                  value={timeframe}
+                  className="text-xs"
+                  onChange={handleTimeframeChange}
+                />
+                
+                {/* Date Range Toggle Button */}
                 <button
                   onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                  className={`inline-flex items-center justify-center rounded-md px-2 py-1 sm:py-1.5 text-xs font-medium bg-muted transition-colors duration-200 ${
                     showDateRangeSelector
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-background text-foreground shadow-sm border border-border'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                   }`}
                   title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
                   </svg>
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </CardHeader>
-        <CardContent className="pt-6">
-          <ResponsiveContainer width="100%" height={400}>
-            <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+        <CardContent className="pt-2 pb-1 px-1 sm:pt-6 sm:pb-6 sm:px-6">
+          <ResponsiveContainer width="100%" height={400} className="h-[300px] sm:h-[400px]">
+            <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 10, left: 5, bottom: 8 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"
@@ -275,21 +294,25 @@ export function DominanceChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 interval="preserveStartEnd"
-                tickCount={Math.min(8, filteredData.length)}
+                tickCount={Math.min(5, filteredData.length)}
                 tickFormatter={(value) => {
                   const [day, month] = value.split('-');
                   const date = new Date(2025, parseInt(month) - 1, parseInt(day));
-                  return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+                  return date.toLocaleDateString('en-US', { 
+                    day: 'numeric', 
+                    month: 'short' 
+                  });
                 }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
                 tickFormatter={(value) => `${value.toFixed(0)}%`}
                 domain={[0, 100]}
+                width={45}
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -358,11 +381,11 @@ export function DominanceChart({
                 })}
               <Legend
                 verticalAlign="bottom"
-                height={32}
+                height={28}
                 iconType="circle"
-                iconSize={8}
+                iconSize={7}
                 wrapperStyle={{
-                  paddingTop: "12px"
+                  paddingTop: "4px"
                 }}
                 payload={dataKeys.map((key, index) => ({
                   value: labels[index],
@@ -383,7 +406,7 @@ export function DominanceChart({
                   const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                   return (
                     <span 
-                      className={`text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
+                      className={`text-[7px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
                     >
                       {value}
                     </span>
@@ -397,7 +420,7 @@ export function DominanceChart({
           <div 
             className={`transition-all duration-200 ease-out ${
               showDateRangeSelector 
-                ? 'max-h-96 opacity-100 mt-6 pt-6 border-t border-border' 
+                ? 'max-h-96 opacity-100 mt-2 pt-3 sm:mt-6 sm:pt-6 border-t border-border' 
                 : 'max-h-0 opacity-0 overflow-hidden'
             }`}
           >

@@ -118,7 +118,7 @@ export default function WeeklyReport() {
               <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">
                 {/* Sliding background indicator with glow effect */}
                 <div 
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-background to-background/95 rounded-lg shadow-md transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-background to-background/95 rounded-lg shadow-md transition-all duration-500 ease-out ${
                     chainType === 'solana' 
                       ? 'left-1 shadow-purple-500/20' 
                       : 'left-[calc(50%+2px)] shadow-blue-500/20'
@@ -127,7 +127,7 @@ export default function WeeklyReport() {
                 
                 {/* Animated glow background */}
                 <div 
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg opacity-20 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg opacity-20 transition-all duration-500 ease-out ${
                     chainType === 'solana' 
                       ? 'left-1 bg-gradient-to-r from-purple-500 to-violet-500' 
                       : 'left-[calc(50%+2px)] bg-gradient-to-r from-blue-500 to-cyan-500'

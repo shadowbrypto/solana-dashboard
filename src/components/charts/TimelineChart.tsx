@@ -373,7 +373,7 @@ export function TimelineChart({
             />
             <YAxis
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-              className="sm:!w-[70px]"
+              className="sm:!w-[70px] sm:!dx-[0px]"
               width={20}
               axisLine={false}
               tickLine={false}
@@ -384,7 +384,6 @@ export function TimelineChart({
                 }).format(value)
               }
               dx={0}
-              className="sm:!dx-[0px]"
             />
             <Tooltip
               content={({

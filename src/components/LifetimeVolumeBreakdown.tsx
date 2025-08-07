@@ -53,30 +53,74 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
       filename="Lifetime_Volume_Breakdown.png"
     >
       <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="space-y-3">
-              <div className="text-3xl font-bold tracking-tight">
-                Lifetime Volume
-              </div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {activeProtocolsCount} Active Protocols
-                </span>
+        <CardContent className="p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-col items-start sm:items-start justify-start w-full sm:w-auto">
+              {/* Mobile: Title and Total Volume on same line, Desktop: separate */}
+              <div className="flex items-center justify-between w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row sm:items-center">
+                  <div className="text-lg sm:text-3xl font-bold tracking-tight">
+                    Lifetime Volume
+                  </div>
+                  {/* Active protocols indicator - under title on mobile */}
+                  <div className="flex items-center gap-2 sm:gap-2.5 mt-1 sm:mt-0 sm:ml-4">
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
+                    <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                      {activeProtocolsCount} Active Protocols
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end sm:hidden">
+                  <div className="text-lg font-bold">
+                    {formatVolume(totalVolume)}
+                  </div>
+                  {/* Mobile stacked avatars below the number */}
+                  <div className="flex items-center mt-1">
+                    {significantProtocols.slice(0, 4).map((protocol, index) => (
+                      <div
+                        key={protocol.id}
+                        className="relative inline-block"
+                        style={{ 
+                          marginLeft: index > 0 ? '-8px' : '0',
+                          zIndex: 4 - index
+                        }}
+                      >
+                        <img
+                          src={`/assets/logos/${protocol.id.includes('terminal') ? protocol.id.split(' ')[0] : protocol.id === 'bull x' ? 'bullx' : protocol.id}.jpg`}
+                          alt={protocol.name}
+                          className="w-5 h-5 rounded-full border-2 border-background object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {significantProtocols.length > 4 && (
+                      <div 
+                        className="w-5 h-5 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground"
+                        style={{ marginLeft: '-8px', zIndex: 0 }}
+                      >
+                        +{significantProtocols.length - 4}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="text-right">
+            
+            {/* Desktop total volume and avatars */}
+            <div className="hidden sm:block text-right">
               <div className="text-3xl font-bold mb-2">
                 {formatVolume(totalVolume)}
               </div>
               <div className="flex justify-end">
-                {significantProtocols.map((protocol, index) => (
+                {significantProtocols.slice(0, 8).map((protocol, index) => (
                   <div
                     key={protocol.id}
                     className="relative inline-block group cursor-pointer"
                     style={{ 
-                      marginLeft: index > 0 ? '-4px' : '0',
+                      marginLeft: index > 0 ? '-3px' : '0',
                       zIndex: significantProtocols.length - index
                     }}
                   >
@@ -109,28 +153,29 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                 ))}
               </div>
             </div>
+
           </div>
           
           {/* Horizontal Bar Chart */}
-          <div className="space-y-4">
-            <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="relative h-6 sm:h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
               {significantProtocols.reduce((acc, protocol, index) => {
                 const prevPercentage = acc.total;
                 acc.total += protocol.percentage;
                 acc.bars.push(
                   <div
                     key={protocol.id}
-                    className="absolute top-0 h-full flex items-center justify-center text-white text-xs font-medium transition-all duration-300 hover:opacity-80"
+                    className="absolute top-0 h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-medium transition-all duration-300 hover:opacity-80"
                     style={{
                       left: `${prevPercentage}%`,
                       width: `${protocol.percentage}%`,
                       backgroundColor: protocol.color,
-                      minWidth: protocol.percentage > 12 ? 'auto' : '0',
+                      minWidth: protocol.percentage > 15 ? 'auto' : '0',
                     }}
                     title={`${protocol.name}: ${formatVolume(protocol.value)} (${protocol.percentage.toFixed(1)}%)`}
                   >
-                    {protocol.percentage > 12 && (
-                      <span className="px-1">
+                    {protocol.percentage > 15 && (
+                      <span className="px-0.5 sm:px-1">
                         {protocol.name}
                       </span>
                     )}
@@ -140,8 +185,8 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
               }, { total: 0, bars: [] as JSX.Element[] }).bars}
             </div>
 
-            {/* Protocol Details in 3 Rows with 5 Items Each */}
-            <div className="grid grid-cols-5 gap-2">
+            {/* Protocol Details - Mobile: 2 cols, Tablet: 3 cols, Desktop: 5 cols */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2">
               {significantProtocols.slice(0, 15).map((protocol) => (
                 <Badge
                   key={protocol.id}
@@ -152,20 +197,20 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                     color: 'inherit'
                   }}
                 >
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0 min-w-0">
                     <div 
-                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: protocol.color }}
                     />
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                    <span className="text-[10px] sm:text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
                       {protocol.name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                    <span className="text-[10px] sm:text-xs font-semibold text-gray-900 dark:text-gray-100">
                       {formatVolume(protocol.value)}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-[9px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {protocol.percentage.toFixed(1)}%
                     </span>
                   </div>

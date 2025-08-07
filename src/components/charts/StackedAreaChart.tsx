@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ComponentActions } from '../ComponentActions';
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/DateRangeSelector';
@@ -61,6 +61,18 @@ export function StackedAreaChart({
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredData = useMemo(() => {
     // Use data as-is (should already be in chronological order)
@@ -297,8 +309,13 @@ export function StackedAreaChart({
           </div>
         </CardHeader>
         <CardContent className="pt-6">
-          <ResponsiveContainer width="100%" height={400}>
-            <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+          <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+            <RechartsAreaChart data={filteredData} margin={{ 
+              top: 20, 
+              right: isMobile ? 10 : 30, 
+              left: isMobile ? 5 : 0, 
+              bottom: isMobile ? 35 : 12 
+            }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="hsl(var(--border))"
@@ -309,17 +326,31 @@ export function StackedAreaChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ 
+                  fill: "hsl(var(--muted-foreground))", 
+                  fontSize: isMobile ? 9 : 10 
+                }}
+                interval={isMobile ? "preserveStartEnd" : "preserveStart"}
+                tickCount={isMobile ? 3 : Math.min(8, filteredData.length)}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 55 : 30}
                 tickFormatter={(value) => {
                   const [day, month] = value.split('-');
                   const date = new Date(2025, parseInt(month) - 1, parseInt(day));
-                  return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+                  return isMobile 
+                    ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
                 }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ 
+                  fill: "hsl(var(--muted-foreground))", 
+                  fontSize: isMobile ? 9 : 10 
+                }}
+                width={isMobile ? 38 : 40}
                 tickFormatter={(value) => isPercentageData ? `${value.toFixed(0)}%` : `${(value * 100).toFixed(0)}%`}
                 domain={isPercentageData ? [0, 100] : [0, 1]}
               />
@@ -327,15 +358,15 @@ export function StackedAreaChart({
                 content={({ active, payload, label }: TooltipProps<number, string>) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="rounded-lg border border-border bg-card p-2 shadow-sm">
+                      <div className={`rounded-lg border border-border bg-card shadow-lg ${isMobile ? 'p-3 min-w-[140px]' : 'p-2'}`}>
                         <div className="grid gap-2">
-                          <div className="text-sm font-medium text-muted-foreground">
+                          <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground`}>
                             {(() => {
                               const [day, month, year] = label.split('-');
                               return new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
-                                year: 'numeric'
+                                year: isMobile ? undefined : 'numeric'
                               });
                             })()}
                           </div>
@@ -343,10 +374,10 @@ export function StackedAreaChart({
                             {payload.map((entry, index) => (
                               <div key={entry.name} className="flex items-center gap-2">
                                 <div 
-                                  className="w-2 h-2 rounded-lg" 
+                                  className={`${isMobile ? 'w-2.5 h-2.5' : 'w-2 h-2'} rounded-lg flex-shrink-0`} 
                                   style={{ backgroundColor: colors[index] }}
                                 />
-                                <span className="text-sm text-foreground">
+                                <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-foreground leading-tight`}>
                                   {displayLabels[index]}: {valueFormatter(entry.value || 0)}
                                 </span>
                               </div>
@@ -380,11 +411,13 @@ export function StackedAreaChart({
               ))}
               <Legend
                 verticalAlign="bottom"
-                height={32}
+                height={isMobile ? 40 : 32}
                 iconType="circle"
-                iconSize={8}
+                iconSize={isMobile ? 6 : 8}
                 wrapperStyle={{
-                  paddingTop: "12px"
+                  paddingTop: isMobile ? "8px" : "12px",
+                  fontSize: isMobile ? "11px" : "12px",
+                  lineHeight: isMobile ? "14px" : "16px"
                 }}
                 onClick={(e) => {
                   if (e && typeof e.dataKey === 'string') {
@@ -399,7 +432,7 @@ export function StackedAreaChart({
                   const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                   return (
                     <span 
-                      className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                      className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
                     >
                       {value}
                     </span>

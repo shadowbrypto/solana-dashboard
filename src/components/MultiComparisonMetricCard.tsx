@@ -90,14 +90,14 @@ export function MultiComparisonMetricCard({
       filename={`${title.replace(/\s+/g, '_')}_Comparison.png`}
     >
       <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-lg group">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Icon className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">{title}</span>
+        <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-2">
+        <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
+          <div className="space-y-1.5 sm:space-y-2">
             {displayProtocols.map((item, index) => {
               const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
               const styling = getRankStyling(index);
@@ -106,16 +106,16 @@ export function MultiComparisonMetricCard({
                 <div 
                   key={item.protocol} 
                   className={cn(
-                    "flex items-center justify-between p-2 rounded-lg border transition-all duration-200 hover:scale-[1.02]",
+                    "flex items-center justify-between p-1.5 sm:p-2 rounded-lg border transition-all duration-200 hover:scale-[1.02]",
                     styling.bgColor,
                     styling.borderColor
                   )}
                 >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={cn("text-xs font-semibold w-6 flex-shrink-0", styling.rankColor)}>
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                    <span className={cn("text-[10px] sm:text-xs font-semibold w-4 sm:w-6 flex-shrink-0", styling.rankColor)}>
                       #{index + 1}
                     </span>
-                    <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
                       <img 
                         src={`/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
                         alt={item.name} 
@@ -125,7 +125,7 @@ export function MultiComparisonMetricCard({
                           const container = target.parentElement;
                           if (container) {
                             container.innerHTML = '';
-                            container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
+                            container.className = 'w-3 h-3 sm:w-4 sm:h-4 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
                             const iconEl = document.createElement('div');
                             iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
                             container.appendChild(iconEl);
@@ -133,12 +133,12 @@ export function MultiComparisonMetricCard({
                         }}
                       />
                     </div>
-                    <span className="text-xs font-medium truncate min-w-0">
+                    <span className="text-[10px] sm:text-xs font-medium truncate min-w-0">
                       {item.name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-12 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <div className="w-8 sm:w-12 h-1 sm:h-1.5 bg-muted/50 rounded-full overflow-hidden">
                       <div 
                         className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{ 
@@ -147,7 +147,7 @@ export function MultiComparisonMetricCard({
                         }}
                       />
                     </div>
-                    <span className="text-xs font-bold w-16 text-right text-foreground">
+                    <span className="text-[10px] sm:text-xs font-bold w-12 sm:w-16 text-right text-foreground">
                       {formatter(item.value)}
                     </span>
                   </div>

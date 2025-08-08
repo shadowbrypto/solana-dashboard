@@ -11,7 +11,7 @@ import MonthlyReport from "./pages/MonthlyReport";
 import WeeklyReport from "./pages/WeeklyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
 import ProtocolAdmin from "./pages/ProtocolAdmin";
-import OneVsOne from "./pages/OneVsOne";
+import TradingAppsComparison from "./pages/TradingAppsComparison";
 import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import { ThemeProvider } from "./lib/theme";
@@ -48,7 +48,7 @@ const router = createBrowserRouter([
                   </div>
                 }
               >
-                <OneVsOne />
+                <TradingAppsComparison />
               </React.Suspense>
             ),
           },

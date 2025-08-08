@@ -134,7 +134,7 @@ export function VolumeActivity({
       startOfWeek.setDate(startOfYear.getDate() - startOfYear.getDay()); // Go to Sunday of first week
 
       const weeks: Array<Array<{ date: string; volume: number; intensity: number; isCurrentYear: boolean }>> = [];
-      const months: string[] = [];
+      const monthPositions: Array<{ month: string; weekIndex: number }> = [];
       
       for (let week = 0; week < 53; week++) {
         const weekData: Array<{ date: string; volume: number; intensity: number; isCurrentYear: boolean }> = [];
@@ -158,20 +158,24 @@ export function VolumeActivity({
         }
         weeks.push(weekData);
         
-        // Track month labels
+        // Track month positions - check if this week starts a new month
         const firstDayOfWeek = new Date(startOfWeek);
         firstDayOfWeek.setDate(startOfWeek.getDate() + (week * 7));
         if (firstDayOfWeek.getFullYear().toString() === selectedYear) {
           const monthName = firstDayOfWeek.toLocaleDateString('en-US', { month: 'short' });
-          if (!months.includes(monthName)) {
-            months.push(monthName);
+          const isFirstWeekOfMonth = firstDayOfWeek.getDate() <= 7 || 
+            (week === 0) || 
+            (week > 0 && new Date(startOfWeek.getTime() + ((week - 1) * 7) * 24 * 60 * 60 * 1000).getMonth() !== firstDayOfWeek.getMonth());
+          
+          if (isFirstWeekOfMonth && !monthPositions.find(m => m.month === monthName && Math.abs(m.weekIndex - week) < 2)) {
+            monthPositions.push({ month: monthName, weekIndex: week });
           }
         }
       }
 
-      return { weeks, months, maxVolume };
+      return { weeks, monthPositions, maxVolume };
     } catch (error) {
-      return { weeks: [], months: [], maxVolume: 0 };
+      return { weeks: [], monthPositions: [], maxVolume: 0 };
     }
   }, [data, selectedYear]);
 
@@ -291,17 +295,21 @@ export function VolumeActivity({
           </Select>
         </div>
 
-        {/* Month headers - full width */}
+        {/* Month headers - positioned based on actual week positions */}
         <div className="relative w-full mb-4">
-          <div className="grid grid-cols-12 gap-1 w-full">
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
-              <div
-                key={month}
-                className="text-xs text-muted-foreground text-center"
-              >
-                {month}
-              </div>
-            ))}
+          <div className="flex gap-1 min-w-full">
+            {activityData.weeks.map((week, weekIndex) => {
+              const monthPosition = activityData.monthPositions.find(m => m.weekIndex === weekIndex);
+              return (
+                <div key={weekIndex} className="w-3 sm:w-4 flex justify-center">
+                  {monthPosition && (
+                    <div className="text-xs text-muted-foreground text-center">
+                      {monthPosition.month}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -433,17 +441,21 @@ export function VolumeActivity({
           </div>
         </CardHeader>
         <CardContent className="pt-2 px-3 pb-0 sm:py-4 sm:px-6">
-          {/* Month headers for card mode */}
+          {/* Month headers for card mode - positioned based on actual week positions */}
           <div className="relative w-full mb-2 sm:mb-4">
-            <div className="grid grid-cols-12 gap-1 w-full">
-              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
-                <div
-                  key={month}
-                  className="text-[10px] sm:text-xs text-muted-foreground text-center"
-                >
-                  {month}
-                </div>
-              ))}
+            <div className="flex gap-1 min-w-full">
+              {activityData.weeks.map((week, weekIndex) => {
+                const monthPosition = activityData.monthPositions.find(m => m.weekIndex === weekIndex);
+                return (
+                  <div key={weekIndex} className="w-3 sm:w-4 flex justify-center">
+                    {monthPosition && (
+                      <div className="text-[10px] sm:text-xs text-muted-foreground text-center">
+                        {monthPosition.month}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           

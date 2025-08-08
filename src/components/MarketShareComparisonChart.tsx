@@ -162,27 +162,58 @@ export function MarketShareComparisonChart({
   return (
     <Card className="bg-card border-border rounded-xl">
       <CardHeader className={`border-b ${isMobile ? 'p-3' : 'p-6'}`}>
-        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
-          <div className="space-y-1">
-            <CardTitle className={`font-medium text-card-foreground ${isMobile ? 'text-sm' : 'text-base'}`}>Market Share Comparison</CardTitle>
-            <p className={`text-muted-foreground ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
-              {getTimeframeText()}
-            </p>
-          </div>
-          {onTimeframeChange && (
-            <Select value={timeframe} onValueChange={onTimeframeChange}>
-              <SelectTrigger className={`bg-background/50 backdrop-blur-sm ${isMobile ? 'w-full text-xs' : 'w-[140px]'}`}>
-                <SelectValue placeholder="Select timeframe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="3m">Last 3 months</SelectItem>
-                <SelectItem value="6m">Last 6 months</SelectItem>
-                <SelectItem value="1y">Last 1 year</SelectItem>
-                <SelectItem value="all">All time</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
+          {isMobile ? (
+            <>
+              {/* Mobile: Title row with timeframe selector on the right */}
+              <div className="flex items-start justify-between gap-2">
+                <CardTitle className="font-medium text-card-foreground text-sm flex-1">Market Share Comparison</CardTitle>
+                {onTimeframeChange && (
+                  <Select value={timeframe} onValueChange={onTimeframeChange}>
+                    <SelectTrigger className="bg-background/50 backdrop-blur-sm w-32 text-xs h-7 relative top-0.5">
+                      <SelectValue placeholder="Select timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7d">Last 7 days</SelectItem>
+                      <SelectItem value="30d">Last 30 days</SelectItem>
+                      <SelectItem value="3m">Last 3 months</SelectItem>
+                      <SelectItem value="6m">Last 6 months</SelectItem>
+                      <SelectItem value="1y">Last 1 year</SelectItem>
+                      <SelectItem value="all">All time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              {/* Mobile: Subtitle below title row */}
+              <p className="text-muted-foreground text-[10px]">
+                {getTimeframeText()}
+              </p>
+            </>
+          ) : (
+            <>
+              {/* Desktop: Title on left, timeframe selector on right */}
+              <div className="space-y-1">
+                <CardTitle className="font-medium text-card-foreground text-base">Market Share Comparison</CardTitle>
+                <p className="text-muted-foreground text-xs">
+                  {getTimeframeText()}
+                </p>
+              </div>
+              {onTimeframeChange && (
+                <Select value={timeframe} onValueChange={onTimeframeChange}>
+                  <SelectTrigger className="bg-background/50 backdrop-blur-sm w-[140px]">
+                    <SelectValue placeholder="Select timeframe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="3m">Last 3 months</SelectItem>
+                    <SelectItem value="6m">Last 6 months</SelectItem>
+                    <SelectItem value="1y">Last 1 year</SelectItem>
+                    <SelectItem value="all">All time</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </>
           )}
         </div>
       </CardHeader>

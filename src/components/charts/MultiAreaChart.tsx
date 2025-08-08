@@ -148,53 +148,72 @@ export function MultiAreaChart({
               <span className="sm:hidden">{title.replace(/ by Category/i, '')}</span>
               <span className="hidden sm:inline">{title}</span>
             </CardTitle>
-            <TimeframeSelector 
-              value={timeframe}
-              className="text-xs"
-              onChange={(value) => {
-                setTimeframe(value);
-                setIsCustomRange(false); // Switch to predefined timeframe mode
-                
-                // Update custom date range to match the selected timeframe
-                const now = new Date();
-                let daysToSubtract: number;
-                
-                switch (value) {
-                  case "7d":
-                    daysToSubtract = 7;
-                    break;
-                  case "30d":
-                    daysToSubtract = 30;
-                    break;
-                  case "3m":
-                    daysToSubtract = 90;
-                    break;
-                  case "6m":
-                    daysToSubtract = 180;
-                    break;
-                  case "1y":
-                    daysToSubtract = 365;
-                    break;
-                  default:
-                    // For "all", use the full data range
-                    if (data.length > 0) {
-                      const dates = data.map(item => {
-                        const [day, month, year] = item.formattedDay.split("-");
-                        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                      });
-                      const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-                      setCustomStartDate(startOfDay(earliestDate));
-                      setCustomEndDate(endOfDay(now));
-                      return;
-                    }
-                    daysToSubtract = 90;
-                }
-                
-                const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
-                setCustomStartDate(newStartDate);
-                setCustomEndDate(endOfDay(now));
-              }}
-            />
+            <div className="flex items-center gap-2">
+              <TimeframeSelector 
+                value={timeframe}
+                className="text-xs"
+                onChange={(value) => {
+                  setTimeframe(value);
+                  setIsCustomRange(false); // Switch to predefined timeframe mode
+                  
+                  // Update custom date range to match the selected timeframe
+                  const now = new Date();
+                  let daysToSubtract: number;
+                  
+                  switch (value) {
+                    case "7d":
+                      daysToSubtract = 7;
+                      break;
+                    case "30d":
+                      daysToSubtract = 30;
+                      break;
+                    case "3m":
+                      daysToSubtract = 90;
+                      break;
+                    case "6m":
+                      daysToSubtract = 180;
+                      break;
+                    case "1y":
+                      daysToSubtract = 365;
+                      break;
+                    default:
+                      // For "all", use the full data range
+                      if (data.length > 0) {
+                        const dates = data.map(item => {
+                          const [day, month, year] = item.formattedDay.split("-");
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        });
+                        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                        setCustomStartDate(startOfDay(earliestDate));
+                        setCustomEndDate(endOfDay(now));
+                        return;
+                      }
+                      daysToSubtract = 90;
+                  }
+                  
+                  const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+                  setCustomStartDate(newStartDate);
+                  setCustomEndDate(endOfDay(now));
+                }}
+              />
+              
+              {/* Date Range Toggle Button - Hidden on mobile */}
+              <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+                <button
+                  onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                    showDateRangeSelector
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
           
           {subtitle && (
@@ -231,23 +250,6 @@ export function MultiAreaChart({
                 return subtitle;
               })()}
               </p>
-              
-              {/* Date Range Toggle Button - Hidden on mobile */}
-              <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
-                <button
-                  onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                    showDateRangeSelector
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
-                  </svg>
-                </button>
-              </div>
             </div>
           )}
         </div>

@@ -266,19 +266,21 @@ export function StackedBarChart({
               />
               
               {/* Date Range Toggle Button */}
-              <button
-                onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className={`inline-flex items-center justify-center rounded-md px-2 py-2 text-xs font-medium bg-muted transition-colors duration-200 ${
-                  showDateRangeSelector
-                    ? 'bg-background text-foreground shadow-sm border border-border'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                }`}
-                title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
-              >
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
-                </svg>
-              </button>
+              <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+                <button
+                  onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                    showDateRangeSelector
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
+                  </svg>
+                </button>
+              </div>
             </div>
             )}
           </div>

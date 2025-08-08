@@ -58,12 +58,12 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
             <div className="flex flex-col sm:flex-col items-start sm:items-start justify-start w-full sm:w-auto">
               {/* Mobile: Title and Total Volume on same line, Desktop: separate */}
               <div className="flex items-center justify-between w-full sm:w-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center">
+                <div className="flex flex-col">
                   <div className="text-lg sm:text-3xl font-bold tracking-tight">
                     Lifetime Volume
                   </div>
-                  {/* Active protocols indicator - under title on mobile */}
-                  <div className="flex items-center gap-2 sm:gap-2.5 mt-1 sm:mt-0 sm:ml-4">
+                  {/* Active protocols indicator - under title for both mobile and desktop */}
+                  <div className="flex items-center gap-2 sm:gap-2.5 mt-1 sm:mt-2">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
                     <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                       {activeProtocolsCount} Active Protocols
@@ -115,7 +115,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                 {formatVolume(totalVolume)}
               </div>
               <div className="flex justify-end">
-                {significantProtocols.slice(0, 8).map((protocol, index) => (
+                {significantProtocols.map((protocol, index) => (
                   <div
                     key={protocol.id}
                     className="relative inline-block group cursor-pointer"

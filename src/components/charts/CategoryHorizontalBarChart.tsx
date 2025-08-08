@@ -10,7 +10,7 @@ import {
   YAxis,
   LabelList,
 } from "recharts";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -68,12 +68,30 @@ export function CategoryHorizontalBarChart({
   data,
   loading
 }: CategoryHorizontalBarChartProps) {
-  const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [timeframe, setTimeframe] = useState<TimeFrame>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640 ? "30d" : "3m";
+    }
+    return "30d";
+  });
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("volume");
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
+
+  // Handle window resize for responsive timeframe
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        const newTimeframe = window.innerWidth < 640 ? "30d" : "3m";
+        setTimeframe(newTimeframe);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Early return if no data
   if (!data || !Array.isArray(data)) {
@@ -201,126 +219,99 @@ export function CategoryHorizontalBarChart({
     >
       <Card className="bg-card border-border rounded-xl">
         <CardHeader className="flex flex-col gap-3 border-b p-3 sm:p-6">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-              {title} - {metricLabels[selectedMetric]}
-            </CardTitle>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                {(() => {
-                  // Check if subtitle is a protocol name
-                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                  if (protocolMatch) {
-                    return (
-                      <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {subtitle}
-                      </>
-                    );
-                  }
-                  return subtitle;
-                })()}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 w-full">
+            <div className="flex flex-col">
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
+                Total Metrics by Category - {metricLabels[selectedMetric]}
+              </CardTitle>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                All Trading Apps
               </p>
-            )}
-          </div>
-          <div className="flex justify-between items-center w-full">
-            <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
-              <SelectTrigger className="w-[90px] sm:flex-1 h-8 text-xs bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-lg">
-                <SelectValue placeholder="Select metric" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border-border text-foreground rounded-lg overflow-hidden">
-                <SelectItem value="volume" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Volume</SelectItem>
-                <SelectItem value="new_users" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">New Users</SelectItem>
-                <SelectItem value="trades" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Trades</SelectItem>
-                <SelectItem value="fees" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Fees</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="flex gap-1">
-              <TimeframeSelector 
-                value={timeframe}
-                className="text-xs"
-                onChange={(value) => {
-                  setTimeframe(value);
-                  setIsCustomRange(false); // Switch to predefined timeframe mode
-                  
-                  // Update custom date range to match the selected timeframe
-                  const now = new Date();
-                  let daysToSubtract: number;
-                  
-                  switch (value) {
-                    case "7d":
-                      daysToSubtract = 7;
-                      break;
-                    case "30d":
-                      daysToSubtract = 30;
-                      break;
-                    case "3m":
-                      daysToSubtract = 90;
-                      break;
-                    case "6m":
-                      daysToSubtract = 180;
-                      break;
-                    case "1y":
-                      daysToSubtract = 365;
-                      break;
-                    default:
-                      // For "all", use the full data range
-                      if (data && data.length > 0) {
-                        const dates = data.map(item => {
-                          if (item.formattedDay) {
-                            const [day, month, year] = item.formattedDay.split("-");
-                            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                          } else if (item.date) {
-                            return new Date(item.date);
-                          }
-                          return new Date();
-                        });
-                        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-                        setCustomStartDate(startOfDay(earliestDate));
-                        setCustomEndDate(endOfDay(now));
-                        return;
-                      }
-                      daysToSubtract = 90;
-                  }
-                  
-                  const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
-                  setCustomStartDate(newStartDate);
-                  setCustomEndDate(endOfDay(now));
-                }}
-              />
+            </div>
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+              <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
+                <SelectTrigger className="w-[90px] sm:w-[120px] h-8 sm:h-9 text-xs bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-lg">
+                  <SelectValue placeholder="Select metric" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground rounded-lg overflow-hidden">
+                  <SelectItem value="volume" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Volume</SelectItem>
+                  <SelectItem value="new_users" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">New Users</SelectItem>
+                  <SelectItem value="trades" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Trades</SelectItem>
+                  <SelectItem value="fees" className="text-xs text-foreground hover:bg-muted/50 rounded focus:bg-muted/50">Fees</SelectItem>
+                </SelectContent>
+              </Select>
               
-              {/* Date Range Toggle Button */}
-              <button
-                onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className={`inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium bg-muted transition-colors duration-200 ${
-                  showDateRangeSelector
-                    ? 'bg-background text-foreground shadow-sm border border-border'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                }`}
-                title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
-              >
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
-                </svg>
-              </button>
+              <div className="flex gap-1">
+                <TimeframeSelector 
+                  value={timeframe}
+                  className="text-xs"
+                  onChange={(value) => {
+                    setTimeframe(value);
+                    setIsCustomRange(false); // Switch to predefined timeframe mode
+                    
+                    // Update custom date range to match the selected timeframe
+                    const now = new Date();
+                    let daysToSubtract: number;
+                    
+                    switch (value) {
+                      case "7d":
+                        daysToSubtract = 7;
+                        break;
+                      case "30d":
+                        daysToSubtract = 30;
+                        break;
+                      case "3m":
+                        daysToSubtract = 90;
+                        break;
+                      case "6m":
+                        daysToSubtract = 180;
+                        break;
+                      case "1y":
+                        daysToSubtract = 365;
+                        break;
+                      default:
+                        // For "all", use the full data range
+                        if (data && data.length > 0) {
+                          const dates = data.map(item => {
+                            if (item.formattedDay) {
+                              const [day, month, year] = item.formattedDay.split("-");
+                              return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            } else if (item.date) {
+                              return new Date(item.date);
+                            }
+                            return new Date();
+                          });
+                          const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                          setCustomStartDate(startOfDay(earliestDate));
+                          setCustomEndDate(endOfDay(now));
+                          return;
+                        }
+                        daysToSubtract = 90;
+                    }
+                    
+                    const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+                    setCustomStartDate(newStartDate);
+                    setCustomEndDate(endOfDay(now));
+                  }}
+                />
+                
+                {/* Date Range Toggle Button */}
+                <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+                  <button
+                    onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+                    className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                      showDateRangeSelector
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </CardHeader>

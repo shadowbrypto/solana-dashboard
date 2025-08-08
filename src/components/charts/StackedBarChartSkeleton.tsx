@@ -39,34 +39,44 @@ export function StackedBarChartSkeleton({
           </div>
         </CardHeader>
         <CardContent className="pt-2 pb-1 px-2 sm:pt-6 sm:pb-6 sm:px-6">
-          <div className="h-[300px] sm:h-[400px] relative bg-muted/10 rounded-lg flex items-center justify-center">
-            <div className="h-full w-full flex flex-col justify-end gap-1 sm:gap-2 p-2 sm:p-4">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="flex gap-1 h-6 sm:h-8">
-                  {Array.from({ length: 3 }).map((_, j) => (
-                    <Skeleton 
-                      key={j} 
-                      className="flex-1 animate-pulse" 
+          <div className="h-[300px] sm:h-[400px] relative bg-muted/10 rounded-lg flex items-end justify-center p-2 sm:p-4">
+            {/* Vertical stacked bars */}
+            <div className="flex items-end justify-center gap-1 sm:gap-2 h-full w-full max-w-[600px]">
+              {Array.from({ length: 12 }).map((_, i) => {
+                const barHeight = Math.random() * 0.6 + 0.3; // Random height between 30% and 90%
+                return (
+                  <div key={i} className="flex-1 flex flex-col justify-end gap-0" style={{ height: `${barHeight * 100}%` }}>
+                    {/* Stacked segments within each bar */}
+                    <div 
+                      className="w-full rounded-t-sm bg-muted animate-pulse"
                       style={{
-                        backgroundColor: j === 0 ? 'hsl(210 100% 50%)' : j === 1 ? 'hsl(120 100% 40%)' : 'hsl(45 100% 50%)',
-                        opacity: 0.3
+                        height: '20%'
                       }}
                     />
-                  ))}
-                </div>
-              ))}
+                    <div 
+                      className="w-full bg-muted/80 animate-pulse"
+                      style={{
+                        height: '50%'
+                      }}
+                    />
+                    <div 
+                      className="w-full rounded-b-sm bg-muted/60 animate-pulse"
+                      style={{
+                        height: '30%'
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
-            <div className="absolute text-xs sm:text-sm text-muted-foreground">Loading chart data...</div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted-foreground">Loading chart data...</div>
             
             {/* Legend skeleton */}
             <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2 sm:gap-4">
-              {['Telegram Bots', 'Trading Terminals', 'Mobile Apps'].map((label, i) => (
+              {[1, 2, 3].map((_, i) => (
                 <div key={i} className="flex items-center gap-1">
-                  <div 
-                    className="w-2 h-2 rounded-full" 
-                    style={{ backgroundColor: i === 0 ? 'hsl(210 100% 50%)' : i === 1 ? 'hsl(120 100% 40%)' : 'hsl(45 100% 50%)' }}
-                  />
-                  <span className="text-[10px] sm:text-xs text-muted-foreground">{label}</span>
+                  <Skeleton className="w-2 h-2 rounded-full" />
+                  <Skeleton className="h-3 w-16 sm:w-20" />
                 </div>
               ))}
             </div>

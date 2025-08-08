@@ -207,8 +207,8 @@ export function StackedAreaChart({
         <CardHeader className="border-b p-3 sm:p-6">
           <div className="flex flex-col gap-1 sm:gap-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-                <span className="sm:hidden">{title.replace(/ by Category/i, '').replace(/ Dominance by Category/i, ' Dominance')}</span>
+              <CardTitle className="text-xs sm:text-base font-medium text-card-foreground">
+                <span className="sm:hidden">{title.replace(/ by Category/i, '').replace(/ Dominance by Category/i, ' Dominance').replace(/ by Protocol/i, '').replace(/ Dominance by Protocol/i, ' Dominance')}</span>
                 <span className="hidden sm:inline">{title}</span>
               </CardTitle>
               <TimeframeSelector 
@@ -262,7 +262,7 @@ export function StackedAreaChart({
             
             {subtitle && (
               <div className="flex items-center justify-between">
-                <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                   {(() => {
                     // Check if subtitle is a protocol name
                     const protocolMatch = protocolConfigs.find(p => p.name === subtitle);

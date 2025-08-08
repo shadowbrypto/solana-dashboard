@@ -13,7 +13,7 @@ import {
   LabelList,
 } from "recharts";
 import { ComponentActions } from '../ComponentActions';
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { getProtocolById, getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 
@@ -58,6 +58,18 @@ export function HorizontalBarChart({
     return <HorizontalBarChartSkeleton />;
   }
   const [timeframe, setTimeframe] = useState<TimeFrame>("3m");
+  const [isMobile, setIsMobile] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (timeframe === "all") {
@@ -107,65 +119,83 @@ export function HorizontalBarChart({
       .filter(item => item.value > 0)
       .sort((a, b) => b.value - a.value);
   }, [data, timeframe]);
+
+  const displayData = useMemo(() => {
+    if (!isMobile || showAll) {
+      return filteredData;
+    }
+    return filteredData.slice(0, 5);
+  }, [filteredData, isMobile, showAll]);
   return (
     <ComponentActions 
       componentName={`${title} Horizontal Bar Chart`}
       filename={`${title.replace(/\s+/g, '_')}_Horizontal_Bar_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+      <CardHeader className="border-b p-3 sm:p-6">
+        <div className="flex flex-col -gap-1 sm:gap-3">
+          <div className="flex items-start sm:items-center justify-between">
+            <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
+              <span className="sm:hidden">Total Volume</span>
+              <span className="hidden sm:inline">{title}</span>
+            </CardTitle>
+            <div className="flex items-start sm:items-center">
+              <TimeframeSelector 
+                value={timeframe}
+                className="text-xs"
+                onChange={setTimeframe}
+              />
+            </div>
+          </div>
+          
           {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              {(() => {
-                // Check if subtitle is a protocol name
-                const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                if (protocolMatch) {
-                  return (
-                    <>
-                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                          alt={subtitle} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
-                      {subtitle}
-                    </>
-                  );
-                }
-                return subtitle;
-              })()}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                {(() => {
+                  // Check if subtitle is a protocol name
+                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                  if (protocolMatch) {
+                    return (
+                      <>
+                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                          <img 
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                            alt={subtitle} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
+                              }
+                            }}
+                          />
+                        </div>
+                        {subtitle}
+                      </>
+                    );
+                  }
+                  return subtitle;
+                })()}
+              </p>
+            </div>
           )}
         </div>
-        <TimeframeSelector 
-          value={timeframe}
-          onChange={setTimeframe}
-        />
       </CardHeader>
-      <CardContent className="pt-2 px-2">
-        <ResponsiveContainer width="100%" height={filteredData.length * 35 + 20}>
+      <CardContent className="pt-2 pb-1 px-2 sm:pt-2 sm:pb-6 sm:px-6">
+        <ResponsiveContainer width="100%" height={displayData.length * (isMobile ? 30 : 35) + 20}>
           <RechartsBarChart
-            data={filteredData}
+            data={displayData}
             layout="vertical"
             margin={{
               top: 0,
-              right: 100,
+              right: isMobile ? 80 : 100,
               bottom: 0,
-              left: 50,
+              left: isMobile ? 8 : 50,
             }}
           >
             <CartesianGrid
@@ -179,20 +209,67 @@ export function HorizontalBarChart({
               type="number"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isMobile ? 9 : 11 }}
               tickFormatter={valueFormatter}
+              tickCount={isMobile ? 3 : 5}
             />
             <YAxis
               type="category"
               dataKey="name"
               axisLine={false}
               tickLine={false}
+              interval={0}
               tick={(props) => {
                 const { x, y, payload } = props;
                 // Try to find protocol by name (payload.value contains the protocol name)
                 const protocolName = payload.value?.toLowerCase();
                 const protocolConfig = getProtocolById(protocolName);
                 
+                if (isMobile) {
+                  // Mobile: Show only logos
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <g transform={`translate(${-18}, ${-8})`}>
+                        <foreignObject x="0" y="0" width="16" height="16">
+                          <div style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))'
+                          }}>
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
+                              alt={payload.value}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
+                        </foreignObject>
+                      </g>
+                    </g>
+                  );
+                }
+
+                // Desktop: Show both text and logos
                 return (
                   <g transform={`translate(${x},${y})`}>
                     <text 
@@ -218,7 +295,7 @@ export function HorizontalBarChart({
                           border: '1px solid hsl(var(--border))'
                         }}>
                           <img 
-                            src={`/assets/logos/${protocolName.includes('terminal') ? protocolName.split(' ')[0] : protocolName === 'bull x' ? 'bullx' : protocolName}.jpg`}
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
                             alt={payload.value}
                             style={{
                               width: '100%',
@@ -243,7 +320,7 @@ export function HorizontalBarChart({
                   </g>
                 );
               }}
-              width={100}
+              width={isMobile ? 30 : 100}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -275,23 +352,23 @@ export function HorizontalBarChart({
             />
             <Bar
               dataKey="value"
-              barSize={20}
+              barSize={isMobile ? 16 : 20}
               fill="none"
               radius={[4, 4, 4, 4]}
-              maxBarSize={20}
+              maxBarSize={isMobile ? 16 : 20}
             >
               <LabelList
                 dataKey="value"
                 position="right"
-                offset={10}
+                offset={8}
                 formatter={valueFormatter}
                 style={{
                   fill: "hsl(var(--foreground))",
-                  fontSize: "12px",
+                  fontSize: isMobile ? "10px" : "12px",
                   fontWeight: "500",
                 }}
               />
-              {filteredData.map((entry, index) => (
+              {displayData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={entry.color || "hsl(var(--primary))"}
@@ -302,6 +379,26 @@ export function HorizontalBarChart({
             </Bar>
           </RechartsBarChart>
         </ResponsiveContainer>
+        
+        {/* Show More/Less Button - Mobile Only */}
+        {isMobile && filteredData.length > 5 && (
+          <div className="flex justify-center pt-3 pb-1 border-t border-border mt-2">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted/80 rounded-lg transition-colors duration-200"
+            >
+              <span>{showAll ? 'Show Less' : `Show More (${filteredData.length - 5} more)`}</span>
+              <svg 
+                className={`h-3 w-3 transition-transform duration-200 ${showAll ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
     </ComponentActions>

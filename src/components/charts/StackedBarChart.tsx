@@ -176,7 +176,7 @@ export function StackedBarChart({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-              <span className="sm:hidden">{title.replace(/ by Category/i, '')}</span>
+              <span className="sm:hidden">{title.replace(/ by Category/i, '').replace(/ by Protocol/i, '')}</span>
               <span className="hidden sm:inline">{title}</span>
             </CardTitle>
               {subtitle && (
@@ -400,11 +400,14 @@ export function StackedBarChart({
                 })}
               <Legend
                 verticalAlign="bottom"
-                height={28}
+                height={dataKeys.length > 6 ? (Math.ceil(dataKeys.length / 3) * 10) : 24}
                 iconType="circle"
-                iconSize={7}
+                iconSize={6}
                 wrapperStyle={{
-                  paddingTop: "4px"
+                  paddingTop: "0px",
+                  fontSize: "9px",
+                  lineHeight: "10px",
+                  marginBottom: "-4px"
                 }}
                 payload={dataKeys.map((key, index) => ({
                   value: labels[index],
@@ -425,7 +428,14 @@ export function StackedBarChart({
                   const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                   return (
                     <span 
-                      className={`text-[10px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
+                      className={`text-[9px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
+                      style={{
+                        display: 'inline-block',
+                        maxWidth: '80px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
                     >
                       {value}
                     </span>

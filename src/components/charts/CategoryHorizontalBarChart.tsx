@@ -222,13 +222,14 @@ export function CategoryHorizontalBarChart({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 w-full">
             <div className="flex flex-col">
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-                Total Metrics by Category - {metricLabels[selectedMetric]}
+                <span className="sm:hidden">Total Metrics - {metricLabels[selectedMetric]}</span>
+                <span className="hidden sm:inline">Total Metrics by Category - {metricLabels[selectedMetric]}</span>
               </CardTitle>
               <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                 All Trading Apps
               </p>
             </div>
-            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="flex justify-between items-center w-full sm:w-auto sm:gap-3">
               <Select value={selectedMetric} onValueChange={(value: string) => setSelectedMetric(value as MetricType)}>
                 <SelectTrigger className="w-[90px] sm:w-[120px] h-8 sm:h-9 text-xs bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-lg">
                   <SelectValue placeholder="Select metric" />
@@ -295,8 +296,8 @@ export function CategoryHorizontalBarChart({
                   }}
                 />
                 
-                {/* Date Range Toggle Button */}
-                <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+                {/* Date Range Toggle Button - Hidden on mobile */}
+                <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
                   <button
                     onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
                     className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${

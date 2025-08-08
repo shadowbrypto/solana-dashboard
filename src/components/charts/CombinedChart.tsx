@@ -261,18 +261,18 @@ export function CombinedChart({
               }}
             />
             
-            {/* Date Range Toggle Button */}
-            <div className="relative inline-flex items-center rounded-lg bg-muted p-0.5 sm:p-1">
+            {/* Date Range Toggle Button - Hidden on mobile */}
+            <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
               <button
                 onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                   showDateRangeSelector
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
                 title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
               >
-                <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
                 </svg>
               </button>

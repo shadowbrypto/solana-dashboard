@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { TimeframeSelector, type TimeFrame } from '../ui/timeframe-selector';
 import { DateRangeSelector } from '../ui/DateRangeSelector';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
@@ -52,6 +52,17 @@ export function MultiAreaChart({
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -130,11 +141,65 @@ export function MultiAreaChart({
       filename={`${title.replace(/\s+/g, '_')}_Multi_Area_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
+      <CardHeader className="border-b p-3 sm:p-6">
+        <div className="flex flex-col gap-1 sm:gap-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
+              <span className="sm:hidden">{title.replace(/ by Category/i, '')}</span>
+              <span className="hidden sm:inline">{title}</span>
+            </CardTitle>
+            <TimeframeSelector 
+              value={timeframe}
+              className="text-xs"
+              onChange={(value) => {
+                setTimeframe(value);
+                setIsCustomRange(false); // Switch to predefined timeframe mode
+                
+                // Update custom date range to match the selected timeframe
+                const now = new Date();
+                let daysToSubtract: number;
+                
+                switch (value) {
+                  case "7d":
+                    daysToSubtract = 7;
+                    break;
+                  case "30d":
+                    daysToSubtract = 30;
+                    break;
+                  case "3m":
+                    daysToSubtract = 90;
+                    break;
+                  case "6m":
+                    daysToSubtract = 180;
+                    break;
+                  case "1y":
+                    daysToSubtract = 365;
+                    break;
+                  default:
+                    // For "all", use the full data range
+                    if (data.length > 0) {
+                      const dates = data.map(item => {
+                        const [day, month, year] = item.formattedDay.split("-");
+                        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                      });
+                      const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+                      setCustomStartDate(startOfDay(earliestDate));
+                      setCustomEndDate(endOfDay(now));
+                      return;
+                    }
+                    daysToSubtract = 90;
+                }
+                
+                const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
+                setCustomStartDate(newStartDate);
+                setCustomEndDate(endOfDay(now));
+              }}
+            />
+          </div>
+          
           {subtitle && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
               {(() => {
                 // Check if subtitle is a protocol name
                 const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
@@ -165,78 +230,36 @@ export function MultiAreaChart({
                 }
                 return subtitle;
               })()}
-            </p>
+              </p>
+              
+              {/* Date Range Toggle Button - Hidden on mobile */}
+              <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+                <button
+                  onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                    showDateRangeSelector
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
+                  </svg>
+                </button>
+              </div>
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <TimeframeSelector 
-            value={timeframe}
-            onChange={(value) => {
-              setTimeframe(value);
-              setIsCustomRange(false); // Switch to predefined timeframe mode
-              
-              // Update custom date range to match the selected timeframe
-              const now = new Date();
-              let daysToSubtract: number;
-              
-              switch (value) {
-                case "7d":
-                  daysToSubtract = 7;
-                  break;
-                case "30d":
-                  daysToSubtract = 30;
-                  break;
-                case "3m":
-                  daysToSubtract = 90;
-                  break;
-                case "6m":
-                  daysToSubtract = 180;
-                  break;
-                case "1y":
-                  daysToSubtract = 365;
-                  break;
-                default:
-                  // For "all", use the full data range
-                  if (data.length > 0) {
-                    const dates = data.map(item => {
-                      const [day, month, year] = item.formattedDay.split("-");
-                      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    });
-                    const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-                    setCustomStartDate(startOfDay(earliestDate));
-                    setCustomEndDate(endOfDay(now));
-                    return;
-                  }
-                  daysToSubtract = 90;
-              }
-              
-              const newStartDate = startOfDay(new Date(now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000));
-              setCustomStartDate(newStartDate);
-              setCustomEndDate(endOfDay(now));
-            }}
-          />
-          
-          {/* Date Range Toggle Button */}
-          <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
-            <button
-              onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                showDateRangeSelector
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title={`${showDateRangeSelector ? 'Hide' : 'Show'} date range selector`}
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showDateRangeSelector ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"} />
-              </svg>
-            </button>
-          </div>
-        </div>
       </CardHeader>
-      <CardContent className="pt-6">
-        <ResponsiveContainer width="100%" height={400}>
-          <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 12 }}>
+      <CardContent className="pt-2 -mb-4 px-2 sm:pt-6 sm:pb-6 sm:px-6">
+        <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
+          <RechartsAreaChart data={filteredData} margin={{ 
+            top: 20, 
+            right: isMobile ? 10 : 30, 
+            left: isMobile ? 5 : 0, 
+            bottom: isMobile ? 8 : 12 
+          }}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="hsl(var(--border))"
@@ -260,6 +283,7 @@ export function MultiAreaChart({
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               tickFormatter={(value) => `${value.toFixed(0)}%`}
               domain={[0, 'dataMax']}
+              width={isMobile ? 38 : 40}
             />
             <Tooltip
               content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -336,7 +360,7 @@ export function MultiAreaChart({
                 const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                 return (
                   <span 
-                    className={`text-sm text-muted-foreground ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
+                    className={`text-xs sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50' : ''}`}
                   >
                     {value}
                   </span>

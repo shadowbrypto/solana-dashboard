@@ -175,7 +175,10 @@ export function StackedBarChart({
         <CardHeader className="flex flex-col border-b gap-3 p-3 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
+              <span className="sm:hidden">{title.replace(/ by Category/i, '')}</span>
+              <span className="hidden sm:inline">{title}</span>
+            </CardTitle>
               {subtitle && (
                 <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
                   {(() => {
@@ -265,8 +268,8 @@ export function StackedBarChart({
                 }}
               />
               
-              {/* Date Range Toggle Button */}
-              <div className="relative inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
+              {/* Date Range Toggle Button - Hidden on mobile */}
+              <div className="relative hidden sm:inline-flex items-center rounded-lg bg-muted p-1 min-w-fit">
                 <button
                   onClick={() => setShowDateRangeSelector(!showDateRangeSelector)}
                   className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
@@ -287,7 +290,7 @@ export function StackedBarChart({
         </CardHeader>
         <CardContent className="pt-2 pb-1 px-2 sm:pt-6 sm:pb-6 sm:px-6">
           <div className="transition-all duration-500 ease-out">
-            <ResponsiveContainer width="100%" height={400} className="h-[300px] sm:h-[400px]">
+            <ResponsiveContainer width="100%" height={400} className="h-[250px] sm:h-[400px]">
               <RechartsBarChart 
                 data={filteredData} 
                 margin={{ top: 20, right: 10, left: 5, bottom: 8 }}

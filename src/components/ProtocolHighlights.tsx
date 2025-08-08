@@ -364,6 +364,7 @@ export function ProtocolHighlights({
           </div>
         </div>
       </CardHeader>
+      <div className="hidden sm:block w-full h-px bg-border"></div>
       <CardContent className="p-0">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 border-t sm:border-t-0">
           {highlights.map((highlight, index) => {

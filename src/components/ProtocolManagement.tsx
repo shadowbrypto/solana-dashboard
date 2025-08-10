@@ -66,14 +66,14 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[100px] p-4 border-2 border-dashed rounded-lg transition-all duration-200 ${
+      className={`min-h-[100px] p-2 sm:p-4 border-2 border-dashed rounded-lg transition-all duration-200 ${
         isOver 
           ? 'border-primary bg-primary/10 shadow-md' 
           : 'border-muted-foreground/25 bg-muted/40 hover:bg-muted/60 hover:border-muted-foreground/40'
       }`}
     >
       <SortableContext items={protocols.map(p => p.id)} strategy={verticalListSortingStrategy}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
           {protocols.map(protocol => (
             <SortableProtocol 
               key={protocol.id} 
@@ -87,11 +87,11 @@ function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols
         </div>
       </SortableContext>
       {protocols.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-sm font-medium mb-1">
+        <div className="text-center py-6 sm:py-12">
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">
             Drop trading apps here
           </p>
-          <p className="text-muted-foreground/70 text-xs">
+          <p className="text-muted-foreground/70 text-[10px] sm:text-xs">
             Drag and drop trading apps to organize them
           </p>
         </div>
@@ -120,7 +120,7 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 p-3 border rounded-lg transition-all duration-200 ${
+      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg transition-all duration-200 ${
         sortableIsDragging 
           ? 'shadow-lg z-50 ring-2 ring-primary/50 bg-card scale-105' 
           : 'bg-card border-border hover:bg-accent hover:shadow-sm hover:border-border/80'
@@ -130,8 +130,8 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
       <div {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-accent p-1.5 rounded transition-colors">
         <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
       </div>
-      <div className="bg-muted/20 rounded-sm w-12 h-12 flex items-center justify-center">
-        <protocol.icon size={48} className="w-12 h-12 text-muted-foreground" style={{ width: '48px', height: '48px' }} />
+      <div className="bg-muted/20 rounded-sm w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+        <protocol.icon size={40} className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" style={{ width: '40px', height: '40px' }} />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
           )}
         </div>
         {latestDate && (
-          <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${
+          <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
             latestDate.is_current 
               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -156,21 +156,21 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
             <div className={`w-1 h-1 rounded-full ${
               latestDate.is_current ? 'bg-green-600' : 'bg-red-600'
             }`} />
-            <span className="font-medium">
+            <span className="font-medium text-[10px] sm:text-xs">
               Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
           </div>
         )}
         {syncStatus && !syncStatus.sync_success && (
           <div className="flex items-center gap-1 mt-1">
-            <AlertCircle className="h-3 w-3 text-red-500" />
-            <span className="text-xs text-red-500">Sync Failed</span>
+            <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 text-red-500" />
+            <span className="text-[10px] sm:text-xs text-red-500">Sync Failed</span>
           </div>
         )}
         {syncStatus && syncStatus.sync_success && !syncStatus.has_recent_data && (
           <div className="flex items-center gap-1 mt-1">
-            <AlertCircle className="h-3 w-3 text-amber-500" />
-            <span className="text-xs text-amber-500">
+            <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 text-amber-500" />
+            <span className="text-[10px] sm:text-xs text-amber-500">
               {syncStatus.latest_data_date 
                 ? `Latest: ${new Date(syncStatus.latest_data_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                 : 'No recent data'}
@@ -186,10 +186,10 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
           onRefresh(protocol.id);
         }}
         disabled={isRefreshing}
-        className="h-8 w-8 p-0"
+        className="h-6 w-6 sm:h-8 sm:w-8 p-0"
         title={`Refresh ${protocol.name} data`}
       >
-        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
       </Button>
     </div>
   );
@@ -544,17 +544,17 @@ export function ProtocolManagement() {
   const activeProtocol = activeId ? getMutableProtocolConfigs().find(p => p.id === activeId) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2 sm:space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3 sm:p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>Trading App Configuration</CardTitle>
-              <CardDescription>
+            <div className="space-y-1 sm:space-y-1.5">
+              <CardTitle className="text-base sm:text-lg">Trading App Configuration</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Current trading apps organized by category. Drag trading apps between categories to reorganize them.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 onClick={handleResetConfigurations}
                 disabled={isResetting || isSaving}
@@ -563,13 +563,13 @@ export function ProtocolManagement() {
               >
                 {isResetting ? (
                   <>
-                    <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
-                    Resetting...
+                    <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    <span className="hidden sm:inline">Resetting...</span>
                   </>
                 ) : (
                   <>
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    Reset
+                    <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Reset</span>
                   </>
                 )}
               </Button>
@@ -580,23 +580,23 @@ export function ProtocolManagement() {
               >
                 {isSaving ? (
                   <>
-                    <Save className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    <span className="hidden sm:inline">Saving...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
+                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Save Changes</span>
                   </>
                 )}
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           {hasUnsavedChanges() && (
-            <div className="mb-4 p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
+            <div className="mb-3 sm:mb-4 p-2 sm:p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200">
                 You have unsaved changes. Click "Save Changes" to make them permanent.
               </p>
             </div>
@@ -606,12 +606,12 @@ export function ProtocolManagement() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
               {categories.map(category => {
                 const categoryProtocols = getMutableProtocolsByCategoryIncludingEVM(category); // Show all protocols including EVM
                 return (
                   <div key={category}>
-                    <h3 className="text-lg font-semibold mb-3">{category}</h3>
+                    <h3 className="text-sm sm:text-lg font-semibold mb-2 sm:mb-3">{category}</h3>
                     <DroppableCategory 
                       category={category} 
                       protocols={categoryProtocols} 
@@ -643,26 +643,26 @@ export function ProtocolManagement() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3 sm:p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>Launchpad Management</CardTitle>
-              <CardDescription>
+            <div className="space-y-1 sm:space-y-1.5">
+              <CardTitle className="text-base sm:text-lg">Launchpad Management</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 View and manage individual launchpad configurations
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-3 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {/* Individual Launchpad Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               {getAllLaunchpads().map(launchpad => (
                 <div
                   key={launchpad.id}
-                  className="flex items-center gap-3 p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
+                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="w-12 h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
                     <img 
                       src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
                       alt={launchpad.name} 
@@ -683,13 +683,13 @@ export function ProtocolManagement() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">{launchpad.name}</p>
-                      <Badge variant="secondary" className="h-5 px-2 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                      <p className="font-medium text-foreground text-xs sm:text-base">{launchpad.name}</p>
+                      <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
                         {launchpad.chain.toUpperCase()}
                       </Badge>
                     </div>
                     {launchpadLatestDates.get(launchpad.id) && (
-                      <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${
+                      <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
                         launchpadLatestDates.get(launchpad.id)!.is_current 
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
                           : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -697,7 +697,7 @@ export function ProtocolManagement() {
                         <div className={`w-1 h-1 rounded-full ${
                           launchpadLatestDates.get(launchpad.id)!.is_current ? 'bg-green-600' : 'bg-red-600'
                         }`} />
-                        <span className="font-medium">
+                        <span className="font-medium text-[10px] sm:text-xs">
                           Latest: {new Date(launchpadLatestDates.get(launchpad.id)!.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
@@ -711,10 +711,10 @@ export function ProtocolManagement() {
                       handleRefreshLaunchpad(launchpad.id);
                     }}
                     disabled={refreshingLaunchpads.has(launchpad.id)}
-                    className="h-8 w-8 p-0"
+                    className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                     title={`Refresh ${launchpad.name} data`}
                   >
-                    <RefreshCw className={`h-4 w-4 ${refreshingLaunchpads.has(launchpad.id) ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingLaunchpads.has(launchpad.id) ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
               ))}
@@ -724,20 +724,20 @@ export function ProtocolManagement() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3 sm:p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>Data Refresh Operations</CardTitle>
-              <CardDescription>
+            <div className="space-y-1 sm:space-y-1.5">
+              <CardTitle className="text-base sm:text-lg">Data Refresh Operations</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Force refresh data from Dune Analytics for trading apps and launchpads
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+        <CardContent className="p-3 sm:p-6">
+          <div className="space-y-3 sm:space-y-6">
             {/* Trading Apps Section */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border/30"></div>
@@ -746,14 +746,14 @@ export function ProtocolManagement() {
                   <span className="bg-background px-2 text-muted-foreground font-medium">Trading Apps</span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <span className="text-sm font-medium text-foreground">Solana Protocols</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Solana Protocols</span>
                         <div className="flex -space-x-1">
                           {getMutableProtocolConfigs()
                             .filter(p => p.chain === 'solana')
@@ -790,7 +790,7 @@ export function ProtocolManagement() {
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
                         Refresh all Solana trading apps data
                       </p>
                     </div>
@@ -803,26 +803,26 @@ export function ProtocolManagement() {
                     >
                       {isRefreshingSolana ? (
                         <>
-                          <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                          Refreshing...
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                          <span className="hidden sm:inline">Refreshing...</span>
                         </>
                       ) : (
                         <>
-                          <RefreshCcw className="mr-2 h-4 w-4" />
-                          Refresh Solana
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Refresh Solana</span>
                         </>
                       )}
                     </Button>
                   </div>
                 </div>
 
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-blue-50/30 dark:to-blue-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-500/20 overflow-hidden">
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-blue-50/30 dark:to-blue-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-500/20 overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="text-sm font-medium text-foreground">EVM Protocols</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">EVM Protocols</span>
                         <div className="flex -space-x-1">
                           {getMutableProtocolConfigs()
                             .filter(p => p.chain === 'evm')
@@ -859,7 +859,7 @@ export function ProtocolManagement() {
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
                         Refresh all EVM trading apps data
                       </p>
                     </div>
@@ -872,13 +872,13 @@ export function ProtocolManagement() {
                     >
                       {isRefreshingEVM ? (
                         <>
-                          <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                          Refreshing...
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                          <span className="hidden sm:inline">Refreshing...</span>
                         </>
                       ) : (
                         <>
-                          <RefreshCcw className="mr-2 h-4 w-4" />
-                          Refresh EVM
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Refresh EVM</span>
                         </>
                       )}
                     </Button>
@@ -898,14 +898,14 @@ export function ProtocolManagement() {
             </div>
 
             {/* Launchpads Section */}
-            <div className="space-y-3">
-              <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
+                  <div className="space-y-1 sm:space-y-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      <span className="text-sm font-medium text-foreground">All Launchpads</span>
+                      <span className="text-xs sm:text-sm font-medium text-foreground">All Launchpads</span>
                       <div className="flex -space-x-1">
                         {getAllLaunchpads().slice(0, 4).map((launchpad, index) => (
                           <div 
@@ -939,7 +939,7 @@ export function ProtocolManagement() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
                       Refresh data for PumpFun, Moonshot, and other launchpad metrics
                     </p>
                   </div>
@@ -952,13 +952,13 @@ export function ProtocolManagement() {
                   >
                     {isRefreshingLaunchpads ? (
                       <>
-                        <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                        Refreshing...
+                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        <span className="hidden sm:inline">Refreshing...</span>
                       </>
                     ) : (
                       <>
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        Refresh Launchpads
+                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Refresh Launchpads</span>
                       </>
                     )}
                   </Button>
@@ -972,34 +972,34 @@ export function ProtocolManagement() {
 
       {/* Data Source Settings */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3 sm:p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-1.5">
-              <CardTitle>
+            <div className="space-y-1 sm:space-y-1.5">
+              <CardTitle className="text-base sm:text-lg">
                 Data Source Settings ({dataTypePreference === 'private' ? 'Private' : 'Public'} Active)
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Configure data sources and preferences for analytics
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+        <CardContent className="p-3 sm:p-6">
+          <div className="space-y-3 sm:space-y-6">
             {/* Data Source Toggle */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-background to-muted/30">
+            <div className="space-y-2 sm:space-y-4">
+              <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl border bg-gradient-to-r from-background to-muted/30">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${dataTypePreference === 'private' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                    <h4 className="text-sm font-semibold">Active Data Source</h4>
+                    <h4 className="text-xs sm:text-sm font-semibold">Active Data Source</h4>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Switch between private (paid) and public (free) data sources
                   </p>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
                     Private
                   </div>
                   <Switch
@@ -1008,7 +1008,7 @@ export function ProtocolManagement() {
                     onCheckedChange={handleDataTypeChange}
                     className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-blue-500"
                   />
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
                     Public
                   </div>
                 </div>

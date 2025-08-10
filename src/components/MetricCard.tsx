@@ -104,7 +104,7 @@ export function MetricCard({
       componentName={`${title} Metric`}
       filename={`${title.replace(/\s+/g, '_')}_Metric.png`}
     >
-      <div className="group relative rounded-lg sm:rounded-xl border-2 border-border/80 bg-card p-2 sm:p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-xl cursor-default overflow-hidden">
+      <div className="group relative rounded-lg sm:rounded-xl border-2 border-border/80 bg-card p-3 sm:p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-xl cursor-default overflow-hidden">
         {/* Content Container */}
         <div className="flex flex-col h-full">
           {/* Top Section - Title */}
@@ -115,7 +115,7 @@ export function MetricCard({
           </div>
 
           {/* Middle Section - Large Value */}
-          <div className="flex-1 flex items-center justify-center py-1 sm:py-4">
+          <div className="flex-1 flex items-center justify-center py-2 sm:py-4">
             <div className="text-center">
               <div className="text-2xl sm:text-4xl lg:text-5xl font-semibold font-mono tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
                 {typeof value === 'number' ? formatNumber(value) : value}
@@ -127,7 +127,7 @@ export function MetricCard({
           <div className="flex items-center justify-between mt-auto">
             {/* Protocol Name */}
             <div className="flex items-center gap-1">
-              <div className="w-4 h-4 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
                 {protocolLogo ? (
                   <img 
                     src={`/assets/logos/${protocolLogo}`}

@@ -23,11 +23,11 @@ export default function ProtocolAdmin() {
       isAuthenticated={isAuthenticated} 
       onAuthenticated={handleAuthenticated}
     >
-      <div className="p-6">
+      <div className="p-1 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">Trading App Administration</h1>
-            <p className="text-muted-foreground mt-2">
+          <div className="mb-2 sm:mb-6">
+            <h1 className="text-lg sm:text-3xl font-bold">Trading App Administration</h1>
+            <p className="text-muted-foreground mt-0.5 sm:mt-2 text-xs sm:text-base">
               Manage trading apps and their configuration
             </p>
           </div>

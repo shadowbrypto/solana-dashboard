@@ -17,6 +17,7 @@ import { PieChart } from '../components/charts/PieChart';
 import { PieChartSkeleton } from '../components/charts/PieChartSkeleton';
 import { transformLaunchpadDataForStackedChart, formatChartNumber } from '../lib/launchpad-chart-utils';
 import { LaunchpadSplitBar } from '../components/LaunchpadSplitBar';
+import { RecentActivityCard } from '../components/RecentActivityCard';
 
 type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -36,12 +37,20 @@ const LAUNCHPAD_COLORS: Record<string, string> = {
 };
 
 export default function AllLaunchpads() {
+  // Check initial window width for default timeframe
+  const getDefaultTimeframe = (): TimeFrame => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640 ? "30d" : "3m";
+    }
+    return "3m";
+  };
+  
   const [launchpadData, setLaunchpadData] = useState<LaunchpadData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [launchesTimeframe, setLaunchesTimeframe] = useState<TimeFrame>("3m");
-  const [launchesDominanceTimeframe, setLaunchesDominanceTimeframe] = useState<TimeFrame>("3m");
-  const [graduationsTimeframe, setGraduationsTimeframe] = useState<TimeFrame>("3m");
-  const [graduationsDominanceTimeframe, setGraduationsDominanceTimeframe] = useState<TimeFrame>("3m");
+  const [launchesTimeframe, setLaunchesTimeframe] = useState<TimeFrame>(getDefaultTimeframe());
+  const [launchesDominanceTimeframe, setLaunchesDominanceTimeframe] = useState<TimeFrame>(getDefaultTimeframe());
+  const [graduationsTimeframe, setGraduationsTimeframe] = useState<TimeFrame>(getDefaultTimeframe());
+  const [graduationsDominanceTimeframe, setGraduationsDominanceTimeframe] = useState<TimeFrame>(getDefaultTimeframe());
   const [launchesPieTimeframe, setLaunchesPieTimeframe] = useState<TimeFrame>("all");
   const [graduationsPieTimeframe, setGraduationsPieTimeframe] = useState<TimeFrame>("all");
   const [selectedMetric, setSelectedMetric] = useState<'launches' | 'graduations'>('launches');
@@ -435,7 +444,7 @@ export default function AllLaunchpads() {
       </div>
 
       {/* Lifetime Metrics - 3 Card Layout */}
-      <div className="mb-6 lg:mb-8 grid grid-cols-1 gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-3 lg:grid-cols-3">
+      <div className="mb-6 lg:mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
         {loading ? (
           <>
             <MetricCardSkeleton />
@@ -471,15 +480,15 @@ export default function AllLaunchpads() {
 
       {/* Pie Charts Section */}
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-lg font-semibold mb-4">Lifetime Distribution</h2>
+        <h2 className="text-sm sm:text-lg font-semibold mb-3 sm:mb-4">Lifetime Distribution</h2>
         
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <PieChartSkeleton />
             <PieChartSkeleton />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Launches Pie Chart */}
             {(() => {
               const launchesChartData = transformLaunchpadDataForStackedChart(
@@ -498,8 +507,8 @@ export default function AllLaunchpads() {
                   timeframe={launchesPieTimeframe}
                   onTimeframeChange={(value) => setLaunchesPieTimeframe(value as TimeFrame)}
                   showPercentages={true}
-                  innerRadius={70}
-                  outerRadius={140}
+                  innerRadius={30}
+                  outerRadius={80}
                   centerLabel="Launches"
                 />
               );
@@ -523,8 +532,8 @@ export default function AllLaunchpads() {
                   timeframe={graduationsPieTimeframe}
                   onTimeframeChange={(value) => setGraduationsPieTimeframe(value as TimeFrame)}
                   showPercentages={true}
-                  innerRadius={70}
-                  outerRadius={140}
+                  innerRadius={30}
+                  outerRadius={80}
                   centerLabel="Graduations"
                 />
               );
@@ -538,229 +547,64 @@ export default function AllLaunchpads() {
         <div className="mb-6 lg:mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {/* Last Day Stats */}
-            <div className="group relative bg-gradient-to-br from-card via-card/95 to-blue-50/30 dark:to-blue-950/10 border border-border/50 rounded-xl p-5 shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-500/20 overflow-hidden">
-              {/* Subtle accent line */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-sm"></div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground">Last Day</h4>
-                      <div className="text-[10px] text-muted-foreground font-medium">
-                        {(() => {
-                          if (recentActivity && launchpadData.length > 0) {
-                            const allDates = launchpadData.flatMap(lp => lp.data.map(item => item.date));
-                            if (allDates.length > 0) {
-                              const sortedDates = [...new Set(allDates)].sort();
-                              const mostRecentDate = sortedDates[sortedDates.length - 1];
-                              return new Date(mostRecentDate).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric',
-                                year: 'numeric' 
-                              });
-                            }
-                          }
-                          return '';
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
-                    recentActivity.dailyGrowth.isPositive 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 border border-green-200/50 dark:from-green-900/30 dark:to-emerald-900/20 dark:text-green-400 dark:border-green-800/30' 
-                      : 'bg-gradient-to-r from-red-100 to-rose-50 text-red-700 border border-red-200/50 dark:from-red-900/30 dark:to-rose-900/20 dark:text-red-400 dark:border-red-800/30'
-                  }`}>
-                    {recentActivity.dailyGrowth.isPositive ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    {recentActivity.dailyGrowth.value.toFixed(1)}%
-                  </div>
-                </div>
+            <RecentActivityCard
+              title="Last Day"
+              subtitle={(() => {
+                if (recentActivity && launchpadData.length > 0) {
+                  const allDates = launchpadData.flatMap(lp => lp.data.map(item => item.date));
+                  if (allDates.length > 0) {
+                    const sortedDates = [...new Set(allDates)].sort();
+                    const mostRecentDate = sortedDates[sortedDates.length - 1];
+                    return new Date(mostRecentDate).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric' 
+                    });
+                  }
+                }
+                return '';
+              })()}
+              stats={recentActivity.stats1d}
+              breakdown={recentActivity.breakdown1d}
+              growth={recentActivity.dailyGrowth}
+              accentColor="blue"
+            />
 
-                <div className="space-y-3">
-                  {/* Launches Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.launches)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown1d.launches} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduations Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats1d.graduations)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown1d.graduations} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduation Rate Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
-                      <span className="text-lg font-bold text-foreground">{recentActivity.stats1d.ratio.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <RecentActivityCard
+              title="Last 7 Days"
+              subtitle={(() => {
+                const now = new Date();
+                const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                const startDate = new Date(yesterday.getTime() - 6 * 24 * 60 * 60 * 1000);
+                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                });
+                return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
+              })()}
+              stats={recentActivity.stats7d}
+              breakdown={recentActivity.breakdown7d}
+              growth={recentActivity.weeklyGrowth}
+              accentColor="green"
+            />
 
-            {/* Last 7 Days Stats */}
-            <div className="group relative bg-gradient-to-br from-card via-card/95 to-green-50/30 dark:to-green-950/10 border border-border/50 rounded-xl p-5 shadow-sm hover:shadow-lg hover:shadow-green-500/5 transition-all duration-300 hover:border-green-500/20 overflow-hidden">
-              {/* Subtle accent line */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 shadow-sm"></div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground">Last 7 Days</h4>
-                      <div className="text-[10px] text-muted-foreground font-medium">
-                        {(() => {
-                          const now = new Date();
-                          const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                          const startDate = new Date(yesterday.getTime() - 6 * 24 * 60 * 60 * 1000); // 7 days excluding today
-                          const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          });
-                          return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
-                    recentActivity.weeklyGrowth.isPositive 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 border border-green-200/50 dark:from-green-900/30 dark:to-emerald-900/20 dark:text-green-400 dark:border-green-800/30' 
-                      : 'bg-gradient-to-r from-red-100 to-rose-50 text-red-700 border border-red-200/50 dark:from-red-900/30 dark:to-rose-900/20 dark:text-red-400 dark:border-red-800/30'
-                  }`}>
-                    {recentActivity.weeklyGrowth.isPositive ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    {recentActivity.weeklyGrowth.value.toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {/* Launches Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.launches)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown7d.launches} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduations Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats7d.graduations)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown7d.graduations} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduation Rate Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
-                      <span className="text-lg font-bold text-foreground">{recentActivity.stats7d.ratio.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Last 30 Days Stats */}
-            <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-5 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
-              {/* Subtle accent line */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 shadow-sm"></div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground">Last 30 Days</h4>
-                      <div className="text-[10px] text-muted-foreground font-medium">
-                        {(() => {
-                          const now = new Date();
-                          const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                          const startDate = new Date(yesterday.getTime() - 29 * 24 * 60 * 60 * 1000); // 30 days excluding today
-                          const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          });
-                          return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all duration-200 ${
-                    recentActivity.monthlyGrowth.isPositive 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 border border-green-200/50 dark:from-green-900/30 dark:to-emerald-900/20 dark:text-green-400 dark:border-green-800/30' 
-                      : 'bg-gradient-to-r from-red-100 to-rose-50 text-red-700 border border-red-200/50 dark:from-red-900/30 dark:to-rose-900/20 dark:text-red-400 dark:border-red-800/30'
-                  }`}>
-                    {recentActivity.monthlyGrowth.isPositive ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    {recentActivity.monthlyGrowth.value.toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {/* Launches Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Launches</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.launches)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown30d.launches} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduations Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduations</span>
-                      <span className="text-lg font-bold text-foreground">{formatNumber(recentActivity.stats30d.graduations)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <LaunchpadSplitBar data={recentActivity.breakdown30d.graduations} />
-                    </div>
-                  </div>
-                  
-                  {/* Graduation Rate Box */}
-                  <div className="bg-muted/60 border border-border rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Graduation Rate</span>
-                      <span className="text-lg font-bold text-foreground">{recentActivity.stats30d.ratio.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <RecentActivityCard
+              title="Last 30 Days"
+              subtitle={(() => {
+                const now = new Date();
+                const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                const startDate = new Date(yesterday.getTime() - 29 * 24 * 60 * 60 * 1000);
+                const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                });
+                return `${formatDate(startDate)} - ${formatDate(yesterday)}`;
+              })()}
+              stats={recentActivity.stats30d}
+              breakdown={recentActivity.breakdown30d}
+              growth={recentActivity.monthlyGrowth}
+              accentColor="purple"
+            />
           </div>
         </div>
       )}

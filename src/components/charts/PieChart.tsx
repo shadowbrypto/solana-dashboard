@@ -89,6 +89,10 @@ export function PieChart({
 
   // Transform data for pie chart
   const pieData = useMemo(() => {
+    console.log('PieChart - Input data:', data);
+    console.log('PieChart - DataKeys:', dataKeys);
+    console.log('PieChart - Timeframe:', timeframe);
+    
     let totals: Record<string, number> = {};
     
     if (timeframe === "1d" && data.length > 0) {
@@ -128,6 +132,10 @@ export function PieChart({
 
   // Calculate total for percentage calculations
   const total = pieData.reduce((sum, item) => sum + item.value, 0);
+  
+  console.log('PieChart - Final pieData:', pieData);
+  console.log('PieChart - Total:', total);
+  console.log('PieChart - innerRadius:', innerRadius, 'outerRadius:', outerRadius);
 
   // Generate date range text based on timeframe
   const getDateRangeText = () => {
@@ -178,75 +186,81 @@ export function PieChart({
       filename={`${title.replace(/\s+/g, '_')}_Pie_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b gap-3 sm:gap-0">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                {(() => {
-                  // Check if subtitle is a protocol name
-                  const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
-                  if (protocolMatch) {
-                    return (
-                      <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {subtitle}
-                      </>
-                    );
-                  }
-                  return subtitle;
-                })()}
-              </p>
+        <CardHeader className="border-b p-3 sm:p-6">
+          <div className="flex items-start justify-between gap-2">
+            {/* Title and subtitle in one column */}
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">{title}</CardTitle>
+              {subtitle && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                  {(() => {
+                    // Check if subtitle is a protocol name
+                    const protocolMatch = protocolConfigs.find(p => p.name === subtitle);
+                    if (protocolMatch) {
+                      return (
+                        <>
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                              alt={subtitle} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                const container = target.parentElement;
+                                if (container) {
+                                  container.innerHTML = '';
+                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                  const iconEl = document.createElement('div');
+                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                  container.appendChild(iconEl);
+                                }
+                              }}
+                            />
+                          </div>
+                          {subtitle}
+                        </>
+                      );
+                    }
+                    return subtitle;
+                  })()}
+                </p>
+              )}
+            </div>
+            {/* Dropdown on the right */}
+            {!disableTimeframeSelector && (
+              <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
+                <SelectTrigger className="w-24 sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl text-xs sm:text-sm h-7 sm:h-10 flex-shrink-0">
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
+                  <SelectItem value="1d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last day</SelectItem>
+                  <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
+                  <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
+                  <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
+                  <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
+                  <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
+                  <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           </div>
-          {!disableTimeframeSelector && (
-          <Select value={timeframe} onValueChange={(value: string) => handleTimeframeChange(value as TimeFrame)}>
-            <SelectTrigger className="w-full sm:w-[140px] bg-background text-foreground border-border hover:bg-muted/50 transition-colors rounded-xl">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border text-foreground rounded-xl overflow-hidden">
-              <SelectItem value="1d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last day</SelectItem>
-              <SelectItem value="7d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 7 days</SelectItem>
-              <SelectItem value="30d" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 30 days</SelectItem>
-              <SelectItem value="3m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 3 months</SelectItem>
-              <SelectItem value="6m" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 6 months</SelectItem>
-              <SelectItem value="1y" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">Last 1 year</SelectItem>
-              <SelectItem value="all" className="text-foreground hover:bg-muted/50 rounded-xl focus:bg-muted/50">All time</SelectItem>
-            </SelectContent>
-          </Select>
-          )}
         </CardHeader>
-        <CardContent className="py-2 relative">
+        <CardContent className="py-2 relative p-3 sm:p-6">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative">
-              <ResponsiveContainer width="100%" height={360}>
-                <RechartsPieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={innerRadius}
-                    outerRadius={outerRadius}
-                    paddingAngle={1}
-                    dataKey="value"
+              <div style={{ width: '100%', height: '300px', minHeight: '300px', backgroundColor: 'rgba(0,0,0,0.05)' }} className="sm:h-[360px] flex items-center justify-center">
+                {pieData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={innerRadius}
+                      outerRadius={outerRadius}
+                      paddingAngle={1}
+                      dataKey="value"
                   >
                     {pieData.map((entry, index) => (
                       <Cell 
@@ -293,7 +307,16 @@ export function PieChart({
                     }}
                   />
                 </RechartsPieChart>
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <div className="text-lg mb-2">📊</div>
+                    <div className="text-sm">No data available</div>
+                    <div className="text-xs">Data: {pieData.length} items</div>
+                    <div className="text-xs">Total: {total}</div>
+                  </div>
+                )}
+              </div>
               
               {/* Center Total Display */}
               {innerRadius > 0 && (

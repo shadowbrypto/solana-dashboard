@@ -33,6 +33,14 @@ const MoonshotIcon: FunctionComponent<{ className?: string }> = ({ className }) 
   }, React.createElement('circle', { cx: "12", cy: "8", r: "6" }), React.createElement('path', { d: "M12 14L8 20h8l-4-6z" }))
 );
 
+const BagsIcon: FunctionComponent<{ className?: string }> = ({ className }) => (
+  React.createElement('svg', {
+    className: className,
+    viewBox: "0 0 24 24",
+    fill: "currentColor"
+  }, React.createElement('path', { d: "M7 4V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2h3a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3zm2-1v1h6V3H9zm-2 5v11h10V8H7z" }))
+);
+
 export interface LaunchpadTheme {
   primary: string;
   secondary: string;
@@ -135,6 +143,26 @@ export const launchpadConfigs: LaunchpadConfig[] = [
       ]
     }
   },
+  { 
+    id: 'bags', 
+    name: 'Bags', 
+    icon: BagsIcon, 
+    category: 'Launchpads', 
+    chain: 'solana',
+    description: 'Token launchpad on Solana',
+    theme: {
+      primary: 'hsl(15, 100%, 55%)', // Orange-red
+      secondary: 'hsl(15, 100%, 95%)', // Light orange-red
+      accent: 'hsl(15, 100%, 45%)', // Darker orange-red
+      background: 'hsl(15, 20%, 98%)', // Very light orange-red background
+      cardBg: 'hsl(15, 30%, 96%)', // Light orange-red card background
+      text: 'hsl(15, 100%, 25%)', // Dark orange-red text
+      chartColors: [
+        'hsl(15, 100%, 55%)', // Orange-red for launches
+        'hsl(15, 100%, 70%)'  // Lighter orange-red for graduations
+      ]
+    }
+  },
 ];
 
 // Helper functions
@@ -162,6 +190,7 @@ export const getLaunchpadLogoFilename = (id: string): string => {
     'launchlab': 'launchlab.jpg',
     'letsbonk': 'letsbonk.jpg',
     'moonshot': 'moonshot.jpg',
+    'bags': 'bags.jpg',
   };
   
   return logoMap[id] || 'default-logo.png';

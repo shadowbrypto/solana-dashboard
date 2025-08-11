@@ -34,6 +34,7 @@ const LAUNCHPAD_COLORS: Record<string, string> = {
   'launchlab': '#06b6d4', // Blue for LaunchLab  
   'letsbonk': '#f59e0b', // Orange for LetsBonk
   'moonshot': '#8b5cf6', // Purple for Moonshot
+  'bags': '#dc2626', // Red for Bags
 };
 
 export default function AllLaunchpads() {

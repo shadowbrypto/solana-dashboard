@@ -28,7 +28,8 @@ const LAUNCHPAD_SOURCES: Record<string, LaunchpadSource> = {
   "pumpfun": { queryIds: [4894656] }, 
   "launchlab": {queryIds: [5552096]},
   "letsbonk": {queryIds: [4992859]},
-  "moonshot": {queryIds: [5360634]}
+  "moonshot": {queryIds: [5360634]},
+  "bags": {queryIds: [5615777]}
 };
 
 // CSV column mapping to database columns - only launches, graduations, date

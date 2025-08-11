@@ -22,6 +22,7 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
 import { useToast } from "../hooks/use-toast";
+import { formatCurrency, formatNumber, formatPercentage } from '../lib/formatUtils';
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -38,31 +39,6 @@ interface MetricDefinition {
   getValue?: (data: ProtocolMetrics) => number;
   skipGradient?: boolean;
 }
-
-function getGradientColor(value: number, min: number, max: number, allValues: number[]): string {
-  return '';
-}
-
-function getGrowthBackground(value: number): string {
-  return '';
-}
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
-};
-
-const formatPercentage = (value: number): string => {
-  return `${(value * 100).toFixed(2)}%`;
-};
 
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);

@@ -129,13 +129,6 @@ interface MonthlyData {
   total_fees_usd: number;
 }
 
-function getGradientColor(value: number, min: number, max: number, allValues: number[]): string {
-  return '';
-}
-
-function getGrowthBackground(value: number): string {
-  return '';
-}
 
 const formatCurrency = (value: number): string => {
   if (value >= 1000000000) {
@@ -899,27 +892,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                         {orderedMetrics.map((metric) => (
                           <TableCell 
                             key={metric.key} 
-                            className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'monthly_growth'
-                              ? getGrowthBackground(monthlyData[protocol]?.monthly_growth || 0)
-                              : !metric.skipGradient
-                                ? getGradientColor(
-                                    metric.getValue 
-                                      ? metric.getValue(monthlyData[protocol] || {} as any)
-                                      : (monthlyData[protocol]?.[metric.key as keyof MonthlyData] || 0),
-                                    0,
-                                    protocols.reduce((max, p) => {
-                                      const value = metric.getValue 
-                                        ? metric.getValue(monthlyData[p] || {} as any)
-                                        : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0);
-                                      return Math.max(max, value);
-                                    }, 0),
-                                    protocols.map(p => metric.getValue
-                                      ? metric.getValue(monthlyData[p] || {} as any)
-                                      : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0)
-                                    )
-                                  )
-                              : ''
-                            }`}
+                            className="text-right py-0.5 text-xs sm:text-sm"
                           >
                             <span>
                               {metric.getValue

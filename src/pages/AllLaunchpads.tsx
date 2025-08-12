@@ -508,8 +508,8 @@ export default function AllLaunchpads() {
                   timeframe={launchesPieTimeframe}
                   onTimeframeChange={(value) => setLaunchesPieTimeframe(value as TimeFrame)}
                   showPercentages={true}
-                  innerRadius={30}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={140}
                   centerLabel="Launches"
                 />
               );
@@ -533,8 +533,8 @@ export default function AllLaunchpads() {
                   timeframe={graduationsPieTimeframe}
                   onTimeframeChange={(value) => setGraduationsPieTimeframe(value as TimeFrame)}
                   showPercentages={true}
-                  innerRadius={30}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={140}
                   centerLabel="Graduations"
                 />
               );

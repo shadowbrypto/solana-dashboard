@@ -249,7 +249,7 @@ export function PieChart({
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative">
-              <div style={{ width: '100%', height: '300px', minHeight: '300px', backgroundColor: 'rgba(0,0,0,0.05)' }} className="sm:h-[360px] flex items-center justify-center">
+              <div style={{ width: '100%', height: '350px', minHeight: '350px', backgroundColor: 'transparent' }} className="sm:h-[400px] lg:h-[480px] flex items-center justify-center">
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                   <RechartsPieChart>

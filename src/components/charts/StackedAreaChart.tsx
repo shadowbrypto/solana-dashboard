@@ -62,16 +62,18 @@ export function StackedAreaChart({
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
+    const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsDesktop(window.innerWidth >= 1024);
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
     
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
   const filteredData = useMemo(() => {
@@ -337,10 +339,10 @@ export function StackedAreaChart({
                 tickLine={false}
                 tick={{ 
                   fill: "hsl(var(--muted-foreground))", 
-                  fontSize: isMobile ? 9 : 10 
+                  fontSize: isMobile ? 9 : (isDesktop ? 12 : 10)
                 }}
-                interval={isMobile ? Math.ceil(filteredData.length / 4) - 1 : "preserveStart"}
-                tickCount={isMobile ? 4 : Math.min(8, filteredData.length)}
+                interval={isMobile ? Math.ceil(filteredData.length / 4) - 1 : (isDesktop ? Math.max(1, Math.floor(filteredData.length / 10)) : "preserveStart")}
+                tickCount={isMobile ? 4 : (isDesktop ? Math.min(10, filteredData.length) : Math.min(8, filteredData.length))}
                 angle={0}
                 textAnchor="middle"
                 height={30}
@@ -357,9 +359,9 @@ export function StackedAreaChart({
                 tickLine={false}
                 tick={{ 
                   fill: "hsl(var(--muted-foreground))", 
-                  fontSize: isMobile ? 9 : 10 
+                  fontSize: isMobile ? 9 : (isDesktop ? 12 : 10)
                 }}
-                width={isMobile ? 38 : 40}
+                width={isMobile ? 38 : (isDesktop ? 50 : 40)}
                 tickFormatter={(value) => isPercentageData ? `${value.toFixed(0)}%` : `${(value * 100).toFixed(0)}%`}
                 domain={isPercentageData ? [0, 100] : [0, 1]}
               />

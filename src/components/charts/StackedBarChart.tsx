@@ -76,6 +76,18 @@ export function StackedBarChart({
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Handle window resize for responsive timeframe
   useEffect(() => {
@@ -290,10 +302,10 @@ export function StackedBarChart({
         </CardHeader>
         <CardContent className="pt-2 pb-1 px-2 sm:pt-6 sm:pb-6 sm:px-6">
           <div className="transition-all duration-500 ease-out">
-            <ResponsiveContainer width="100%" height={400} className="h-[250px] sm:h-[400px]">
+            <ResponsiveContainer width="100%" height={isDesktop ? 500 : 400} className={isDesktop ? "h-[500px]" : "h-[250px] sm:h-[400px]"}>
               <RechartsBarChart 
                 data={filteredData} 
-                margin={{ top: 20, right: 10, left: 5, bottom: 8 }}
+                margin={{ top: 20, right: 10, left: 5, bottom: 5 }}
               >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -305,9 +317,9 @@ export function StackedBarChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
-                interval="preserveStartEnd"
-                tickCount={Math.min(7, filteredData.length)}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 9 }}
+                interval={isDesktop ? Math.max(1, Math.floor(filteredData.length / 8)) : "preserveStartEnd"}
+                tickCount={isDesktop ? Math.min(8, filteredData.length) : Math.min(7, filteredData.length)}
                 tickFormatter={(value) => {
                   const [day, month] = value.split('-');
                   const date = new Date(2025, parseInt(month) - 1, parseInt(day));
@@ -320,9 +332,9 @@ export function StackedBarChart({
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 9 }}
                 tickFormatter={(value) => formatNumberWithSuffix(value)}
-                width={45}
+                width={isDesktop ? 55 : 45}
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {
@@ -400,14 +412,24 @@ export function StackedBarChart({
                 })}
               <Legend
                 verticalAlign="bottom"
-                height={dataKeys.length > 6 ? (Math.ceil(dataKeys.length / 3) * 10) : 24}
+                height={dataKeys.length > 6 ? (isDesktop ? Math.ceil(dataKeys.length / 5) * 14 : Math.ceil(dataKeys.length / 3) * 24) : 28}
                 iconType="circle"
-                iconSize={6}
+                iconSize={8}
                 wrapperStyle={{
-                  paddingTop: "0px",
-                  fontSize: "9px",
-                  lineHeight: "10px",
-                  marginBottom: "-4px"
+                  paddingTop: "2px",
+                  fontSize: isDesktop ? "12px" : "11px",
+                  lineHeight: isDesktop ? "14px" : "16px",
+                  marginBottom: "0px",
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}
+                itemStyle={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  marginRight: isDesktop ? '16px' : '12px',
+                  marginBottom: isDesktop ? '2px' : '4px',
+                  maxWidth: isDesktop ? '200px' : '120px'
                 }}
                 payload={dataKeys.map((key, index) => ({
                   value: labels[index],
@@ -428,13 +450,15 @@ export function StackedBarChart({
                   const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
                   return (
                     <span 
-                      className={`text-[9px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
+                      className={`text-[10px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
                       style={{
                         display: 'inline-block',
-                        maxWidth: '80px',
+                        verticalAlign: 'middle',
+                        maxWidth: isDesktop ? '140px' : '80px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        marginLeft: '6px'
                       }}
                     >
                       {value}

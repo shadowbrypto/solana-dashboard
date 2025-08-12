@@ -53,15 +53,17 @@ export function MultiAreaChart({
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
+    const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 640);
+      setIsDesktop(window.innerWidth >= 1024);
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
   const filteredData = useMemo(() => {
@@ -272,7 +274,9 @@ export function MultiAreaChart({
               dataKey={xAxisKey}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isMobile ? 9 : (isDesktop ? 12 : 10) }}
+              interval={isMobile ? Math.ceil(filteredData.length / 4) - 1 : (isDesktop ? Math.max(1, Math.floor(filteredData.length / 10)) : "preserveStartEnd")}
+              tickCount={isMobile ? 4 : (isDesktop ? Math.min(10, filteredData.length) : Math.min(8, filteredData.length))}
               tickFormatter={(value) => {
                 const [day, month] = value.split('-');
                 const date = new Date(2025, parseInt(month) - 1, parseInt(day));
@@ -282,10 +286,10 @@ export function MultiAreaChart({
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isMobile ? 9 : (isDesktop ? 12 : 10) }}
               tickFormatter={(value) => `${value.toFixed(0)}%`}
               domain={[0, 'dataMax']}
-              width={isMobile ? 38 : 40}
+              width={isMobile ? 38 : (isDesktop ? 50 : 40)}
             />
             <Tooltip
               content={({ active, payload, label }: TooltipProps<number, string>) => {

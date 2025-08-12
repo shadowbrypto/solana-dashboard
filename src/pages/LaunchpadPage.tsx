@@ -29,6 +29,7 @@ export function LaunchpadPage() {
   const [allData, setAllData] = useState<LaunchpadMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [latestDate, setLatestDate] = useState<Date | null>(null);
 
   const launchpadConfig = getLaunchpadById(launchpadId);
   const launchpadName = launchpadConfig?.name || launchpadId;
@@ -44,11 +45,25 @@ export function LaunchpadPage() {
       setError(null);
       
       // Fetch all available data for lifetime metrics and chart filtering
-      const metrics = await LaunchpadApi.getMetrics({
-        launchpad: launchpadId,
-        timeframe: 'all'
-      });
+      const [metrics, latestDatesData] = await Promise.all([
+        LaunchpadApi.getMetrics({
+          launchpad: launchpadId,
+          timeframe: 'all'
+        }),
+        LaunchpadApi.getLatestDataDates()
+      ]);
+      
       setAllData(metrics);
+      
+      // Find the latest date for this specific launchpad
+      const launchpadLatestDate = latestDatesData.find(
+        item => item.launchpad_name === launchpadId
+      );
+      
+      if (launchpadLatestDate) {
+        setLatestDate(new Date(launchpadLatestDate.latest_date));
+      }
+      
     } catch (err) {
       console.error('Error fetching launchpad data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -238,19 +253,25 @@ export function LaunchpadPage() {
           title="Tokens Launched"
           type="launches"
           value={totalLaunches}
-          subtitle={launchpadName}
+          protocolName={launchpadName}
+          protocolLogo={getLaunchpadLogoFilename(launchpadId)}
+          latestDate={latestDate}
         />
         <MetricCard
           title="Tokens Graduated"
           type="graduations"
           value={totalGraduations}
-          subtitle={launchpadName}
+          protocolName={launchpadName}
+          protocolLogo={getLaunchpadLogoFilename(launchpadId)}
+          latestDate={latestDate}
         />
         <MetricCard
           title="Graduation Rate"
           type="graduation_rate"
           value={`${graduationRate}%`}
-          subtitle={launchpadName}
+          protocolName={launchpadName}
+          protocolLogo={getLaunchpadLogoFilename(launchpadId)}
+          latestDate={latestDate}
         />
       </div>
 

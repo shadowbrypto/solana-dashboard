@@ -67,16 +67,20 @@ export function DominanceChart({
   const [showDateRangeSelector, setShowDateRangeSelector] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(() => startOfDay(subDays(new Date(), 90)));
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
+  const [isDesktop, setIsDesktop] = useState(false);
   
-  // Handle window resize for responsive timeframe
+  // Handle window resize for responsive behavior
   useEffect(() => {
     const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+      
       if (!externalTimeframe && typeof window !== 'undefined') {
         const newTimeframe = window.innerWidth < 640 ? "30d" : "3m";
         setInternalTimeframe(newTimeframe);
       }
     };
 
+    handleResize(); // Set initial value
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [externalTimeframe]);
@@ -284,7 +288,7 @@ export function DominanceChart({
           </div>
         </CardHeader>
         <CardContent className="pt-2 pb-1 px-1 sm:pt-6 sm:pb-6 sm:px-6">
-          <ResponsiveContainer width="100%" height={400} className="h-[300px] sm:h-[400px]">
+          <ResponsiveContainer width="100%" height={isDesktop ? 500 : 400} className={isDesktop ? "h-[500px]" : "h-[300px] sm:h-[400px]"}>
             <RechartsAreaChart data={filteredData} margin={{ top: 20, right: 10, left: 5, bottom: 8 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -296,9 +300,9 @@ export function DominanceChart({
                 dataKey={xAxisKey}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
-                interval="preserveStartEnd"
-                tickCount={Math.min(5, filteredData.length)}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 8 }}
+                interval={isDesktop ? Math.max(1, Math.floor(filteredData.length / 8)) : "preserveStartEnd"}
+                tickCount={isDesktop ? Math.min(8, filteredData.length) : Math.min(5, filteredData.length)}
                 tickFormatter={(value) => {
                   const [day, month] = value.split('-');
                   const date = new Date(2025, parseInt(month) - 1, parseInt(day));
@@ -311,10 +315,10 @@ export function DominanceChart({
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 9 }}
                 tickFormatter={(value) => `${value.toFixed(0)}%`}
                 domain={[0, 100]}
-                width={45}
+                width={isDesktop ? 55 : 45}
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<number, string>) => {

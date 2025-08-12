@@ -24,6 +24,7 @@ import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCa
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Settings } from '../lib/settings';
+import { ProjectedStatsApi } from '../lib/projected-stats-api';
 import {
   DndContext,
   DragEndEvent,
@@ -199,6 +200,7 @@ export function ProtocolManagement() {
   const [isRefreshingSolana, setIsRefreshingSolana] = useState(false);
   const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
   const [isRefreshingLaunchpads, setIsRefreshingLaunchpads] = useState(false);
+  const [isRefreshingProjectedStats, setIsRefreshingProjectedStats] = useState(false);
   const [refreshingLaunchpads, setRefreshingLaunchpads] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
@@ -506,6 +508,32 @@ export function ProtocolManagement() {
       });
     } finally {
       setIsRefreshingLaunchpads(false);
+    }
+  };
+
+  const handleRefreshProjectedStats = async () => {
+    if (isRefreshingProjectedStats) return;
+    
+    setIsRefreshingProjectedStats(true);
+    try {
+      await ProjectedStatsApi.updateProjectedData();
+      
+      toast({
+        variant: "success",
+        title: "Projected Stats Refresh Complete",
+        description: "Successfully updated projected volume data from Dune Analytics",
+      });
+      
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Projected Stats Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh projected stats data",
+      });
+    } finally {
+      setIsRefreshingProjectedStats(false);
     }
   };
 
@@ -959,6 +987,57 @@ export function ProtocolManagement() {
                       <>
                         <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         <span className="hidden sm:inline">Refresh Launchpads</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/30"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground font-medium">Projected Stats</span>
+              </div>
+            </div>
+
+            {/* Projected Stats Section */}
+            <div className="space-y-2 sm:space-y-3">
+              <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 sm:space-y-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                      <span className="text-xs sm:text-sm font-medium text-foreground">Projected Volume Data</span>
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                        <span className="text-[10px] sm:text-xs font-medium text-purple-700 dark:text-purple-300">Dune Analytics</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                      Refresh projected trading volume data from Dune Analytics queries
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleRefreshProjectedStats}
+                    disabled={isRefreshingProjectedStats}
+                    variant="outline"
+                    size="sm"
+                    className="ml-4 shrink-0"
+                  >
+                    {isRefreshingProjectedStats ? (
+                      <>
+                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        <span className="hidden sm:inline">Refreshing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Refresh Projected</span>
                       </>
                     )}
                   </Button>

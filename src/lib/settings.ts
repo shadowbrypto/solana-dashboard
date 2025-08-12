@@ -42,6 +42,9 @@ export interface AppSettings {
   
   // Data type preference
   'data-type-preference': 'private' | 'public';
+  
+  // Column visibility
+  'projected-volume-hidden': boolean;
 }
 
 // Default values for all settings
@@ -53,7 +56,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   'daily-table-collapsed-categories': [],
   'weekly-table-collapsed-categories': [],
   'sidebar-expanded-categories': {},
-  'daily-table-column-order': ['total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'market_share', 'daily_growth'],
+  'daily-table-column-order': ['projected_volume', 'total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'market_share', 'daily_growth'],
   'protocol-data-table-metric': 'total_volume_usd',
   'weekly-heatmap-metric': 'total_volume_usd',
   'weekly-table-metric': 'total_volume_usd',
@@ -62,6 +65,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   'protocol-table-sorting': [{ id: 'date', desc: true }],
   'last-selected-dates': {},
   'data-type-preference': 'private' as const,
+  'projected-volume-hidden': false,
 };
 
 class SettingsManager {
@@ -244,6 +248,10 @@ export const Settings = {
     dataTypeChangeListeners.add(listener);
     return () => dataTypeChangeListeners.delete(listener);
   },
+
+  // Projected volume visibility
+  getIsProjectedVolumeHidden: () => settingsManager.getSetting('projected-volume-hidden'),
+  setIsProjectedVolumeHidden: (hidden: boolean) => settingsManager.setSetting('projected-volume-hidden', hidden),
 };
 
 // Export default instance

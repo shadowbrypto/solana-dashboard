@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { format, subDays, eachDayOfInterval } from "date-fns";
-import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
@@ -22,6 +22,7 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
 import { useToast } from "../hooks/use-toast";
+import { ProjectedStatsApi, ProjectedStatsData } from "../lib/projected-stats-api";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -29,13 +30,13 @@ interface DailyMetricsTableProps {
   onDateChange: (date: Date) => void;
 }
 
-type MetricKey = keyof ProtocolMetrics | 'market_share';
+type MetricKey = keyof ProtocolMetrics | 'market_share' | 'projected_volume';
 
 interface MetricDefinition {
   key: MetricKey;
   label: string;
   format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => React.ReactNode;
-  getValue?: (data: ProtocolMetrics) => number;
+  getValue?: (data: ProtocolMetrics, protocol?: Protocol) => number;
   skipGradient?: boolean;
 }
 
@@ -70,9 +71,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [weeklyVolumeData, setWeeklyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
+  const [projectedVolumeData, setProjectedVolumeData] = useState<Record<string, number>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
+  const [isProjectedVolumeHidden, setIsProjectedVolumeHidden] = useState<boolean>(() => Settings.getIsProjectedVolumeHidden());
   const { toast } = useToast();
 
   // Calculate total volume for market share
@@ -114,6 +117,52 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   const metrics: MetricDefinition[] = [
+    { 
+      key: "projected_volume" as MetricKey, 
+      label: "Adj. Volume", 
+      format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => {
+        if (value === 0 || value === undefined) return <span className="text-muted-foreground">-</span>;
+        
+        // For category rows, just show the total without badge
+        if (isCategory) return formatCurrency(value);
+        
+        // Get actual volume for comparison
+        const actualVolume = protocol ? dailyData[protocol]?.total_volume_usd || 0 : 0;
+        
+        if (actualVolume === 0) {
+          return (
+            <div className="flex items-center gap-2 justify-end">
+              <span>{formatCurrency(value)}</span>
+            </div>
+          );
+        }
+        
+        // Calculate difference
+        const difference = value - actualVolume;
+        const percentageDiff = (difference / actualVolume) * 100;
+        
+        // Determine styling based on difference
+        const isPositive = difference > 0;
+        const bgColor = isPositive 
+          ? "bg-green-100/80 dark:bg-green-950/40" 
+          : "bg-red-100/80 dark:bg-red-950/40";
+        const borderColor = isPositive 
+          ? "border-l-green-400" 
+          : "border-l-red-400";
+        
+        const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+        
+        return (
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+            <span>{formatCurrency(value)}</span>
+            <span className="text-[9px] font-medium text-muted-foreground">
+              {diffText}
+            </span>
+          </div>
+        );
+      },
+      getValue: (data, protocol) => projectedVolumeData[protocol as string] || 0
+    },
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
     { key: "daily_users", label: "Daily Users", format: formatNumber },
     { key: "numberOfNewUsers", label: "New Users", format: formatNumber },
@@ -210,7 +259,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               </div>
               {!isNeutralCategory && (
                 <div className={cn(
-                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ml-1",
                   isPositive 
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -266,7 +315,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             </div>
             {!isNeutral && (
               <div className={cn(
-                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ml-1",
                 isPositive 
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                   : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -332,7 +381,28 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   // Create ordered metrics based on column order
-  const orderedMetrics = columnOrder.map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
+  // Ensure projected_volume is always included for existing users who don't have it in their saved settings
+  let effectiveColumnOrder = [...columnOrder];
+  if (!effectiveColumnOrder.includes('projected_volume')) {
+    // Insert projected_volume before total_volume_usd if it exists, otherwise at the beginning
+    const volumeIndex = effectiveColumnOrder.indexOf('total_volume_usd');
+    if (volumeIndex >= 0) {
+      effectiveColumnOrder.splice(volumeIndex, 0, 'projected_volume');
+    } else {
+      effectiveColumnOrder.unshift('projected_volume');
+    }
+  }
+  
+  const orderedMetrics = effectiveColumnOrder
+    .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
+    .map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
+
+  // Toggle projected volume visibility
+  const toggleProjectedVolumeVisibility = () => {
+    const newHidden = !isProjectedVolumeHidden;
+    setIsProjectedVolumeHidden(newHidden);
+    Settings.setIsProjectedVolumeHidden(newHidden);
+  };
 
 
   // Category-based bright coloring using shadcn theme colors
@@ -404,6 +474,23 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
         setWeeklyVolumeData(organizedWeeklyData);
         
+        // Fetch projected volume data for the selected date
+        try {
+          const projectedData = await ProjectedStatsApi.getProjectedStatsForDate(
+            format(date, 'yyyy-MM-dd')
+          );
+          
+          const projectedVolumeMap: Record<string, number> = {};
+          projectedData.forEach(item => {
+            projectedVolumeMap[item.protocol_name] = item.volume_usd;
+          });
+          
+          setProjectedVolumeData(projectedVolumeMap);
+        } catch (error) {
+          console.error('Error fetching projected volume data:', error);
+          setProjectedVolumeData({});
+        }
+        
         // Sort protocols by volume to find the top 3
         const sortedByVolume = Object.entries(currentData)
           .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
@@ -446,9 +533,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   const selectedDate = format(date, "dd/MM/yyyy");
 
-  const formatValue = (metric: MetricDefinition, value: number, isCategory = false) => {
+  const formatValue = (metric: MetricDefinition, value: number, isCategory = false, protocol?: Protocol, categoryName?: string) => {
     if (isCategory && metric.key === 'market_share') return '—';
-    return metric.format(value, isCategory);
+    return metric.format(value, isCategory, protocol, categoryName);
   };
 
   const toggleCollapse = (categoryName: string) => {
@@ -629,14 +716,40 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 {orderedMetrics.map((metric, index) => (
                   <TableHead 
                     key={metric.key} 
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm`}
+                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
                   >
-                    <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                    {metric.key === 'projected_volume' ? (
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="truncate">{metric.label}</span>
+                        <button
+                          onClick={toggleProjectedVolumeVisibility}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
+                          title="Hide Adj. Volume column"
+                        >
+                          <EyeOff className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
                       <span className="truncate">{metric.label}</span>
-                      <GripVertical className="w-2 h-2 sm:w-3 sm:h-3 opacity-50 flex-shrink-0" />
-                    </div>
+                    )}
                   </TableHead>
                 ))}
+                {isProjectedVolumeHidden && (
+                  <TableHead 
+                    className="text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm group relative"
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="truncate text-muted-foreground">Adj. Volume</span>
+                      <button
+                        onClick={toggleProjectedVolumeVisibility}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
+                        title="Show Adj. Volume column"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </TableHead>
+                )}
               </TableRow>
 
             </TableHeader>
@@ -677,6 +790,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const categoryVolume = visibleProtocols
                       .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
                     acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
+                  } else if (metric.key === 'projected_volume') {
+                    // Calculate category projected volume total
+                    acc[metric.key] = visibleProtocols
+                      .reduce((sum, p) => sum + (projectedVolumeData[p] || 0), 0);
                   } else {
                     acc[metric.key] = visibleProtocols
                       .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
@@ -704,7 +821,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
-                          className="text-right font-medium py-0.5 text-xs sm:text-sm"
+                          className={`text-right font-medium py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''}`}
                         >
                           {metric.key === 'market_share'
                             ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
@@ -778,21 +895,21 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           <TableCell 
                             key={metric.key} 
                             className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth'
-                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0)
+                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + ' min-w-[130px]'
                               : !metric.skipGradient
                                 ? getGradientColor(
                                     metric.getValue 
-                                      ? metric.getValue(dailyData[protocol] || {} as ProtocolMetrics)
+                                      ? metric.getValue(dailyData[protocol] || {} as ProtocolMetrics, protocol)
                                       : (dailyData[protocol]?.[metric.key as keyof ProtocolMetrics] || 0),
                                     0,
                                     protocols.reduce((max, p) => {
                                       const value = metric.getValue 
-                                        ? metric.getValue(dailyData[p] || {} as ProtocolMetrics)
+                                        ? metric.getValue(dailyData[p] || {} as ProtocolMetrics, p)
                                         : (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0);
                                       return Math.max(max, value);
                                     }, 0),
                                     protocols.map(p => metric.getValue
-                                      ? metric.getValue(dailyData[p] || {} as ProtocolMetrics)
+                                      ? metric.getValue(dailyData[p] || {} as ProtocolMetrics, p)
                                       : (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0)
                                     )
                                   )
@@ -801,7 +918,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           >
                             <span>
                               {metric.getValue
-                                ? metric.format(metric.getValue(dailyData[protocol] || {} as ProtocolMetrics), false, protocol)
+                                ? metric.format(metric.getValue(dailyData[protocol] || {} as ProtocolMetrics, protocol), false, protocol)
                                 : metric.format(dailyData[protocol]?.[metric.key] || 0, false, protocol)}
                             </span>
                           </TableCell>
@@ -936,7 +1053,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       key={metric.key} 
                       className="text-right font-bold text-xs sm:text-sm"
                     >
-                      {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total)}
+                      {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total, true)}
                     </TableCell>
                   );
                 })}

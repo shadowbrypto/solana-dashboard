@@ -101,7 +101,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                   setSyncProgress(0);
                   toast({
                     title: "Starting Data Refresh",
-                    description: "Refreshing all data sources (Solana, EVM, Launchpads)...",
+                    description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
                   });
                 },
                 (result) => {
@@ -235,7 +235,7 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 setSyncProgress(0);
                 toast({
                   title: "Starting Data Refresh",
-                  description: "Refreshing all data sources (Solana, EVM, Launchpads)...",
+                  description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
                 });
               },
               (result) => {

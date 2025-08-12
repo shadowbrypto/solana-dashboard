@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataSyncApi, ApiError } from '../lib/api';
 import { resetAllCaches } from '../lib/protocol';
+import { ProjectedStatsApi } from '../lib/projected-stats-api';
 
 interface DataSyncState {
   isLoading: boolean;
@@ -192,6 +193,18 @@ export function useDataSync() {
       totalRowsImported += launchpadResult.rowsImported || 0;
       console.log('Launchpad sync completed:', launchpadResult);
       if (onStepComplete) onStepComplete('Launchpad', { csvFilesFetched: launchpadResult.csvFilesFetched || 0, rowsImported: launchpadResult.rowsImported || 0 });
+      
+      // Step 4: Sync Projected Stats data from Dune
+      currentStep = 'Projected Stats sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 95);
+      try {
+        await ProjectedStatsApi.updateProjectedData();
+        console.log('Projected Stats sync completed');
+        if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 }); // Placeholder values
+      } catch (projectedStatsError) {
+        console.warn('Projected Stats sync failed (non-critical):', projectedStatsError);
+        // Don't fail the entire sync if projected stats fail
+      }
       
       // Complete
       currentStep = 'completion';

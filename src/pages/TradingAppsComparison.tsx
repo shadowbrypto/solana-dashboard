@@ -268,7 +268,7 @@ export default function TradingAppsComparison() {
             <Select value="" onValueChange={addProtocol}>
               <SelectTrigger className="w-full sm:w-[280px]">
                 <Plus className="w-4 h-4 mr-2" />
-                <span className="text-sm sm:text-base">Add trading app to compare</span>
+                <span className="text-xs sm:text-sm">Add trading app to compare</span>
               </SelectTrigger>
               <SelectContent>
                 {filteredProtocols.length === 0 ? (
@@ -345,7 +345,7 @@ export default function TradingAppsComparison() {
                   <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   <h3 className="text-xs sm:text-sm font-medium">Quick Comparisons</h3>
                 </div>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {presets.map((preset, index) => {
                     const icons = [
                       <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />,

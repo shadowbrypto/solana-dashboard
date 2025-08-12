@@ -89,12 +89,16 @@ export function PieChart({
 
   // Transform data for pie chart
   const pieData = useMemo(() => {
+    console.log('PieChart - Input data:', data);
+    console.log('PieChart - DataKeys:', dataKeys);
+    console.log('PieChart - Timeframe:', timeframe);
     
     let totals: Record<string, number> = {};
     
     if (timeframe === "1d" && data.length > 0) {
       // For "Last day", use only the most recent day's data
       const mostRecentItem = data[data.length - 1]; // Data should be sorted by date
+      console.log('PieChart 1d - Using most recent item:', mostRecentItem);
       
       dataKeys.forEach(key => {
         totals[key] = mostRecentItem[key] || 0;
@@ -119,6 +123,9 @@ export function PieChart({
       key: key,
     })).filter(item => item.value > 0);
     
+    if (timeframe === "1d") {
+      console.log('PieChart 1d - Final result:', result);
+    }
     
     return result;
   }, [data, dataKeys, labels, colors, disabledKeys, timeframe]);
@@ -126,6 +133,9 @@ export function PieChart({
   // Calculate total for percentage calculations
   const total = pieData.reduce((sum, item) => sum + item.value, 0);
   
+  console.log('PieChart - Final pieData:', pieData);
+  console.log('PieChart - Total:', total);
+  console.log('PieChart - innerRadius:', innerRadius, 'outerRadius:', outerRadius);
 
   // Generate date range text based on timeframe
   const getDateRangeText = () => {

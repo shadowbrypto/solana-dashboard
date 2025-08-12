@@ -87,7 +87,7 @@ export default function AllLaunchpads() {
               color: LAUNCHPAD_COLORS[launchpad.id] || '#6366f1'
             };
           } catch (error) {
-            // Error loading launchpad data
+            console.error(`Failed to load data for ${launchpad.id}:`, error);
             return {
               launchpad: launchpad.id,
               name: launchpad.name,
@@ -108,7 +108,7 @@ export default function AllLaunchpads() {
         const results = await Promise.all(dataPromises);
         setLaunchpadData(results);
       } catch (error) {
-        // Error loading launchpad data
+        console.error('Failed to load launchpad data:', error);
       } finally {
         setLoading(false);
       }
@@ -119,6 +119,7 @@ export default function AllLaunchpads() {
 
   // Helper function to filter data by timeframe
   const getFilteredData = (timeframe: TimeFrame) => {
+    console.log('getFilteredData called with timeframe:', timeframe);
     
     if (timeframe === "all") {
       return launchpadData;
@@ -132,17 +133,24 @@ export default function AllLaunchpads() {
       });
       
       if (allDates.size === 0) {
+        console.log('No dates found for 1d filter');
         return launchpadData.map(lp => ({ ...lp, data: [] }));
       }
       
       const sortedDates = Array.from(allDates).sort();
       const mostRecentDate = sortedDates[sortedDates.length - 1];
+      console.log('Most recent date for 1d:', mostRecentDate, 'from dates:', sortedDates);
       
       const filtered = launchpadData.map(lp => ({
         ...lp,
         data: lp.data.filter(item => item.date === mostRecentDate)
       }));
       
+      console.log('Filtered data for 1d (most recent date):', filtered.map(lp => ({ 
+        name: lp.name, 
+        dataLength: lp.data.length, 
+        data: lp.data
+      })));
       
       return filtered;
     }
@@ -296,6 +304,11 @@ export default function AllLaunchpads() {
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
+    console.log('Daily totals sample:', {
+      totalDays: sortedDailyTotals.length,
+      latestDates: sortedDailyTotals.slice(-5).map(d => ({ date: d.date, launches: d.launches, graduations: d.graduations })),
+      earliestDates: sortedDailyTotals.slice(0, 3).map(d => ({ date: d.date, launches: d.launches, graduations: d.graduations }))
+    });
 
     // Get the most recent complete day data (for "Last Day")
     const getLastDayStats = () => {
@@ -307,6 +320,12 @@ export default function AllLaunchpads() {
       const graduations = lastDay.graduations;
       const ratio = launches > 0 ? ((graduations / launches) * 100) : 0;
 
+      console.log('Last day stats:', { 
+        date: lastDay.date, 
+        launches, 
+        graduations, 
+        ratio: ratio.toFixed(1) + '%'
+      });
 
       return { launches, graduations, ratio };
     };
@@ -326,6 +345,14 @@ export default function AllLaunchpads() {
       const graduations = recentData.reduce((sum, item) => sum + item.graduations, 0);
       const ratio = launches > 0 ? ((graduations / launches) * 100) : 0;
 
+      console.log(`Stats for last ${days} days (excluding today):`, { 
+        dataPoints: recentData.length, 
+        launches, 
+        graduations, 
+        ratio: ratio.toFixed(1) + '%',
+        dateRange: recentData.length > 0 ? `${recentData[0].date} to ${recentData[recentData.length - 1].date}` : 'no data',
+        excludedToday: today
+      });
 
       return { launches, graduations, ratio };
     };
@@ -360,6 +387,12 @@ export default function AllLaunchpads() {
       const launches = previousData.reduce((sum, item) => sum + item.launches, 0);
       const graduations = previousData.reduce((sum, item) => sum + item.graduations, 0);
       
+      console.log(`Previous ${currentDays} days stats:`, {
+        dataPoints: previousData.length,
+        launches,
+        graduations,
+        dateRange: previousData.length > 0 ? `${previousData[0].date} to ${previousData[previousData.length - 1].date}` : 'no data'
+      });
       
       return { launches, graduations };
     };

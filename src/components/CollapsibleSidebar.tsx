@@ -85,6 +85,7 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol, isL
 }
 
 export function CollapsibleSidebar() {
+  console.log('CollapsibleSidebar component loaded');
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedProtocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
@@ -94,8 +95,10 @@ export function CollapsibleSidebar() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    console.log('useEffect in CollapsibleSidebar running');
     const loadCategories = async () => {
       try {
+        console.log('Starting loadCategories');
         await loadProtocolConfigurations();
         const categoryNames = getMutableAllCategoriesIncludingEVM();
         const categoryData = categoryNames.map(name => ({
@@ -105,24 +108,30 @@ export function CollapsibleSidebar() {
         setCategories(categoryData);
         
         // Load launchpads
+        console.log('About to call getAllLaunchpads');
         try {
           const allLaunchpads = getAllLaunchpads();
+          console.log('All launchpads loaded:', allLaunchpads);
           const launchpadIds = allLaunchpads.map(l => l.id);
+          console.log('Launchpad IDs:', launchpadIds);
           
           // Force show pumpfun if no launchpads are found
           if (launchpadIds.length === 0) {
+            console.log('No launchpads found, forcing pumpfun');
             setLaunchpads(['pumpfun']);
           } else {
             setLaunchpads(launchpadIds);
           }
         } catch (launchpadError) {
-          // Error loading launchpads, using fallback
+          console.error('Error loading launchpads:', launchpadError);
+          console.log('Fallback: setting pumpfun manually');
           setLaunchpads(['pumpfun']);
         }
         
         setIsLoaded(true);
+        console.log('loadCategories completed');
       } catch (error) {
-        // Error in loadCategories
+        console.error('Error in loadCategories:', error);
         setIsLoaded(true);
       }
     };

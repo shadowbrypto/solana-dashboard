@@ -24,7 +24,6 @@ import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCa
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Settings } from '../lib/settings';
-import { SafeImage } from './SafeImage';
 import {
   DndContext,
   DragEndEvent,
@@ -663,17 +662,23 @@ export function ProtocolManagement() {
                   key={launchpad.id}
                   className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20">
-                    <SafeImage
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                    <img 
                       src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
-                      alt={launchpad.name}
+                      alt={launchpad.name} 
                       className="w-full h-full object-cover"
-                      fallbackIcon={
-                        <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/>
-                          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/>
-                        </svg>
-                      }
+                      onError={(e) => {
+                        // Fallback to icon if logo not found
+                        const target = e.target as HTMLImageElement;
+                        const container = target.parentElement;
+                        if (container) {
+                          container.innerHTML = '';
+                          container.className = 'w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center';
+                          const iconElement = document.createElement('div');
+                          iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                          container.appendChild(iconElement);
+                        }
+                      }}
                     />
                   </div>
                   <div className="flex-1">

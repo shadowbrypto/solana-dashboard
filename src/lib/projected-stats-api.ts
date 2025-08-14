@@ -1,6 +1,4 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-production-api.com'
-  : 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export interface ProjectedStatsData {
   id?: number;
@@ -39,7 +37,7 @@ export class ProjectedStatsApi {
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/api/projected-stats?${params.toString()}`,
+        `${API_BASE_URL}/projected-stats?${params.toString()}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -64,7 +62,7 @@ export class ProjectedStatsApi {
   static async getProjectedStatsForDate(date: string): Promise<ProjectedStatsData[]> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/projected-stats/date/${date}`,
+        `${API_BASE_URL}/projected-stats/date/${date}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -89,7 +87,7 @@ export class ProjectedStatsApi {
   static async getLatestProjectedVolumes(): Promise<Record<string, number>> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/projected-stats/latest-volumes`,
+        `${API_BASE_URL}/projected-stats/latest-volumes`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -114,7 +112,7 @@ export class ProjectedStatsApi {
   static async updateProjectedData(): Promise<void> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/projected-stats/update`,
+        `${API_BASE_URL}/projected-stats/update`,
         {
           method: 'POST',
           headers: {

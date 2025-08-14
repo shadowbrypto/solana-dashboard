@@ -31,15 +31,25 @@ export interface DuneQueryResult {
  */
 export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<DuneQueryResult[]> {
   try {
+    // Check if Dune API key is configured
+    const duneApiKey = process.env.DUNE_API_KEY;
+    if (!duneApiKey) {
+      console.warn('DUNE_API_KEY environment variable is not set. Skipping Dune data fetch.');
+      return [];
+    }
+
     // First, get the execution result
     const response = await fetch(`https://api.dune.com/api/v1/query/${duneQueryId}/results`, {
       headers: {
-        'X-Dune-API-Key': process.env.DUNE_API_KEY || '',
+        'X-Dune-API-Key': duneApiKey,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch data from Dune: ${response.statusText}`);
+      const errorDetails = response.status === 401 
+        ? 'Unauthorized - Please check your DUNE_API_KEY' 
+        : `${response.status} - ${response.statusText}`;
+      throw new Error(`Failed to fetch data from Dune Analytics: ${errorDetails}`);
     }
 
     const data = await response.json();
@@ -68,7 +78,11 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
       };
     });
   } catch (error) {
-    console.error(`Error fetching data from Dune query ${duneQueryId}:`, error);
+    if (error instanceof Error && error.message.includes('DUNE_API_KEY')) {
+      console.warn(`Dune Analytics integration not configured. Query ${duneQueryId} skipped.`);
+    } else {
+      console.error(`Error fetching data from Dune query ${duneQueryId}:`, error);
+    }
     return [];
   }
 }
@@ -175,6 +189,12 @@ export async function getProjectedStatsForDate(date: string): Promise<ProjectedS
 export async function updateAllProjectedData(): Promise<void> {
   try {
     console.log('Starting projected data update for all protocols...');
+    
+    // Check if Dune API key is configured
+    if (!process.env.DUNE_API_KEY) {
+      console.warn('DUNE_API_KEY is not configured. Projected stats update skipped.');
+      return;
+    }
     
     // Get all protocols with valid Dune query IDs
     const validMappings = getValidDuneQueryMappings();

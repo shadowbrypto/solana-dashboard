@@ -720,7 +720,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 {orderedMetrics.map((metric, index) => (
                   <TableHead 
                     key={metric.key} 
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
+                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[90px]' : 'min-w-[130px]') : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
                   >
                     {metric.key === 'projected_volume' ? (
                       <div className="flex items-center justify-end gap-1">
@@ -809,7 +809,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
-                          className={`text-right font-medium py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''}`}
+                          className={`text-right font-medium py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[90px]' : 'min-w-[130px]') : ''}`}
                         >
                           {metric.key === 'market_share'
                             ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
@@ -883,7 +883,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           <TableCell 
                             key={metric.key} 
                             className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth'
-                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + ' min-w-[130px]'
+                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[90px]' : ' min-w-[130px]')
                               : !metric.skipGradient
                                 ? getGradientColor(
                                     metric.getValue 

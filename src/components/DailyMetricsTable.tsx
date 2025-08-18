@@ -397,12 +397,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
     .map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
-  // Toggle projected volume visibility
-  const toggleProjectedVolumeVisibility = () => {
-    const newHidden = !isProjectedVolumeHidden;
-    setIsProjectedVolumeHidden(newHidden);
-    Settings.setIsProjectedVolumeHidden(newHidden);
-  };
 
 
   // Category-based bright coloring using shadcn theme colors
@@ -560,6 +554,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   const showAllProtocols = () => {
     setHiddenProtocols(new Set());
+    setIsProjectedVolumeHidden(false);
+    Settings.setIsProjectedVolumeHidden(false);
   };
 
   const hideAllProtocols = () => {
@@ -574,6 +570,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       });
     });
     setHiddenProtocols(allProtocols);
+    setIsProjectedVolumeHidden(true);
+    Settings.setIsProjectedVolumeHidden(true);
   };
 
   const downloadReport = async () => {
@@ -716,40 +714,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 {orderedMetrics.map((metric, index) => (
                   <TableHead 
                     key={metric.key} 
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
+                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? 'min-w-[130px]' : ''}`}
                   >
-                    {metric.key === 'projected_volume' ? (
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="truncate">{metric.label}</span>
-                        <button
-                          onClick={toggleProjectedVolumeVisibility}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
-                          title="Hide Adj. Volume column"
-                        >
-                          <EyeOff className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="truncate">{metric.label}</span>
-                    )}
+                    <span className="truncate">{metric.label}</span>
                   </TableHead>
                 ))}
-                {isProjectedVolumeHidden && (
-                  <TableHead 
-                    className="text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm group relative"
-                  >
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="truncate text-muted-foreground">Adj. Volume</span>
-                      <button
-                        onClick={toggleProjectedVolumeVisibility}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
-                        title="Show Adj. Volume column"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </TableHead>
-                )}
               </TableRow>
 
             </TableHeader>

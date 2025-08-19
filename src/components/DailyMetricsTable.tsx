@@ -596,20 +596,34 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       
       try {
         console.log('Starting dom-to-image conversion...');
+        // Scale factor for higher resolution (2x for retina quality)
+        const scale = 2;
+        const padding = 40;
+        
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + padding) * scale,
+            height: (tableElement.scrollHeight + padding) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: '20px',
+              padding: `${padding/2}px`,
               borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              width: `${tableElement.scrollWidth}px`,
+              height: `${tableElement.scrollHeight}px`
+            },
+            filter: (node: any) => {
+              // Ensure all nodes are included
+              return true;
+            },
+            // Additional options for better rendering
+            cacheBust: true,
+            imagePlaceholder: undefined,
+            includeQueryParams: false
           }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
@@ -644,20 +658,34 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
       
       try {
+        // Scale factor for higher resolution (2x for retina quality)
+        const scale = 2;
+        const padding = 40;
+        
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + padding) * scale,
+            height: (tableElement.scrollHeight + padding) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: '20px',
+              padding: `${padding/2}px`,
               borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              width: `${tableElement.scrollWidth}px`,
+              height: `${tableElement.scrollHeight}px`
+            },
+            filter: (node: any) => {
+              // Ensure all nodes are included
+              return true;
+            },
+            // Additional options for better rendering
+            cacheBust: true,
+            imagePlaceholder: undefined,
+            includeQueryParams: false
           }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)

@@ -84,6 +84,12 @@ router.get('/projected-stats/latest-volumes', async (req, res) => {
  */
 router.post('/projected-stats/update', async (req, res) => {
   try {
+    console.log('Projected stats update endpoint called');
+    console.log('Environment check:', {
+      hasDuneApiKey: !!process.env.DUNE_API_KEY,
+      nodeEnv: process.env.NODE_ENV
+    });
+    
     await updateAllProjectedData();
     res.json({ message: 'Projected data update completed successfully' });
   } catch (error) {

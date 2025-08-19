@@ -122,12 +122,25 @@ export class ProjectedStatsApi {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to update projected data: ${response.statusText}`);
+        let errorMessage = `Failed to update projected data: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.details) {
+            errorMessage = errorData.details;
+          }
+        } catch (e) {
+          // If response is not JSON, use default error message
+        }
+        throw new Error(errorMessage);
       }
 
       await response.json();
     } catch (error) {
       console.error('Error updating projected data:', error);
+      // Log more details about the error
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.error('Network error - check CORS or API URL:', API_BASE_URL);
+      }
       throw error;
     }
   }

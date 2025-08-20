@@ -337,14 +337,15 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       }
       
       try {
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               padding: '20px',
@@ -382,14 +383,15 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       }
       
       try {
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               padding: '20px',

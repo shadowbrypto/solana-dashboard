@@ -596,14 +596,15 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       
       try {
         console.log('Starting dom-to-image conversion...');
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               padding: '20px',
@@ -644,14 +645,15 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
       
       try {
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 40,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               padding: '20px',

@@ -77,6 +77,7 @@ export function StackedBarChart({
   const [customEndDate, setCustomEndDate] = useState(() => endOfDay(new Date()));
   const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
   // Handle window resize for responsive behavior
   useEffect(() => {
@@ -399,14 +400,24 @@ export function StackedBarChart({
                 .map((key, index) => {
                   const originalIndex = dataKeys.indexOf(key);
                   const isLastEnabled = index === dataKeys.filter(k => !disabledKeys.includes(k)).length - 1;
+                  const isHovered = hoveredBar === key;
+                  const hasHoveredBar = hoveredBar !== null;
+                  
                   return (
                     <Bar
                       key={key}
                       dataKey={key}
                       stackId="a"
                       fill={colors[originalIndex]}
+                      fillOpacity={hasHoveredBar ? (isHovered ? 1 : 0.3) : 1}
                       radius={isLastEnabled ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                       name={labels[originalIndex]}
+                      onMouseEnter={() => setHoveredBar(key)}
+                      onMouseLeave={() => setHoveredBar(null)}
+                      style={{
+                        transition: 'fill-opacity 0.2s ease-in-out',
+                        cursor: 'pointer'
+                      }}
                     />
                   );
                 })}
@@ -415,54 +426,82 @@ export function StackedBarChart({
                 height={dataKeys.length > 6 ? (isDesktop ? Math.ceil(dataKeys.length / 5) * 14 : Math.ceil(dataKeys.length / 3) * 24) : 28}
                 iconType="circle"
                 iconSize={8}
-                wrapperStyle={{
-                  paddingTop: "2px",
-                  fontSize: isDesktop ? "12px" : "11px",
-                  lineHeight: isDesktop ? "14px" : "16px",
-                  marginBottom: "0px",
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center'
-                }}
-                itemStyle={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  marginRight: isDesktop ? '16px' : '12px',
-                  marginBottom: isDesktop ? '2px' : '4px',
-                  maxWidth: isDesktop ? '200px' : '120px'
-                }}
-                payload={dataKeys.map((key, index) => ({
-                  value: labels[index],
-                  type: 'circle',
-                  color: disabledKeys.includes(key) ? 'hsl(var(--muted-foreground))' : colors[index],
-                  dataKey: key
-                }))}
-                onClick={(e) => {
-                  if (e && typeof e.dataKey === 'string') {
-                    setDisabledKeys((prev: string[]) => 
-                      prev.includes(e.dataKey as string)
-                        ? prev.filter(key => key !== e.dataKey)
-                        : [...prev, e.dataKey as string]
-                    );
-                  }
-                }}
-                formatter={(value, entry) => {
-                  const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
+                content={(props) => {
+                  const { payload } = props;
+                  if (!payload) return null;
+                  
                   return (
-                    <span 
-                      className={`text-[10px] sm:text-sm text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
-                      style={{
-                        display: 'inline-block',
-                        verticalAlign: 'middle',
-                        maxWidth: isDesktop ? '140px' : '80px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        marginLeft: '6px'
-                      }}
-                    >
-                      {value}
-                    </span>
+                    <ul style={{
+                      paddingTop: "2px",
+                      fontSize: isDesktop ? "12px" : "11px",
+                      lineHeight: isDesktop ? "14px" : "16px",
+                      marginBottom: "0px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0
+                    }}>
+                      {payload.map((entry, index) => {
+                        const dataKey = entry.dataKey as string;
+                        const isHovered = hoveredBar === dataKey;
+                        const hasHoveredBar = hoveredBar !== null;
+                        const isDisabled = disabledKeys.includes(dataKey);
+                        
+                        return (
+                          <li
+                            key={`item-${index}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              marginRight: isDesktop ? '16px' : '12px',
+                              marginBottom: isDesktop ? '2px' : '4px',
+                              maxWidth: isDesktop ? '200px' : '120px',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={() => setHoveredBar(dataKey)}
+                            onMouseLeave={() => setHoveredBar(null)}
+                            onClick={() => {
+                              setDisabledKeys((prev: string[]) => 
+                                prev.includes(dataKey)
+                                  ? prev.filter(key => key !== dataKey)
+                                  : [...prev, dataKey]
+                              );
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: isDisabled ? 'hsl(var(--muted-foreground))' : entry.color,
+                                marginRight: '6px',
+                                opacity: hasHoveredBar ? (isHovered ? 1 : 0.3) : 1,
+                                transition: 'opacity 0.2s ease-in-out'
+                              }}
+                            />
+                            <span
+                              className={`text-[10px] sm:text-sm text-muted-foreground select-none ${isDisabled ? 'opacity-50 line-through' : ''}`}
+                              style={{
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                                maxWidth: isDesktop ? '140px' : '80px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                opacity: hasHoveredBar ? (isHovered ? 1 : 0.4) : 1,
+                                fontWeight: isHovered ? 600 : 400,
+                                transition: 'opacity 0.2s ease-in-out, font-weight 0.2s ease-in-out'
+                              }}
+                            >
+                              {entry.value}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   );
                 }}
               />

@@ -63,6 +63,7 @@ export function StackedAreaChart({
   const [disabledKeys, setDisabledKeys] = useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [hoveredArea, setHoveredArea] = useState<string | null>(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -408,45 +409,110 @@ export function StackedAreaChart({
                 }}
                 cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
               />
-              {keys.map((key, index) => (
-                  <Area
-                    key={key}
-                    dataKey={key}
-                    stackId="1"
-                    stroke={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
-                    fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
-                    fillOpacity={disabledKeys.includes(key) ? 0.2 : 0.85}
-                    strokeWidth={2}
-                    name={displayLabels[index]}
-                  />
-              ))}
+              {keys.map((key, index) => {
+                  const isHovered = hoveredArea === key;
+                  const hasHoveredArea = hoveredArea !== null;
+                  
+                  return (
+                    <Area
+                      key={key}
+                      dataKey={key}
+                      stackId="1"
+                      stroke={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                      fill={disabledKeys.includes(key) ? 'hsl(var(--muted))' : colors[index]}
+                      fillOpacity={disabledKeys.includes(key) ? 0.2 : (hasHoveredArea ? (isHovered ? 0.85 : 0.3) : 0.85)}
+                      strokeWidth={isHovered ? 3 : 2}
+                      strokeOpacity={hasHoveredArea ? (isHovered ? 1 : 0.5) : 1}
+                      name={displayLabels[index]}
+                      onMouseEnter={() => setHoveredArea(key)}
+                      onMouseLeave={() => setHoveredArea(null)}
+                      style={{
+                        transition: 'fill-opacity 0.2s ease-in-out, stroke-width 0.2s ease-in-out, stroke-opacity 0.2s ease-in-out',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  );
+              })}
               <Legend
                 verticalAlign="bottom"
                 height={isMobile ? 40 : 32}
                 iconType="circle"
                 iconSize={isMobile ? 6 : 8}
-                wrapperStyle={{
-                  paddingTop: isMobile ? "8px" : "12px",
-                  fontSize: isMobile ? "11px" : "12px",
-                  lineHeight: isMobile ? "14px" : "16px"
-                }}
-                onClick={(e) => {
-                  if (e && typeof e.dataKey === 'string') {
-                    setDisabledKeys((prev: string[]) => 
-                      prev.includes(e.dataKey as string)
-                        ? prev.filter(key => key !== e.dataKey)
-                        : [...prev, e.dataKey as string]
-                    );
-                  }
-                }}
-                formatter={(value, entry) => {
-                  const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : '';
+                content={(props) => {
+                  const { payload } = props;
+                  if (!payload) return null;
+                  
                   return (
-                    <span 
-                      className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground cursor-pointer select-none ${disabledKeys.includes(dataKey) ? 'opacity-50 line-through' : ''}`}
-                    >
-                      {value}
-                    </span>
+                    <ul style={{
+                      paddingTop: isMobile ? "8px" : "12px",
+                      fontSize: isMobile ? "11px" : "12px",
+                      lineHeight: isMobile ? "14px" : "16px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0
+                    }}>
+                      {payload.map((entry, index) => {
+                        const dataKey = entry.dataKey as string;
+                        const isHovered = hoveredArea === dataKey;
+                        const hasHoveredArea = hoveredArea !== null;
+                        const isDisabled = disabledKeys.includes(dataKey);
+                        
+                        return (
+                          <li
+                            key={`item-${index}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              marginRight: isDesktop ? '16px' : '12px',
+                              marginBottom: isDesktop ? '2px' : '4px',
+                              maxWidth: isDesktop ? '200px' : '120px',
+                              cursor: 'pointer'
+                            }}
+                            onMouseEnter={() => setHoveredArea(dataKey)}
+                            onMouseLeave={() => setHoveredArea(null)}
+                            onClick={() => {
+                              setDisabledKeys((prev: string[]) => 
+                                prev.includes(dataKey)
+                                  ? prev.filter(key => key !== dataKey)
+                                  : [...prev, dataKey]
+                              );
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                width: isMobile ? '6px' : '8px',
+                                height: isMobile ? '6px' : '8px',
+                                borderRadius: '50%',
+                                backgroundColor: isDisabled ? 'hsl(var(--muted-foreground))' : entry.color,
+                                marginRight: '6px',
+                                opacity: hasHoveredArea ? (isHovered ? 1 : 0.3) : 1,
+                                transition: 'opacity 0.2s ease-in-out'
+                              }}
+                            />
+                            <span
+                              className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground select-none ${isDisabled ? 'opacity-50 line-through' : ''}`}
+                              style={{
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                                maxWidth: isDesktop ? '140px' : '80px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                opacity: hasHoveredArea ? (isHovered ? 1 : 0.4) : 1,
+                                fontWeight: isHovered ? 600 : 400,
+                                transition: 'opacity 0.2s ease-in-out, font-weight 0.2s ease-in-out'
+                              }}
+                            >
+                              {entry.value}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   );
                 }}
               />

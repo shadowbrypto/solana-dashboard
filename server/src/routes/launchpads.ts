@@ -120,13 +120,13 @@ router.get('/metrics', async (req, res) => {
       total: (parseInt(row.launches) || 0) + (parseInt(row.graduations) || 0)
     }));
 
-    // Filter out the latest date (most recent day might have incomplete data)
+    // Filter out data for the current calendar date (as it might have incomplete data)
     if (processedData.length > 0) {
-      // Get the latest date from the processed data
-      const latestDate = processedData[processedData.length - 1].date;
-      const filteredData = processedData.filter(item => item.date !== latestDate);
+      // Get the current date in the same format as the data
+      const currentDate = format(new Date(), 'yyyy-MM-dd');
+      const filteredData = processedData.filter(item => item.date < currentDate);
       
-      console.log(`LaunchpadAPI: Filtered out most recent date ${latestDate}. Records: ${processedData.length} -> ${filteredData.length}`);
+      console.log(`LaunchpadAPI: Filtering out data for current date ${currentDate} and beyond. Records: ${processedData.length} -> ${filteredData.length}`);
       
       // Use filtered data if we still have records, otherwise keep original data
       const finalData = filteredData.length > 0 ? filteredData : processedData;

@@ -433,7 +433,12 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       <div data-table="evm-daily-metrics" className="space-y-4">
         <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold">EVM Protocol Performance</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Daily Report</h2>
+            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
+              EVM
+            </span>
+          </div>
           <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}

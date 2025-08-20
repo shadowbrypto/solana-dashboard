@@ -596,34 +596,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       
       try {
         console.log('Starting dom-to-image conversion...');
-        // Scale factor for higher resolution (2x for retina quality)
-        const scale = 2;
-        const padding = 40;
-        
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: (tableElement.scrollWidth + padding) * scale,
-            height: (tableElement.scrollHeight + padding) * scale,
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 40,
             style: {
-              transform: `scale(${scale})`,
+              transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: `${padding/2}px`,
+              padding: '20px',
               borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              width: `${tableElement.scrollWidth}px`,
-              height: `${tableElement.scrollHeight}px`
-            },
-            filter: (node: any) => {
-              // Ensure all nodes are included
-              return true;
-            },
-            // Additional options for better rendering
-            cacheBust: true,
-            imagePlaceholder: undefined,
-            includeQueryParams: false
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
           }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
@@ -658,34 +644,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
       
       try {
-        // Scale factor for higher resolution (2x for retina quality)
-        const scale = 2;
-        const padding = 40;
-        
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: (tableElement.scrollWidth + padding) * scale,
-            height: (tableElement.scrollHeight + padding) * scale,
+            width: tableElement.scrollWidth + 40,
+            height: tableElement.scrollHeight + 40,
             style: {
-              transform: `scale(${scale})`,
+              transform: 'scale(1)',
               transformOrigin: 'top left',
               overflow: 'visible',
-              padding: `${padding/2}px`,
+              padding: '20px',
               borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              width: `${tableElement.scrollWidth}px`,
-              height: `${tableElement.scrollHeight}px`
-            },
-            filter: (node: any) => {
-              // Ensure all nodes are included
-              return true;
-            },
-            // Additional options for better rendering
-            cacheBust: true,
-            imagePlaceholder: undefined,
-            includeQueryParams: false
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
           }),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
@@ -723,7 +695,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         <div data-table="daily-metrics" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
           <div className="flex items-center gap-4">
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Metrics</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Daily Report</h3>
+              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
+                SOL
+              </span>
+            </div>
             <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
               <button
                 onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}

@@ -411,7 +411,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       case 'Telegram Bots':
         return 'bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40';
       case 'Trading Terminals':
-        return 'bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/40';
+        return 'bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-200 dark:hover:bg-orange-900/40';
       case 'Mobile Apps':
         return 'bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/40';
       default:

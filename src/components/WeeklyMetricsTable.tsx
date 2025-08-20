@@ -106,7 +106,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       case 'Telegram Bots':
         return 'bg-blue-100 dark:bg-blue-900/30';
       case 'Trading Terminals':
-        return 'bg-green-100 dark:bg-green-900/30';
+        return 'bg-orange-100 dark:bg-orange-900/30';
       case 'Mobile Apps':
         return 'bg-purple-100 dark:bg-purple-900/30';
       default:
@@ -119,7 +119,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       case 'Telegram Bots':
         return 'group-hover:bg-blue-200 dark:group-hover:bg-blue-900/40';
       case 'Trading Terminals':
-        return 'group-hover:bg-green-200 dark:group-hover:bg-green-900/40';
+        return 'group-hover:bg-orange-200 dark:group-hover:bg-orange-900/40';
       case 'Mobile Apps':
         return 'group-hover:bg-purple-200 dark:group-hover:bg-purple-900/40';
       default:

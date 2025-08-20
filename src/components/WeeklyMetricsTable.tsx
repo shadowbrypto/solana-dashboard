@@ -528,14 +528,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       }
       
       try {
+        const scale = 2;
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 10,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 10) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               paddingTop: '20px',
@@ -577,14 +578,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       }
       
       try {
+        const scale = 2;
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 10,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 10) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               paddingTop: '20px',
@@ -632,6 +634,14 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   return (
     <div className="relative space-y-3" data-table="weekly-metrics-full">
+        <div className="flex items-center justify-between pb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Weekly Report</h2>
+            <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
+              SOL
+            </span>
+          </div>
+        </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 group">
             <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
@@ -706,15 +716,30 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto lg:overflow-x-visible" data-table="weekly-metrics">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm">Protocol</TableHead>
-                {last7Days.map((day) => (
-                  <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
-                    <span className="font-medium">
-                      {format(day, 'EEE, MMM d')}
-                    </span>
-                  </TableHead>
-                ))}
+              <TableRow className="h-16">
+                <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm rounded-tl-xl">Protocol</TableHead>
+                {last7Days.map((day) => {
+                  const dayOfWeek = day.getDay(); // 0 = Sunday, 6 = Saturday
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                  
+                  return (
+                    <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className="text-sm font-medium">{format(day, 'MMM dd')}</span>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs font-normal px-2 py-0.5 min-w-[36px] justify-center ${
+                            isWeekend 
+                              ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' 
+                              : 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800'
+                          }`}
+                        >
+                          {format(day, 'EEE')}
+                        </Badge>
+                      </div>
+                    </TableHead>
+                  );
+                })}
                 {selectedMetric !== 'daily_users' && (
                   <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
                 )}

@@ -168,14 +168,15 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       }
       
       try {
+        const scale = 2;
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 50,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 50) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               paddingTop: '20px',
@@ -217,14 +218,15 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       }
       
       try {
+        const scale = 2;
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
             quality: 1,
             bgcolor: '#ffffff',
-            width: tableElement.scrollWidth + 40,
-            height: tableElement.scrollHeight + 50,
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 50) * scale,
             style: {
-              transform: 'scale(1)',
+              transform: `scale(${scale})`,
               transformOrigin: 'top left',
               overflow: 'visible',
               paddingTop: '20px',
@@ -283,7 +285,12 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6">
       <div className="space-y-4" data-table="evm-weekly-metrics">
         <div className="flex items-center justify-between pb-4">
-          <h3 className="text-lg font-semibold text-foreground">EVM Weekly Volume</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
+              EVM
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -352,13 +359,30 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
         <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
           <Table className="w-full [&_th]:px-2 [&_td]:px-2">
           <TableHeader>
-            <TableRow>
+            <TableRow className="h-16">
               <TableHead className="w-[120px]">Protocol</TableHead>
-              {last7Days.map((day) => (
-                <TableHead key={day.toISOString()} className="text-right w-[75px]">
-                  {format(day, 'MMM dd')}
-                </TableHead>
-              ))}
+              {last7Days.map((day) => {
+                const dayOfWeek = day.getDay(); // 0 = Sunday, 6 = Saturday
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                return (
+                  <TableHead key={day.toISOString()} className="text-center w-[85px] px-2">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span className="text-sm font-medium">{format(day, 'MMM dd')}</span>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs font-normal px-2 py-0.5 min-w-[36px] justify-center ${
+                          isWeekend 
+                            ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' 
+                            : 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
+                        }`}
+                      >
+                        {format(day, 'EEE')}
+                      </Badge>
+                    </div>
+                  </TableHead>
+                );
+              })}
               <TableHead className="text-right w-[180px]">Total Volume</TableHead>
               <TableHead className="text-center w-[160px]">Weekly Trend</TableHead>
             </TableRow>
@@ -432,7 +456,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-[50px] h-[20px]">
+                      <div className="w-[50px] h-[32px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
                             <Area 

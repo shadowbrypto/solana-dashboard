@@ -1154,6 +1154,56 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     );
                   }
                   
+                  if (metric.key === 'projected_volume') {
+                    // Calculate total actual volume for comparison
+                    const totalActualVolume = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => sum + (dailyData[p]?.total_volume_usd || 0), 0);
+                    
+                    if (totalActualVolume === 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
+                          <div className="flex items-center gap-2 justify-end">
+                            <span>{formatCurrency(total)}</span>
+                          </div>
+                        </TableCell>
+                      );
+                    }
+                    
+                    // Calculate difference
+                    const difference = total - totalActualVolume;
+                    const percentageDiff = (difference / totalActualVolume) * 100;
+                    
+                    // Determine styling based on difference
+                    const isNeutral = Math.abs(difference) < 0.01;
+                    const isPositive = difference > 0;
+                    
+                    let bgColor, borderColor;
+                    if (isNeutral) {
+                      bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+                      borderColor = "border-l-gray-400";
+                    } else if (isPositive) {
+                      bgColor = "bg-green-100/80 dark:bg-green-950/40";
+                      borderColor = "border-l-green-400";
+                    } else {
+                      bgColor = "bg-red-100/80 dark:bg-red-950/40";
+                      borderColor = "border-l-red-400";
+                    }
+                    
+                    const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+                    
+                    return (
+                      <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
+                        <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+                          <span>{formatCurrency(total)}</span>
+                          <span className="text-[9px] font-medium text-muted-foreground">
+                            {diffText}
+                          </span>
+                        </div>
+                      </TableCell>
+                    );
+                  }
+                  
                   return (
                     <TableCell 
                       key={metric.key} 

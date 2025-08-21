@@ -90,8 +90,13 @@ router.post('/projected-stats/update', async (req, res) => {
       nodeEnv: process.env.NODE_ENV
     });
     
-    await updateAllProjectedData();
-    res.json({ message: 'Projected data update completed successfully' });
+    const result = await updateAllProjectedData();
+    res.json({ 
+      message: `Projected data update completed successfully. Updated ${result.successCount} out of ${result.totalCount} protocols.`,
+      successCount: result.successCount,
+      totalCount: result.totalCount,
+      protocols: result.protocols
+    });
   } catch (error) {
     console.error('Error updating projected data:', error);
     res.status(500).json({ 

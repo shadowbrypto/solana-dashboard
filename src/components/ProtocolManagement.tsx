@@ -516,12 +516,12 @@ export function ProtocolManagement() {
     
     setIsRefreshingProjectedStats(true);
     try {
-      await ProjectedStatsApi.updateProjectedData();
+      const result = await ProjectedStatsApi.updateProjectedData();
       
       toast({
         variant: "success",
         title: "Projected Stats Refresh Complete",
-        description: "Successfully updated projected volume data from Dune Analytics",
+        description: `Successfully updated projected volume data for ${result.successCount} out of ${result.totalCount} protocols`,
       });
       
       // Reload sync statuses after successful refresh

@@ -78,9 +78,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [isProjectedVolumeHidden, setIsProjectedVolumeHidden] = useState<boolean>(() => Settings.getIsProjectedVolumeHidden());
   const { toast } = useToast();
 
-  // Calculate total volume for market share
-  const totalVolume = Object.values(dailyData)
-    .reduce((sum, protocol) => sum + (protocol?.total_volume_usd || 0), 0);
+  // Calculate total volume for market share (excluding hidden protocols)
+  const totalVolume = protocols
+    .filter(protocol => protocol !== 'all' && !hiddenProtocols.has(protocol))
+    .reduce((sum, protocol) => sum + (dailyData[protocol]?.total_volume_usd || 0), 0);
 
   // Weekly trend functions
   const getWeeklyVolumeChart = (protocolId: Protocol) => {
@@ -123,8 +124,50 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => {
         if (value === 0 || value === undefined) return <span className="text-muted-foreground">-</span>;
         
-        // For category rows, just show the total without badge
-        if (isCategory) return formatCurrency(value);
+        // For category rows, calculate total actual volume and show comparison
+        if (isCategory && categoryName) {
+          // Get protocols for this category
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+          const visibleProtocols = categoryProtocols
+            .map(p => p.id)
+            .filter(p => !hiddenProtocols.has(p));
+          
+          // Calculate total actual volume for the category
+          const totalActualVolume = visibleProtocols
+            .reduce((sum, p) => sum + (dailyData[p as Protocol]?.total_volume_usd || 0), 0);
+          
+          if (totalActualVolume === 0) {
+            return (
+              <div className="flex items-center gap-2 justify-end">
+                <span>{formatCurrency(value)}</span>
+              </div>
+            );
+          }
+          
+          // Calculate difference
+          const difference = value - totalActualVolume;
+          const percentageDiff = (difference / totalActualVolume) * 100;
+          
+          // Determine styling based on difference
+          const isPositive = difference > 0;
+          const bgColor = isPositive 
+            ? "bg-green-100/80 dark:bg-green-950/40" 
+            : "bg-red-100/80 dark:bg-red-950/40";
+          const borderColor = isPositive 
+            ? "border-l-green-400" 
+            : "border-l-red-400";
+          
+          const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+          
+          return (
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+              <span>{formatCurrency(value)}</span>
+              <span className="text-[9px] font-medium text-muted-foreground">
+                {diffText}
+              </span>
+            </div>
+          );
+        }
         
         // Get actual volume for comparison
         const actualVolume = protocol ? dailyData[protocol]?.total_volume_usd || 0 : 0;
@@ -161,7 +204,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           </div>
         );
       },
-      getValue: (data, protocol) => projectedVolumeData[protocol as string] || 0
+      getValue: (data, protocol) => {
+        if (!protocol) return 0;
+        // Use protocol ID instead of display name for projected volume lookup
+        return projectedVolumeData[protocol] || 0;
+      }
     },
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
     { key: "daily_users", label: "Daily Users", format: formatNumber },
@@ -824,6 +871,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             ? formatNumber(categoryTotals[metric.key] || 0)
                             : metric.key === 'daily_growth'
                             ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
+                            : metric.key === 'projected_volume'
+                            ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
                             : metric.getValue
                               ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics), true, undefined, categoryName)
                               : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
@@ -934,17 +983,25 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   let total: number;
                   if (metric.key === 'daily_growth') {
                     const currentVolume = protocols
-                      .filter(p => p !== 'all')
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
                       .reduce((sum, p) => sum + (dailyData[p]?.total_volume_usd || 0), 0);
                     const previousVolume = protocols
-                      .filter(p => p !== 'all')
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
                       .reduce((sum, p) => sum + (previousDayData[p]?.total_volume_usd || 0), 0);
                     total = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
                   } else if (metric.key === 'market_share') {
-                    total = 1; // 100% by definition for all protocols
+                    total = 1; // 100% by definition for all visible protocols
+                  } else if (metric.key === 'projected_volume') {
+                    // Calculate total projected volume for all protocols
+                    total = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => {
+                        // Use protocol ID instead of display name for projected volume lookup
+                        return sum + (projectedVolumeData[p] || 0);
+                      }, 0);
                   } else {
                     total = protocols
-                      .filter(p => p !== 'all')
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
                       .reduce((sum, p) => sum + (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
                   }
                   
@@ -961,7 +1018,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       if (dayData) {
                         const dateKey = format(dayData, 'yyyy-MM-dd');
                         const dailyTotal = protocols
-                          .filter(p => p !== 'all')
+                          .filter(p => p !== 'all' && !hiddenProtocols.has(p))
                           .reduce((sum, p) => {
                             const protocolWeeklyData = weeklyVolumeData[p];
                             return sum + (protocolWeeklyData?.[dateKey] || 0);

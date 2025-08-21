@@ -185,19 +185,22 @@ export async function getProjectedStatsForDate(date: string): Promise<ProjectedS
 
 /**
  * Update projected data for all protocols with Dune query IDs
+ * @returns Object with update statistics
  */
-export async function updateAllProjectedData(): Promise<void> {
+export async function updateAllProjectedData(): Promise<{ successCount: number; totalCount: number; protocols: string[] }> {
   try {
     console.log('Starting projected data update for all protocols...');
     
     // Check if Dune API key is configured
     if (!process.env.DUNE_API_KEY) {
       console.warn('DUNE_API_KEY is not configured. Projected stats update skipped.');
-      return;
+      return { successCount: 0, totalCount: 0, protocols: [] };
     }
     
     // Get all protocols with valid Dune query IDs
     const validMappings = getValidDuneQueryMappings();
+    let successCount = 0;
+    const successfulProtocols: string[] = [];
 
     for (const { protocolId, duneQueryId } of validMappings) {
       try {
@@ -217,6 +220,8 @@ export async function updateAllProjectedData(): Promise<void> {
 
           await saveProjectedStats(projectedData);
           console.log(`✓ Updated ${projectedData.length} records for ${protocolId}`);
+          successCount++;
+          successfulProtocols.push(protocolId);
         } else {
           console.log(`No data returned for ${protocolId}`);
         }
@@ -237,7 +242,13 @@ export async function updateAllProjectedData(): Promise<void> {
       console.log(`Skipped protocols without valid Dune query IDs: ${protocolsWithoutValidIds.join(', ')}`);
     }
 
-    console.log('Projected data update completed');
+    console.log(`Projected data update completed: ${successCount}/${validMappings.length} protocols updated`);
+    
+    return {
+      successCount,
+      totalCount: validMappings.length,
+      protocols: successfulProtocols
+    };
   } catch (error) {
     console.error('Error in updateAllProjectedData:', error);
     throw error;

@@ -109,7 +109,7 @@ export class ProjectedStatsApi {
   /**
    * Trigger update of projected data from Dune
    */
-  static async updateProjectedData(): Promise<void> {
+  static async updateProjectedData(): Promise<{ successCount: number; totalCount: number; protocols: string[] }> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/projected-stats/update`,
@@ -134,7 +134,7 @@ export class ProjectedStatsApi {
         throw new Error(errorMessage);
       }
 
-      await response.json();
+      return await response.json();
     } catch (error) {
       console.error('Error updating projected data:', error);
       // Log more details about the error

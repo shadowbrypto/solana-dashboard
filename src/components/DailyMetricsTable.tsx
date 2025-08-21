@@ -149,13 +149,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           const percentageDiff = (difference / totalActualVolume) * 100;
           
           // Determine styling based on difference
+          const isNeutral = Math.abs(difference) < 0.01; // Less than 1 cent difference
           const isPositive = difference > 0;
-          const bgColor = isPositive 
-            ? "bg-green-100/80 dark:bg-green-950/40" 
-            : "bg-red-100/80 dark:bg-red-950/40";
-          const borderColor = isPositive 
-            ? "border-l-green-400" 
-            : "border-l-red-400";
+          
+          let bgColor, borderColor;
+          if (isNeutral) {
+            bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+            borderColor = "border-l-gray-400";
+          } else if (isPositive) {
+            bgColor = "bg-green-100/80 dark:bg-green-950/40";
+            borderColor = "border-l-green-400";
+          } else {
+            bgColor = "bg-red-100/80 dark:bg-red-950/40";
+            borderColor = "border-l-red-400";
+          }
           
           const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
           
@@ -185,13 +192,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         const percentageDiff = (difference / actualVolume) * 100;
         
         // Determine styling based on difference
+        const isNeutral = Math.abs(difference) < 0.01; // Less than 1 cent difference
         const isPositive = difference > 0;
-        const bgColor = isPositive 
-          ? "bg-green-100/80 dark:bg-green-950/40" 
-          : "bg-red-100/80 dark:bg-red-950/40";
-        const borderColor = isPositive 
-          ? "border-l-green-400" 
-          : "border-l-red-400";
+        
+        let bgColor, borderColor;
+        if (isNeutral) {
+          bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+          borderColor = "border-l-gray-400";
+        } else if (isPositive) {
+          bgColor = "bg-green-100/80 dark:bg-green-950/40";
+          borderColor = "border-l-green-400";
+        } else {
+          bgColor = "bg-red-100/80 dark:bg-red-950/40";
+          borderColor = "border-l-red-400";
+        }
         
         const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
         
@@ -206,8 +220,21 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       },
       getValue: (data, protocol) => {
         if (!protocol) return 0;
-        // Use protocol ID instead of display name for projected volume lookup
-        return projectedVolumeData[protocol] || 0;
+        
+        // Check if this protocol has projected volume data
+        const projectedVolume = projectedVolumeData[protocol];
+        if (projectedVolume && projectedVolume > 0) {
+          return projectedVolume;
+        }
+        
+        // For Mobile Apps protocols, use actual volume as projected volume
+        const protocolConfig = getProtocolById(protocol);
+        if (protocolConfig?.category === 'Mobile Apps') {
+          return dailyData[protocol]?.total_volume_usd || 0;
+        }
+        
+        // For other protocols without projected data, return 0
+        return 0;
       }
     },
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
@@ -835,7 +862,22 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   } else if (metric.key === 'projected_volume') {
                     // Calculate category projected volume total
                     acc[metric.key] = visibleProtocols
-                      .reduce((sum, p) => sum + (projectedVolumeData[p] || 0), 0);
+                      .reduce((sum, p) => {
+                        // Check if this protocol has projected volume data
+                        const projectedVolume = projectedVolumeData[p];
+                        if (projectedVolume && projectedVolume > 0) {
+                          return sum + projectedVolume;
+                        }
+                        
+                        // For Mobile Apps protocols, use actual volume as projected volume
+                        const protocolConfig = getProtocolById(p);
+                        if (protocolConfig?.category === 'Mobile Apps') {
+                          return sum + (dailyData[p as Protocol]?.total_volume_usd || 0);
+                        }
+                        
+                        // For other protocols without projected data, add 0
+                        return sum;
+                      }, 0);
                   } else {
                     acc[metric.key] = visibleProtocols
                       .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
@@ -996,8 +1038,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     total = protocols
                       .filter(p => p !== 'all' && !hiddenProtocols.has(p))
                       .reduce((sum, p) => {
-                        // Use protocol ID instead of display name for projected volume lookup
-                        return sum + (projectedVolumeData[p] || 0);
+                        // Check if this protocol has projected volume data
+                        const projectedVolume = projectedVolumeData[p];
+                        if (projectedVolume && projectedVolume > 0) {
+                          return sum + projectedVolume;
+                        }
+                        
+                        // For Mobile Apps protocols, use actual volume as projected volume
+                        const protocolConfig = getProtocolById(p);
+                        if (protocolConfig?.category === 'Mobile Apps') {
+                          return sum + (dailyData[p]?.total_volume_usd || 0);
+                        }
+                        
+                        // For other protocols without projected data, add 0
+                        return sum;
                       }, 0);
                   } else {
                     total = protocols

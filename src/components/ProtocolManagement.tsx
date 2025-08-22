@@ -1140,10 +1140,10 @@ export function ProtocolManagement() {
           <div className="flex items-start justify-between">
             <div className="space-y-1 sm:space-y-1.5">
               <CardTitle className="text-base sm:text-lg">
-                Data Source Settings ({dataTypePreference === 'private' ? 'Private' : 'Public'} Active)
+                Active Data Source
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Configure data sources and preferences for analytics
+                Switch between in-house analytics and publicly verified sources
               </CardDescription>
             </div>
           </div>
@@ -1152,13 +1152,7 @@ export function ProtocolManagement() {
           <div className="space-y-3 sm:space-y-6">
             {/* Data Source Toggle */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Active Data Source</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Switch between in-house analytics and publicly verified sources
-                  </p>
-                </div>
+              <div className="flex items-center justify-end">
                 <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
                   {dataTypePreference === 'private' ? "Private" : "Public"}
                 </Badge>

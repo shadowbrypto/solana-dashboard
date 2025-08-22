@@ -1136,7 +1136,7 @@ export function ProtocolManagement() {
 
       {/* Data Source Settings */}
       <Card>
-        <CardHeader className="p-3 sm:p-6">
+        <CardHeader className="pb-2 p-3 sm:px-6 sm:pt-6 sm:pb-3">
           <div className="flex items-start justify-between">
             <div className="space-y-1 sm:space-y-1.5">
               <CardTitle className="text-base sm:text-lg">
@@ -1146,23 +1146,35 @@ export function ProtocolManagement() {
                 Switch between in-house analytics and publicly verified sources
               </CardDescription>
             </div>
-            <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
-              {dataTypePreference === 'private' ? "Private" : "Public"}
+            <Badge variant={dataTypePreference === 'private' ? "destructive" : "outline"} className={`text-sm px-3 py-1.5 gap-1.5 ${
+              dataTypePreference === 'public' ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : ''
+            }`}>
+              {dataTypePreference === 'private' ? (
+                <>
+                  <Shield className="w-3.5 h-3.5" />
+                  Private
+                </>
+              ) : (
+                <>
+                  <Globe className="w-3.5 h-3.5" />
+                  Public
+                </>
+              )}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-6">
+        <CardContent className="pt-2 p-3 sm:px-6 sm:pt-3 sm:pb-6">
+          <div>
             {/* Data Source Toggle */}
             <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
               <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-md ${
                     dataTypePreference === 'private' 
-                      ? 'bg-orange-100 dark:bg-orange-900/20' 
+                      ? 'bg-blue-100 dark:bg-blue-900/20' 
                       : 'bg-green-100 dark:bg-green-900/20'
                   }`}>
                     {dataTypePreference === 'private' ? (
-                      <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     ) : (
                       <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
                     )}
@@ -1184,7 +1196,7 @@ export function ProtocolManagement() {
                   id="data-type-toggle"
                   checked={dataTypePreference === 'public'}
                   onCheckedChange={handleDataTypeChange}
-                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-orange-500"
+                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-blue-500"
                 />
               </div>
             </div>

@@ -97,7 +97,7 @@ export function PieChart({
     if (windowWidth < 640) { // Mobile
       return {
         innerRadius: Math.max(0, innerRadius * 0.85),
-        outerRadius: Math.max(100, outerRadius ? outerRadius : 130)
+        outerRadius: Math.max(110, outerRadius ? outerRadius : 145)
       };
     } else if (windowWidth < 1024) { // Tablet
       return {
@@ -284,11 +284,11 @@ export function PieChart({
             )}
           </div>
         </CardHeader>
-        <CardContent className="py-2 relative p-3 sm:p-6">
+        <CardContent className="py-1 relative p-3 sm:p-6 sm:py-6">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative w-full sm:w-auto">
-              <div style={{ width: '100%', height: '360px', minHeight: '360px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
+              <div style={{ width: '100%', height: '380px', minHeight: '380px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                   <RechartsPieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>

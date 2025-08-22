@@ -284,7 +284,7 @@ export function PieChart({
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0 relative sm:p-6">
+        <CardContent className="px-2 py-0 relative sm:p-6">
           <div className="flex flex-col lg:flex-row items-center gap-0 sm:gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative w-full sm:w-auto">

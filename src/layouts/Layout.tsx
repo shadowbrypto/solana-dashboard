@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -436,23 +436,23 @@ export function Layout() {
               );
             })}
             
-            {/* Data Type Indicator - Below Settings */}
-            <div className="px-2 pt-2">
+            {/* Data Type Indicator - Bottom Right */}
+            <div className="px-2 pt-2 flex justify-end">
               <div className={cn(
-                "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-colors",
+                "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors w-fit",
                 dataType === 'private' 
                   ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50" 
                   : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800/50"
               )}>
                 {dataType === 'private' ? (
                   <>
-                    <Database className="w-3.5 h-3.5 shrink-0" />
-                    <span>Private Analytics</span>
+                    <Shield className="w-3 h-3 shrink-0" />
+                    <span>Private</span>
                   </>
                 ) : (
                   <>
-                    <Globe className="w-3.5 h-3.5 shrink-0" />
-                    <span>Public Analytics</span>
+                    <Globe className="w-3 h-3 shrink-0" />
+                    <span>Public</span>
                   </>
                 )}
               </div>

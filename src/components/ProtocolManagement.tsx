@@ -823,7 +823,7 @@ export function ProtocolManagement() {
             <div className="space-y-1 sm:space-y-1.5">
               <CardTitle className="text-base sm:text-lg">Data Refresh Operations</CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Force refresh data from Dune Analytics for trading apps and launchpads
+                Force refresh data for trading apps and launchpads
               </CardDescription>
             </div>
             <Button
@@ -1098,13 +1098,9 @@ export function ProtocolManagement() {
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                       <span className="text-xs sm:text-sm font-medium text-foreground">Projected Volume Data</span>
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-                        <span className="text-[10px] sm:text-xs font-medium text-purple-700 dark:text-purple-300">Dune Analytics</span>
-                      </div>
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                      Refresh projected trading volume data from Dune Analytics queries
+                      Refresh projected trading volume data from analytics queries
                     </p>
                   </div>
                   <Button
@@ -1146,8 +1142,10 @@ export function ProtocolManagement() {
                 Switch between in-house analytics and publicly verified sources
               </CardDescription>
             </div>
-            <Badge variant={dataTypePreference === 'private' ? "destructive" : "outline"} className={`text-sm px-3 py-1.5 gap-1.5 ${
-              dataTypePreference === 'public' ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : ''
+            <Badge variant="outline" className={`text-sm px-3 py-1.5 gap-1.5 ${
+              dataTypePreference === 'private' 
+                ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
+                : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
             }`}>
               {dataTypePreference === 'private' ? (
                 <>

@@ -447,12 +447,12 @@ export function Layout() {
                 {dataType === 'private' ? (
                   <>
                     <Shield className="w-3 h-3 shrink-0" />
-                    <span>Private</span>
+                    <span>Private Data</span>
                   </>
                 ) : (
                   <>
                     <Globe className="w-3 h-3 shrink-0" />
-                    <span>Public</span>
+                    <span>Public Data</span>
                   </>
                 )}
               </div>

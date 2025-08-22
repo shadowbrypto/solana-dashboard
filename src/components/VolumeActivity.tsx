@@ -211,7 +211,7 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4 min-h-[200px] sm:min-h-0">
+        <CardContent className="pt-4 min-h-[120px] sm:min-h-0">
           {/* Combined scrollable skeleton */}
           <div className="relative h-full flex flex-col">
             <div className="w-full overflow-x-auto scrollbar-thin flex-1">
@@ -278,7 +278,7 @@ export function VolumeActivity({
   if (!title) {
     // Embedded mode - no card wrapper
     return (
-      <div className="space-y-4 min-h-[200px] sm:min-h-0 flex flex-col">
+      <div className="space-y-4 min-h-[120px] sm:min-h-0 flex flex-col">
         {/* Year selector and month headers */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -444,7 +444,7 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2 px-3 pb-3 sm:py-4 sm:px-6 min-h-[200px] sm:min-h-0">
+        <CardContent className="pt-2 px-3 pb-3 sm:py-4 sm:px-6 min-h-[120px] sm:min-h-0">
           {/* Combined scrollable months and calendar grid for card mode */}
           <div className="relative h-full flex flex-col">
             <div className="w-full overflow-x-auto scrollbar-thin flex-1">

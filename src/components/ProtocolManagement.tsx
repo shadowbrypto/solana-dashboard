@@ -15,7 +15,7 @@ import {
   getProtocolLogoFilename
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock } from 'lucide-react';
+import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock, Shield, Globe, CheckCircle2 } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { LaunchpadApi, LaunchpadLatestDate } from '../lib/launchpad-api';
@@ -1151,31 +1151,51 @@ export function ProtocolManagement() {
         <CardContent className="p-3 sm:p-6">
           <div className="space-y-3 sm:space-y-6">
             {/* Data Source Toggle */}
-            <div className="space-y-2 sm:space-y-4">
-              <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl border bg-gradient-to-r from-background to-muted/30">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${dataTypePreference === 'private' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                    <h4 className="text-xs sm:text-sm font-semibold">Active Data Source</h4>
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
-                    Switch between private (paid) and public (free) data sources
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Active Data Source</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Switch between in-house analytics and publicly verified sources
                   </p>
                 </div>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                    Private
+                <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
+                  {dataTypePreference === 'private' ? "Premium" : "Free"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-md ${
+                    dataTypePreference === 'private' 
+                      ? 'bg-orange-100 dark:bg-orange-900/20' 
+                      : 'bg-green-100 dark:bg-green-900/20'
+                  }`}>
+                    {dataTypePreference === 'private' ? (
+                      <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    ) : (
+                      <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    )}
                   </div>
-                  <Switch
-                    id="data-type-toggle"
-                    checked={dataTypePreference === 'public'}
-                    onCheckedChange={handleDataTypeChange}
-                    className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-blue-500"
-                  />
-                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
-                    Public
+                  <div>
+                    <div className="font-medium">
+                      {dataTypePreference === 'private' ? "In-house Analytics" : "Publicly Verified Sources"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {dataTypePreference === 'private' 
+                        ? "Premium data with advanced metrics and real-time updates" 
+                        : "Community verified, open source data from public APIs"
+                      }
+                    </div>
                   </div>
                 </div>
+                
+                <Switch
+                  id="data-type-toggle"
+                  checked={dataTypePreference === 'public'}
+                  onCheckedChange={handleDataTypeChange}
+                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-orange-500"
+                />
               </div>
             </div>
           </div>

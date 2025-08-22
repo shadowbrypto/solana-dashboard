@@ -48,7 +48,7 @@ export function Toaster() {
               ? `${8 + Math.min(3, toasts.length) * 8 + 45}px`
               : `${16 + Math.min(3, toasts.length) * 12 + 65}px`,
             right: window.innerWidth < 640 ? '8px' : '16px',
-            width: window.innerWidth < 640 ? '240px' : '350px',
+            width: window.innerWidth < 640 ? '200px' : '350px',
             display: 'flex',
             justifyContent: 'center',
             zIndex: 1001,

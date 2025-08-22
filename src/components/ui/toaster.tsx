@@ -20,14 +20,14 @@ export function Toaster() {
             {...props}
             style={{
               position: 'absolute',
-              top: `${16 + index * 12}px`,
-              right: '16px',
+              top: window.innerWidth < 640 ? `${8 + index * 8}px` : `${16 + index * 12}px`,
+              right: window.innerWidth < 640 ? '8px' : '16px',
               zIndex: 1000 - index,
               transform: `scale(${1 - index * 0.02})`,
               opacity: Math.max(0.3, 1 - index * 0.15)
             }}
           >
-            <div className="grid gap-1">
+            <div className="grid gap-0.5 sm:gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
                 <ToastDescription>{description}</ToastDescription>
@@ -44,9 +44,11 @@ export function Toaster() {
         <div
           style={{
             position: 'fixed',
-            top: `${16 + Math.min(3, toasts.length) * 12 + 65}px`,
-            right: '16px',
-            width: '350px',
+            top: window.innerWidth < 640 
+              ? `${8 + Math.min(3, toasts.length) * 8 + 45}px`
+              : `${16 + Math.min(3, toasts.length) * 12 + 65}px`,
+            right: window.innerWidth < 640 ? '8px' : '16px',
+            width: window.innerWidth < 640 ? '280px' : '350px',
             display: 'flex',
             justifyContent: 'center',
             zIndex: 1001,
@@ -61,8 +63,8 @@ export function Toaster() {
               backdropFilter: 'blur(8px)',
               border: '1px solid #e5e7eb',
               borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '12px',
+              padding: window.innerWidth < 640 ? '4px 8px' : '6px 12px',
+              fontSize: window.innerWidth < 640 ? '10px' : '12px',
               fontWeight: '500',
               color: '#374151',
               cursor: 'pointer',
@@ -81,7 +83,7 @@ export function Toaster() {
               e.currentTarget.style.transform = 'scale(1)'
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width={window.innerWidth < 640 ? "10" : "12"} height={window.innerWidth < 640 ? "10" : "12"} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Clear All ({toasts.length})

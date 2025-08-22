@@ -112,7 +112,7 @@ export function useDataSync() {
       lastSyncTime: lastSync,
       nextAvailableTime: nextAvailable,
       // Allow sync if time conditions are met AND we don't have current data
-      canSync: !prev.isLoading, // TESTING: Always allow sync for testing purposes
+      canSync: timeBasedCanSync && !prev.isLoading,
       timeUntilNext
     }));
   }, [getNextAvailableTime, formatTimeUntilNext]);

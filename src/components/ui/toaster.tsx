@@ -20,12 +20,14 @@ export function Toaster() {
             {...props}
             style={{
               position: 'absolute',
-              top: window.innerWidth < 640 ? `${8 + index * 8}px` : `${16 + index * 12}px`,
-              right: window.innerWidth < 640 ? '8px' : '16px',
+              top: `${8 + index * 8}px`,
+              right: '8px',
               zIndex: 1000 - index,
               transform: `scale(${1 - index * 0.02})`,
-              opacity: Math.max(0.3, 1 - index * 0.15)
+              opacity: Math.max(0.3, 1 - index * 0.15),
+              ['--toast-top' as any]: `${16 + index * 12}px`
             }}
+            className="sm:!top-[var(--toast-top)] sm:!right-[16px]"
           >
             <div className="grid gap-0.5 sm:gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
@@ -44,15 +46,15 @@ export function Toaster() {
         <div
           style={{
             position: 'fixed',
-            top: window.innerWidth < 640 
-              ? `${8 + Math.min(3, toasts.length) * 8 + 45}px`
-              : `${16 + Math.min(3, toasts.length) * 12 + 65}px`,
-            right: window.innerWidth < 640 ? '8px' : '16px',
-            width: window.innerWidth < 640 ? '200px' : '350px',
+            top: `${8 + Math.min(3, toasts.length) * 8 + 45}px`,
+            right: '8px',
+            width: '200px',
             display: 'flex',
             justifyContent: 'center',
             zIndex: 1001,
+            ['--clear-top' as any]: `${16 + Math.min(3, toasts.length) * 12 + 65}px`
           }}
+          className="sm:!top-[var(--clear-top)] sm:!right-[16px] sm:!w-[350px]"
         >
           <button
             onClick={() => {
@@ -63,8 +65,8 @@ export function Toaster() {
               backdropFilter: 'blur(8px)',
               border: '1px solid #e5e7eb',
               borderRadius: '6px',
-              padding: window.innerWidth < 640 ? '4px 8px' : '6px 12px',
-              fontSize: window.innerWidth < 640 ? '10px' : '12px',
+              padding: '4px 8px',
+              fontSize: '10px',
               fontWeight: '500',
               color: '#374151',
               cursor: 'pointer',
@@ -74,6 +76,7 @@ export function Toaster() {
               gap: '4px',
               transition: 'all 0.2s',
             }}
+            className="sm:!px-3 sm:!py-1.5 sm:!text-xs"
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(249, 250, 251, 0.95)'
               e.currentTarget.style.transform = 'scale(1.02)'
@@ -83,7 +86,7 @@ export function Toaster() {
               e.currentTarget.style.transform = 'scale(1)'
             }}
           >
-            <svg width={window.innerWidth < 640 ? "10" : "12"} height={window.innerWidth < 640 ? "10" : "12"} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:!w-3 sm:!h-3">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Clear All ({toasts.length})

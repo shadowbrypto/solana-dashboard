@@ -211,11 +211,11 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 min-h-[200px] sm:min-h-0">
           {/* Combined scrollable skeleton */}
-          <div className="relative">
-            <div className="w-full overflow-x-auto scrollbar-thin">
-              <div className="min-w-max">
+          <div className="relative h-full flex flex-col">
+            <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+              <div className="min-w-max h-full flex flex-col justify-center">
                 {/* Month headers skeleton */}
                 <div className="flex gap-[3px] sm:gap-1 mb-1 sm:mb-4">
                   {[...Array(12)].map((_, i) => (
@@ -239,7 +239,7 @@ export function VolumeActivity({
             </div>
             
             {/* Legend skeleton */}
-            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-2 sm:mt-4 mb-2 sm:mb-0">
+            <div className="flex items-center justify-center sm:justify-end text-[8px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
               <div className="flex items-center gap-1 sm:gap-2">
                 <div className="h-2 sm:h-3 w-6 sm:w-8 bg-muted animate-pulse rounded" />
                 <div className="flex space-x-[2px] sm:space-x-1">
@@ -278,7 +278,7 @@ export function VolumeActivity({
   if (!title) {
     // Embedded mode - no card wrapper
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 min-h-[200px] sm:min-h-0 flex flex-col">
         {/* Year selector and month headers */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -299,9 +299,9 @@ export function VolumeActivity({
         </div>
 
         {/* Combined scrollable months and calendar grid */}
-        <div className="relative">
-          <div className="w-full overflow-x-auto scrollbar-thin">
-            <div className="min-w-max">
+        <div className="relative flex-1 flex flex-col">
+          <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+            <div className="min-w-max h-full flex flex-col justify-center">
               {/* Month headers - scrollable with dots */}
               <div className="flex gap-[3px] sm:gap-1 mb-4">
                 {activityData.weeks.map((week, weekIndex) => {
@@ -361,8 +361,8 @@ export function VolumeActivity({
             </div>
           </div>
           
-          {/* Legend - bottom right */}
-          <div className="flex items-center justify-end text-[10px] sm:text-xs mt-6 sm:mt-4 mb-2 sm:mb-0">
+          {/* Legend - bottom */}
+          <div className="flex items-center justify-center sm:justify-end text-[10px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-[2px] sm:space-x-1">
@@ -444,11 +444,11 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2 px-3 pb-0 sm:py-4 sm:px-6">
+        <CardContent className="pt-2 px-3 pb-3 sm:py-4 sm:px-6 min-h-[200px] sm:min-h-0">
           {/* Combined scrollable months and calendar grid for card mode */}
-          <div className="relative">
-            <div className="w-full overflow-x-auto scrollbar-thin">
-              <div className="min-w-max">
+          <div className="relative h-full flex flex-col">
+            <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+              <div className="min-w-max h-full flex flex-col justify-center">
                 {/* Month headers - scrollable with dots */}
                 <div className="flex gap-[3px] sm:gap-1 mb-1 sm:mb-4">
                   {activityData.weeks.map((week, weekIndex) => {
@@ -508,8 +508,8 @@ export function VolumeActivity({
               </div>
             </div>
             
-            {/* Legend - bottom right */}
-            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-2 sm:mt-4 mb-2 sm:mb-0">
+            {/* Legend - bottom */}
+            <div className="flex items-center justify-center sm:justify-end text-[8px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
               <div className="flex items-center gap-1 sm:gap-2">
                 <span className="text-muted-foreground">Less</span>
                 <div className="flex space-x-[2px] sm:space-x-1">

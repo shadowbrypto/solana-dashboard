@@ -287,15 +287,39 @@ export function ProtocolHighlights({
         <CardHeader className="border-b">
           <CardTitle className="text-base font-medium text-card-foreground">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="w-20 h-4 bg-muted animate-pulse rounded" />
-                <div className="w-16 h-6 bg-muted animate-pulse rounded" />
-                <div className="w-24 h-3 bg-muted animate-pulse rounded" />
-              </div>
-            ))}
+        <CardContent className="p-0">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => {
+              const isRightColumnMobile = (i + 1) % 2 === 0;
+              const isRightColumnDesktop = (i + 1) % 3 === 0;
+              const isBottomRow = i >= 3;
+              
+              return (
+                <div key={i} className={`relative py-4 px-2 sm:p-4 min-h-[50px] sm:min-h-[90px] border-r border-b border-border/50 ${
+                  isRightColumnMobile ? 'border-r-0' : ''
+                } ${
+                  isRightColumnDesktop ? 'lg:border-r-0' : 'lg:border-r'
+                } ${
+                  isBottomRow ? 'border-b-0' : ''
+                }`}>
+                  <div className="flex flex-col space-y-2 sm:space-y-4 h-full">
+                    {/* Top row: Icon and Title */}
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-muted animate-pulse rounded-lg" />
+                      <div className="flex-1">
+                        <div className="w-16 sm:w-20 h-4 sm:h-5 bg-muted animate-pulse rounded" />
+                      </div>
+                    </div>
+                    
+                    {/* Value section */}
+                    <div className="text-center flex-1 flex flex-col justify-center">
+                      <div className="w-12 sm:w-16 h-5 sm:h-8 bg-muted animate-pulse rounded mx-auto" />
+                      <div className="w-8 sm:w-12 h-3 sm:h-4 bg-muted animate-pulse rounded mx-auto mt-1 sm:mt-2" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

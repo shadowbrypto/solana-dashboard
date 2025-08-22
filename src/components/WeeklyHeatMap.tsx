@@ -218,11 +218,20 @@ export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMa
     
     if (heatMapElement) {
       try {
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await domtoimage.toPng(heatMapElement, {
           quality: 1,
           bgcolor: '#ffffff',
-          width: heatMapElement.scrollWidth,
-          height: heatMapElement.scrollHeight,
+          width: (heatMapElement.scrollWidth + 40) * scale,
+          height: (heatMapElement.scrollHeight + 40) * scale,
+          style: {
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            overflow: 'visible',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          },
           filter: (node: any) => {
             return !node.classList?.contains('no-screenshot');
           }
@@ -245,11 +254,20 @@ export function WeeklyHeatMap({ protocols, endDate, onDateChange }: WeeklyHeatMa
     
     if (heatMapElement) {
       try {
+        const scale = 2; // 2x resolution for higher quality
         const dataUrl = await domtoimage.toPng(heatMapElement, {
           quality: 1,
           bgcolor: '#ffffff',
-          width: heatMapElement.scrollWidth,
-          height: heatMapElement.scrollHeight,
+          width: (heatMapElement.scrollWidth + 40) * scale,
+          height: (heatMapElement.scrollHeight + 40) * scale,
+          style: {
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            overflow: 'visible',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          },
           filter: (node: any) => {
             return !node.classList?.contains('no-screenshot');
           }

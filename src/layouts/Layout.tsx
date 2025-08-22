@@ -436,10 +436,10 @@ export function Layout() {
               );
             })}
             
-            {/* Data Type Indicator - Bottom Right */}
-            <div className="px-2 pt-2 flex justify-end">
+            {/* Data Type Indicator - Full Width */}
+            <div className="px-2 pt-2">
               <div className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors w-fit",
+                "flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors w-full",
                 dataType === 'private' 
                   ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50" 
                   : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800/50"

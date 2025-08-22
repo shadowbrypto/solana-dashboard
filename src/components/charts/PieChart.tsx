@@ -96,7 +96,7 @@ export function PieChart({
   const getResponsiveRadius = () => {
     if (windowWidth < 640) { // Mobile
       return {
-        innerRadius: Math.max(0, innerRadius * 0.85),
+        innerRadius: Math.max(0, innerRadius ? innerRadius * 1.2 : 65),
         outerRadius: Math.max(160, outerRadius ? outerRadius : 190)
       };
     } else if (windowWidth < 1024) { // Tablet

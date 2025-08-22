@@ -17,7 +17,7 @@ import {
   TooltipProps,
   Legend,
 } from "recharts";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ComponentActions } from '../ComponentActions';
 
 type TimeFrame = "1d" | "7d" | "30d" | "3m" | "6m" | "1y" | "all";
@@ -65,7 +65,7 @@ export function PieChart({
   disableTimeframeSelector = false,
   showPercentages = true,
   innerRadius = 0,
-  outerRadius = 120,
+  outerRadius,
   centerLabel = "Total",
   defaultDisabledKeys = [],
 }: PieChartProps) {
@@ -75,9 +75,44 @@ export function PieChart({
 
   const [internalTimeframe, setInternalTimeframe] = useState<TimeFrame>("all");
   const [disabledKeys, setDisabledKeys] = useState<string[]>(defaultDisabledKeys);
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
   
   // Use external timeframe if provided, otherwise use internal
   const timeframe = externalTimeframe || internalTimeframe;
+  
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+  
+  // Responsive radius calculation based on screen size
+  const getResponsiveRadius = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        innerRadius: innerRadius * 0.7,
+        outerRadius: outerRadius ? outerRadius * 0.7 : 85
+      };
+    } else if (windowWidth < 1024) { // Tablet
+      return {
+        innerRadius: innerRadius * 0.85,
+        outerRadius: outerRadius ? outerRadius * 0.85 : 100
+      };
+    }
+    // Desktop or fallback
+    return {
+      innerRadius,
+      outerRadius: outerRadius || 120
+    };
+  };
+
+  const { innerRadius: responsiveInnerRadius, outerRadius: responsiveOuterRadius } = getResponsiveRadius();
   
   const handleTimeframeChange = (newTimeframe: TimeFrame) => {
     if (onTimeframeChange) {
@@ -249,7 +284,7 @@ export function PieChart({
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative">
-              <div style={{ width: '100%', height: '350px', minHeight: '350px', backgroundColor: 'transparent' }} className="sm:h-[400px] lg:h-[480px] flex items-center justify-center">
+              <div style={{ width: '100%', height: '280px', minHeight: '280px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                   <RechartsPieChart>
@@ -257,8 +292,8 @@ export function PieChart({
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={innerRadius}
-                      outerRadius={outerRadius}
+                      innerRadius={responsiveInnerRadius}
+                      outerRadius={responsiveOuterRadius}
                       paddingAngle={1}
                       dataKey="value"
                   >

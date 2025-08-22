@@ -211,10 +211,10 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4 min-h-[160px] sm:min-h-0">
+        <CardContent className="pt-4 h-[180px] sm:h-auto overflow-hidden sm:overflow-visible">
           {/* Combined scrollable skeleton */}
           <div className="relative h-full flex flex-col">
-            <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+            <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin flex-1">
               <div className="min-w-max h-full flex flex-col justify-center">
                 {/* Month headers skeleton */}
                 <div className="flex gap-[3px] sm:gap-1 mb-1 sm:mb-4">
@@ -239,7 +239,7 @@ export function VolumeActivity({
             </div>
             
             {/* Legend skeleton */}
-            <div className="flex items-center justify-center sm:justify-end text-[8px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
+            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-2 sm:mt-4 pt-1 sm:pt-0">
               <div className="flex items-center gap-1 sm:gap-2">
                 <div className="h-2 sm:h-3 w-6 sm:w-8 bg-muted animate-pulse rounded" />
                 <div className="flex space-x-[2px] sm:space-x-1">
@@ -278,7 +278,7 @@ export function VolumeActivity({
   if (!title) {
     // Embedded mode - no card wrapper
     return (
-      <div className="space-y-4 min-h-[160px] sm:min-h-0 flex flex-col">
+      <div className="space-y-4 h-[180px] sm:h-auto flex flex-col overflow-hidden sm:overflow-visible">
         {/* Year selector and month headers */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -300,7 +300,7 @@ export function VolumeActivity({
 
         {/* Combined scrollable months and calendar grid */}
         <div className="relative flex-1 flex flex-col">
-          <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+          <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin flex-1">
             <div className="min-w-max h-full flex flex-col justify-center">
               {/* Month headers - scrollable with dots */}
               <div className="flex gap-[3px] sm:gap-1 mb-4">
@@ -361,8 +361,8 @@ export function VolumeActivity({
             </div>
           </div>
           
-          {/* Legend - bottom */}
-          <div className="flex items-center justify-center sm:justify-end text-[10px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
+          {/* Legend - top right on mobile */}
+          <div className="flex items-center justify-end text-[10px] sm:text-xs mt-2 sm:mt-4 pt-1 sm:pt-0">
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-muted-foreground">Less</span>
               <div className="flex space-x-[2px] sm:space-x-1">
@@ -444,10 +444,10 @@ export function VolumeActivity({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-2 px-3 pb-3 sm:py-4 sm:px-6 min-h-[160px] sm:min-h-0">
+        <CardContent className="pt-2 px-3 pb-3 sm:py-4 sm:px-6 h-[180px] sm:h-auto overflow-hidden sm:overflow-visible">
           {/* Combined scrollable months and calendar grid for card mode */}
           <div className="relative h-full flex flex-col">
-            <div className="w-full overflow-x-auto scrollbar-thin flex-1">
+            <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin flex-1">
               <div className="min-w-max h-full flex flex-col justify-center">
                 {/* Month headers - scrollable with dots */}
                 <div className="flex gap-[3px] sm:gap-1 mb-1 sm:mb-4">
@@ -508,8 +508,8 @@ export function VolumeActivity({
               </div>
             </div>
             
-            {/* Legend - bottom */}
-            <div className="flex items-center justify-center sm:justify-end text-[8px] sm:text-xs mt-4 sm:mt-4 pt-2 sm:pt-0">
+            {/* Legend - top right on mobile */}
+            <div className="flex items-center justify-end text-[8px] sm:text-xs mt-2 sm:mt-4 pt-1 sm:pt-0">
               <div className="flex items-center gap-1 sm:gap-2">
                 <span className="text-muted-foreground">Less</span>
                 <div className="flex space-x-[2px] sm:space-x-1">

@@ -21,6 +21,7 @@ import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-con
 import { LaunchpadApi, LaunchpadLatestDate } from '../lib/launchpad-api';
 import { useToast } from '../hooks/use-toast';
 import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
+import { useDataSync } from '../hooks/useDataSync';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Settings } from '../lib/settings';
@@ -162,20 +163,10 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
             </span>
           </div>
         )}
-        {syncStatus && !syncStatus.sync_success && (
+        {syncStatus && !syncStatus.sync_success && !latestDate?.is_current && (
           <div className="flex items-center gap-1 mt-1">
             <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 text-red-500" />
             <span className="text-[10px] sm:text-xs text-red-500">Sync Failed</span>
-          </div>
-        )}
-        {syncStatus && syncStatus.sync_success && !syncStatus.has_recent_data && (
-          <div className="flex items-center gap-1 mt-1">
-            <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 text-amber-500" />
-            <span className="text-[10px] sm:text-xs text-amber-500">
-              {syncStatus.latest_data_date 
-                ? `Latest: ${new Date(syncStatus.latest_data_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                : 'No recent data'}
-            </span>
           </div>
         )}
       </div>
@@ -201,7 +192,9 @@ export function ProtocolManagement() {
   const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
   const [isRefreshingLaunchpads, setIsRefreshingLaunchpads] = useState(false);
   const [isRefreshingProjectedStats, setIsRefreshingProjectedStats] = useState(false);
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [refreshingLaunchpads, setRefreshingLaunchpads] = useState<Set<string>>(new Set());
+  const { syncData } = useDataSync();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [forceRender, setForceRender] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -537,6 +530,79 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleRefreshAll = async () => {
+    if (isRefreshingAll) return;
+    
+    setIsRefreshingAll(true);
+    
+    try {
+      await syncData(
+        // onSyncStart
+        () => {
+          toast({
+            title: "Starting Data Refresh",
+            description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
+          });
+        },
+        // onSyncSuccess
+        (result) => {
+          toast({
+            variant: "success",
+            title: "All Data Synced Successfully",
+            description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
+          });
+          // Reload sync statuses after successful refresh
+          setForceRender(prev => prev + 1);
+        },
+        // onStepUpdate
+        (step, progress) => {
+          // Update individual loading states based on step
+          if (step.includes('Solana')) {
+            setIsRefreshingSolana(true);
+            setIsRefreshingEVM(false);
+            setIsRefreshingLaunchpads(false);
+            setIsRefreshingProjectedStats(false);
+          } else if (step.includes('EVM')) {
+            setIsRefreshingSolana(false);
+            setIsRefreshingEVM(true);
+            setIsRefreshingLaunchpads(false);
+            setIsRefreshingProjectedStats(false);
+          } else if (step.includes('Launchpad')) {
+            setIsRefreshingSolana(false);
+            setIsRefreshingEVM(false);
+            setIsRefreshingLaunchpads(true);
+            setIsRefreshingProjectedStats(false);
+          } else if (step.includes('Projected Stats')) {
+            setIsRefreshingSolana(false);
+            setIsRefreshingEVM(false);
+            setIsRefreshingLaunchpads(false);
+            setIsRefreshingProjectedStats(true);
+          }
+        },
+        // onStepComplete
+        (stepName, result) => {
+          toast({
+            variant: "success",
+            title: `${stepName} Data Synced`,
+            description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
+          });
+        }
+      );
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Refresh All Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh all data sources",
+      });
+    } finally {
+      setIsRefreshingAll(false);
+      setIsRefreshingSolana(false);
+      setIsRefreshingEVM(false);
+      setIsRefreshingLaunchpads(false);
+      setIsRefreshingProjectedStats(false);
+    }
+  };
+
   const handleRefreshLaunchpad = async (launchpadId: string) => {
     if (refreshingLaunchpads.has(launchpadId)) return;
     
@@ -760,6 +826,25 @@ export function ProtocolManagement() {
                 Force refresh data from Dune Analytics for trading apps and launchpads
               </CardDescription>
             </div>
+            <Button
+              onClick={handleRefreshAll}
+              disabled={isRefreshingAll || isRefreshingSolana || isRefreshingEVM || isRefreshingLaunchpads || isRefreshingProjectedStats}
+              variant="default"
+              size="sm"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0"
+            >
+              {isRefreshingAll ? (
+                <>
+                  <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  <span className="hidden sm:inline">Refreshing All...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Refresh All</span>
+                </>
+              )}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
@@ -824,7 +909,7 @@ export function ProtocolManagement() {
                     </div>
                     <Button
                       onClick={handleHardRefresh}
-                      disabled={isRefreshingSolana}
+                      disabled={isRefreshingSolana || isRefreshingAll}
                       variant="outline"
                       size="sm"
                       className="ml-4 shrink-0"
@@ -893,7 +978,7 @@ export function ProtocolManagement() {
                     </div>
                     <Button
                       onClick={handleRefreshAllEVM}
-                      disabled={isRefreshingEVM}
+                      disabled={isRefreshingEVM || isRefreshingAll}
                       variant="outline"
                       size="sm"
                       className="ml-4 shrink-0"
@@ -973,7 +1058,7 @@ export function ProtocolManagement() {
                   </div>
                   <Button
                     onClick={handleRefreshAllLaunchpads}
-                    disabled={isRefreshingLaunchpads}
+                    disabled={isRefreshingLaunchpads || isRefreshingAll}
                     variant="outline"
                     size="sm"
                     className="ml-4 shrink-0"
@@ -1024,7 +1109,7 @@ export function ProtocolManagement() {
                   </div>
                   <Button
                     onClick={handleRefreshProjectedStats}
-                    disabled={isRefreshingProjectedStats}
+                    disabled={isRefreshingProjectedStats || isRefreshingAll}
                     variant="outline"
                     size="sm"
                     className="ml-4 shrink-0"

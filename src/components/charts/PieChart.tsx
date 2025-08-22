@@ -96,23 +96,27 @@ export function PieChart({
   const getResponsiveRadius = () => {
     if (windowWidth < 640) { // Mobile
       return {
-        innerRadius: innerRadius * 0.7,
-        outerRadius: outerRadius ? outerRadius * 0.7 : 85
+        innerRadius: Math.max(0, innerRadius * 0.85),
+        outerRadius: Math.max(100, outerRadius ? outerRadius : 130)
       };
     } else if (windowWidth < 1024) { // Tablet
       return {
-        innerRadius: innerRadius * 0.85,
-        outerRadius: outerRadius ? outerRadius * 0.85 : 100
+        innerRadius: Math.max(0, innerRadius * 0.85),
+        outerRadius: Math.max(80, outerRadius ? outerRadius * 0.85 : 100)
       };
     }
     // Desktop or fallback
     return {
-      innerRadius,
-      outerRadius: outerRadius || 120
+      innerRadius: Math.max(0, innerRadius),
+      outerRadius: Math.max(100, outerRadius || 120)
     };
   };
 
   const { innerRadius: responsiveInnerRadius, outerRadius: responsiveOuterRadius } = getResponsiveRadius();
+
+  console.log('PieChart - Window width:', windowWidth);
+  console.log('PieChart - Responsive radii:', { responsiveInnerRadius, responsiveOuterRadius });
+  console.log('PieChart - Original radii:', { innerRadius, outerRadius });
   
   const handleTimeframeChange = (newTimeframe: TimeFrame) => {
     if (onTimeframeChange) {
@@ -283,11 +287,11 @@ export function PieChart({
         <CardContent className="py-2 relative p-3 sm:p-6">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             {/* Pie Chart */}
-            <div className="flex-1 min-w-0 relative">
-              <div style={{ width: '100%', height: '280px', minHeight: '280px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
+            <div className="flex-1 min-w-0 relative w-full sm:w-auto">
+              <div style={{ width: '100%', height: '360px', minHeight: '360px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
                 {pieData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
+                  <RechartsPieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
                     <Pie
                       data={pieData}
                       cx="50%"
@@ -344,11 +348,15 @@ export function PieChart({
                 </RechartsPieChart>
                 </ResponsiveContainer>
                 ) : (
-                  <div className="text-center text-muted-foreground">
+                  <div className="text-center text-muted-foreground p-4">
                     <div className="text-lg mb-2">📊</div>
-                    <div className="text-sm">No data available</div>
-                    <div className="text-xs">Data: {pieData.length} items</div>
+                    <div className="text-sm mb-2">No data available</div>
+                    <div className="text-xs">Data items: {pieData.length}</div>
+                    <div className="text-xs">Input data: {data.length}</div>
+                    <div className="text-xs">DataKeys: {dataKeys.length}</div>
                     <div className="text-xs">Total: {total}</div>
+                    <div className="text-xs">Window: {windowWidth}px</div>
+                    <div className="text-xs">Radii: {responsiveInnerRadius}/{responsiveOuterRadius}</div>
                   </div>
                 )}
               </div>
@@ -366,7 +374,7 @@ export function PieChart({
             </div>
 
             {/* Legend and Statistics */}
-            <div className="flex-shrink-0 w-full lg:w-56">
+            <div className="flex-shrink-0 w-full lg:w-56 mt-4 lg:mt-0">
               {/* Legend Items */}
               <div className="space-y-2">
                 {dataKeys

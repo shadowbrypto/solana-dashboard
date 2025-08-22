@@ -297,13 +297,13 @@ export function VolumeActivity({
 
         {/* Month headers - positioned based on actual week positions */}
         <div className="relative w-full mb-4">
-          <div className="flex gap-1 min-w-full">
+          <div className="flex gap-[2px] sm:gap-1 min-w-full">
             {activityData.weeks.map((week, weekIndex) => {
               const monthPosition = activityData.monthPositions.find(m => m.weekIndex === weekIndex);
               return (
-                <div key={weekIndex} className="w-3 sm:w-4 flex justify-center">
+                <div key={weekIndex} className="w-[8px] sm:w-4 flex justify-center">
                   {monthPosition && (
-                    <div className="text-xs text-muted-foreground text-center">
+                    <div className="text-[8px] sm:text-xs text-muted-foreground text-center leading-none">
                       {monthPosition.month}
                     </div>
                   )}
@@ -315,14 +315,14 @@ export function VolumeActivity({
 
         {/* Calendar grid - full width horizontal */}
         <div className="relative">
-          <div className="w-full overflow-x-auto">
-            <div className="flex gap-1 min-w-full">
+          <div className="w-full overflow-x-auto scrollbar-thin">
+            <div className="flex gap-[2px] sm:gap-1 min-w-full">
               {activityData.weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col gap-1">
+                <div key={weekIndex} className="flex flex-col gap-[2px] sm:gap-1">
                   {week.map((day, dayIndex) => (
                     <div
                       key={`${weekIndex}-${dayIndex}`}
-                      className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
+                      className={`w-[8px] h-[8px] sm:w-4 sm:h-4 rounded-[1px] sm:rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                         !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                       }`}
                     >
@@ -358,13 +358,13 @@ export function VolumeActivity({
           </div>
           
           {/* Legend - bottom right */}
-          <div className="flex items-center justify-end text-xs mt-6 sm:mt-4 mb-2 sm:mb-0">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end text-[10px] sm:text-xs mt-6 sm:mt-4 mb-2 sm:mb-0">
+            <div className="flex items-center gap-1 sm:gap-2">
               <span className="text-muted-foreground">Less</span>
-              <div className="flex space-x-1">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted rounded-sm" />
+              <div className="flex space-x-[2px] sm:space-x-1">
+                <div className="w-[8px] h-[8px] sm:w-4 sm:h-4 bg-muted rounded-[1px] sm:rounded-sm" />
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                  <div key={level} className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                  <div key={level} className={`w-[8px] h-[8px] sm:w-4 sm:h-4 rounded-[1px] sm:rounded-sm ${getGreenColorClass(level)}`} />
                 ))}
               </div>
               <span className="text-muted-foreground">More</span>
@@ -442,14 +442,14 @@ export function VolumeActivity({
         </CardHeader>
         <CardContent className="pt-2 px-3 pb-0 sm:py-4 sm:px-6">
           {/* Month headers for card mode - positioned based on actual week positions */}
-          <div className="relative w-full mb-2 sm:mb-4">
-            <div className="flex gap-1 min-w-full">
+          <div className="relative w-full mb-1 sm:mb-4">
+            <div className="flex gap-[2px] sm:gap-1 min-w-full">
               {activityData.weeks.map((week, weekIndex) => {
                 const monthPosition = activityData.monthPositions.find(m => m.weekIndex === weekIndex);
                 return (
-                  <div key={weekIndex} className="w-3 sm:w-4 flex justify-center">
+                  <div key={weekIndex} className="w-[8px] sm:w-4 flex justify-center">
                     {monthPosition && (
-                      <div className="text-[10px] sm:text-xs text-muted-foreground text-center">
+                      <div className="text-[8px] sm:text-xs text-muted-foreground text-center leading-none">
                         {monthPosition.month}
                       </div>
                     )}
@@ -461,14 +461,14 @@ export function VolumeActivity({
           
           {/* Calendar grid - full width horizontal */}
           <div className="relative">
-            <div className="w-full overflow-x-auto">
-              <div className="flex gap-1 min-w-full">
+            <div className="w-full overflow-x-auto scrollbar-thin">
+              <div className="flex gap-[2px] sm:gap-1 min-w-full">
                 {activityData.weeks.map((week, weekIndex) => (
-                  <div key={weekIndex} className="flex flex-col gap-1">
+                  <div key={weekIndex} className="flex flex-col gap-[2px] sm:gap-1">
                     {week.map((day, dayIndex) => (
                       <div
                         key={`${weekIndex}-${dayIndex}`}
-                        className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
+                        className={`w-[8px] h-[8px] sm:w-4 sm:h-4 rounded-[1px] sm:rounded-sm transition-all duration-200 hover:opacity-80 hover:scale-110 hover:z-50 group relative cursor-pointer ${
                           !day.isCurrentYear ? 'bg-transparent' : getGreenColorClass(day.intensity)
                         }`}
                       >
@@ -505,12 +505,12 @@ export function VolumeActivity({
             
             {/* Legend - bottom right */}
             <div className="flex items-center justify-end text-[8px] sm:text-xs mt-2 sm:mt-4 mb-2 sm:mb-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <span className="text-muted-foreground">Less</span>
-                <div className="flex space-x-1">
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted rounded-sm" />
+                <div className="flex space-x-[2px] sm:space-x-1">
+                  <div className="w-[8px] h-[8px] sm:w-4 sm:h-4 bg-muted rounded-[1px] sm:rounded-sm" />
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
-                    <div key={level} className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${getGreenColorClass(level)}`} />
+                    <div key={level} className={`w-[8px] h-[8px] sm:w-4 sm:h-4 rounded-[1px] sm:rounded-sm ${getGreenColorClass(level)}`} />
                   ))}
                 </div>
                 <span className="text-muted-foreground">More</span>

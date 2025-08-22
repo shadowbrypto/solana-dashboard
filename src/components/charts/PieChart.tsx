@@ -225,7 +225,7 @@ export function PieChart({
       filename={`${title.replace(/\s+/g, '_')}_Pie_Chart.png`}
     >
       <Card className="bg-card border-border rounded-xl">
-        <CardHeader className="border-b p-3 sm:p-6">
+        <CardHeader className="border-b p-3 sm:px-6 sm:py-2">
           <div className="flex items-start justify-between gap-2">
             {/* Title and subtitle in one column */}
             <div className="flex-1 min-w-0">
@@ -284,11 +284,11 @@ export function PieChart({
             )}
           </div>
         </CardHeader>
-        <CardContent className="px-2 pb-3 pt-0 relative sm:p-6">
+        <CardContent className="px-2 pb-3 pt-0 relative sm:px-6 sm:py-1">
           <div className="flex flex-col lg:flex-row items-center gap-0 sm:gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative w-full sm:w-auto">
-              <div style={{ width: '100%', height: '450px', minHeight: '450px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px]">
+              <div style={{ width: '100%', height: '450px', minHeight: '450px', backgroundColor: 'transparent' }} className="sm:h-[300px] lg:h-[320px]">
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                   <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>

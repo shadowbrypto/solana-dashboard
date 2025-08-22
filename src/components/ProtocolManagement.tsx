@@ -1146,20 +1146,16 @@ export function ProtocolManagement() {
                 Switch between in-house analytics and publicly verified sources
               </CardDescription>
             </div>
+            <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
+              {dataTypePreference === 'private' ? "Private" : "Public"}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
           <div className="space-y-3 sm:space-y-6">
             {/* Data Source Toggle */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-end">
-                <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
-                  {dataTypePreference === 'private' ? "Private" : "Public"}
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+              <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-md ${
                     dataTypePreference === 'private' 
                       ? 'bg-orange-100 dark:bg-orange-900/20' 
@@ -1192,7 +1188,6 @@ export function ProtocolManagement() {
                 />
               </div>
             </div>
-          </div>
         </CardContent>
       </Card>
 

@@ -285,13 +285,13 @@ export function PieChart({
           </div>
         </CardHeader>
         <CardContent className="px-2 py-0 relative sm:p-6">
-          <div className="flex flex-col lg:flex-row items-center gap-1 sm:gap-4">
+          <div className="flex flex-col lg:flex-row items-center gap-0 sm:gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative w-full sm:w-auto">
-              <div style={{ width: '100%', height: '400px', minHeight: '400px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
+              <div style={{ width: '100%', height: '420px', minHeight: '420px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-                  <RechartsPieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                  <RechartsPieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                     <Pie
                       data={pieData}
                       cx="50%"
@@ -374,7 +374,7 @@ export function PieChart({
             </div>
 
             {/* Legend and Statistics */}
-            <div className="flex-shrink-0 w-full lg:w-56 mt-1 lg:mt-0">
+            <div className="flex-shrink-0 w-full lg:w-56 mt-0 lg:mt-0">
               {/* Legend Items */}
               <div className="space-y-2">
                 {dataKeys

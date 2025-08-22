@@ -97,7 +97,7 @@ export function PieChart({
     if (windowWidth < 640) { // Mobile
       return {
         innerRadius: Math.max(0, innerRadius * 0.85),
-        outerRadius: Math.max(110, outerRadius ? outerRadius : 145)
+        outerRadius: Math.max(120, outerRadius ? outerRadius : 155)
       };
     } else if (windowWidth < 1024) { // Tablet
       return {
@@ -284,8 +284,8 @@ export function PieChart({
             )}
           </div>
         </CardHeader>
-        <CardContent className="py-1 relative p-3 sm:p-6 sm:py-6">
-          <div className="flex flex-col lg:flex-row items-center gap-4">
+        <CardContent className="px-2 py-1 relative sm:p-6">
+          <div className="flex flex-col lg:flex-row items-center gap-1 sm:gap-4">
             {/* Pie Chart */}
             <div className="flex-1 min-w-0 relative w-full sm:w-auto">
               <div style={{ width: '100%', height: '380px', minHeight: '380px', backgroundColor: 'transparent' }} className="sm:h-[350px] lg:h-[400px] flex items-center justify-center">
@@ -374,7 +374,7 @@ export function PieChart({
             </div>
 
             {/* Legend and Statistics */}
-            <div className="flex-shrink-0 w-full lg:w-56 mt-4 lg:mt-0">
+            <div className="flex-shrink-0 w-full lg:w-56 mt-1 lg:mt-0">
               {/* Legend Items */}
               <div className="space-y-2">
                 {dataKeys

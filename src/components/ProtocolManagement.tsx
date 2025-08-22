@@ -1160,7 +1160,7 @@ export function ProtocolManagement() {
                   </p>
                 </div>
                 <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
-                  {dataTypePreference === 'private' ? "Premium" : "Free"}
+                  {dataTypePreference === 'private' ? "Private" : "Public"}
                 </Badge>
               </div>
 

@@ -1151,7 +1151,7 @@ export function ProtocolManagement() {
         <CardContent className="p-3 sm:p-6">
           <div className="space-y-3 sm:space-y-6">
             {/* Data Source Toggle */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="flex items-center justify-end">
                 <Badge variant={dataTypePreference === 'private' ? "destructive" : "secondary"} className="text-xs">
                   {dataTypePreference === 'private' ? "Private" : "Public"}

@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ProtocolStats } from '../types/protocol';
 import { formatDate } from '../lib/protocol';
+import { format } from 'date-fns';
 
 interface ProtocolData {
   protocol: string;
@@ -26,6 +27,7 @@ export function MarketShareComparisonChart({
   onTimeframeChange
 }: MarketShareComparisonChartProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkMobile = () => {
@@ -36,6 +38,18 @@ export function MarketShareComparisonChart({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const toggleProtocol = (protocolId: string) => {
+    setHiddenProtocols(prev => {
+      const next = new Set(prev);
+      if (next.has(protocolId)) {
+        next.delete(protocolId);
+      } else {
+        next.add(protocolId);
+      }
+      return next;
+    });
+  };
   // Calculate market share for each date against ALL protocols
   const mergedData = React.useMemo(() => {
     if (!allProtocolsData || allProtocolsData.size === 0) return [];
@@ -52,7 +66,7 @@ export function MarketShareComparisonChart({
         if (!dataMap.has(date)) {
           dataMap.set(date, {
             date,
-            formattedDate: formatDate(date)
+            formattedDate: format(new Date(date), 'd MMM')
           });
         }
       });
@@ -125,18 +139,29 @@ export function MarketShareComparisonChart({
     return (
       <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-3 sm:mt-4 px-2 sm:px-4`}>
         {payload.map((entry: any, index: number) => {
-          const protocolName = data.find(d => 
+          const protocolData = data.find(d => 
             entry.dataKey.startsWith(d.protocol)
-          )?.name || 'Unknown';
+          );
+          const protocolName = protocolData?.name || 'Unknown';
+          const protocolId = protocolData?.protocol || entry.dataKey.split('_')[0];
+          const isHidden = hiddenProtocols.has(protocolId);
           
           return (
-            <div key={index} className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              key={index}
+              onClick={() => toggleProtocol(protocolId)}
+              className={`flex items-center gap-1.5 sm:gap-2 transition-opacity hover:opacity-80 ${
+                isHidden ? 'opacity-50 line-through' : ''
+              }`}
+            >
               <div 
                 className={`rounded-full ${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`}
                 style={{ backgroundColor: entry.color }}
               />
-              <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{isMobile ? protocolName.slice(0, 8) : protocolName}</span>
-            </div>
+              <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                {isMobile ? protocolName.slice(0, 8) : protocolName}
+              </span>
+            </button>
           );
         })}
       </div>
@@ -237,7 +262,7 @@ export function MarketShareComparisonChart({
                 tick={{ fontSize: isMobile ? 9 : 11, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
-                interval={isMobile ? Math.max(Math.ceil(mergedData.length / 3) - 1, 0) : "preserveStartEnd"}
+                interval={isMobile ? Math.max(Math.ceil(mergedData.length / 4) - 1, 0) : Math.max(Math.ceil(mergedData.length / 8) - 1, 0)}
                 angle={isMobile ? 0 : 0}
                 textAnchor="middle"
               />
@@ -251,24 +276,29 @@ export function MarketShareComparisonChart({
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend content={<CustomLegend />} />
-              {data.map(protocolData => (
-                <Line
-                  key={protocolData.protocol}
-                  type="monotone"
-                  dataKey={`${protocolData.protocol}_marketshare`}
-                  stroke={protocolData.color}
-                  strokeWidth={isMobile ? 2 : 2.5}
-                  dot={{ fill: protocolData.color, strokeWidth: 0, r: isMobile ? 2 : 3 }}
-                  activeDot={{ 
-                    r: isMobile ? 4 : 6, 
-                    stroke: protocolData.color, 
-                    strokeWidth: 2, 
-                    fill: "hsl(var(--background))",
-                    className: "drop-shadow-sm"
-                  }}
-                  connectNulls={false}
-                />
-              ))}
+              {data.map(protocolData => {
+                const isHidden = hiddenProtocols.has(protocolData.protocol);
+                if (isHidden) return null;
+                
+                return (
+                  <Line
+                    key={protocolData.protocol}
+                    type="monotone"
+                    dataKey={`${protocolData.protocol}_marketshare`}
+                    stroke={protocolData.color}
+                    strokeWidth={isMobile ? 2 : 2.5}
+                    dot={{ fill: protocolData.color, strokeWidth: 0, r: isMobile ? 2 : 3 }}
+                    activeDot={{ 
+                      r: isMobile ? 4 : 6, 
+                      stroke: protocolData.color, 
+                      strokeWidth: 2, 
+                      fill: "hsl(var(--background))",
+                      className: "drop-shadow-sm"
+                    }}
+                    connectNulls={false}
+                  />
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
         </div>

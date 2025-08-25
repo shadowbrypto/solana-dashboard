@@ -212,14 +212,7 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
     // Filter by data type (use effectiveDataType which defaults to public for EVM, private for others)
     query = query.eq('data_type', effectiveDataType);
 
-    console.log(`Query for protocol: ${protocolName}, chain: ${chainFilter}`);
     const { data, error } = await query;
-    console.log(`Query returned ${data?.length || 0} rows`);
-    if (data && data.length > 0) {
-      console.log(`Sample data:`, data.slice(0, 2));
-      const totalVol = data.reduce((sum, row) => sum + (Number(row.volume_usd) || 0), 0);
-      console.log(`Total volume from this batch: ${totalVol}`);
-    }
 
     if (error) throw error;
     if (!data || data.length === 0) break;

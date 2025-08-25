@@ -105,7 +105,12 @@ export const protocolApi = {
   // Get protocol stats with optional filtering
   async getProtocolStats(protocolName?: string | string[], chain?: string, dataType?: string): Promise<ProtocolStats[]> {
     try {
-      // Try unified API first
+      // For EVM protocols, always use legacy API to ensure proper chain handling
+      if (chain === 'evm') {
+        console.log('Using legacy API for EVM protocol stats to ensure proper chain filtering');
+        throw new Error('Force legacy API for EVM');
+      }
+      // Try unified API first for non-EVM
       return await unifiedApi.getProtocolStats(protocolName, chain, dataType);
     } catch (error) {
       console.warn('Unified API failed, falling back to legacy API:', error);
@@ -138,7 +143,12 @@ export const protocolApi = {
   // Get total protocol stats with optional filtering
   async getTotalProtocolStats(protocolName?: string, chain?: string, dataType?: string): Promise<ProtocolMetrics> {
     try {
-      // Try unified API first
+      // For EVM protocols, always use legacy API to ensure proper chain handling
+      if (chain === 'evm') {
+        console.log('Using legacy API for EVM total stats to ensure proper chain filtering');
+        throw new Error('Force legacy API for EVM');
+      }
+      // Try unified API first for non-EVM
       return await unifiedApi.getTotalProtocolStats(protocolName, chain, dataType);
     } catch (error) {
       console.warn('Unified API failed, falling back to legacy API:', error);

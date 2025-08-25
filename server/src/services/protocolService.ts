@@ -73,13 +73,14 @@ export function formatDate(isoDate: string): string {
 }
 
 export async function getProtocolStats(protocolName?: string | string[], chainFilter?: string, dataType?: string) {
-  // ALWAYS use 'public' for EVM chains, regardless of dataType parameter
-  // Default to 'private' for Solana protocols
+  // STRICT chain filtering: Force proper data_type and chain combination
   const isEVMChain = chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '');
   const effectiveDataType = isEVMChain ? 'public' : (dataType || 'private');
+  
+  // Add strict flag to cache key for separation
   const cacheKey = Array.isArray(protocolName) 
-    ? protocolName.sort().join(',') + '_' + (chainFilter || 'default') + '_' + effectiveDataType
-    : (protocolName || 'all') + '_' + (chainFilter || 'default') + '_' + effectiveDataType;
+    ? protocolName.sort().join(',') + '_' + (chainFilter || 'default') + '_' + effectiveDataType + '_strict'
+    : (protocolName || 'all') + '_' + (chainFilter || 'default') + '_' + effectiveDataType + '_strict';
 
   const cachedData = protocolStatsCache.get(cacheKey);
   if (cachedData && isCacheValid(cachedData)) {
@@ -98,16 +99,25 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    // Determine which chains to query based on chain parameter
+    // STRICT chain filtering - no fallbacks or mixing
     if (chainFilter === 'evm') {
-      // For EVM, query specific EVM chains (same as working EVM metrics query)
+      console.log(`EVM STRICT filter: querying EVM chains with data_type=public for protocol ${protocolName}`);
       query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum']);
-    } else if (chainFilter === 'solana' || !chainFilter) {
-      // For Solana or default, query Solana chain
+      query = query.eq('data_type', 'public'); // Force public for EVM
+    } else if (chainFilter === 'solana') {
+      console.log(`Solana STRICT filter: querying solana chain with data_type=${effectiveDataType} for protocol ${protocolName}`);
       query = query.eq('chain', 'solana');
+      query = query.eq('data_type', effectiveDataType);
+    } else if (!chainFilter) {
+      // Default to Solana with private data for legacy compatibility
+      console.log(`Default STRICT filter: querying solana chain with data_type=private for protocol ${protocolName}`);
+      query = query.eq('chain', 'solana');
+      query = query.eq('data_type', 'private');
     } else {
       // For specific chain, query that exact chain
+      console.log(`Specific chain STRICT filter: ${chainFilter} with data_type=${effectiveDataType}`);
       query = query.eq('chain', chainFilter);
+      query = query.eq('data_type', effectiveDataType);
     }
     
     if (protocolName) {
@@ -120,9 +130,6 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
         query = query.ilike('protocol_name', protocolName);
       }
     }
-
-    // Filter by data type (use effectiveDataType which defaults to public for EVM, private for others)
-    query = query.eq('data_type', effectiveDataType);
 
     const { data, error } = await query;
 
@@ -141,10 +148,11 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
   }
 
   if (allData.length === 0) {
+    console.log(`STRICT FILTERING: No protocol stats found for protocol=${protocolName}, chain=${chainFilter}, dataType=${effectiveDataType}`);
     return [];
   }
 
-  console.log(`Total protocol stats records fetched: ${allData.length}`);
+  console.log(`STRICT FILTERING SUCCESS: Found ${allData.length} protocol stats records for protocol=${protocolName}, chain=${chainFilter}, dataType=${effectiveDataType}`);
 
   // Sort by date and remove the most recent date
   const sortedData = allData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -169,9 +177,12 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
 }
 
 export async function getTotalProtocolStats(protocolName?: string, chainFilter?: string, dataType?: string): Promise<ProtocolMetrics> {
-  // Default to 'public' for EVM chains, 'private' for others
-  const effectiveDataType = dataType || (chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '') ? 'public' : 'private');
-  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}_${effectiveDataType}`;
+  // STRICT chain filtering: Force proper data_type and chain combination
+  const isEVMChain = chainFilter === 'evm' || ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(chainFilter || '');
+  const effectiveDataType = isEVMChain ? 'public' : (dataType || 'private');
+  
+  // Add chain to cache key for strict separation
+  const cacheKey = `${protocolName || 'all'}_${chainFilter || 'default'}_${effectiveDataType}_strict`;
   const cachedData = totalStatsCache.get(cacheKey);
 
   if (cachedData && isCacheValid(cachedData)) {
@@ -186,31 +197,34 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
   while (hasMore) {
     let query = supabase
       .from('protocol_stats')
-      .select('volume_usd, daily_users, new_users, trades, fees_usd, date')
+      .select('volume_usd, daily_users, new_users, trades, fees_usd, date, chain, protocol_name, data_type')
       .order('date', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    // Determine which chains to query based on chain parameter
+    // STRICT chain filtering - no fallbacks
     if (chainFilter === 'evm') {
-      // For EVM, query specific EVM chains (same as working EVM metrics query)
-      console.log(`EVM filter detected, querying EVM chains`);
+      console.log(`EVM STRICT filter: querying EVM chains with data_type=public for protocol ${protocolName}`);
       query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum']);
-    } else if (chainFilter === 'solana' || !chainFilter) {
-      // For Solana or default, query Solana chain
-      console.log(`Solana filter, querying Solana chain`);
+      query = query.eq('data_type', 'public'); // Force public for EVM
+    } else if (chainFilter === 'solana') {
+      console.log(`Solana STRICT filter: querying solana chain with data_type=${effectiveDataType} for protocol ${protocolName}`);
       query = query.eq('chain', 'solana');
+      query = query.eq('data_type', effectiveDataType);
+    } else if (!chainFilter) {
+      // Default to Solana with private data for legacy compatibility
+      console.log(`Default STRICT filter: querying solana chain with data_type=private for protocol ${protocolName}`);
+      query = query.eq('chain', 'solana');
+      query = query.eq('data_type', 'private');
     } else {
       // For specific chain, query that exact chain
-      console.log(`Specific chain filter: ${chainFilter}`);
+      console.log(`Specific chain STRICT filter: ${chainFilter} with data_type=${effectiveDataType}`);
       query = query.eq('chain', chainFilter);
+      query = query.eq('data_type', effectiveDataType);
     }
 
     if (protocolName) {
       query = query.eq('protocol_name', protocolName);
     }
-
-    // Filter by data type (use effectiveDataType which defaults to public for EVM, private for others)
-    query = query.eq('data_type', effectiveDataType);
 
     const { data, error } = await query;
 
@@ -225,6 +239,7 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
   }
 
   if (allData.length === 0) {
+    console.log(`STRICT FILTERING: No data found for protocol=${protocolName}, chain=${chainFilter}, dataType=${effectiveDataType}`);
     return {
       total_volume_usd: 0,
       daily_users: 0,
@@ -233,6 +248,8 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
       total_fees_usd: 0
     };
   }
+
+  console.log(`STRICT FILTERING SUCCESS: Found ${allData.length} records for protocol=${protocolName}, chain=${chainFilter}, dataType=${effectiveDataType}`);
 
   console.log(`Total records fetched: ${allData.length}`);
 

@@ -121,7 +121,20 @@ export default function TradingAppsComparison() {
     const fetchAllProtocolsData = async () => {
       try {
         const allProtocolIds = protocolConfigs.map(p => p.id);
-        const allStats = await getProtocolStats(); // Get ALL protocols without filtering
+        
+        // Fetch data for both Solana and EVM protocols
+        const [solanaStats, evmStats] = await Promise.all([
+          getProtocolStats(), // Solana protocols (default)
+          getProtocolStats(undefined, 'evm') // EVM protocols
+        ]);
+        
+        const allStats = [...solanaStats, ...evmStats];
+        
+        console.log('OneVsOne - Fetched stats:', { 
+          solanaCount: solanaStats.length, 
+          evmCount: evmStats.length, 
+          totalCount: allStats.length 
+        });
         
         console.log('OneVsOne - Fetched all stats count:', allStats.length);
         
@@ -144,8 +157,15 @@ export default function TradingAppsComparison() {
                    (cleanProtocolName === 'bloom' && statProtocol === 'bloom');
           });
           
-          if (protocolId.includes('trojan') || protocolId.includes('bloom')) {
+          if (protocolId.includes('trojan') || protocolId.includes('bloom') || protocolId.includes('evm')) {
             console.log(`OneVsOne - ${protocolId} (${cleanProtocolName}) stats count:`, protocolStats.length);
+            if (protocolStats.length > 0) {
+              console.log(`  Sample stat:`, {
+                protocol: protocolStats[0].protocol_name,
+                volume: protocolStats[0].volume_usd,
+                date: protocolStats[0].date
+              });
+            }
           }
           
           dataMap.set(protocolId, protocolStats);

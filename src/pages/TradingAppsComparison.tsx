@@ -14,7 +14,7 @@ import { MultiComparisonMetricCard } from '../components/MultiComparisonMetricCa
 import { MultiComparisonChart } from '../components/MultiComparisonChart';
 import { MarketShareComparisonChart } from '../components/MarketShareComparisonChart';
 import { Skeleton } from '../components/ui/skeleton';
-import { MetricCardSkeleton } from '../components/MetricCardSkeleton';
+import { MultiComparisonMetricCardSkeleton } from '../components/MultiComparisonMetricCardSkeleton';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -533,11 +533,11 @@ export default function TradingAppsComparison() {
           <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${hasEvmProtocols ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'}`}>
             {loadingProtocols.size > 0 ? (
               <>
-                <MetricCardSkeleton />
+                <MultiComparisonMetricCardSkeleton protocolCount={selectedProtocols.length} />
                 {!hasEvmProtocols && (
                   <>
-                    <MetricCardSkeleton />
-                    <MetricCardSkeleton />
+                    <MultiComparisonMetricCardSkeleton protocolCount={selectedProtocols.length} />
+                    <MultiComparisonMetricCardSkeleton protocolCount={selectedProtocols.length} />
                   </>
                 )}
               </>

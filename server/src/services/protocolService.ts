@@ -101,7 +101,7 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
     // Determine which chains to query based on chain parameter
     if (chainFilter === 'evm') {
       // For EVM, query specific EVM chains (same as working EVM metrics query)
-      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum']);
     } else if (chainFilter === 'solana' || !chainFilter) {
       // For Solana or default, query Solana chain
       query = query.eq('chain', 'solana');
@@ -194,7 +194,7 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
     if (chainFilter === 'evm') {
       // For EVM, query specific EVM chains (same as working EVM metrics query)
       console.log(`EVM filter detected, querying EVM chains`);
-      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax']);
+      query = query.in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum']);
     } else if (chainFilter === 'solana' || !chainFilter) {
       // For Solana or default, query Solana chain
       console.log(`Solana filter, querying Solana chain`);

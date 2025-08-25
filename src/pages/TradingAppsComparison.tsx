@@ -44,12 +44,26 @@ export default function TradingAppsComparison() {
   );
 
   const fetchProtocolData = async (protocolId: string): Promise<ProtocolData> => {
-    const [stats, metrics] = await Promise.all([
-      getProtocolStats([protocolId]),
-      getTotalProtocolStats(protocolId)
-    ]);
-
     const protocolConfig = protocolConfigs.find(p => p.id === protocolId);
+    
+    // Handle EVM protocols - clean the protocol name and set chain
+    const isEvmProtocol = protocolConfig?.chain === 'evm';
+    const cleanProtocolName = isEvmProtocol ? protocolId.replace('_evm', '') : protocolId;
+    const chain = isEvmProtocol ? 'evm' : undefined;
+    
+    console.log(`Fetching data for ${protocolId}:`, { cleanProtocolName, chain, isEvmProtocol });
+    
+    const [stats, metrics] = await Promise.all([
+      getProtocolStats([cleanProtocolName], chain),
+      getTotalProtocolStats(cleanProtocolName, chain)
+    ]);
+    
+    console.log(`Data fetched for ${protocolId}:`, { 
+      statsCount: stats.length, 
+      metricsVolume: metrics?.total_volume_usd,
+      metricsUsers: metrics?.numberOfNewUsers,
+      sample: stats.slice(0, 2)
+    });
 
     return {
       protocol: protocolId,
@@ -114,17 +128,24 @@ export default function TradingAppsComparison() {
         // Organize stats by protocol
         const dataMap = new Map<string, ProtocolStats[]>();
         allProtocolIds.forEach((protocolId) => {
+          // Handle EVM protocols - match by clean name
+          const protocolConfig = protocolConfigs.find(p => p.id === protocolId);
+          const isEvmProtocol = protocolConfig?.chain === 'evm';
+          const cleanProtocolName = isEvmProtocol ? protocolId.replace('_evm', '') : protocolId;
+          
           const protocolStats = allStats.filter((stat: ProtocolStats) => {
             const statProtocol = stat.protocol_name || stat.protocol;
             return statProtocol === protocolId || 
+                   statProtocol === cleanProtocolName ||
                    statProtocol?.toLowerCase() === protocolId.toLowerCase() ||
+                   statProtocol?.toLowerCase() === cleanProtocolName.toLowerCase() ||
                    (protocolId === 'fomo' && (statProtocol === 'tryFomo' || statProtocol === 'tryfomo')) ||
-                   (protocolId === 'trojan' && statProtocol === 'trojan') ||
-                   (protocolId === 'bloom' && statProtocol === 'bloom');
+                   (cleanProtocolName === 'trojan' && statProtocol === 'trojan') ||
+                   (cleanProtocolName === 'bloom' && statProtocol === 'bloom');
           });
           
-          if (protocolId === 'trojan' || protocolId === 'bloom') {
-            console.log(`OneVsOne - ${protocolId} stats count:`, protocolStats.length);
+          if (protocolId.includes('trojan') || protocolId.includes('bloom')) {
+            console.log(`OneVsOne - ${protocolId} (${cleanProtocolName}) stats count:`, protocolStats.length);
           }
           
           dataMap.set(protocolId, protocolStats);

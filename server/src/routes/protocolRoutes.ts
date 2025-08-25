@@ -516,4 +516,38 @@ router.get('/evm-weekly-metrics', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/protocols/evm-monthly-metrics
+// Get EVM monthly metrics for all protocols
+router.get('/evm-monthly-metrics', async (req: Request, res: Response) => {
+  try {
+    const { startDate, endDate, dataType } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'startDate and endDate parameters are required' 
+      });
+    }
+
+    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'startDate and endDate must be strings in YYYY-MM-DD format' 
+      });
+    }
+
+    console.log(`Fetching EVM monthly metrics from ${startDate} to ${endDate} with dataType: ${dataType || 'public'}`);
+    const monthlyData = await getEVMWeeklyMetrics(startDate, endDate, typeof dataType === 'string' ? dataType : 'public');
+
+    res.json({ success: true, data: monthlyData });
+  } catch (error) {
+    console.error('Error fetching EVM monthly metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch EVM monthly metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

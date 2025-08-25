@@ -819,18 +819,20 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           );
                         })}
                         {selectedMetric !== 'daily_users' && (
-                          <TableCell className={cn("text-center font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                            {formatValue(last7Days.reduce((sum, day) => {
-                              const dateKey = format(day, 'yyyy-MM-dd');
-                              const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
-                                const protocolData = dailyData[protocol.id];
-                                if (protocolData && protocolData[dateKey] !== undefined) {
-                                  return sum + protocolData[dateKey];
-                                }
-                                return sum;
-                              }, 0);
-                              return sum + categoryTotal;
-                            }, 0))}
+                          <TableCell className={cn("text-center font-bold py-2 sm:py-3 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                            <Badge variant="outline" className="font-semibold bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm py-0 -my-1">
+                              {formatValue(last7Days.reduce((sum, day) => {
+                                const dateKey = format(day, 'yyyy-MM-dd');
+                                const categoryTotal = visibleCategoryProtocols.reduce((sum, protocol) => {
+                                  const protocolData = dailyData[protocol.id];
+                                  if (protocolData && protocolData[dateKey] !== undefined) {
+                                    return sum + protocolData[dateKey];
+                                  }
+                                  return sum;
+                                }, 0);
+                                return sum + categoryTotal;
+                              }, 0))}
+                            </Badge>
                           </TableCell>
                         )}
                         <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
@@ -962,12 +964,14 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                               );
                             })}
                             {selectedMetric !== 'daily_users' && (
-                              <TableCell className="text-center py-3 sm:py-4 px-1 transition-all relative font-bold text-xs sm:text-sm">
-                                {formatValue(last7Days.reduce((sum, day) => {
-                                  const dateKey = format(day, 'yyyy-MM-dd');
-                                  const value = protocolData[dateKey] || 0;
-                                  return sum + value;
-                                }, 0))}
+                              <TableCell className="text-center py-2 sm:py-3 px-1 transition-all relative font-bold text-xs sm:text-sm">
+                                <Badge variant="outline" className="font-medium bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm py-0 -my-1">
+                                  {formatValue(last7Days.reduce((sum, day) => {
+                                    const dateKey = format(day, 'yyyy-MM-dd');
+                                    const value = protocolData[dateKey] || 0;
+                                    return sum + value;
+                                  }, 0))}
+                                </Badge>
                               </TableCell>
                             )}
                             <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[150px]">
@@ -1053,18 +1057,20 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                     );
                   })}
                   {selectedMetric !== 'daily_users' && (
-                    <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
-                      {formatValue(last7Days.reduce((sum, day) => {
-                        const dateKey = format(day, 'yyyy-MM-dd');
-                        const dailyTotal = protocols.reduce((sum, protocol) => {
-                          const protocolData = dailyData[protocol];
-                          if (protocolData && protocolData[dateKey] !== undefined) {
-                            return sum + protocolData[dateKey];
-                          }
-                          return sum;
-                        }, 0);
-                        return sum + dailyTotal;
-                      }, 0))}
+                    <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-2 sm:py-3 px-1 text-xs sm:text-sm transition-colors">
+                      <Badge variant="outline" className="font-bold bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm py-0 -my-1">
+                        {formatValue(last7Days.reduce((sum, day) => {
+                          const dateKey = format(day, 'yyyy-MM-dd');
+                          const dailyTotal = protocols.reduce((sum, protocol) => {
+                            const protocolData = dailyData[protocol];
+                            if (protocolData && protocolData[dateKey] !== undefined) {
+                              return sum + protocolData[dateKey];
+                            }
+                            return sum;
+                          }, 0);
+                          return sum + dailyTotal;
+                        }, 0))}
+                      </Badge>
                     </TableCell>
                   )}
                   <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]">

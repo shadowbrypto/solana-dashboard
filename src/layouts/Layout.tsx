@@ -28,7 +28,7 @@ const overviewPages = [
 const reports = [
   { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
   { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly' },
-  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly', chain: 'solana' }
+  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' }
 ];
 
 const adminPages = [

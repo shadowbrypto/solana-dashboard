@@ -5,7 +5,7 @@ import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } fro
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { ChevronLeft, ChevronRight, Calendar, Download, Copy } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Download, Copy, Eye, EyeOff } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { protocolApi } from "../lib/api";
@@ -69,6 +69,7 @@ const getGrowthBadgeClasses = (growth: number): string => {
 export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMWeeklyMetricsTableProps) {
   const [protocolData, setProtocolData] = useState<ProtocolWeeklyData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const startDate = useMemo(() => subDays(endDate, 6), [endDate]);
@@ -76,18 +77,19 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
 
   // Calculate totals
   const totals = useMemo(() => {
-    const totalVolume = protocolData.reduce((sum, item) => sum + item.totalVolume, 0);
+    const visibleData = protocolData.filter(item => !hiddenProtocols.has(item.protocol));
+    const totalVolume = visibleData.reduce((sum, item) => sum + item.totalVolume, 0);
     const totalChainVolumes: ChainVolume = {
-      ethereum: protocolData.reduce((sum, item) => sum + item.chainVolumes.ethereum, 0),
-      base: protocolData.reduce((sum, item) => sum + item.chainVolumes.base, 0),
-      bsc: protocolData.reduce((sum, item) => sum + item.chainVolumes.bsc, 0),
-      avax: protocolData.reduce((sum, item) => sum + item.chainVolumes.avax, 0),
-      arbitrum: protocolData.reduce((sum, item) => sum + item.chainVolumes.arbitrum, 0)
+      ethereum: visibleData.reduce((sum, item) => sum + item.chainVolumes.ethereum, 0),
+      base: visibleData.reduce((sum, item) => sum + item.chainVolumes.base, 0),
+      bsc: visibleData.reduce((sum, item) => sum + item.chainVolumes.bsc, 0),
+      avax: visibleData.reduce((sum, item) => sum + item.chainVolumes.avax, 0),
+      arbitrum: visibleData.reduce((sum, item) => sum + item.chainVolumes.arbitrum, 0)
     };
     const totalDailyVolumes: Record<string, number> = {};
     last7Days.forEach(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
-      totalDailyVolumes[dateStr] = protocolData.reduce((sum, item) => sum + (item.dailyVolumes[dateStr] || 0), 0);
+      totalDailyVolumes[dateStr] = visibleData.reduce((sum, item) => sum + (item.dailyVolumes[dateStr] || 0), 0);
     });
     const totalWeeklyTrend = last7Days.map(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
@@ -98,7 +100,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       : 0;
 
     return { totalVolume, totalChainVolumes, totalDailyVolumes, totalWeeklyTrend, totalWeeklyGrowth };
-  }, [protocolData, last7Days]);
+  }, [protocolData, last7Days, hiddenProtocols]);
 
   useEffect(() => {
     console.log('EVM Weekly useEffect triggered with:', {
@@ -156,6 +158,30 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
 
     fetchData();
   }, [startDate, endDate]);
+
+  const toggleProtocolVisibility = (protocol: string) => {
+    setHiddenProtocols(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(protocol)) {
+        newSet.delete(protocol);
+      } else {
+        newSet.add(protocol);
+      }
+      return newSet;
+    });
+  };
+
+  const showAllProtocols = () => {
+    setHiddenProtocols(new Set());
+  };
+
+  const hideAllProtocols = () => {
+    const allProtocols = new Set<string>();
+    protocolData.forEach(data => {
+      allProtocols.add(data.protocol);
+    });
+    setHiddenProtocols(allProtocols);
+  };
 
   const downloadReport = async () => {
     const tableElement = document.querySelector('[data-table="evm-weekly-metrics"]') as HTMLElement;
@@ -285,11 +311,23 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6">
       <div className="space-y-4" data-table="evm-weekly-metrics">
         <div className="flex items-center justify-between pb-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
-              EVM
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
+              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
+                EVM
+              </span>
+            </div>
+            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+              >
+                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -389,22 +427,36 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
           </TableHeader>
           <TableBody>
             {protocolData.length > 0 ? (
-              protocolData.map((item) => (
-                <TableRow key={item.protocol}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(item.protocol as Protocol)}`}
-                          alt={item.protocol}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="font-medium text-sm capitalize">
-                        {item.protocol.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </TableCell>
+              protocolData
+                .filter(item => !hiddenProtocols.has(item.protocol))
+                .map((item) => {
+                  const isHidden = hiddenProtocols.has(item.protocol);
+                  return (
+                    <TableRow key={item.protocol} className="transition-colors hover:bg-muted/30">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleProtocolVisibility(item.protocol);
+                            }}
+                            className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                            title={isHidden ? "Show protocol" : "Hide protocol"}
+                          >
+                            {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
+                          <div className="w-5 h-5 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(item.protocol as Protocol)}`}
+                              alt={item.protocol}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="font-medium text-sm capitalize">
+                            {item.protocol.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </TableCell>
                   
                   {last7Days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
@@ -491,7 +543,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+                })
             ) : (
               <TableRow>
                 <TableCell colSpan={last7Days.length + 3} className="text-center text-muted-foreground py-8">

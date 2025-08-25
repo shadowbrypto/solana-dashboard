@@ -463,14 +463,8 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">Monthly Report</h2>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${
-              Math.abs(totals.overallGrowth) < 0.0001 
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                : totals.overallGrowth >= 0
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                  : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-            }`}>
-              EVM {Math.abs(totals.overallGrowth) >= 0.0001 && formatGrowthPercentage(totals.overallGrowth)}
+            <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+              EVM
             </span>
           </div>
           <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">

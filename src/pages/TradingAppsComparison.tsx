@@ -251,6 +251,14 @@ export default function TradingAppsComparison() {
   // Chart data for comparison cards (uses all-time data)
   const chartData = useMemo(() => Array.from(protocolData.values()), [protocolData]);
 
+  // Check if any EVM protocols are selected (they only have volume data)
+  const hasEvmProtocols = useMemo(() => {
+    return selectedProtocols.some(protocolId => {
+      const protocol = protocolConfigs.find(p => p.id === protocolId);
+      return protocol?.chain === 'evm';
+    });
+  }, [selectedProtocols]);
+
   return (
     <div className="p-3 sm:p-4 lg:p-6">
       {/* Header */}
@@ -481,12 +489,16 @@ export default function TradingAppsComparison() {
       {selectedProtocols.length >= 2 && (
         <div className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
           {/* Metric Comparison Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${hasEvmProtocols ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'}`}>
             {loadingProtocols.size > 0 ? (
               <>
                 <MetricCardSkeleton />
-                <MetricCardSkeleton />
-                <MetricCardSkeleton />
+                {!hasEvmProtocols && (
+                  <>
+                    <MetricCardSkeleton />
+                    <MetricCardSkeleton />
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -497,20 +509,24 @@ export default function TradingAppsComparison() {
                   dataKey="total_volume_usd"
                   formatter={formatCurrency}
                 />
-                <MultiComparisonMetricCard
-                  title="Lifetime Users"
-                  icon={Users}
-                  data={chartData}
-                  dataKey="numberOfNewUsers"
-                  formatter={formatNumber}
-                />
-                <MultiComparisonMetricCard
-                  title="Lifetime Trades"
-                  icon={Activity}
-                  data={chartData}
-                  dataKey="daily_trades"
-                  formatter={formatNumber}
-                />
+                {!hasEvmProtocols && (
+                  <>
+                    <MultiComparisonMetricCard
+                      title="Lifetime Users"
+                      icon={Users}
+                      data={chartData}
+                      dataKey="numberOfNewUsers"
+                      formatter={formatNumber}
+                    />
+                    <MultiComparisonMetricCard
+                      title="Lifetime Trades"
+                      icon={Activity}
+                      data={chartData}
+                      dataKey="daily_trades"
+                      formatter={formatNumber}
+                    />
+                  </>
+                )}
               </>
             )}
           </div>
@@ -527,30 +543,34 @@ export default function TradingAppsComparison() {
                     <Skeleton className="h-64 w-full" />
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-48" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-64 w-full" />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-48" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-64 w-full" />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-48" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-64 w-full" />
-                  </CardContent>
-                </Card>
+                {!hasEvmProtocols && (
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <Skeleton className="h-6 w-48" />
+                      </CardHeader>
+                      <CardContent>
+                        <Skeleton className="h-64 w-full" />
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <Skeleton className="h-6 w-48" />
+                      </CardHeader>
+                      <CardContent>
+                        <Skeleton className="h-64 w-full" />
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <Skeleton className="h-6 w-48" />
+                      </CardHeader>
+                      <CardContent>
+                        <Skeleton className="h-64 w-full" />
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -562,28 +582,32 @@ export default function TradingAppsComparison() {
                   timeframe={volumeTimeframe}
                   onTimeframeChange={(value) => setVolumeTimeframe(value as TimeFrame)}
                 />
-                <MultiComparisonChart
-                  title="Daily Users Comparison"
-                  data={getFilteredData(usersTimeframe)}
-                  dataKey="daily_users"
-                  formatter={formatNumber}
-                  timeframe={usersTimeframe}
-                  onTimeframeChange={(value) => setUsersTimeframe(value as TimeFrame)}
-                />
-                <MultiComparisonChart
-                  title="Trades Comparison"
-                  data={getFilteredData(tradesTimeframe)}
-                  dataKey="trades"
-                  formatter={formatNumber}
-                  timeframe={tradesTimeframe}
-                  onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
-                />
-                <MarketShareComparisonChart
-                  data={getFilteredData(marketShareTimeframe)}
-                  allProtocolsData={allProtocolsData}
-                  timeframe={marketShareTimeframe}
-                  onTimeframeChange={(value) => setMarketShareTimeframe(value as TimeFrame)}
-                />
+                {!hasEvmProtocols && (
+                  <>
+                    <MultiComparisonChart
+                      title="Daily Users Comparison"
+                      data={getFilteredData(usersTimeframe)}
+                      dataKey="daily_users"
+                      formatter={formatNumber}
+                      timeframe={usersTimeframe}
+                      onTimeframeChange={(value) => setUsersTimeframe(value as TimeFrame)}
+                    />
+                    <MultiComparisonChart
+                      title="Trades Comparison"
+                      data={getFilteredData(tradesTimeframe)}
+                      dataKey="trades"
+                      formatter={formatNumber}
+                      timeframe={tradesTimeframe}
+                      onTimeframeChange={(value) => setTradesTimeframe(value as TimeFrame)}
+                    />
+                    <MarketShareComparisonChart
+                      data={getFilteredData(marketShareTimeframe)}
+                      allProtocolsData={allProtocolsData}
+                      timeframe={marketShareTimeframe}
+                      onTimeframeChange={(value) => setMarketShareTimeframe(value as TimeFrame)}
+                    />
+                  </>
+                )}
               </>
             )}
           </div>

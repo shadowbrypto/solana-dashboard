@@ -30,7 +30,7 @@ export interface ProtocolConfig {
   id: string;
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
-  category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps' | 'EVM Protocols';
+  category: 'Telegram Bots' | 'Trading Terminals' | 'Mobile Apps' | 'EVM';
   chain?: 'solana' | 'ethereum' | 'evm'; // Optional for backward compatibility
 }
 
@@ -73,10 +73,10 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'fomo', name: 'Fomo', icon: FomoIcon, category: 'Mobile Apps', chain: 'solana' },
   
   // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
-  { id: 'sigma_evm', name: 'Sigma', icon: SigmaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'maestro_evm', name: 'Maestro', icon: MaestroEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'bloom_evm', name: 'Bloom', icon: BloomEVMIcon, category: 'EVM Protocols', chain: 'evm' },
-  { id: 'banana_evm', name: 'Banana', icon: BananaEVMIcon, category: 'EVM Protocols', chain: 'evm' },
+  { id: 'sigma_evm', name: 'Sigma', icon: SigmaEVMIcon, category: 'EVM', chain: 'evm' },
+  { id: 'maestro_evm', name: 'Maestro', icon: MaestroEVMIcon, category: 'EVM', chain: 'evm' },
+  { id: 'bloom_evm', name: 'Bloom', icon: BloomEVMIcon, category: 'EVM', chain: 'evm' },
+  { id: 'banana_evm', name: 'Banana', icon: BananaEVMIcon, category: 'EVM', chain: 'evm' },
 ];
 
 // Helper functions

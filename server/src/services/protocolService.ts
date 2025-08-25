@@ -154,8 +154,46 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
 
   console.log(`STRICT FILTERING SUCCESS: Found ${allData.length} protocol stats records for protocol=${protocolName}, chain=${chainFilter}, dataType=${effectiveDataType}`);
 
+  // For EVM protocols, aggregate data by date (sum across all chains per date)
+  let processedData = allData;
+  if (chainFilter === 'evm') {
+    console.log(`EVM AGGREGATION: Aggregating ${allData.length} records across chains by date`);
+    
+    // Group by date and sum metrics across all chains
+    const dateGroups = allData.reduce((acc: Record<string, any>, row: any) => {
+      const date = row.date;
+      if (!acc[date]) {
+        acc[date] = {
+          protocol_name: row.protocol_name,
+          date: date,
+          volume_usd: 0,
+          daily_users: 0,
+          new_users: 0,
+          trades: 0,
+          fees_usd: 0,
+          chain: 'evm', // Use 'evm' as aggregated chain identifier
+          data_type: row.data_type,
+          created_at: row.created_at,
+          id: row.id // Use first row's ID
+        };
+      }
+      
+      // Sum metrics across all chains for this date
+      acc[date].volume_usd += Number(row.volume_usd) || 0;
+      acc[date].daily_users += Number(row.daily_users) || 0;
+      acc[date].new_users += Number(row.new_users) || 0;
+      acc[date].trades += Number(row.trades) || 0;
+      acc[date].fees_usd += Number(row.fees_usd) || 0;
+      
+      return acc;
+    }, {});
+    
+    processedData = Object.values(dateGroups);
+    console.log(`EVM AGGREGATION: Reduced to ${processedData.length} aggregated daily records`);
+  }
+
   // Sort by date and remove the most recent date
-  const sortedData = allData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedData = processedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   // Find the most recent date and filter it out
   const mostRecentDate = sortedData.length > 0 ? sortedData[0].date : null;
@@ -163,7 +201,7 @@ export async function getProtocolStats(protocolName?: string | string[], chainFi
     ? sortedData.filter(row => row.date !== mostRecentDate)
     : sortedData;
 
-  const formattedData = filteredData.map((row: ProtocolStats) => ({
+  const formattedData = filteredData.map((row: any) => ({
     ...row,
     formattedDay: formatDate(row.date)
   }));
@@ -253,8 +291,41 @@ export async function getTotalProtocolStats(protocolName?: string, chainFilter?:
 
   console.log(`Total records fetched: ${allData.length}`);
 
+  // For EVM protocols, aggregate data by date (sum across all chains per date)
+  let processedData = allData;
+  if (chainFilter === 'evm') {
+    console.log(`EVM METRICS AGGREGATION: Aggregating ${allData.length} records across chains by date`);
+    
+    // Group by date and sum metrics across all chains
+    const dateGroups = allData.reduce((acc: Record<string, any>, row: any) => {
+      const date = row.date;
+      if (!acc[date]) {
+        acc[date] = {
+          volume_usd: 0,
+          daily_users: 0,
+          new_users: 0,
+          trades: 0,
+          fees_usd: 0,
+          date: date
+        };
+      }
+      
+      // Sum metrics across all chains for this date
+      acc[date].volume_usd += Number(row.volume_usd) || 0;
+      acc[date].daily_users += Number(row.daily_users) || 0;
+      acc[date].new_users += Number(row.new_users) || 0;
+      acc[date].trades += Number(row.trades) || 0;
+      acc[date].fees_usd += Number(row.fees_usd) || 0;
+      
+      return acc;
+    }, {});
+    
+    processedData = Object.values(dateGroups);
+    console.log(`EVM METRICS AGGREGATION: Reduced to ${processedData.length} aggregated daily records`);
+  }
+
   // Sort by date and remove the most recent date (same logic as getProtocolStats)
-  const sortedData = allData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedData = processedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   // Find the most recent date and filter it out
   const mostRecentDate = sortedData.length > 0 ? sortedData[0].date : null;

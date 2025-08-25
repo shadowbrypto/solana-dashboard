@@ -935,7 +935,7 @@ export function ProtocolManagement() {
                     <div className="space-y-1 sm:space-y-2">
                       <div className="flex items-center gap-2 sm:gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="text-xs sm:text-sm font-medium text-foreground">EVM Protocols</span>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">EVM</span>
                         <div className="flex -space-x-1">
                           {getMutableProtocolConfigs()
                             .filter(p => p.chain === 'evm')

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ProtocolStats } from '../types/protocol';
 import { formatDate } from '../lib/protocol';
 import { formatNumber, formatCurrency } from '../lib/utils';
+import { format } from 'date-fns';
 
 interface ProtocolData {
   protocol: string;
@@ -20,6 +21,17 @@ interface MultiComparisonChartProps {
   formatter: (value: number) => string;
   timeframe?: string;
   onTimeframeChange?: (timeframe: string) => void;
+}
+
+// Format date for chart display (28 Jul format)
+function formatChartDate(isoDate: string): string {
+  try {
+    const date = new Date(isoDate);
+    return format(date, 'd MMM');
+  } catch (error) {
+    // Fallback to original format if parsing fails
+    return formatDate(isoDate);
+  }
 }
 
 export function MultiComparisonChart({
@@ -52,7 +64,7 @@ export function MultiComparisonChart({
         if (!dataMap.has(date)) {
           dataMap.set(date, {
             date,
-            formattedDate: formatDate(date)
+            formattedDate: formatChartDate(date)
           });
         }
       });
@@ -76,9 +88,13 @@ export function MultiComparisonChart({
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      // Find the original date for this formatted label
+      const originalDate = mergedData.find(item => item.formattedDate === label)?.date;
+      const tooltipDate = originalDate ? format(new Date(originalDate), 'd MMM yyyy') : label;
+      
       return (
         <div className={`bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg ${isMobile ? 'p-2 min-w-[120px]' : 'p-3'}`}>
-          <p className={`font-medium mb-2 text-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{label}</p>
+          <p className={`font-medium mb-2 text-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{tooltipDate}</p>
           <div className="space-y-1">
             {payload
               .sort((a: any, b: any) => b.value - a.value) // Sort by value descending
@@ -111,7 +127,7 @@ export function MultiComparisonChart({
     if (!payload || payload.length === 0) return null;
 
     return (
-      <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-3 sm:mt-4 px-2 sm:px-4`}>
+      <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-1 sm:mt-2 px-2 sm:px-4 mb-0`}>
         {payload.map((entry: any, index: number) => {
           const protocolName = data.find(d => 
             entry.dataKey.startsWith(d.protocol)
@@ -201,14 +217,14 @@ export function MultiComparisonChart({
           )}
         </div>
       </CardHeader>
-      <CardContent className={`${isMobile ? 'pt-2 p-3' : 'pt-2 p-6'}`}>
-        <div className={isMobile ? 'h-64' : 'h-80'}>
+      <CardContent className={`${isMobile ? 'pt-2 px-3 pb-2' : 'pt-2 px-6 pb-3'}`}>
+        <div className={isMobile ? 'h-[350px]' : 'h-[500px]'}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mergedData} margin={{ 
+            <AreaChart data={mergedData} margin={{ 
               top: 5, 
               right: isMobile ? 10 : 20, 
               left: isMobile ? 5 : 0, 
-              bottom: isMobile ? 0 : 5 
+              bottom: isMobile ? 20 : 25
             }}>
               <CartesianGrid 
                 strokeDasharray="3 3" 
@@ -218,42 +234,64 @@ export function MultiComparisonChart({
               />
               <XAxis 
                 dataKey="formattedDate"
-                tick={{ fontSize: isMobile ? 9 : 11, className: "fill-muted-foreground" }}
+                tick={{ fontSize: isMobile ? 10 : 12, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
-                interval={isMobile ? Math.max(Math.ceil(mergedData.length / 3) - 1, 0) : "preserveStartEnd"}
-                angle={isMobile ? 0 : 0}
+                interval={isMobile ? Math.max(Math.ceil(mergedData.length / 6) - 1, 0) : Math.max(Math.ceil(mergedData.length / 12) - 1, 0)}
+                angle={0}
                 textAnchor="middle"
+                height={isMobile ? 40 : 50}
               />
               <YAxis 
                 tick={{ fontSize: isMobile ? 9 : 11, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
                 width={isMobile ? 35 : 45}
-                tickFormatter={(value) => {
+                domain={[0, 'dataMax']}
+                tickCount={6}
+                tickFormatter={(value, index) => {
+                  // Add padding from bottom by not showing values too close to 0
+                  if (value === 0) return '';
+                  
                   // Use appropriate formatting based on data type
                   if (typeof value === 'number') {
                     // Check if this looks like currency data (contains 'usd' or 'fee')
                     const isCurrency = title.toLowerCase().includes('volume') || 
                                      title.toLowerCase().includes('fee') || 
                                      title.toLowerCase().includes('revenue');
-                    return isCurrency ? formatCurrency(value) : formatNumber(value);
+                    
+                    // Format with 0 decimals
+                    if (isCurrency) {
+                      // For currency, show abbreviated format with no decimals
+                      if (value >= 1000000000) return `$${Math.round(value / 1000000000)}B`;
+                      if (value >= 1000000) return `$${Math.round(value / 1000000)}M`;
+                      if (value >= 1000) return `$${Math.round(value / 1000)}K`;
+                      return `$${Math.round(value)}`;
+                    } else {
+                      // For non-currency numbers, show abbreviated format with no decimals
+                      if (value >= 1000000000) return `${Math.round(value / 1000000000)}B`;
+                      if (value >= 1000000) return `${Math.round(value / 1000000)}M`;
+                      if (value >= 1000) return `${Math.round(value / 1000)}K`;
+                      return Math.round(value).toString();
+                    }
                   }
                   return value;
                 }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend content={<CustomLegend />} />
-              {data.map(protocolData => (
-                <Line
+              {data.map((protocolData, index) => (
+                <Area
                   key={protocolData.protocol}
                   type="monotone"
                   dataKey={`${protocolData.protocol}_${dataKey}`}
                   stroke={protocolData.color}
-                  strokeWidth={isMobile ? 2 : 2.5}
+                  strokeWidth={isMobile ? 2.5 : 3}
+                  fill={protocolData.color}
+                  fillOpacity={0.08} // Lower consistent opacity to reduce overlap issues
                   dot={{ fill: protocolData.color, strokeWidth: 0, r: isMobile ? 2 : 3 }}
                   activeDot={{ 
-                    r: isMobile ? 4 : 6, 
+                    r: isMobile ? 5 : 7, 
                     stroke: protocolData.color, 
                     strokeWidth: 2, 
                     fill: "hsl(var(--background))",
@@ -262,7 +300,7 @@ export function MultiComparisonChart({
                   connectNulls={false}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

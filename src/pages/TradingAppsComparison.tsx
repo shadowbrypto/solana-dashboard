@@ -46,12 +46,13 @@ export default function TradingAppsComparison() {
   const fetchProtocolData = async (protocolId: string): Promise<ProtocolData> => {
     const protocolConfig = protocolConfigs.find(p => p.id === protocolId);
     
-    // Handle EVM protocols - clean the protocol name and set chain
+    // Handle EVM protocols - clean the protocol name and set chain explicitly
     const isEvmProtocol = protocolConfig?.chain === 'evm';
     const cleanProtocolName = isEvmProtocol ? protocolId.replace('_evm', '') : protocolId;
-    const chain = isEvmProtocol ? 'evm' : undefined;
+    const chain = isEvmProtocol ? 'evm' : 'solana';
     
     console.log(`Fetching data for ${protocolId}:`, { cleanProtocolName, chain, isEvmProtocol });
+    console.log(`API calls for ${protocolId}: getProtocolStats([${cleanProtocolName}], ${chain})`);
     
     const [stats, metrics] = await Promise.all([
       getProtocolStats([cleanProtocolName], chain),
@@ -62,7 +63,9 @@ export default function TradingAppsComparison() {
       statsCount: stats.length, 
       metricsVolume: metrics?.total_volume_usd,
       metricsUsers: metrics?.numberOfNewUsers,
-      sample: stats.slice(0, 2)
+      sample: stats.slice(0, 2),
+      sampleChains: stats.slice(0, 3).map((s: any) => ({ protocol: s.protocol_name, chain: s.chain, date: s.date, volume: s.volume_usd })),
+      totalSampleVolume: stats.slice(0, 10).reduce((sum: number, s: any) => sum + (Number(s.volume_usd) || 0), 0)
     });
 
     return {
@@ -124,7 +127,7 @@ export default function TradingAppsComparison() {
         
         // Fetch data for both Solana and EVM protocols
         const [solanaStats, evmStats] = await Promise.all([
-          getProtocolStats(), // Solana protocols (default)
+          getProtocolStats(undefined, 'solana'), // Explicitly request Solana protocols
           getProtocolStats(undefined, 'evm') // EVM protocols
         ]);
         
@@ -138,23 +141,34 @@ export default function TradingAppsComparison() {
         
         console.log('OneVsOne - Fetched all stats count:', allStats.length);
         
-        // Organize stats by protocol
+        // Organize stats by protocol with proper chain filtering
         const dataMap = new Map<string, ProtocolStats[]>();
         allProtocolIds.forEach((protocolId) => {
-          // Handle EVM protocols - match by clean name
+          // Handle EVM protocols - match by clean name and chain
           const protocolConfig = protocolConfigs.find(p => p.id === protocolId);
           const isEvmProtocol = protocolConfig?.chain === 'evm';
           const cleanProtocolName = isEvmProtocol ? protocolId.replace('_evm', '') : protocolId;
           
-          const protocolStats = allStats.filter((stat: ProtocolStats) => {
+          const protocolStats = allStats.filter((stat: any) => {
             const statProtocol = stat.protocol_name || stat.protocol;
-            return statProtocol === protocolId || 
+            const statChain = stat.chain;
+            
+            // STRICT matching: protocol name must match AND chain must match
+            const protocolMatches = statProtocol === protocolId || 
                    statProtocol === cleanProtocolName ||
                    statProtocol?.toLowerCase() === protocolId.toLowerCase() ||
                    statProtocol?.toLowerCase() === cleanProtocolName.toLowerCase() ||
                    (protocolId === 'fomo' && (statProtocol === 'tryFomo' || statProtocol === 'tryfomo')) ||
                    (cleanProtocolName === 'trojan' && statProtocol === 'trojan') ||
                    (cleanProtocolName === 'bloom' && statProtocol === 'bloom');
+            
+            // Chain must match what we expect for this protocol type
+            const chainMatches = isEvmProtocol 
+              ? ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].includes(statChain)
+              : statChain === 'solana';
+            
+            // Both protocol name AND chain must match
+            return protocolMatches && chainMatches;
           });
           
           if (protocolId.includes('trojan') || protocolId.includes('bloom') || protocolId.includes('evm')) {
@@ -163,6 +177,7 @@ export default function TradingAppsComparison() {
               console.log(`  Sample stat:`, {
                 protocol: protocolStats[0].protocol_name,
                 volume: protocolStats[0].volume_usd,
+                chain: (protocolStats[0] as any).chain,
                 date: protocolStats[0].date
               });
             }
@@ -228,9 +243,6 @@ export default function TradingAppsComparison() {
     }
   }, [clearAll]);
 
-  const getProtocolIcon = (id: string) => {
-    return protocolConfigs.find(p => p.id === id)?.icon;
-  };
 
   const getProtocolCategory = (id: string) => {
     return protocolConfigs.find(p => p.id === id)?.category;
@@ -329,7 +341,6 @@ export default function TradingAppsComparison() {
                   </div>
                 ) : (
                   filteredProtocols.map(protocol => {
-                    const Icon = protocol.icon;
                     return (
                       <SelectItem key={protocol.id} value={protocol.id} className="relative pr-36">
                         <div className="flex items-center gap-2">
@@ -401,11 +412,6 @@ export default function TradingAppsComparison() {
                       <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />,
                       <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
                     ];
-                    const descriptions = [
-                      "Compare top performing Telegram trading bots",
-                      "Analyze desktop trading terminal platforms",
-                      "Compare leading mobile trading applications"
-                    ];
                     return (
                       <Card 
                         key={preset.name}
@@ -470,7 +476,6 @@ export default function TradingAppsComparison() {
               
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {selectedProtocols.map(protocolId => {
-                  const Icon = getProtocolIcon(protocolId);
                   const isLoading = loadingProtocols.has(protocolId);
                   const data = protocolData.get(protocolId);
                   

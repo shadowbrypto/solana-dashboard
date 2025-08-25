@@ -17,6 +17,13 @@ export const protocolColors: { [key: string]: string } = {
   "bonkbot terminal": "hsl(39 96% 60%)",   // Amber
   slingshot: "hsl(110 75% 45%)",           // Lime Green
   fomo: "hsl(270 95% 60%)",             // Electric Purple
+  
+  // EVM Protocol Colors (distinct from their Solana counterparts)
+  sigma: "hsl(300 85% 55%)",            // Magenta
+  sigma_evm: "hsl(300 85% 55%)",        // Magenta
+  maestro_evm: "hsl(25 95% 60%)",       // Orange Red (different from regular maestro)
+  bloom_evm: "hsl(160 90% 40%)",        // Forest Green (different from regular bloom)
+  banana_evm: "hsl(50 100% 50%)",       // Bright Yellow (different from regular banana blue)
 };
 
 export const protocolColorsList = Object.values(protocolColors);

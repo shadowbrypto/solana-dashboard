@@ -43,6 +43,7 @@ export function MultiComparisonChart({
   onTimeframeChange
 }: MultiComparisonChartProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkMobile = () => {
@@ -53,12 +54,28 @@ export function MultiComparisonChart({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Toggle protocol visibility
+  const toggleProtocol = (protocolId: string) => {
+    setHiddenProtocols(prev => {
+      const next = new Set(prev);
+      if (next.has(protocolId)) {
+        next.delete(protocolId);
+      } else {
+        next.add(protocolId);
+      }
+      return next;
+    });
+  };
+
+  // Filter visible data
+  const visibleData = data.filter(protocolData => !hiddenProtocols.has(protocolData.protocol));
   // Merge and align data by date
   const mergedData = React.useMemo(() => {
     const dataMap = new Map();
     
     // Collect all unique dates first
-    data.forEach(protocolData => {
+    visibleData.forEach(protocolData => {
       protocolData.stats?.forEach(item => {
         const date = item.date;
         if (!dataMap.has(date)) {
@@ -71,7 +88,7 @@ export function MultiComparisonChart({
     });
     
     // Add protocol data to each date
-    data.forEach(protocolData => {
+    visibleData.forEach(protocolData => {
       protocolData.stats?.forEach(item => {
         const date = item.date;
         const existing = dataMap.get(date);
@@ -84,7 +101,7 @@ export function MultiComparisonChart({
     // Convert to array and sort by date
     return Array.from(dataMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [data, dataKey]);
+  }, [visibleData, dataKey]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -99,7 +116,7 @@ export function MultiComparisonChart({
             {payload
               .sort((a: any, b: any) => b.value - a.value) // Sort by value descending
               .map((entry: any, index: number) => {
-                const protocolName = data.find(d => 
+                const protocolName = visibleData.find(d => 
                   entry.dataKey.startsWith(d.protocol)
                 )?.name || 'Unknown';
                 
@@ -126,20 +143,48 @@ export function MultiComparisonChart({
   const CustomLegend = ({ payload }: any) => {
     if (!payload || payload.length === 0) return null;
 
+    // Show all protocols in legend (both visible and hidden) but get from original data
+    const allLegendItems = data.map(protocolData => {
+      const isHidden = hiddenProtocols.has(protocolData.protocol);
+      const chartDataKey = `${protocolData.protocol}_${dataKey}`;
+      
+      return {
+        protocol: protocolData.protocol,
+        name: protocolData.name,
+        color: protocolData.color,
+        dataKey: chartDataKey,
+        isHidden
+      };
+    });
+
     return (
       <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-1 sm:mt-2 px-2 sm:px-4 mb-0`}>
-        {payload.map((entry: any, index: number) => {
-          const protocolName = data.find(d => 
-            entry.dataKey.startsWith(d.protocol)
-          )?.name || 'Unknown';
+        {allLegendItems.map((item, index) => {
+          const displayName = isMobile ? item.name.slice(0, 8) : item.name;
           
           return (
-            <div key={index} className="flex items-center gap-1.5 sm:gap-2">
+            <div 
+              key={item.protocol}
+              className={`flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all hover:opacity-80 ${
+                item.isHidden ? 'opacity-40' : 'opacity-100'
+              }`}
+              onClick={() => toggleProtocol(item.protocol)}
+              title={item.isHidden ? `Show ${item.name}` : `Hide ${item.name}`}
+            >
               <div 
-                className={`rounded-full ${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`}
-                style={{ backgroundColor: entry.color }}
+                className={`rounded-full ${isMobile ? 'w-2 h-2' : 'w-3 h-3'} ${
+                  item.isHidden ? 'ring-1 ring-muted-foreground/30' : ''
+                }`}
+                style={{ 
+                  backgroundColor: item.isHidden ? 'transparent' : item.color,
+                  border: item.isHidden ? `2px solid ${item.color}` : 'none'
+                }}
               />
-              <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{isMobile ? protocolName.slice(0, 8) : protocolName}</span>
+              <span className={`${isMobile ? 'text-xs' : 'text-sm'} ${
+                item.isHidden ? 'text-muted-foreground line-through' : 'text-muted-foreground'
+              }`}>
+                {displayName}
+              </span>
             </div>
           );
         })}
@@ -280,7 +325,7 @@ export function MultiComparisonChart({
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend content={<CustomLegend />} />
-              {data.map((protocolData, index) => (
+              {visibleData.map((protocolData, index) => (
                 <Area
                   key={protocolData.protocol}
                   type="monotone"

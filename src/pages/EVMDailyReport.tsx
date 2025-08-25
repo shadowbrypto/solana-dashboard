@@ -28,11 +28,8 @@ export default function EVMDailyReport() {
 
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
-      <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+      <h1 className="text-2xl sm:text-3xl font-bold">
         Daily Report
-        <span className="text-xs px-2 py-1 rounded-md font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
-          EVM
-        </span>
       </h1>
       <EVMDailyHighlights date={date} />
       <EVMDailyMetricsTable 

@@ -57,15 +57,8 @@ export default function MonthlyReport() {
       {/* Header with Toggle */}
       <div className="mb-6 lg:mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">
             Monthly Report
-            <span className={`text-xs px-2 py-1 rounded-md font-medium ${
-              chainType === 'solana' 
-                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-            }`}>
-              {chainType === 'solana' ? 'SOL' : 'EVM'}
-            </span>
           </h1>
           
           {/* Chain Type Toggle */}

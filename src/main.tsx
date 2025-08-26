@@ -14,6 +14,7 @@ import ProtocolAdmin from "./pages/ProtocolAdmin";
 import TradingAppsComparison from "./pages/TradingAppsComparison";
 import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
+import CustomReports from "./pages/CustomReports";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
@@ -124,6 +125,20 @@ const router = createBrowserRouter([
                 }
               >
                 <MonthlyReport />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "custom",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <CustomReports />
               </React.Suspense>
             ),
           },

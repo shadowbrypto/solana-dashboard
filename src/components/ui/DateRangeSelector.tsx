@@ -11,6 +11,7 @@ interface DateRangeSelectorProps {
   className?: string;
   data?: Array<{ formattedDay: string; [key: string]: any }>;
   dataKey?: string;
+  sensitivity?: 'day' | 'week' | 'month';
 }
 
 export function DateRangeSelector({
@@ -21,7 +22,8 @@ export function DateRangeSelector({
   maxDate = new Date(),
   className = "",
   data,
-  dataKey = "value"
+  dataKey = "value",
+  sensitivity = "day"
 }: DateRangeSelectorProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
@@ -55,10 +57,37 @@ export function DateRangeSelector({
     return Math.max(0, Math.min(100, percentage));
   };
 
+  // Helper function to snap dates to sensitivity boundaries
+  const snapToSensitivity = (date: Date): Date => {
+    switch (sensitivity) {
+      case 'week':
+        return startOfWeek(date);
+      case 'month':
+        return startOfMonth(date);
+      case 'day':
+      default:
+        return startOfDay(date);
+    }
+  };
+
+  // Helper function to snap end dates to sensitivity boundaries
+  const snapToSensitivityEnd = (date: Date): Date => {
+    switch (sensitivity) {
+      case 'week':
+        return endOfWeek(date);
+      case 'month':
+        return endOfMonth(date);
+      case 'day':
+      default:
+        return endOfDay(date);
+    }
+  };
+
   // Convert position to date
   const positionToDate = (position: number) => {
     const timestamp = effectiveMinDate.getTime() + (position / 100) * (maxDate.getTime() - effectiveMinDate.getTime());
-    return new Date(timestamp);
+    const rawDate = new Date(timestamp);
+    return snapToSensitivity(rawDate);
   };
 
   const startPosition = dateToPosition(startDate);
@@ -170,7 +199,7 @@ export function DateRangeSelector({
     if (e.key === 'Enter') {
       const days = parseInt(daysInput);
       if (!isNaN(days) && days > 0) {
-        const newEndDate = endOfDay(new Date(displayStartDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000));
+        const newEndDate = snapToSensitivityEnd(new Date(displayStartDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000));
         // Validate the new end date is within bounds
         if (newEndDate <= maxDate && displayStartDate >= (minDate || effectiveMinDate)) {
           onRangeChange(displayStartDate, newEndDate);
@@ -237,8 +266,8 @@ export function DateRangeSelector({
       const handleMouseUp = () => {
         setTempRange(currentTempRange => {
           if (currentTempRange && Math.abs(currentTempRange.end - currentTempRange.start) >= 0.5) {
-            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
-            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            const newStartDate = snapToSensitivity(positionToDate(currentTempRange.start));
+            const newEndDate = snapToSensitivityEnd(positionToDate(currentTempRange.end));
             onRangeChange(newStartDate, newEndDate);
           }
           return null;
@@ -284,8 +313,8 @@ export function DateRangeSelector({
         setTempRange(currentTempRange => {
           if (currentTempRange && originalDuration > 0) {
             // Use the stored original duration to preserve exact duration
-            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
-            const newEndDate = new Date(newStartDate.getTime() + originalDuration);
+            const newStartDate = snapToSensitivity(positionToDate(currentTempRange.start));
+            const newEndDate = snapToSensitivityEnd(new Date(newStartDate.getTime() + originalDuration));
             onRangeChange(newStartDate, newEndDate);
           }
           return null;
@@ -332,8 +361,8 @@ export function DateRangeSelector({
       const handleMouseUp = () => {
         setTempRange(currentTempRange => {
           if (currentTempRange) {
-            const newStartDate = startOfDay(positionToDate(currentTempRange.start));
-            const newEndDate = endOfDay(positionToDate(currentTempRange.end));
+            const newStartDate = snapToSensitivity(positionToDate(currentTempRange.start));
+            const newEndDate = snapToSensitivityEnd(positionToDate(currentTempRange.end));
             onRangeChange(newStartDate, newEndDate);
           }
           return null;
@@ -552,7 +581,7 @@ export function DateRangeSelector({
               <button
                 onClick={() => {
                   if (calendarStartDate && calendarEndDate) {
-                    onRangeChange(startOfDay(calendarStartDate), endOfDay(calendarEndDate));
+                    onRangeChange(snapToSensitivity(calendarStartDate), snapToSensitivityEnd(calendarEndDate));
                   }
                   setShowCalendar(false);
                   setIsSelectingEnd(false);

@@ -28,7 +28,8 @@ const overviewPages = [
 const reports = [
   { id: 'daily', name: 'Daily Report', icon: CalendarDays, path: '/reports/daily' },
   { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly' },
-  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' }
+  { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' },
+  { id: 'custom', name: 'Custom Reports', icon: Brain, path: '/reports/custom' }
 ];
 
 const adminPages = [

@@ -270,7 +270,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
     const protocolData = dailyData[protocolId];
     const prevProtocolData = previousWeekData[protocolId];
     
-    if (!protocolData || !prevProtocolData) return 0;
+    if (!protocolData || !prevProtocolData || last7Days.length === 0) return 0;
 
     // Calculate this week's total
     const thisWeekTotal = last7Days.reduce((sum, day) => {
@@ -287,6 +287,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   const calculateCategoryWeekOnWeekGrowth = (categoryName: string): number => {
     const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    
+    // Check if we have enough data
+    if (last7Days.length === 0 || Object.keys(previousWeekData).length === 0) return 0;
 
     // Calculate this week's total for category
     const thisWeekTotal = last7Days.reduce((weekSum, day) => {
@@ -300,21 +303,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
       }, 0);
     }, 0);
 
-    // Calculate last week's total for category
+    // Calculate last week's total for category from previousWeekData
     let lastWeekTotal = 0;
-    const prevWeekStart = subDays(last7Days[0], 7);
-    const prevWeekEnd = subDays(last7Days[last7Days.length - 1], 7);
-    const prevWeekDays = eachDayOfInterval({ start: prevWeekStart, end: prevWeekEnd });
-    
-    prevWeekDays.forEach(day => {
-      const dateKey = format(day, 'yyyy-MM-dd');
-      lastWeekTotal += categoryProtocols.reduce((daySum, protocol) => {
-        const prevProtocolData = previousWeekData[protocol.id];
-        if (prevProtocolData && prevProtocolData[dateKey] !== undefined) {
-          return daySum + prevProtocolData[dateKey];
-        }
-        return daySum;
-      }, 0);
+    categoryProtocols.forEach(protocol => {
+      const prevProtocolData = previousWeekData[protocol.id];
+      if (prevProtocolData) {
+        lastWeekTotal += Object.values(prevProtocolData).reduce((sum, value) => sum + value, 0);
+      }
     });
 
     if (lastWeekTotal === 0) return 0;
@@ -510,7 +505,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const calculateTotalWeekOnWeekGrowth = (): number => {
-    if (last7Days.length < 7) return 0;
+    if (last7Days.length < 7 || Object.keys(previousWeekData).length === 0) return 0;
 
     // Calculate this week's total (current 7 days)
     const thisWeekTotal = last7Days.reduce((weekSum, day) => {

@@ -524,7 +524,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   </TableCell>
                   
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-end gap-3">
                       <div className="w-[50px] h-[32px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
@@ -624,7 +624,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 </TableCell>
                 
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-end gap-3">
                     <div className="w-[50px] h-[32px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={totals.totalWeeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>

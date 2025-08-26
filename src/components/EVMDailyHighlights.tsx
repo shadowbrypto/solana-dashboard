@@ -299,7 +299,7 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
           });
         }
 
-        // 6. Market Growth Insight
+        // 6. Market Growth Insight - Always show this regardless of threshold
         const yesterdayProtocolTotal = performances.reduce((sum, p) => {
           const yesterday = p.previous[0];
           return sum + (yesterday?.totalVolume || 0);
@@ -313,16 +313,25 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
 
         if (yesterdayTotalWithStandalone > 0) {
           const totalGrowth = (totalVolumeWithStandalone - yesterdayTotalWithStandalone) / yesterdayTotalWithStandalone;
-          if (Math.abs(totalGrowth) > 0.1) { // > 10% change
-            generatedInsights.push({
-              type: totalGrowth > 0 ? 'success' : 'warning',
-              title: 'EVM Market Movement',
-              description: `Total EVM volume ${totalGrowth > 0 ? 'increased' : 'decreased'} ${Math.abs(totalGrowth * 100).toFixed(1)}% from yesterday`,
-              value: formatCurrency(totalVolumeWithStandalone),
-              trend: totalGrowth,
-              icon: totalGrowth > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
-            });
-          }
+          
+          // Always add the market movement insight
+          generatedInsights.push({
+            type: totalGrowth > 0 ? 'success' : 'warning',
+            title: 'EVM Market Movement',
+            description: `Total EVM volume ${totalGrowth > 0 ? 'increased' : 'decreased'} ${Math.abs(totalGrowth * 100).toFixed(1)}% from yesterday`,
+            value: formatCurrency(totalVolumeWithStandalone),
+            trend: totalGrowth,
+            icon: totalGrowth > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
+          });
+        } else {
+          // If no yesterday data, show current total
+          generatedInsights.push({
+            type: 'info',
+            title: 'EVM Market Volume',
+            description: `Total EVM volume for ${format(date, 'MMM dd')}`,
+            value: formatCurrency(totalVolumeWithStandalone),
+            icon: <Activity className="h-4 w-4" />
+          });
         }
 
         setInsights(generatedInsights.slice(0, 4)); // Show top 4 insights for 2x2 grid

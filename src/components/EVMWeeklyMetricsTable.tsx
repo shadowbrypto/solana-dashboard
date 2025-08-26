@@ -41,7 +41,7 @@ interface ProtocolWeeklyData {
 const chainColors: Record<string, string> = {
   ethereum: '#627EEA',
   base: '#0052FF', 
-  bsc: '#B8860B',
+  bsc: '#F3BA2F',
   avax: '#E84142',
   arbitrum: '#28A0F0'
 };

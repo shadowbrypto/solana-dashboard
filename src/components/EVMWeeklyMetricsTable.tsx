@@ -35,6 +35,7 @@ interface ProtocolWeeklyData {
   chainVolumes: ChainVolume;
   weeklyGrowth: number;
   weeklyTrend: number[];
+  previousWeekTotal?: number; // Add previous week total
 }
 
 // Chain color mapping for consistent UI
@@ -79,6 +80,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   const totals = useMemo(() => {
     const visibleData = protocolData.filter(item => !hiddenProtocols.has(item.protocol));
     const totalVolume = visibleData.reduce((sum, item) => sum + item.totalVolume, 0);
+    const totalPreviousWeekVolume = visibleData.reduce((sum, item) => sum + (item.previousWeekTotal || 0), 0);
     const totalChainVolumes: ChainVolume = {
       ethereum: visibleData.reduce((sum, item) => sum + item.chainVolumes.ethereum, 0),
       base: visibleData.reduce((sum, item) => sum + item.chainVolumes.base, 0),
@@ -95,8 +97,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       const dateStr = format(day, 'yyyy-MM-dd');
       return totalDailyVolumes[dateStr] || 0;
     });
-    const totalWeeklyGrowth = totalWeeklyTrend.length > 1 && totalWeeklyTrend[0] > 0 
-      ? (totalWeeklyTrend[totalWeeklyTrend.length - 1] - totalWeeklyTrend[0]) / totalWeeklyTrend[0] 
+    const totalWeeklyGrowth = totalPreviousWeekVolume > 0 
+      ? (totalVolume - totalPreviousWeekVolume) / totalPreviousWeekVolume 
       : 0;
 
     return { totalVolume, totalChainVolumes, totalDailyVolumes, totalWeeklyTrend, totalWeeklyGrowth };
@@ -119,9 +121,26 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
         const data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, 'public');
         console.log('Raw API response:', data);
         
+        // Fetch previous week data
+        const prevWeekStartDate = subDays(startDate, 7);
+        const prevWeekEndDate = subDays(endDate, 7);
+        let previousWeekData: any = null;
+        try {
+          previousWeekData = await protocolApi.getEVMWeeklyMetrics(prevWeekStartDate, prevWeekEndDate, 'public');
+          console.log('Previous week data:', previousWeekData);
+        } catch (prevWeekError) {
+          console.error('Error fetching previous week data:', prevWeekError);
+        }
+        
         // Convert API data to display format
         const processedData: ProtocolWeeklyData[] = Object.entries(data.dailyVolumes).map(([protocol, dailyVolumes]) => {
           const totalVolume = Object.values(dailyVolumes).reduce((sum, vol) => sum + vol, 0);
+          
+          // Calculate previous week total
+          let previousWeekTotal = 0;
+          if (previousWeekData && previousWeekData.dailyVolumes[protocol]) {
+            previousWeekTotal = Object.values(previousWeekData.dailyVolumes[protocol]).reduce((sum: number, vol: any) => sum + vol, 0);
+          }
           
           // Use real chain distribution data from API
           const protocolChainData = data.chainDistribution[protocol] || {};
@@ -133,16 +152,14 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             arbitrum: protocolChainData.arbitrum || 0
           };
           
-          // Calculate weekly growth (compare first vs last day)
-          const dateKeys = Object.keys(dailyVolumes).sort();
-          const firstDayVolume = dailyVolumes[dateKeys[0]] || 0;
-          const lastDayVolume = dailyVolumes[dateKeys[dateKeys.length - 1]] || 0;
-          const weeklyGrowth = firstDayVolume > 0 ? (lastDayVolume - firstDayVolume) / firstDayVolume : 0;
+          // Calculate weekly growth (compare previous week total vs current week total)
+          const weeklyGrowth = previousWeekTotal > 0 ? (totalVolume - previousWeekTotal) / previousWeekTotal : 0;
           
           // Create weekly trend array
+          const dateKeys = Object.keys(dailyVolumes).sort();
           const weeklyTrend = dateKeys.map(date => dailyVolumes[date] || 0);
           
-          return { protocol, totalVolume, dailyVolumes, chainVolumes, weeklyGrowth, weeklyTrend };
+          return { protocol, totalVolume, dailyVolumes, chainVolumes, weeklyGrowth, weeklyTrend, previousWeekTotal };
         }).sort((a, b) => b.totalVolume - a.totalVolume);
 
         console.log('Processed data:', processedData);

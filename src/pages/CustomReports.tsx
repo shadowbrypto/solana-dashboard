@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Download, Copy, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Download, Copy, Calendar, Eye, EyeOff, Check, ChevronDown } from 'lucide-react';
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -116,6 +116,7 @@ export default function CustomReports() {
   const [reportType, setReportType] = useState<ReportType>('monthly');
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 6)); // Default to 6 months ago
   const [endDate, setEndDate] = useState<Date>(new Date());
+  const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(new Set(['volume', 'trades', 'users']));
 
   // Update date range when report type changes
   useEffect(() => {
@@ -130,6 +131,22 @@ export default function CustomReports() {
       setEndDate(now);
     }
   }, [reportType]);
+
+  // Click outside handler for metrics dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const dropdown = document.getElementById('metrics-dropdown');
+      const button = document.querySelector('[aria-label="metrics-button"]');
+      
+      if (dropdown && !dropdown.contains(event.target as Node) && 
+          button && !button.contains(event.target as Node)) {
+        dropdown.classList.add('hidden');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Get available protocols
   const availableProtocols = protocolConfigs
@@ -149,7 +166,7 @@ export default function CustomReports() {
 
   useEffect(() => {
     fetchReportData();
-  }, [selectedProtocol, reportType, startDate, endDate]);
+  }, [selectedProtocol, reportType, startDate, endDate, selectedMetrics]);
 
   useEffect(() => {
     const unsubscribe = Settings.addDataTypeChangeListener((newDataType) => {
@@ -157,7 +174,7 @@ export default function CustomReports() {
       fetchReportData(); // Refetch data when data type changes
     });
     return unsubscribe;
-  }, [selectedProtocol, reportType, startDate, endDate]);
+  }, [selectedProtocol, reportType, startDate, endDate, selectedMetrics]);
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -468,8 +485,8 @@ export default function CustomReports() {
       {/* Controls Section */}
       <Card className="p-6 overflow-hidden">
         <div className="space-y-6">
-          {/* Top Row - Protocol and Report Type */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Row - Protocol, Report Type, and Metrics */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Protocol Selector */}
             <div className="space-y-2 overflow-hidden">
               <label className="text-sm font-medium text-foreground">Protocol</label>
@@ -558,6 +575,101 @@ export default function CustomReports() {
                 </button>
               </div>
             </div>
+
+            {/* Metrics Multi-Select */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Metrics</label>
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between"
+                  aria-label="metrics-button"
+                  onClick={() => {
+                    const dropdown = document.getElementById('metrics-dropdown');
+                    if (dropdown) {
+                      dropdown.classList.toggle('hidden');
+                    }
+                  }}
+                >
+                  <span className="text-sm truncate">
+                    {selectedMetrics.size === 0 
+                      ? 'Select metrics' 
+                      : selectedMetrics.size === 3 
+                      ? 'All metrics selected'
+                      : `${selectedMetrics.size} metric${selectedMetrics.size > 1 ? 's' : ''} selected`}
+                  </span>
+                  <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0" />
+                </Button>
+                <div 
+                  id="metrics-dropdown"
+                  className="hidden absolute z-50 top-full mt-1 w-full bg-background border rounded-md shadow-md p-2 space-y-1"
+                >
+                  <button
+                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setSelectedMetrics(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has('volume')) {
+                          newSet.delete('volume');
+                        } else {
+                          newSet.add('volume');
+                        }
+                        return newSet;
+                      });
+                    }}
+                  >
+                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
+                      selectedMetrics.has('volume') ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {selectedMetrics.has('volume') && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                    <span>Volume</span>
+                  </button>
+                  <button
+                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setSelectedMetrics(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has('users')) {
+                          newSet.delete('users');
+                        } else {
+                          newSet.add('users');
+                        }
+                        return newSet;
+                      });
+                    }}
+                  >
+                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
+                      selectedMetrics.has('users') ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {selectedMetrics.has('users') && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                    <span>New Users</span>
+                  </button>
+                  <button
+                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setSelectedMetrics(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has('trades')) {
+                          newSet.delete('trades');
+                        } else {
+                          newSet.add('trades');
+                        }
+                        return newSet;
+                      });
+                    }}
+                  >
+                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
+                      selectedMetrics.has('trades') ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
+                      {selectedMetrics.has('trades') && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                    <span>Trades</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Bottom Row - Date Range */}
@@ -581,7 +693,11 @@ export default function CustomReports() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-                {reportType === 'weekly' ? 'Weekly' : 'Monthly'} Volume Chart
+                {reportType === 'weekly' ? 'Weekly' : 'Monthly'} {
+                  selectedMetrics.size === 0 ? 'Chart' :
+                  selectedMetrics.size === 1 ? `${Array.from(selectedMetrics)[0].charAt(0).toUpperCase() + Array.from(selectedMetrics)[0].slice(1)} Chart` :
+                  'Metrics Chart'
+                }
               </CardTitle>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
@@ -633,7 +749,7 @@ export default function CustomReports() {
             <div className="text-center py-8 text-muted-foreground">
               <p>{error}</p>
             </div>
-          ) : chartData.length > 0 ? (
+          ) : chartData.length > 0 && selectedMetrics.size > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
               <RechartsBarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid
@@ -662,32 +778,85 @@ export default function CustomReports() {
                     color: 'hsl(var(--foreground))'
                   }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-                  formatter={(value: any) => [formatCurrency(value), 'Volume']}
+                  formatter={(value: any) => [
+                    selectedMetrics.has('volume') && !selectedMetrics.has('users') && !selectedMetrics.has('trades') 
+                      ? formatCurrency(value) 
+                      : formatNumberWithSuffix(value), 
+                    'Value'
+                  ]}
                   labelFormatter={(label: any) => label}
                 />
-                <Bar
-                  dataKey="volume"
-                  fill={getProtocolColor(selectedProtocol)}
-                  fillOpacity={0.8}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={60}
-                >
-                  <LabelList
+                {selectedMetrics.has('volume') && (
+                  <Bar
                     dataKey="volume"
-                    position="top"
-                    formatter={(value: number) => formatNumberWithSuffix(value)}
-                    style={{
-                      fill: 'hsl(var(--foreground))',
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}
-                  />
-                </Bar>
+                    fill={getProtocolColor(selectedProtocol)}
+                    fillOpacity={0.8}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={60}
+                  >
+                    {selectedMetrics.size === 1 && (
+                      <LabelList
+                        dataKey="volume"
+                        position="top"
+                        formatter={(value: number) => formatNumberWithSuffix(value)}
+                        style={{
+                          fill: 'hsl(var(--foreground))',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      />
+                    )}
+                  </Bar>
+                )}
+                {selectedMetrics.has('users') && (
+                  <Bar
+                    dataKey="users"
+                    fill={getProtocolColor(selectedProtocol)}
+                    fillOpacity={0.6}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={60}
+                  >
+                    {selectedMetrics.size === 1 && (
+                      <LabelList
+                        dataKey="users"
+                        position="top"
+                        formatter={(value: number) => formatNumberWithSuffix(value)}
+                        style={{
+                          fill: 'hsl(var(--foreground))',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      />
+                    )}
+                  </Bar>
+                )}
+                {selectedMetrics.has('trades') && (
+                  <Bar
+                    dataKey="trades"
+                    fill={getProtocolColor(selectedProtocol)}
+                    fillOpacity={0.4}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={60}
+                  >
+                    {selectedMetrics.size === 1 && (
+                      <LabelList
+                        dataKey="trades"
+                        position="top"
+                        formatter={(value: number) => formatNumberWithSuffix(value)}
+                        style={{
+                          fill: 'hsl(var(--foreground))',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      />
+                    )}
+                  </Bar>
+                )}
               </RechartsBarChart>
             </ResponsiveContainer>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No data available for chart</p>
+              <p>{selectedMetrics.size === 0 ? 'Please select at least one metric to display' : 'No data available for chart'}</p>
             </div>
           )}
         </CardContent>
@@ -779,10 +948,18 @@ export default function CustomReports() {
                     <TableHead className="w-32 h-12 px-2 text-left align-middle font-medium text-muted-foreground">
                       {reportType === 'weekly' ? 'Week' : 'Month'}
                     </TableHead>
-                    <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Volume</TableHead>
-                    <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">New Users</TableHead>
-                    <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
-                    <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cumulative</TableHead>
+                    {selectedMetrics.has('volume') && (
+                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Volume</TableHead>
+                    )}
+                    {selectedMetrics.has('users') && (
+                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">New Users</TableHead>
+                    )}
+                    {selectedMetrics.has('trades') && (
+                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
+                    )}
+                    {selectedMetrics.has('volume') && (
+                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cumulative</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -808,33 +985,43 @@ export default function CustomReports() {
                             <TableCell className="font-medium text-sm py-2 px-2 whitespace-nowrap">
                               {data.period}
                             </TableCell>
-                            <TableCell className="text-right py-2 px-2">
-                              <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5">
-                                {formatCurrency(data.totalVolume)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right py-2 px-2">
-                              <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300">
-                                {formatNumber(data.newUsers)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right py-2 px-2">
-                              <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
-                                {formatNumber(data.totalTrades)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right py-2 px-2">
-                              <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
-                                {formatCurrency(data.cumulativeVolume)}
-                              </Badge>
-                            </TableCell>
+                            {selectedMetrics.has('volume') && (
+                              <TableCell className="text-right py-2 px-2">
+                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5">
+                                  {formatCurrency(data.totalVolume)}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {selectedMetrics.has('users') && (
+                              <TableCell className="text-right py-2 px-2">
+                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300">
+                                  {formatNumber(data.newUsers)}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {selectedMetrics.has('trades') && (
+                              <TableCell className="text-right py-2 px-2">
+                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
+                                  {formatNumber(data.totalTrades)}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {selectedMetrics.has('volume') && (
+                              <TableCell className="text-right py-2 px-2">
+                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                                  {formatCurrency(data.cumulativeVolume)}
+                                </Badge>
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })
                   ) : (
                     <TableRow className="h-16">
-                      <TableCell colSpan={6} className="text-center py-6 text-muted-foreground text-sm px-2">
-                        No data available for {getProtocolById(selectedProtocol)?.name || selectedProtocol}
+                      <TableCell colSpan={2 + selectedMetrics.size + (selectedMetrics.has('volume') ? 1 : 0)} className="text-center py-6 text-muted-foreground text-sm px-2">
+                        {selectedMetrics.size === 0 
+                          ? 'Please select at least one metric to display' 
+                          : `No data available for ${getProtocolById(selectedProtocol)?.name || selectedProtocol}`}
                       </TableCell>
                     </TableRow>
                   )}

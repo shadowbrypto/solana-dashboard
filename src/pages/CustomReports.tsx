@@ -230,7 +230,12 @@ export default function CustomReports() {
           } else {
             periodStart = startOfWeek(period);
             periodEnd = endOfWeek(period);
-            periodLabel = `Week of ${format(periodStart, 'MMM d, yyyy')}`;
+            // Format as "May 1-8, 2025"
+            const startMonth = format(periodStart, 'MMM');
+            const startDay = format(periodStart, 'd');
+            const endDay = format(periodEnd, 'd');
+            const year = format(periodEnd, 'yyyy');
+            periodLabel = `${startMonth} ${startDay}-${endDay}, ${year}`;
           }
           
           console.log(`Fetching ${selectedProtocol} data for ${periodLabel}: ${format(periodStart, 'yyyy-MM-dd')} to ${format(periodEnd, 'yyyy-MM-dd')}`);
@@ -266,9 +271,18 @@ export default function CustomReports() {
           };
         } catch (error) {
           console.error(`Error fetching data for period:`, error);
-          const periodLabel = reportType === 'monthly' 
-            ? format(period, 'MMM yyyy')
-            : `Week of ${format(startOfWeek(period), 'MMM d, yyyy')}`;
+          let periodLabel: string;
+          if (reportType === 'monthly') {
+            periodLabel = format(period, 'MMM yyyy');
+          } else {
+            const weekStart = startOfWeek(period);
+            const weekEnd = endOfWeek(period);
+            const startMonth = format(weekStart, 'MMM');
+            const startDay = format(weekStart, 'd');
+            const endDay = format(weekEnd, 'd');
+            const year = format(weekEnd, 'yyyy');
+            periodLabel = `${startMonth} ${startDay}-${endDay}, ${year}`;
+          }
           
           return {
             period: periodLabel,
@@ -729,10 +743,19 @@ export default function CustomReports() {
                   // Sort visible periods chronologically to get proper range
                   const sortedPeriods = visiblePeriods.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
-                  const firstPeriod = sortedPeriods[0].period;
-                  const lastPeriod = sortedPeriods[sortedPeriods.length - 1].period;
-                  
-                  return `${firstPeriod} - ${lastPeriod}`;
+                  if (reportType === 'weekly') {
+                    // For weekly reports, show start and end dates
+                    const firstDate = sortedPeriods[0].date;
+                    const lastDate = sortedPeriods[sortedPeriods.length - 1].date;
+                    const startOfFirstWeek = startOfWeek(firstDate);
+                    const endOfLastWeek = endOfWeek(lastDate);
+                    return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                  } else {
+                    // For monthly reports, show period ranges
+                    const firstPeriod = sortedPeriods[0].period;
+                    const lastPeriod = sortedPeriods[sortedPeriods.length - 1].period;
+                    return `${firstPeriod} - ${lastPeriod}`;
+                  }
                 })()}
               </Badge>
             </div>
@@ -742,7 +765,7 @@ export default function CustomReports() {
           {/* Chart Metric Tabs */}
           {selectedMetrics.size > 1 && !loading && !error && chartData.length > 0 && (
             <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
-              {Array.from(selectedMetrics).map((metric) => (
+              {['volume', 'users', 'trades'].filter(metric => selectedMetrics.has(metric)).map((metric) => (
                 <button
                   key={metric}
                   onClick={() => setActiveChartMetric(metric)}
@@ -836,13 +859,30 @@ export default function CustomReports() {
         </CardContent>
       </Card>
 
-      <Card data-table="custom-report" className="max-w-2xl mx-auto p-0">
+      <Card data-table="custom-report" className={`${
+        selectedMetrics.size === 1 && selectedMetrics.has('volume') ? 'max-w-2xl' : 
+        selectedMetrics.size === 1 ? 'max-w-md' : 
+        selectedMetrics.size === 2 ? 'max-w-4xl' : 
+        'max-w-5xl'
+      } mx-auto p-0`}>
         <CardHeader className="pb-4 px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-xl font-semibold">
-                {reportType === 'weekly' ? 'Weekly' : 'Monthly'} Report
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-xl font-semibold">
+                  {reportType === 'weekly' ? 'Weekly' : 'Monthly'} Report
+                </CardTitle>
+                <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+                  <button
+                    onClick={hiddenPeriods.size > 0 ? showAllPeriods : hideAllPeriods}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    title={hiddenPeriods.size > 0 ? "Show all periods" : "Hide all periods"}
+                  >
+                    {hiddenPeriods.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                    {hiddenPeriods.size > 0 ? "Show All" : "Hide All"}
+                  </button>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
                   <img 
@@ -858,16 +898,6 @@ export default function CustomReports() {
                 <span className="text-sm font-medium text-muted-foreground">
                   {getProtocolById(selectedProtocol)?.name || selectedProtocol}
                 </span>
-                <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200 ml-2">
-                  <button
-                    onClick={hiddenPeriods.size > 0 ? showAllPeriods : hideAllPeriods}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    title={hiddenPeriods.size > 0 ? "Show all periods" : "Hide all periods"}
-                  >
-                    {hiddenPeriods.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                    {hiddenPeriods.size > 0 ? "Show All" : "Hide All"}
-                  </button>
-                </div>
               </div>
             </div>
             <div className="text-right">
@@ -880,10 +910,19 @@ export default function CustomReports() {
                   // Sort visible periods chronologically to get proper range
                   const sortedPeriods = visiblePeriods.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
-                  const firstPeriod = sortedPeriods[0].period;
-                  const lastPeriod = sortedPeriods[sortedPeriods.length - 1].period;
-                  
-                  return `${firstPeriod} - ${lastPeriod}`;
+                  if (reportType === 'weekly') {
+                    // For weekly reports, show start and end dates
+                    const firstDate = sortedPeriods[0].date;
+                    const lastDate = sortedPeriods[sortedPeriods.length - 1].date;
+                    const startOfFirstWeek = startOfWeek(firstDate);
+                    const endOfLastWeek = endOfWeek(lastDate);
+                    return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                  } else {
+                    // For monthly reports, show period ranges
+                    const firstPeriod = sortedPeriods[0].period;
+                    const lastPeriod = sortedPeriods[sortedPeriods.length - 1].period;
+                    return `${firstPeriod} - ${lastPeriod}`;
+                  }
                 })()}
               </Badge>
             </div>
@@ -932,7 +971,7 @@ export default function CustomReports() {
                       <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
                     )}
                     {selectedMetrics.has('volume') && (
-                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cumulative</TableHead>
+                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cum. Volume</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>

@@ -203,6 +203,17 @@ export const protocolApi = {
     return apiRequest<any[]>(endpoint);
   },
 
+  // Get cumulative volume for a protocol up to a specific date
+  async getCumulativeVolume(protocol: string, endDate: Date, dataType?: string): Promise<number> {
+    const year = endDate.getFullYear();
+    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+    const day = String(endDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const endpoint = `/protocols/${protocol}/cumulative-volume?endDate=${dateStr}${dataType ? `&dataType=${dataType}` : ''}`;
+    
+    return apiRequest<number>(endpoint);
+  },
+
   // Health check
   async healthCheck(): Promise<{ message: string; timestamp: string }> {
     return apiRequest<{ message: string; timestamp: string }>('/protocols/health');

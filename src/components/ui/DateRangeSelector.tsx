@@ -217,9 +217,21 @@ export function DateRangeSelector({
     const rect = containerRef.current.getBoundingClientRect();
     const position = ((e.clientX - rect.left) / rect.width) * 100;
     
-    setIsDragging(true);
-    setDragStart(position);
-    setTempRange({ start: position, end: position });
+    // Determine if we're expanding to the left or right of the current selection
+    if (position < startPosition) {
+      // Clicking to the left - expand start point, keep end point
+      setIsResizing('start');
+      setTempRange({ start: position, end: endPosition });
+    } else if (position > endPosition) {
+      // Clicking to the right - expand end point, keep start point  
+      setIsResizing('end');
+      setTempRange({ start: startPosition, end: position });
+    } else {
+      // Clicking inside current selection - create new selection
+      setIsDragging(true);
+      setDragStart(position);
+      setTempRange({ start: position, end: position });
+    }
   };
 
   const handleStartHandleMouseDown = (e: React.MouseEvent) => {
@@ -344,16 +356,16 @@ export function DateRangeSelector({
         const mousePosition = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
         
         if (isResizing === 'start') {
-          // Resize from the start (left) handle
+          // Resize from the start (left) handle - right handle stays fixed
           setTempRange(prev => ({
-            start: Math.min(mousePosition, endPosition - 1), // Ensure minimum 1% width
-            end: endPosition
+            start: Math.max(0, Math.min(mousePosition, endPosition - 0.1)), // Allow very close to end but not past it
+            end: endPosition // Keep end position exactly the same
           }));
         } else if (isResizing === 'end') {
-          // Resize from the end (right) handle
+          // Resize from the end (right) handle - left handle stays fixed  
           setTempRange(prev => ({
-            start: startPosition,
-            end: Math.max(mousePosition, startPosition + 1) // Ensure minimum 1% width
+            start: startPosition, // Keep start position exactly the same
+            end: Math.min(100, Math.max(mousePosition, startPosition + 0.1)) // Allow very close to start but not past it
           }));
         }
       };
@@ -423,7 +435,7 @@ export function DateRangeSelector({
   const calendarDays = generateCalendarDays();
 
   return (
-    <div className={`space-y-3 ${className} relative`}>
+    <div className={`space-y-2 ${className} relative`}>
       {/* Header with custom time period text and controls */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">
@@ -483,7 +495,7 @@ export function DateRangeSelector({
 
       {/* Calendar Popup */}
       {showCalendar && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50">
           <div 
             ref={calendarRef}
             className="bg-card border border-border rounded-lg shadow-lg p-4 w-80"
@@ -701,7 +713,7 @@ export function DateRangeSelector({
         </div>
 
         {/* Timeline Labels */}
-        <div className="relative mt-1 h-6 overflow-visible px-2">
+        <div className="relative mt-1 h-4 overflow-visible px-2">
           {monthMarkers.map((marker, index) => {
             // More aggressive overflow prevention
             let transform = 'translateX(-50%)';
@@ -726,7 +738,7 @@ export function DateRangeSelector({
                   minWidth: '40px'
                 }}
               >
-                <div className="w-px h-2 bg-border/40 mb-1" />
+                <div className="w-px h-2 bg-border/40 mb-0" />
                 <span 
                   className="text-[10px] text-muted-foreground whitespace-nowrap truncate"
                   style={{ textAlign }}

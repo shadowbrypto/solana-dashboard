@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getEVMWeeklyMetrics } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getEVMWeeklyMetrics, getCumulativeVolume } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -57,10 +57,10 @@ router.get('/total-stats', async (req: Request, res: Response) => {
 });
 
 // GET /api/protocols/daily-metrics
-// Query params: date (required, format: YYYY-MM-DD)
+// Query params: date (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private')
 router.get('/daily-metrics', async (req: Request, res: Response) => {
   try {
-    const { date } = req.query;
+    const { date, dataType } = req.query;
     
     if (!date || typeof date !== 'string') {
       return res.status(400).json({ 
@@ -93,6 +93,49 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch daily metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/:protocol/cumulative-volume
+// Get cumulative volume for a specific protocol up to a given date
+router.get('/:protocol/cumulative-volume', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const { endDate, dataType } = req.query;
+    
+    if (!endDate || typeof endDate !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'endDate parameter is required and must be in YYYY-MM-DD format' 
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(endDate)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'endDate must be in YYYY-MM-DD format' 
+      });
+    }
+
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid endDate provided' 
+      });
+    }
+
+    const cumulativeVolume = await getCumulativeVolume(protocol, endDateObj, dataType as string);
+    res.json({ success: true, data: cumulativeVolume });
+  } catch (error) {
+    console.error(`Error fetching cumulative volume for ${req.params.protocol}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch cumulative volume',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

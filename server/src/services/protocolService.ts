@@ -1215,3 +1215,45 @@ export async function getEVMWeeklyMetrics(startDate: string, endDate: string, da
   }
 }
 
+/**
+ * Get cumulative volume for a protocol from inception to a specific end date
+ */
+export async function getCumulativeVolume(protocolName: string, endDate: Date, dataType: string = 'private'): Promise<number> {
+  try {
+    console.log(`Getting cumulative volume for ${protocolName} up to ${endDate.toISOString().split('T')[0]} with data type: ${dataType}`);
+    
+    // Query to sum all volume from inception to end date for the specific protocol
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('volume_usd')
+      .eq('protocol_name', protocolName)
+      .eq('data_type', dataType)
+      .lte('date', endDate.toISOString().split('T')[0])
+      .not('volume_usd', 'is', null);
+
+    if (error) {
+      console.error(`Supabase error in getCumulativeVolume for ${protocolName}:`, error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`No volume data found for ${protocolName} up to ${endDate.toISOString().split('T')[0]}`);
+      return 0;
+    }
+
+    // Sum all volume values
+    const cumulativeVolume = data.reduce((sum, record) => {
+      const volume = Number(record.volume_usd) || 0;
+      return sum + volume;
+    }, 0);
+
+    console.log(`Cumulative volume for ${protocolName} up to ${endDate.toISOString().split('T')[0]}: $${cumulativeVolume.toLocaleString()}`);
+    
+    return cumulativeVolume;
+
+  } catch (error) {
+    console.error(`Error getting cumulative volume for ${protocolName}:`, error);
+    throw error;
+  }
+}
+

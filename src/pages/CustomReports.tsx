@@ -21,7 +21,14 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Download, Copy, Eye, EyeOff, Check } from 'lucide-react';
+import { Download, Copy, Eye, EyeOff, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+} from '../components/ui/pagination';
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -47,12 +54,13 @@ interface ReportData {
   period: string; // e.g., "Jan 2024" for monthly, "Week of Jan 1, 2024" for weekly
   date: Date; // The actual date for sorting/filtering
   totalVolume: number;
+  totalDAUs: number;
   newUsers: number;
   totalTrades: number;
   cumulativeVolume: number;
 }
 
-type ReportType = 'weekly' | 'monthly';
+type ReportType = 'daily' | 'weekly' | 'monthly';
 
 const formatCurrency = (value: number): string => {
   if (value >= 1000000000) {
@@ -135,13 +143,19 @@ export default function CustomReports() {
   const [reportType, setReportType] = useState<ReportType>('monthly');
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 6)); // Default to 6 months ago
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(new Set(['volume', 'trades', 'users']));
+  const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(new Set(['volume', 'daus', 'users', 'trades']));
   const [activeChartMetric, setActiveChartMetric] = useState<string>('volume');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const rowsPerPage = 10;
 
   // Update date range when report type changes
   useEffect(() => {
     const now = new Date();
-    if (reportType === 'weekly') {
+    if (reportType === 'daily') {
+      // For daily reports, default to last 30 days
+      setStartDate(subDays(now, 30));
+      setEndDate(now);
+    } else if (reportType === 'weekly') {
       // For weekly reports, default to last 12 weeks (3 months)
       setStartDate(subMonths(now, 3));
       setEndDate(now);
@@ -159,6 +173,11 @@ export default function CustomReports() {
     }
   }, [selectedMetrics, activeChartMetric]);
 
+  // Reset pagination when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProtocol, reportType, startDate, endDate, selectedMetrics]);
+
 
   // Get available protocols
   const availableProtocols = protocolConfigs
@@ -171,6 +190,7 @@ export default function CustomReports() {
     .map(data => ({
       period: data.period,
       volume: data.totalVolume,
+      daus: data.totalDAUs,
       users: data.newUsers,
       trades: data.totalTrades,
       formattedVolume: formatCurrency(data.totalVolume)
@@ -199,7 +219,13 @@ export default function CustomReports() {
       const periods: Date[] = [];
       let current = new Date(startDate);
       
-      if (reportType === 'monthly') {
+      if (reportType === 'daily') {
+        // Generate days
+        while (isBefore(current, endDate) || current.getTime() === endDate.getTime()) {
+          periods.push(new Date(current));
+          current = addDays(current, 1);
+        }
+      } else if (reportType === 'monthly') {
         // Generate months
         while (isBefore(current, endDate) || current.getMonth() === endDate.getMonth()) {
           periods.push(new Date(current));
@@ -223,7 +249,11 @@ export default function CustomReports() {
           let periodEnd: Date;
           let periodLabel: string;
           
-          if (reportType === 'monthly') {
+          if (reportType === 'daily') {
+            periodStart = period;
+            periodEnd = period;
+            periodLabel = format(period, 'MMM d, yyyy');
+          } else if (reportType === 'monthly') {
             periodStart = startOfMonth(period);
             periodEnd = endOfMonth(period);
             periodLabel = format(period, 'MMM yyyy');
@@ -247,6 +277,7 @@ export default function CustomReports() {
           
           // Aggregate data for the selected protocol
           let totalVolume = 0;
+          let totalDAUs = 0;
           let totalNewUsers = 0;
           let totalTrades = 0;
           
@@ -254,17 +285,19 @@ export default function CustomReports() {
             const protocolData = dayData[selectedProtocol];
             if (protocolData) {
               totalVolume += protocolData.total_volume_usd || 0;
+              totalDAUs += protocolData.daily_users || 0;
               totalNewUsers += protocolData.numberOfNewUsers || 0;
               totalTrades += protocolData.daily_trades || 0;
             }
           });
           
-          console.log(`${periodLabel} - Volume: $${totalVolume}, Users: ${totalNewUsers}, Trades: ${totalTrades}`);
+          console.log(`${periodLabel} - Volume: $${totalVolume}, DAUs: ${totalDAUs}, New Users: ${totalNewUsers}, Trades: ${totalTrades}`);
           
           return {
             period: periodLabel,
             date: period,
             totalVolume,
+            totalDAUs,
             newUsers: totalNewUsers,
             totalTrades,
             cumulativeVolume: 0 // Will be calculated after all data is fetched
@@ -272,7 +305,9 @@ export default function CustomReports() {
         } catch (error) {
           console.error(`Error fetching data for period:`, error);
           let periodLabel: string;
-          if (reportType === 'monthly') {
+          if (reportType === 'daily') {
+            periodLabel = format(period, 'MMM d, yyyy');
+          } else if (reportType === 'monthly') {
             periodLabel = format(period, 'MMM yyyy');
           } else {
             const weekStart = startOfWeek(period);
@@ -288,6 +323,7 @@ export default function CustomReports() {
             period: periodLabel,
             date: period,
             totalVolume: 0,
+            totalDAUs: 0,
             newUsers: 0,
             totalTrades: 0,
             cumulativeVolume: 0
@@ -297,15 +333,33 @@ export default function CustomReports() {
       
       const results = await Promise.all(reportDataPromises);
       
-      // Calculate cumulative volumes
-      let cumulativeSum = 0;
-      const resultsWithCumulative = results.map(data => {
-        cumulativeSum += data.totalVolume;
-        return {
-          ...data,
-          cumulativeVolume: cumulativeSum
-        };
-      });
+      // Calculate actual lifetime cumulative volumes for each period
+      const resultsWithCumulative = await Promise.all(results.map(async (data) => {
+        try {
+          // For weekly/monthly reports, use the end date of the period for cumulative calculation
+          let cumulativeEndDate = data.date;
+          if (reportType === 'weekly') {
+            cumulativeEndDate = endOfWeek(data.date);
+          } else if (reportType === 'monthly') {
+            cumulativeEndDate = endOfMonth(data.date);
+          }
+          
+          // Use API to get cumulative volume from inception to this date
+          const cumulativeResponse = await protocolApi.getCumulativeVolume(selectedProtocol, cumulativeEndDate, dataType);
+          
+          return {
+            ...data,
+            cumulativeVolume: cumulativeResponse || 0
+          };
+        } catch (error) {
+          console.error(`Error calculating cumulative volume for ${data.period}:`, error);
+          // Fallback to simple cumulative calculation within visible range
+          return {
+            ...data,
+            cumulativeVolume: data.totalVolume
+          };
+        }
+      }));
       
       // Sort by date (chronological order)
       resultsWithCumulative.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -597,8 +651,18 @@ export default function CustomReports() {
               <label className="text-sm font-medium text-foreground">Report Type</label>
               <div className="flex bg-muted p-1 rounded-lg h-10">
                 <button
+                  onClick={() => setReportType('daily')}
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    reportType === 'daily'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Daily
+                </button>
+                <button
                   onClick={() => setReportType('weekly')}
-                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     reportType === 'weekly'
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -608,7 +672,7 @@ export default function CustomReports() {
                 </button>
                 <button
                   onClick={() => setReportType('monthly')}
-                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     reportType === 'monthly'
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -643,6 +707,27 @@ export default function CustomReports() {
                     {selectedMetrics.has('volume') && <Check className="w-3 h-3 text-primary-foreground" />}
                   </div>
                   <span>Volume</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('daus')) {
+                        newSet.delete('daus');
+                      } else {
+                        newSet.add('daus');
+                      }
+                      return newSet;
+                    });
+                  }}
+                >
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('daus') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('daus') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>DAUs</span>
                 </button>
                 <button
                   className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
@@ -698,8 +783,8 @@ export default function CustomReports() {
               onRangeChange={handleDateRangeChange}
               minDate={new Date('2024-01-01')} // Set minimum to when data is available
               maxDate={new Date()}
-              className="h-40 mb-8"
-              sensitivity={reportType === 'weekly' ? 'week' : 'month'}
+              className="h-40"
+              sensitivity={reportType === 'daily' ? 'day' : reportType === 'weekly' ? 'week' : 'month'}
             />
           </div>
         </div>
@@ -711,9 +796,9 @@ export default function CustomReports() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
-                {reportType === 'weekly' ? 'Weekly' : 'Monthly'} {
+                {reportType === 'daily' ? 'Daily' : reportType === 'weekly' ? 'Weekly' : 'Monthly'} {
                   selectedMetrics.size === 0 ? 'Chart' :
-                  `${activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'users' ? 'New Users' : 'Trades'} Chart`
+                  `${activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : 'Trades'} Chart`
                 }
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -743,13 +828,18 @@ export default function CustomReports() {
                   // Sort visible periods chronologically to get proper range
                   const sortedPeriods = visiblePeriods.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
-                  if (reportType === 'weekly') {
-                    // For weekly reports, show start and end dates
+                  if (reportType === 'daily' || reportType === 'weekly') {
+                    // For daily and weekly reports, show start and end dates
                     const firstDate = sortedPeriods[0].date;
                     const lastDate = sortedPeriods[sortedPeriods.length - 1].date;
-                    const startOfFirstWeek = startOfWeek(firstDate);
-                    const endOfLastWeek = endOfWeek(lastDate);
-                    return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                    
+                    if (reportType === 'daily') {
+                      return `${format(firstDate, 'MMM d, yyyy')} - ${format(lastDate, 'MMM d, yyyy')}`;
+                    } else {
+                      const startOfFirstWeek = startOfWeek(firstDate);
+                      const endOfLastWeek = endOfWeek(lastDate);
+                      return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                    }
                   } else {
                     // For monthly reports, show period ranges
                     const firstPeriod = sortedPeriods[0].period;
@@ -765,7 +855,7 @@ export default function CustomReports() {
           {/* Chart Metric Tabs */}
           {selectedMetrics.size > 1 && !loading && !error && chartData.length > 0 && (
             <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
-              {['volume', 'users', 'trades'].filter(metric => selectedMetrics.has(metric)).map((metric) => (
+              {['volume', 'daus', 'users', 'trades'].filter(metric => selectedMetrics.has(metric)).map((metric) => (
                 <button
                   key={metric}
                   onClick={() => setActiveChartMetric(metric)}
@@ -775,7 +865,7 @@ export default function CustomReports() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {metric === 'volume' ? 'Volume' : metric === 'users' ? 'New Users' : 'Trades'}
+                  {metric === 'volume' ? 'Volume' : metric === 'daus' ? 'DAUs' : metric === 'users' ? 'New Users' : 'Trades'}
                 </button>
               ))}
             </div>
@@ -827,7 +917,7 @@ export default function CustomReports() {
                     activeChartMetric === 'volume' 
                       ? formatCurrency(value) 
                       : formatNumberWithSuffix(value), 
-                    activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'users' ? 'New Users' : 'Trades'
+                    activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : 'Trades'
                   ]}
                   labelFormatter={(label: any) => label}
                 />
@@ -838,16 +928,18 @@ export default function CustomReports() {
                   radius={[4, 4, 0, 0]}
                   maxBarSize={60}
                 >
-                  <LabelList
-                    dataKey={activeChartMetric}
-                    position="top"
-                    formatter={(value: number) => activeChartMetric === 'volume' ? formatCurrency(value) : formatNumberWithSuffix(value)}
-                    style={{
-                      fill: 'hsl(var(--foreground))',
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}
-                  />
+                  {chartData.length <= 10 && (
+                    <LabelList
+                      dataKey={activeChartMetric}
+                      position="top"
+                      formatter={(value: number) => activeChartMetric === 'volume' ? formatCurrency(value) : formatNumberWithSuffix(value)}
+                      style={{
+                        fill: 'hsl(var(--foreground))',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    />
+                  )}
                 </Bar>
               </RechartsBarChart>
             </ResponsiveContainer>
@@ -870,7 +962,7 @@ export default function CustomReports() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-xl font-semibold">
-                  {reportType === 'weekly' ? 'Weekly' : 'Monthly'} Report
+                  {reportType === 'daily' ? 'Daily' : reportType === 'weekly' ? 'Weekly' : 'Monthly'} Report
                 </CardTitle>
                 <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
                   <button
@@ -910,13 +1002,18 @@ export default function CustomReports() {
                   // Sort visible periods chronologically to get proper range
                   const sortedPeriods = visiblePeriods.sort((a, b) => a.date.getTime() - b.date.getTime());
                   
-                  if (reportType === 'weekly') {
-                    // For weekly reports, show start and end dates
+                  if (reportType === 'daily' || reportType === 'weekly') {
+                    // For daily and weekly reports, show start and end dates
                     const firstDate = sortedPeriods[0].date;
                     const lastDate = sortedPeriods[sortedPeriods.length - 1].date;
-                    const startOfFirstWeek = startOfWeek(firstDate);
-                    const endOfLastWeek = endOfWeek(lastDate);
-                    return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                    
+                    if (reportType === 'daily') {
+                      return `${format(firstDate, 'MMM d, yyyy')} - ${format(lastDate, 'MMM d, yyyy')}`;
+                    } else {
+                      const startOfFirstWeek = startOfWeek(firstDate);
+                      const endOfLastWeek = endOfWeek(lastDate);
+                      return `${format(startOfFirstWeek, 'MMM d, yyyy')} - ${format(endOfLastWeek, 'MMM d, yyyy')}`;
+                    }
                   } else {
                     // For monthly reports, show period ranges
                     const firstPeriod = sortedPeriods[0].period;
@@ -953,93 +1050,186 @@ export default function CustomReports() {
               </div>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table className="w-full">
-                <TableHeader>
-                  <TableRow className="border-b">
-                    <TableHead className="w-8 h-12 px-2 text-left align-middle font-medium text-muted-foreground"></TableHead>
-                    <TableHead className="w-32 h-12 px-2 text-left align-middle font-medium text-muted-foreground">
-                      {reportType === 'weekly' ? 'Week' : 'Month'}
-                    </TableHead>
-                    {selectedMetrics.has('volume') && (
-                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Volume</TableHead>
-                    )}
-                    {selectedMetrics.has('users') && (
-                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">New Users</TableHead>
-                    )}
-                    {selectedMetrics.has('trades') && (
-                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
-                    )}
-                    {selectedMetrics.has('volume') && (
-                      <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cum. Volume</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reportData.length > 0 ? (
-                    reportData
-                      .filter(data => !hiddenPeriods.has(data.period))
-                      .map((data) => {
-                        const isHidden = hiddenPeriods.has(data.period);
-                        return (
-                          <TableRow key={data.period} className="hover:bg-muted/30 h-10">
-                            <TableCell className="py-2 px-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePeriodVisibility(data.period);
-                                }}
-                                className="opacity-0 hover:opacity-100 transition-opacity duration-200"
-                                title={isHidden ? "Show period" : "Hide period"}
-                              >
-                                {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                              </button>
-                            </TableCell>
-                            <TableCell className="font-medium text-sm py-2 px-2 whitespace-nowrap">
-                              {data.period}
-                            </TableCell>
-                            {selectedMetrics.has('volume') && (
-                              <TableCell className="text-right py-2 px-2">
-                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5">
-                                  {formatCurrency(data.totalVolume)}
-                                </Badge>
-                              </TableCell>
-                            )}
-                            {selectedMetrics.has('users') && (
-                              <TableCell className="text-right py-2 px-2">
-                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300">
-                                  {formatNumber(data.newUsers)}
-                                </Badge>
-                              </TableCell>
-                            )}
-                            {selectedMetrics.has('trades') && (
-                              <TableCell className="text-right py-2 px-2">
-                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
-                                  {formatNumber(data.totalTrades)}
-                                </Badge>
-                              </TableCell>
-                            )}
-                            {selectedMetrics.has('volume') && (
-                              <TableCell className="text-right py-2 px-2">
-                                <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
-                                  {formatCurrency(data.cumulativeVolume)}
-                                </Badge>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        );
-                      })
-                  ) : (
-                    <TableRow className="h-16">
-                      <TableCell colSpan={2 + selectedMetrics.size + (selectedMetrics.has('volume') ? 1 : 0)} className="text-center py-6 text-muted-foreground text-sm px-2">
-                        {selectedMetrics.size === 0 
-                          ? 'Please select at least one metric to display' 
-                          : `No data available for ${getProtocolById(selectedProtocol)?.name || selectedProtocol}`}
-                      </TableCell>
+            <div className="space-y-4">
+              <div className="rounded-md border">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow className="border-b">
+                      <TableHead className="w-8 h-12 px-2 text-left align-middle font-medium text-muted-foreground"></TableHead>
+                      <TableHead className="w-32 h-12 px-2 text-left align-middle font-medium text-muted-foreground">
+                        {reportType === 'daily' ? 'Day' : reportType === 'weekly' ? 'Week' : 'Month'}
+                      </TableHead>
+                      {selectedMetrics.has('volume') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Volume</TableHead>
+                      )}
+                      {selectedMetrics.has('daus') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">DAUs</TableHead>
+                      )}
+                      {selectedMetrics.has('users') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">New Users</TableHead>
+                      )}
+                      {selectedMetrics.has('trades') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
+                      )}
+                      {selectedMetrics.has('volume') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cum. Volume</TableHead>
+                      )}
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {reportData.length > 0 ? (
+                      (() => {
+                        const filteredData = reportData.filter(data => !hiddenPeriods.has(data.period));
+                        const startIndex = (currentPage - 1) * rowsPerPage;
+                        const endIndex = startIndex + rowsPerPage;
+                        const paginatedData = filteredData.slice(startIndex, endIndex);
+                        
+                        return paginatedData.map((data) => {
+                          const isHidden = hiddenPeriods.has(data.period);
+                          return (
+                            <TableRow key={data.period} className="hover:bg-muted/30 h-10">
+                              <TableCell className="py-2 px-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    togglePeriodVisibility(data.period);
+                                  }}
+                                  className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                                  title={isHidden ? "Show period" : "Hide period"}
+                                >
+                                  {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                </button>
+                              </TableCell>
+                              <TableCell className="font-medium text-sm py-2 px-2 whitespace-nowrap">
+                                {data.period}
+                              </TableCell>
+                              {selectedMetrics.has('volume') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5">
+                                    {formatCurrency(data.totalVolume)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {selectedMetrics.has('daus') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-300">
+                                    {formatNumber(data.totalDAUs)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {selectedMetrics.has('users') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300">
+                                    {formatNumber(data.newUsers)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {selectedMetrics.has('trades') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
+                                    {formatNumber(data.totalTrades)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {selectedMetrics.has('volume') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                                    {formatCurrency(data.cumulativeVolume)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        });
+                      })()
+                    ) : (
+                      <TableRow className="h-16">
+                        <TableCell colSpan={2 + selectedMetrics.size + (selectedMetrics.has('volume') ? 1 : 0)} className="text-center py-6 text-muted-foreground text-sm px-2">
+                          {selectedMetrics.size === 0 
+                            ? 'Please select at least one metric to display' 
+                            : `No data available for ${getProtocolById(selectedProtocol)?.name || selectedProtocol}`}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination Controls */}
+              {(() => {
+                if (reportData.length === 0) return null;
+                const filteredData = reportData.filter(data => !hiddenPeriods.has(data.period));
+                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+                
+                if (totalPages <= 1) return null;
+                
+                return (
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <div className="text-sm text-muted-foreground whitespace-nowrap">
+                      Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, filteredData.length)} of {filteredData.length} entries
+                    </div>
+                    <div className="ml-auto">
+                      <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </PaginationLink>
+                        </PaginationItem>
+                        
+                        {/* Page Numbers */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                          // Show first page, last page, current page, and pages around current
+                          if (
+                            pageNum === 1 ||
+                            pageNum === totalPages ||
+                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  isActive={currentPage === pageNum}
+                                  className="cursor-pointer"
+                                >
+                                  {pageNum}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          
+                          // Show ellipsis
+                          if (
+                            (pageNum === 2 && currentPage > 4) ||
+                            (pageNum === totalPages - 1 && currentPage < totalPages - 3)
+                          ) {
+                            return (
+                              <PaginationItem key={pageNum}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          
+                          return null;
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </PaginationLink>
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </CardContent>

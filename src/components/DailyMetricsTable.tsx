@@ -308,7 +308,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           
           return (
             <div className="flex items-center justify-between w-full">
-              <div className="w-[60px] h-[30px] -my-1">
+              <div className="hidden sm:block w-[60px] h-[30px] -my-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={aggregatedData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                     <Area 
@@ -364,7 +364,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         
         return (
           <div className="flex items-center justify-between w-full">
-            <div className="w-[60px] h-[30px] -my-1">
+            <div className="hidden sm:block w-[60px] h-[30px] -my-1">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={getWeeklyVolumeChart(protocol)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <Area 

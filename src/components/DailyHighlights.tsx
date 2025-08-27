@@ -478,6 +478,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
             </div>
           </div>
         </CardHeader>
+        <div className="border-b md:hidden"></div>
         <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => {
@@ -535,6 +536,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
           </div>
         </div>
       </CardHeader>
+      <div className="border-b md:hidden"></div>
       <CardContent className="p-0">
         {insights.length === 0 ? (
           <div className="text-center text-muted-foreground py-6 md:py-8">

@@ -36,10 +36,10 @@ export default function DailyReport() {
   }, [date]);
 
   return (
-    <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
-      <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+    <div className="space-y-2 sm:space-y-4 lg:space-y-6 p-1 sm:p-2 lg:p-0">
+      <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold flex items-center gap-2 sm:gap-3">
         Daily Report
-        <span className="text-xs px-2 py-1 rounded-md font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400">
+        <span className="text-[10px] sm:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400">
           SOL
         </span>
       </h1>

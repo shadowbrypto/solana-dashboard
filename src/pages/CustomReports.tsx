@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Download, Copy, Calendar, Eye, EyeOff, Check, ChevronDown } from 'lucide-react';
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { Download, Copy, Eye, EyeOff, Check } from 'lucide-react';
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -87,6 +88,24 @@ const formatNumberWithSuffix = (value: number): string => {
   return value.toFixed(0);
 };
 
+// Custom SelectItem without checkmark
+const CustomSelectItem = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
+  >
+    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+));
+CustomSelectItem.displayName = "CustomSelectItem";
+
 const getCategoryBadgeStyle = (category: string): string => {
   switch (category) {
     case 'Telegram Bots':
@@ -132,21 +151,6 @@ export default function CustomReports() {
     }
   }, [reportType]);
 
-  // Click outside handler for metrics dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const dropdown = document.getElementById('metrics-dropdown');
-      const button = document.querySelector('[aria-label="metrics-button"]');
-      
-      if (dropdown && !dropdown.contains(event.target as Node) && 
-          button && !button.contains(event.target as Node)) {
-        dropdown.classList.add('hidden');
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Get available protocols
   const availableProtocols = protocolConfigs
@@ -488,12 +492,29 @@ export default function CustomReports() {
           {/* Top Row - Protocol, Report Type, and Metrics */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Protocol Selector */}
-            <div className="space-y-2 overflow-hidden">
+            <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Protocol</label>
-              <div className="relative overflow-hidden">
+              <div className="relative">
                 <Select value={selectedProtocol} onValueChange={setSelectedProtocol}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a protocol" />
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Select a protocol">
+                      {selectedProtocol && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
+                            <img 
+                              src={`/assets/logos/${getProtocolLogoFilename(selectedProtocol)}`}
+                              alt={getProtocolById(selectedProtocol)?.name || selectedProtocol} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                          <span>{getProtocolById(selectedProtocol)?.name || selectedProtocol}</span>
+                        </div>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                 <SelectContent className="max-h-60 overflow-y-auto overflow-x-hidden">
                   {getAllCategories().map((category) => {
@@ -513,12 +534,12 @@ export default function CustomReports() {
                           const config = getProtocolById(protocol);
                           
                           return (
-                            <SelectItem 
+                            <CustomSelectItem 
                               key={protocol} 
                               value={protocol} 
-                              className="px-6 py-2"
+                              className="px-6 py-2 relative"
                             >
-                              <div className="flex items-center gap-2 w-full">
+                              <div className="flex items-center gap-2 pr-20">
                                 <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
                                   <img 
                                     src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
@@ -530,15 +551,15 @@ export default function CustomReports() {
                                     }}
                                   />
                                 </div>
-                                <span className="flex-1 truncate">{config?.name || protocol}</span>
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-[10px] px-1.5 py-0.5 flex-shrink-0 ml-auto ${getCategoryBadgeStyle(config?.category || '')}`}
-                                >
-                                  {config?.category}
-                                </Badge>
+                                <span className="truncate">{config?.name || protocol}</span>
                               </div>
-                            </SelectItem>
+                              <Badge 
+                                variant="outline" 
+                                className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-1.5 py-0 ${getCategoryBadgeStyle(config?.category || '')}`}
+                              >
+                                {config?.category}
+                              </Badge>
+                            </CustomSelectItem>
                           );
                         })}
                       </SelectGroup>
@@ -552,7 +573,7 @@ export default function CustomReports() {
             {/* Report Type Toggle */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Report Type</label>
-              <div className="flex bg-muted p-1 rounded-lg">
+              <div className="flex bg-muted p-1 rounded-lg h-10">
                 <button
                   onClick={() => setReportType('weekly')}
                   className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -576,98 +597,73 @@ export default function CustomReports() {
               </div>
             </div>
 
-            {/* Metrics Multi-Select */}
+            {/* Metrics Selection */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Metrics</label>
-              <div className="relative">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-between"
-                  aria-label="metrics-button"
+              <div className="flex flex-row gap-4 items-center h-10">
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
                   onClick={() => {
-                    const dropdown = document.getElementById('metrics-dropdown');
-                    if (dropdown) {
-                      dropdown.classList.toggle('hidden');
-                    }
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('volume')) {
+                        newSet.delete('volume');
+                      } else {
+                        newSet.add('volume');
+                      }
+                      return newSet;
+                    });
                   }}
                 >
-                  <span className="text-sm truncate">
-                    {selectedMetrics.size === 0 
-                      ? 'Select metrics' 
-                      : selectedMetrics.size === 3 
-                      ? 'All metrics selected'
-                      : `${selectedMetrics.size} metric${selectedMetrics.size > 1 ? 's' : ''} selected`}
-                  </span>
-                  <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0" />
-                </Button>
-                <div 
-                  id="metrics-dropdown"
-                  className="hidden absolute z-50 top-full mt-1 w-full bg-background border rounded-md shadow-md p-2 space-y-1"
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('volume') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('volume') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>Volume</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('users')) {
+                        newSet.delete('users');
+                      } else {
+                        newSet.add('users');
+                      }
+                      return newSet;
+                    });
+                  }}
                 >
-                  <button
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
-                    onClick={() => {
-                      setSelectedMetrics(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has('volume')) {
-                          newSet.delete('volume');
-                        } else {
-                          newSet.add('volume');
-                        }
-                        return newSet;
-                      });
-                    }}
-                  >
-                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
-                      selectedMetrics.has('volume') ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
-                      {selectedMetrics.has('volume') && <Check className="w-3 h-3 text-primary-foreground" />}
-                    </div>
-                    <span>Volume</span>
-                  </button>
-                  <button
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
-                    onClick={() => {
-                      setSelectedMetrics(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has('users')) {
-                          newSet.delete('users');
-                        } else {
-                          newSet.add('users');
-                        }
-                        return newSet;
-                      });
-                    }}
-                  >
-                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
-                      selectedMetrics.has('users') ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
-                      {selectedMetrics.has('users') && <Check className="w-3 h-3 text-primary-foreground" />}
-                    </div>
-                    <span>New Users</span>
-                  </button>
-                  <button
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors flex items-center gap-2"
-                    onClick={() => {
-                      setSelectedMetrics(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has('trades')) {
-                          newSet.delete('trades');
-                        } else {
-                          newSet.add('trades');
-                        }
-                        return newSet;
-                      });
-                    }}
-                  >
-                    <div className={`w-4 h-4 border rounded-sm flex items-center justify-center ${
-                      selectedMetrics.has('trades') ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
-                      {selectedMetrics.has('trades') && <Check className="w-3 h-3 text-primary-foreground" />}
-                    </div>
-                    <span>Trades</span>
-                  </button>
-                </div>
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('users') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('users') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>New Users</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('trades')) {
+                        newSet.delete('trades');
+                      } else {
+                        newSet.add('trades');
+                      }
+                      return newSet;
+                    });
+                  }}
+                >
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('trades') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('trades') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>Trades</span>
+                </button>
               </div>
             </div>
           </div>
@@ -966,7 +962,7 @@ export default function CustomReports() {
                   {reportData.length > 0 ? (
                     reportData
                       .filter(data => !hiddenPeriods.has(data.period))
-                      .map((data, index) => {
+                      .map((data) => {
                         const isHidden = hiddenPeriods.has(data.period);
                         return (
                           <TableRow key={data.period} className="hover:bg-muted/30 h-10">

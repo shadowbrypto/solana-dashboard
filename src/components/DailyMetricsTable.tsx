@@ -333,7 +333,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               </div>
               {!isNeutralCategory && (
                 <div className={cn(
-                  "flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
+                  "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
                   isPositive 
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -389,7 +389,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             </div>
             {!isNeutral && (
               <div className={cn(
-                "flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
+                "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
                 isPositive 
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                   : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1129,7 +1129,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           </div>
                           {!isNeutral && (
                             <div className={cn(
-                              "flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] sm:text-xs font-medium -ml-8",
+                              "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium -ml-8",
                               isPositive 
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"

@@ -307,7 +307,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           const isNeutralCategory = Math.abs(value) < 0.001;
           
           return (
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-end sm:justify-between w-full">
               <div className="hidden sm:block w-[60px] h-[30px] -my-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={aggregatedData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
@@ -333,7 +333,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               </div>
               {!isNeutralCategory && (
                 <div className={cn(
-                  "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
+                  "flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-0.5 sm:ml-1",
                   isPositive 
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -363,7 +363,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         }
         
         return (
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-end sm:justify-between w-full">
             <div className="hidden sm:block w-[60px] h-[30px] -my-1">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={getWeeklyVolumeChart(protocol)} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
@@ -389,7 +389,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             </div>
             {!isNeutral && (
               <div className={cn(
-                "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-1",
+                "flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-0.5 sm:ml-1",
                 isPositive 
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                   : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1111,7 +1111,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         key={metric.key} 
                         className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
                       >
-                        <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center justify-end sm:justify-between w-full">
                           <div className="hidden sm:block w-[40px] sm:w-[50px] h-[24px] sm:h-[28px] -my-2">
                             <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={aggregatedWeeklyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
@@ -1129,7 +1129,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           </div>
                           {!isNeutral && (
                             <div className={cn(
-                              "flex items-center gap-1 rounded-md px-1 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium -ml-8",
+                              "flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium -ml-4 sm:-ml-8",
                               isPositive 
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1147,7 +1147,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             </div>
                           )}
                           {isNeutral && (
-                            <span className="text-muted-foreground text-[9px] sm:text-xs -ml-8">—</span>
+                            <span className="text-muted-foreground text-[9px] sm:text-xs -ml-4 sm:-ml-8">—</span>
                           )}
                         </div>
                       </TableCell>

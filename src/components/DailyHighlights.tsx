@@ -448,7 +448,7 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
       <Badge 
         variant="secondary" 
         className={cn(
-          "text-xs px-2 py-1 font-medium border-0 shadow-sm",
+          "text-[9px] md:text-xs px-1 py-0.5 md:px-2 md:py-1 font-medium border-0 shadow-sm",
           isPositive 
             ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-400"
             : "bg-gradient-to-r from-red-100 to-rose-100 text-red-700 dark:from-red-900/30 dark:to-rose-900/30 dark:text-red-400"
@@ -462,17 +462,17 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
   if (loading) {
     return (
       <Card className="overflow-hidden">
-        <CardHeader>
+        <CardHeader className="p-3 md:p-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-base font-medium">Daily Insights</CardTitle>
-              <p className="text-xs text-muted-foreground">
+            <div className="space-y-0.5 md:space-y-1">
+              <CardTitle className="text-xs md:text-base font-medium">Daily Insights</CardTitle>
+              <p className="text-[9px] md:text-xs text-muted-foreground">
                 Key trends and performance highlights
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="h-5 text-xs">
-                <Calendar className="w-2.5 h-2.5 mr-1 animate-pulse" />
+            <div className="flex items-center gap-1 md:gap-2">
+              <Badge variant="secondary" className="h-3.5 md:h-5 text-[9px] md:text-xs">
+                <Calendar className="w-2 h-2 md:w-2.5 md:h-2.5 mr-0.5 md:mr-1 animate-pulse" />
                 {format(date, 'MMM dd')}
               </Badge>
             </div>
@@ -487,21 +487,21 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
               return (
                 <div 
                   key={i}
-                  className={`p-4 animate-pulse ${
+                  className={`p-2 md:p-4 animate-pulse border-b ${
                     !isRightColumn ? 'border-r' : ''
                   } ${
-                    !isBottomRow ? 'border-b' : ''
+                    isBottomRow ? 'md:border-b-0' : ''
                   }`}
                 >
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1 md:space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="w-7 h-7 bg-muted rounded-lg"></div>
-                      <div className="w-16 h-4 bg-muted rounded"></div>
+                      <div className="w-5 h-5 md:w-7 md:h-7 bg-muted rounded-lg"></div>
+                      <div className="w-12 h-3 md:w-16 md:h-4 bg-muted rounded"></div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="w-20 h-3 bg-muted rounded"></div>
-                      <div className="w-full h-4 bg-muted rounded"></div>
-                      <div className="w-24 h-3 bg-muted rounded"></div>
+                    <div className="space-y-1.5 md:space-y-2">
+                      <div className="w-16 h-2.5 md:w-20 md:h-3 bg-muted rounded"></div>
+                      <div className="w-full h-3 md:h-4 bg-muted rounded"></div>
+                      <div className="w-20 h-2.5 md:w-24 md:h-3 bg-muted rounded"></div>
                     </div>
                   </div>
                 </div>
@@ -519,17 +519,17 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
       filename={`Daily_Insights_${format(date, 'yyyy_MM_dd')}.png`}
     >
       <Card className="overflow-hidden">
-      <CardHeader>
+      <CardHeader className="p-3 md:p-6">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-medium">Daily Insights</CardTitle>
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-0.5 md:space-y-1">
+            <CardTitle className="text-xs md:text-base font-medium">Daily Insights</CardTitle>
+            <p className="text-[9px] md:text-xs text-muted-foreground">
               Key trends and performance highlights
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="h-5 text-xs">
-              <Calendar className="w-2.5 h-2.5 mr-1" />
+          <div className="flex items-center gap-1 md:gap-2">
+            <Badge variant="secondary" className="h-3.5 md:h-5 text-[9px] md:text-xs">
+              <Calendar className="w-2 h-2 md:w-2.5 md:h-2.5 mr-0.5 md:mr-1" />
               {format(date, 'MMM dd')}
             </Badge>
           </div>
@@ -537,9 +537,9 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
       </CardHeader>
       <CardContent className="p-0">
         {insights.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <Info className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>No significant insights for this date</p>
+          <div className="text-center text-muted-foreground py-6 md:py-8">
+            <Info className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-50" />
+            <p className="text-[10px] md:text-sm">No significant insights for this date</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2">
@@ -550,26 +550,26 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
               return (
                 <div 
                   key={index}
-                  className={`relative group p-4 transition-colors hover:bg-muted/50 ${
+                  className={`relative group p-2 md:p-4 transition-colors hover:bg-muted/50 border-b ${
                     !isRightColumn ? 'border-r' : ''
                   } ${
-                    !isBottomRow ? 'border-b' : ''
+                    isBottomRow ? 'md:border-b-0' : ''
                   }`}
                 >
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1 md:space-y-2">
                     <div className="flex items-center justify-between">
                       <div className={cn(
-                        "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                        "inline-flex h-4 w-4 md:h-7 md:w-7 items-center justify-center rounded-lg",
                         getInsightBadgeColor(insight.type)
                       )}>
                         {React.cloneElement(insight.icon as React.ReactElement, {
-                          className: cn("h-3.5 w-3.5", getInsightIconColor(insight.type))
+                          className: cn("h-2 w-2 md:h-3.5 md:w-3.5", getInsightIconColor(insight.type))
                         })}
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1 md:gap-1.5">
                         {insight.protocol && (
-                          <Badge variant="outline" className="text-xs font-medium px-2 py-1 flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
+                          <Badge variant="outline" className="text-[8px] md:text-xs font-medium px-1 py-0.5 md:px-2 md:py-1 flex items-center gap-0.5 md:gap-1.5">
+                            <div className="w-2 h-2 md:w-3 md:h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
                               <img 
                                 src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
                                 alt={insight.protocol} 
@@ -579,9 +579,9 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
                                   const container = target.parentElement;
                                   if (container) {
                                     container.innerHTML = '';
-                                    container.className = 'w-3 h-3 bg-muted/20 rounded-full flex items-center justify-center';
+                                    container.className = 'w-2 h-2 md:w-3 md:h-3 bg-muted/20 rounded-full flex items-center justify-center';
                                     const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                    iconEl.innerHTML = '<svg class="h-1 w-1 md:h-1.5 md:w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
                                     container.appendChild(iconEl);
                                   }
                                 }}
@@ -590,19 +590,21 @@ export function DailyHighlights({ date }: DailyHighlightsProps) {
                             {insight.protocol.charAt(0).toUpperCase() + insight.protocol.slice(1)}
                           </Badge>
                         )}
-                        {getTrendBadge(insight.trend)}
+                        <div className="hidden sm:block">
+                          {getTrendBadge(insight.trend)}
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-medium leading-none text-muted-foreground">
+                    <div className="space-y-0.5 md:space-y-1">
+                      <h4 className="text-[9px] md:text-xs font-medium leading-none text-muted-foreground">
                         {insight.title}
                       </h4>
-                      <p className="text-sm font-semibold tracking-tight leading-tight">
+                      <p className="text-[10px] md:text-sm font-semibold tracking-tight leading-tight">
                         {insight.description}
                       </p>
                       {insight.value && (
-                        <p className="text-xs text-muted-foreground/70">
+                        <p className="text-[9px] md:text-xs text-muted-foreground/70">
                           {insight.value}
                         </p>
                       )}

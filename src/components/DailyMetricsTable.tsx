@@ -767,20 +767,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
-        <div data-table="daily-metrics" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">Daily Report</h3>
-              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
+    <div className="space-y-2 sm:space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-2 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
+        <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 sm:pb-4 gap-2 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
+              <span className="px-1 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
                 SOL
               </span>
             </div>
-            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+            <div className="flex items-center gap-1 sm:gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
               <button
                 onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
               >
                 {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
@@ -794,17 +794,17 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         </div>
 
           <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
-          <Table className="min-w-[800px]">
+          <Table className="min-w-[600px] sm:min-w-[800px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[150px] sm:w-[200px] py-0.5 text-xs sm:text-sm">Protocol</TableHead>
+                <TableHead className="w-[120px] sm:w-[200px] py-0.5 text-[9px] sm:text-sm px-1 sm:px-4">Protocol</TableHead>
                 {orderedMetrics.map((metric, index) => (
                   <TableHead 
                     key={metric.key} 
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-xs sm:text-sm ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[90px]' : 'min-w-[130px]') : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
+                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
                   >
                     {metric.key === 'projected_volume' ? (
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                         <span className="truncate">{metric.label}</span>
                         <button
                           onClick={toggleProjectedVolumeVisibility}
@@ -892,8 +892,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       className={cn("border-t cursor-pointer", getCategoryRowColor(categoryName))}
                       onClick={toggleCollapse}
                     >
-                      <TableCell className="font-semibold text-xs sm:text-sm tracking-wide py-3 sm:py-4">
-                        <div className="flex items-center gap-1 sm:gap-2">
+                      <TableCell className="font-semibold text-[9px] sm:text-sm tracking-wide py-2 sm:py-4 px-1 sm:px-4">
+                        <div className="flex items-center gap-0.5 sm:gap-2">
                           <ChevronRight 
                             className={`h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 ${
                               !isCollapsed ? 'rotate-90' : ''
@@ -905,7 +905,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       {orderedMetrics.map((metric) => (
                         <TableCell 
                           key={metric.key} 
-                          className={`text-right font-medium py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[90px]' : 'min-w-[130px]') : ''}`}
+                          className={`text-right font-medium py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
                         >
                           {metric.key === 'market_share'
                             ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
@@ -930,8 +930,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           key={protocol} 
                           className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
                         >
-                          <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
-                            <div className="flex items-center gap-1 sm:gap-2">
+                          <TableCell className="pl-1 sm:pl-6 text-muted-foreground text-[9px] sm:text-sm px-1 sm:px-4">
+                            <div className="flex items-center gap-0.5 sm:gap-2">
                               <button
                                 onClick={(e) => {
                                   console.log('Protocol visibility button clicked');
@@ -980,8 +980,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         {orderedMetrics.map((metric) => (
                           <TableCell 
                             key={metric.key} 
-                            className={`text-right py-0.5 text-xs sm:text-sm ${metric.key === 'daily_growth'
-                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[90px]' : ' min-w-[130px]')
+                            className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth'
+                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[70px] sm:min-w-[90px]' : ' min-w-[100px] sm:min-w-[130px]')
                               : !metric.skipGradient
                                 ? getGradientColor(
                                     metric.getValue 
@@ -1018,7 +1018,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
               {/* All Trading Apps Total Row */}
               <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
-                <TableCell className="font-medium text-xs sm:text-sm">
+                <TableCell className="font-medium text-[9px] sm:text-sm px-1 sm:px-4">
                   All Trading Apps
                 </TableCell>
                 {orderedMetrics.map((metric) => {
@@ -1109,10 +1109,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     return (
                       <TableCell 
                         key={metric.key} 
-                        className="text-right font-bold text-xs sm:text-sm"
+                        className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
                       >
                         <div className="flex items-center justify-between w-full">
-                          <div className="w-[50px] h-[28px] -my-2">
+                          <div className="hidden sm:block w-[40px] sm:w-[50px] h-[24px] sm:h-[28px] -my-2">
                             <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={aggregatedWeeklyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
                                 <Area 
@@ -1162,8 +1162,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     
                     if (totalActualVolume === 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
-                          <div className="flex items-center gap-2 justify-end">
+                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                          <div className="flex items-center gap-1 sm:gap-2 justify-end">
                             <span>{formatCurrency(total)}</span>
                           </div>
                         </TableCell>
@@ -1193,8 +1193,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
                     
                     return (
-                      <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
-                        <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatCurrency(total)}</span>
                           <span className="text-[9px] font-medium text-muted-foreground">
                             {diffText}
@@ -1207,7 +1207,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   return (
                     <TableCell 
                       key={metric.key} 
-                      className="text-right font-bold text-xs sm:text-sm"
+                      className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
                     >
                       {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total, true)}
                     </TableCell>

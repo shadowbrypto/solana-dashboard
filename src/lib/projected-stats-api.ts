@@ -107,27 +107,24 @@ export class ProjectedStatsApi {
   }
 
   /**
-   * Get aggregated monthly projected volumes for all protocols
+   * Get aggregated monthly projected volumes for all protocols from backend
    */
   static async getMonthlyProjectedVolumes(year: number, month: number): Promise<Record<string, number>> {
     try {
-      // Create start and end dates for the month
-      const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of month
-      
-      const projectedData = await this.getProjectedStats(undefined, startDate, endDate);
-      
-      // Aggregate by protocol
-      const monthlyVolumes: Record<string, number> = {};
-      
-      projectedData.forEach(item => {
-        if (!monthlyVolumes[item.protocol_name]) {
-          monthlyVolumes[item.protocol_name] = 0;
+      const response = await fetch(
+        `${API_BASE_URL}/projected-stats/monthly/${year}/${month}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
-        monthlyVolumes[item.protocol_name] += item.volume_usd;
-      });
-      
-      return monthlyVolumes;
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch monthly projected volumes: ${response.statusText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       console.error('Error fetching monthly projected volumes:', error);
       throw error;

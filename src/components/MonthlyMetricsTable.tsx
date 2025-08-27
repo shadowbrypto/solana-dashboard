@@ -121,7 +121,7 @@ interface MetricDefinition {
   key: MetricKey;
   label: string;
   format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => React.ReactNode;
-  getValue?: (data: ProtocolMetrics) => number;
+  getValue?: (data: ProtocolMetrics, protocol?: Protocol) => number;
   skipGradient?: boolean;
 }
 
@@ -328,7 +328,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
         // For Mobile Apps protocols, use actual volume as projected volume
         const protocolConfig = getProtocolById(protocol);
         if (protocolConfig?.category === 'Mobile Apps') {
-          return monthlyData[protocol]?.total_volume_usd || 0;
+          return data?.total_volume_usd || 0;
         }
         
         // For other protocols without projected data, return 0
@@ -997,7 +997,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                             : metric.key === 'monthly_growth'
                             ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
                             : metric.getValue
-                              ? metric.format(metric.getValue(categoryTotals as any), true, undefined, categoryName)
+                              ? metric.format(metric.getValue(categoryTotals as any, undefined), true, undefined, categoryName)
                               : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}
                         </TableCell>
                       ))}
@@ -1065,17 +1065,17 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                               : !metric.skipGradient
                                 ? getGradientColor(
                                     metric.getValue 
-                                      ? metric.getValue(monthlyData[protocol] || {} as any)
+                                      ? metric.getValue(monthlyData[protocol] || {} as any, protocol)
                                       : (monthlyData[protocol]?.[metric.key as keyof MonthlyData] || 0),
                                     0,
                                     protocols.reduce((max, p) => {
                                       const value = metric.getValue 
-                                        ? metric.getValue(monthlyData[p] || {} as any)
+                                        ? metric.getValue(monthlyData[p] || {} as any, p)
                                         : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0);
                                       return Math.max(max, value);
                                     }, 0),
                                     protocols.map(p => metric.getValue
-                                      ? metric.getValue(monthlyData[p] || {} as any)
+                                      ? metric.getValue(monthlyData[p] || {} as any, p)
                                       : (monthlyData[p]?.[metric.key as keyof MonthlyData] || 0)
                                     )
                                   )
@@ -1084,7 +1084,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                           >
                             <span>
                               {metric.getValue
-                                ? metric.format(metric.getValue(monthlyData[protocol] || {} as any), false, protocol)
+                                ? metric.format(metric.getValue(monthlyData[protocol] || {} as any, protocol), false, protocol)
                                 : metric.format(monthlyData[protocol]?.[metric.key] || 0, false, protocol)}
                             </span>
                           </TableCell>

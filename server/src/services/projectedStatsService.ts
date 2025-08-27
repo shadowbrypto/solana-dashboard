@@ -295,3 +295,48 @@ export async function getLatestProjectedVolumes(): Promise<Record<string, number
     return {};
   }
 }
+
+/**
+ * Get monthly adjusted volumes for all protocols
+ */
+export async function getMonthlyAdjustedVolumes(year: number, month: number): Promise<Record<string, number>> {
+  try {
+    // Create start and end dates for the month
+    const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+    const endOfMonth = new Date(year, month, 0); // Last day of the month
+    const endDate = endOfMonth.toISOString().split('T')[0];
+
+    console.log(`Fetching monthly adjusted volumes for ${year}-${month.toString().padStart(2, '0')} (${startDate} to ${endDate})`);
+
+    // Get all projected stats for the month
+    const { data, error } = await supabase
+      .from('projected_stats')
+      .select('protocol_name, volume_usd')
+      .gte('formatted_day', startDate)
+      .lte('formatted_day', endDate);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+
+    console.log(`Found ${data?.length || 0} projected stats records for the month`);
+
+    // Aggregate by protocol
+    const monthlyVolumes: Record<string, number> = {};
+    
+    data?.forEach(item => {
+      if (!monthlyVolumes[item.protocol_name]) {
+        monthlyVolumes[item.protocol_name] = 0;
+      }
+      monthlyVolumes[item.protocol_name] += item.volume_usd || 0;
+    });
+
+    console.log('Aggregated monthly volumes:', Object.keys(monthlyVolumes).length, 'protocols');
+    
+    return monthlyVolumes;
+  } catch (error) {
+    console.error('Error fetching monthly adjusted volumes:', error);
+    return {};
+  }
+}

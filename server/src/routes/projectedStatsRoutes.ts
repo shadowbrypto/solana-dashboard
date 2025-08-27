@@ -3,7 +3,8 @@ import {
   getProjectedStats, 
   getProjectedStatsForDate, 
   updateAllProjectedData,
-  getLatestProjectedVolumes
+  getLatestProjectedVolumes,
+  getMonthlyAdjustedVolumes
 } from '../services/projectedStatsService';
 
 const router = express.Router();
@@ -73,6 +74,36 @@ router.get('/projected-stats/latest-volumes', async (req, res) => {
     console.error('Error fetching latest projected volumes:', error);
     res.status(500).json({ 
       error: 'Failed to fetch latest projected volumes',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/projected-stats/monthly/:year/:month
+ * Get monthly adjusted volumes for all protocols
+ */
+router.get('/projected-stats/monthly/:year/:month', async (req, res) => {
+  try {
+    const { year, month } = req.params;
+    
+    if (!year || !month) {
+      return res.status(400).json({ error: 'Year and month parameters are required' });
+    }
+
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+
+    if (isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+      return res.status(400).json({ error: 'Invalid year or month parameter' });
+    }
+
+    const data = await getMonthlyAdjustedVolumes(yearNum, monthNum);
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching monthly adjusted volumes:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch monthly adjusted volumes',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -127,7 +127,11 @@ export default function MonthlyReport() {
       </div>
 
       {/* Content based on chain type */}
-      {chainType === 'solana' && <MonthlyHighlights date={date} loading={loading} />}
+      {chainType === 'solana' && (
+        <div className="mb-6">
+          <MonthlyHighlights date={date} loading={loading} />
+        </div>
+      )}
       
       {isLoading ? (
         <Card>

@@ -21,6 +21,9 @@ import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogo
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { useToast } from "../hooks/use-toast";
+import { ProjectedStatsApi, ProjectedStatsData } from "../lib/projected-stats-api";
+import { Settings } from "../lib/settings";
+import { getProtocolById } from "../lib/protocol-config";
 
 const LoadingSkeleton = () => (
   <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
@@ -112,7 +115,7 @@ interface MonthlyMetricsTableProps {
   loading?: boolean;
 }
 
-type MetricKey = keyof ProtocolMetrics | 'market_share';
+type MetricKey = keyof ProtocolMetrics | 'market_share' | 'adjusted_volume';
 
 interface MetricDefinition {
   key: MetricKey;
@@ -162,9 +165,11 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
   const [monthlyData, setMonthlyData] = useState<Record<Protocol, MonthlyData>>({});
   const [previousMonthData, setPreviousMonthData] = useState<Record<Protocol, MonthlyData>>({});
   const [monthlyVolumeData, setMonthlyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
+  const [projectedVolumeData, setProjectedVolumeData] = useState<Record<string, number>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
-  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["total_volume_usd", "numberOfNewUsers", "daily_trades", "market_share", "monthly_growth" as MetricKey]);
+  const [columnOrder, setColumnOrder] = useState<MetricKey[]>(["adjusted_volume" as MetricKey, "total_volume_usd", "numberOfNewUsers", "daily_trades", "market_share", "monthly_growth" as MetricKey]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const [isProjectedVolumeHidden, setIsProjectedVolumeHidden] = useState<boolean>(() => Settings.getIsProjectedVolumeHidden());
   const { toast } = useToast();
 
   // Show loading skeleton when loading prop is true
@@ -211,6 +216,125 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
   };
 
   const metrics: MetricDefinition[] = [
+    { 
+      key: "adjusted_volume" as MetricKey, 
+      label: "Adj. Volume", 
+      format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => {
+        if (value === 0 || value === undefined) return <span className="text-muted-foreground">-</span>;
+        
+        // For category rows, calculate total actual volume and show comparison
+        if (isCategory && categoryName) {
+          // Get protocols for this category
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+          const visibleProtocols = categoryProtocols
+            .map(p => p.id)
+            .filter(p => protocols.includes(p as Protocol) && !hiddenProtocols.has(p));
+          
+          // Calculate total actual volume for this category
+          const totalActualVolume = visibleProtocols
+            .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
+          
+          if (totalActualVolume === 0) {
+            return (
+              <div className="flex items-center gap-2 justify-end">
+                <span>{formatCurrency(value)}</span>
+              </div>
+            );
+          }
+          
+          // Calculate difference
+          const difference = value - totalActualVolume;
+          const percentageDiff = (difference / totalActualVolume) * 100;
+          
+          // Determine styling based on difference
+          const isNeutral = Math.abs(difference) < 0.01;
+          const isPositive = difference > 0;
+          
+          let bgColor, borderColor;
+          if (isNeutral) {
+            bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+            borderColor = "border-l-gray-400";
+          } else if (isPositive) {
+            bgColor = "bg-green-100/80 dark:bg-green-950/40";
+            borderColor = "border-l-green-400";
+          } else {
+            bgColor = "bg-red-100/80 dark:bg-red-950/40";
+            borderColor = "border-l-red-400";
+          }
+          
+          const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+          
+          return (
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+              <span>{formatCurrency(value)}</span>
+              <span className="text-[9px] font-medium text-muted-foreground">
+                {diffText}
+              </span>
+            </div>
+          );
+        }
+        
+        // Get actual volume for comparison
+        const actualVolume = protocol ? monthlyData[protocol]?.total_volume_usd || 0 : 0;
+        
+        if (actualVolume === 0) {
+          return (
+            <div className="flex items-center gap-2 justify-end">
+              <span>{formatCurrency(value)}</span>
+            </div>
+          );
+        }
+        
+        // Calculate difference
+        const difference = value - actualVolume;
+        const percentageDiff = (difference / actualVolume) * 100;
+        
+        // Determine styling based on difference
+        const isNeutral = Math.abs(difference) < 0.01;
+        const isPositive = difference > 0;
+        
+        let bgColor, borderColor;
+        if (isNeutral) {
+          bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+          borderColor = "border-l-gray-400";
+        } else if (isPositive) {
+          bgColor = "bg-green-100/80 dark:bg-green-950/40";
+          borderColor = "border-l-green-400";
+        } else {
+          bgColor = "bg-red-100/80 dark:bg-red-950/40";
+          borderColor = "border-l-red-400";
+        }
+        
+        const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+        
+        return (
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+            <span>{formatCurrency(value)}</span>
+            <span className="text-[9px] font-medium text-muted-foreground">
+              {diffText}
+            </span>
+          </div>
+        );
+      },
+      getValue: (data, protocol) => {
+        if (!protocol) return 0;
+        
+        // Check if this protocol has projected volume data
+        const projectedVolume = projectedVolumeData[protocol];
+        if (projectedVolume && projectedVolume > 0) {
+          return projectedVolume;
+        }
+        
+        // For Mobile Apps protocols, use actual volume as projected volume
+        const protocolConfig = getProtocolById(protocol);
+        if (protocolConfig?.category === 'Mobile Apps') {
+          return monthlyData[protocol]?.total_volume_usd || 0;
+        }
+        
+        // For other protocols without projected data, return 0
+        return 0;
+      }
+    },
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
     { key: "numberOfNewUsers", label: "New Users", format: formatNumber },
     { key: "daily_trades", label: "Trades", format: formatNumber },
@@ -511,6 +635,23 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
         setMonthlyVolumeData(organizedMonthlyData);
 
+        // Fetch projected volume data for the selected date
+        try {
+          const projectedData = await ProjectedStatsApi.getProjectedStatsForDate(
+            format(date, 'yyyy-MM-dd')
+          );
+          
+          const projectedVolumeMap: Record<string, number> = {};
+          projectedData.forEach(item => {
+            projectedVolumeMap[item.protocol_name] = item.volume_usd;
+          });
+          
+          setProjectedVolumeData(projectedVolumeMap);
+        } catch (error) {
+          console.error('Error fetching projected volume data:', error);
+          setProjectedVolumeData({});
+        }
+
         // Aggregate monthly data for each protocol
         const currentAggregated: Record<Protocol, MonthlyData> = {};
         const previousAggregated: Record<Protocol, MonthlyData> = {};
@@ -722,7 +863,12 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
         <div data-table="monthly-metrics" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
           <div className="flex items-center gap-4">
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Protocol Monthly Metrics</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
+              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
+                SOL
+              </span>
+            </div>
             <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
               <button
                 onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
@@ -802,6 +948,24 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                     const categoryVolume = visibleProtocols
                       .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
                     acc[metric.key] = totalVolume > 0 ? categoryVolume / totalVolume : 0;
+                  } else if (metric.key === 'adjusted_volume') {
+                    // Calculate category adjusted volume total
+                    acc[metric.key] = visibleProtocols
+                      .reduce((sum, p) => {
+                        // Check if this protocol has projected volume data
+                        const projectedVolume = projectedVolumeData[p];
+                        if (projectedVolume && projectedVolume > 0) {
+                          return sum + projectedVolume;
+                        }
+                        
+                        // For Mobile Apps protocols, use actual volume as projected volume
+                        const protocolConfig = getProtocolById(p);
+                        if (protocolConfig?.category === 'Mobile Apps') {
+                          return sum + (monthlyData[p as Protocol]?.total_volume_usd || 0);
+                        }
+                        
+                        return sum;
+                      }, 0);
                   } else {
                     acc[metric.key] = visibleProtocols
                       .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.[metric.key as keyof MonthlyData] || 0), 0);
@@ -954,6 +1118,25 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                     total = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
                   } else if (metric.key === 'market_share') {
                     total = 1; // 100% by definition for all protocols
+                  } else if (metric.key === 'adjusted_volume') {
+                    // Calculate total adjusted volume for all protocols
+                    total = protocols
+                      .filter(p => p !== 'all')
+                      .reduce((sum, p) => {
+                        // Check if this protocol has projected volume data
+                        const projectedVolume = projectedVolumeData[p];
+                        if (projectedVolume && projectedVolume > 0) {
+                          return sum + projectedVolume;
+                        }
+                        
+                        // For Mobile Apps protocols, use actual volume as projected volume
+                        const protocolConfig = getProtocolById(p);
+                        if (protocolConfig?.category === 'Mobile Apps') {
+                          return sum + (monthlyData[p]?.total_volume_usd || 0);
+                        }
+                        
+                        return sum;
+                      }, 0);
                   } else {
                     total = protocols
                       .filter(p => p !== 'all')
@@ -1047,6 +1230,56 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                           {isNeutral && (
                             <span className="text-muted-foreground text-xs">—</span>
                           )}
+                        </div>
+                      </TableCell>
+                    );
+                  }
+                  
+                  if (metric.key === 'adjusted_volume') {
+                    // Calculate total actual volume for comparison
+                    const totalActualVolume = protocols
+                      .filter(p => p !== 'all')
+                      .reduce((sum, p) => sum + (monthlyData[p]?.total_volume_usd || 0), 0);
+                    
+                    if (totalActualVolume === 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
+                          <div className="flex items-center gap-2 justify-end">
+                            <span>{formatCurrency(total)}</span>
+                          </div>
+                        </TableCell>
+                      );
+                    }
+                    
+                    // Calculate difference
+                    const difference = total - totalActualVolume;
+                    const percentageDiff = (difference / totalActualVolume) * 100;
+                    
+                    // Determine styling based on difference
+                    const isNeutral = Math.abs(difference) < 0.01; // Less than 1 cent difference
+                    const isPositive = difference > 0;
+                    
+                    let bgColor, borderColor;
+                    if (isNeutral) {
+                      bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+                      borderColor = "border-l-gray-400";
+                    } else if (isPositive) {
+                      bgColor = "bg-green-100/80 dark:bg-green-950/40";
+                      borderColor = "border-l-green-400";
+                    } else {
+                      bgColor = "bg-red-100/80 dark:bg-red-950/40";
+                      borderColor = "border-l-red-400";
+                    }
+                    
+                    const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+                    
+                    return (
+                      <TableCell key={metric.key} className="text-right font-bold text-xs sm:text-sm">
+                        <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+                          <span>{formatCurrency(total)}</span>
+                          <span className="text-[9px] font-medium text-muted-foreground">
+                            {diffText}
+                          </span>
                         </div>
                       </TableCell>
                     );

@@ -136,6 +136,7 @@ export default function CustomReports() {
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 6)); // Default to 6 months ago
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(new Set(['volume', 'trades', 'users']));
+  const [activeChartMetric, setActiveChartMetric] = useState<string>('volume');
 
   // Update date range when report type changes
   useEffect(() => {
@@ -150,6 +151,13 @@ export default function CustomReports() {
       setEndDate(now);
     }
   }, [reportType]);
+
+  // Update active chart metric when selectedMetrics changes
+  useEffect(() => {
+    if (!selectedMetrics.has(activeChartMetric) && selectedMetrics.size > 0) {
+      setActiveChartMetric(Array.from(selectedMetrics)[0]);
+    }
+  }, [selectedMetrics, activeChartMetric]);
 
 
   // Get available protocols
@@ -691,8 +699,7 @@ export default function CustomReports() {
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
                 {reportType === 'weekly' ? 'Weekly' : 'Monthly'} {
                   selectedMetrics.size === 0 ? 'Chart' :
-                  selectedMetrics.size === 1 ? `${Array.from(selectedMetrics)[0].charAt(0).toUpperCase() + Array.from(selectedMetrics)[0].slice(1)} Chart` :
-                  'Metrics Chart'
+                  `${activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'users' ? 'New Users' : 'Trades'} Chart`
                 }
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -732,6 +739,25 @@ export default function CustomReports() {
           </div>
         </CardHeader>
         <CardContent className="pt-2 pb-1 px-2 sm:pt-6 sm:pb-6 sm:px-6">
+          {/* Chart Metric Tabs */}
+          {selectedMetrics.size > 1 && !loading && !error && chartData.length > 0 && (
+            <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
+              {Array.from(selectedMetrics).map((metric) => (
+                <button
+                  key={metric}
+                  onClick={() => setActiveChartMetric(metric)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    activeChartMetric === metric
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {metric === 'volume' ? 'Volume' : metric === 'users' ? 'New Users' : 'Trades'}
+                </button>
+              ))}
+            </div>
+          )}
+          
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex items-center gap-2">
@@ -775,79 +801,31 @@ export default function CustomReports() {
                   }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                   formatter={(value: any) => [
-                    selectedMetrics.has('volume') && !selectedMetrics.has('users') && !selectedMetrics.has('trades') 
+                    activeChartMetric === 'volume' 
                       ? formatCurrency(value) 
                       : formatNumberWithSuffix(value), 
-                    'Value'
+                    activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'users' ? 'New Users' : 'Trades'
                   ]}
                   labelFormatter={(label: any) => label}
                 />
-                {selectedMetrics.has('volume') && (
-                  <Bar
-                    dataKey="volume"
-                    fill={getProtocolColor(selectedProtocol)}
-                    fillOpacity={0.8}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={60}
-                  >
-                    {selectedMetrics.size === 1 && (
-                      <LabelList
-                        dataKey="volume"
-                        position="top"
-                        formatter={(value: number) => formatNumberWithSuffix(value)}
-                        style={{
-                          fill: 'hsl(var(--foreground))',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                      />
-                    )}
-                  </Bar>
-                )}
-                {selectedMetrics.has('users') && (
-                  <Bar
-                    dataKey="users"
-                    fill={getProtocolColor(selectedProtocol)}
-                    fillOpacity={0.6}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={60}
-                  >
-                    {selectedMetrics.size === 1 && (
-                      <LabelList
-                        dataKey="users"
-                        position="top"
-                        formatter={(value: number) => formatNumberWithSuffix(value)}
-                        style={{
-                          fill: 'hsl(var(--foreground))',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                      />
-                    )}
-                  </Bar>
-                )}
-                {selectedMetrics.has('trades') && (
-                  <Bar
-                    dataKey="trades"
-                    fill={getProtocolColor(selectedProtocol)}
-                    fillOpacity={0.4}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={60}
-                  >
-                    {selectedMetrics.size === 1 && (
-                      <LabelList
-                        dataKey="trades"
-                        position="top"
-                        formatter={(value: number) => formatNumberWithSuffix(value)}
-                        style={{
-                          fill: 'hsl(var(--foreground))',
-                          fontSize: '12px',
-                          fontWeight: '500'
-                        }}
-                      />
-                    )}
-                  </Bar>
-                )}
+                <Bar
+                  dataKey={activeChartMetric}
+                  fill={getProtocolColor(selectedProtocol)}
+                  fillOpacity={0.8}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={60}
+                >
+                  <LabelList
+                    dataKey={activeChartMetric}
+                    position="top"
+                    formatter={(value: number) => activeChartMetric === 'volume' ? formatCurrency(value) : formatNumberWithSuffix(value)}
+                    style={{
+                      fill: 'hsl(var(--foreground))',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  />
+                </Bar>
               </RechartsBarChart>
             </ResponsiveContainer>
           ) : (

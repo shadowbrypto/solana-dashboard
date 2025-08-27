@@ -254,7 +254,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 style={{ width: `${Math.max(percentage, 2)}%` }}
               />
             </div>
-            <span className="font-medium text-sm min-w-[50px]">{percentage.toFixed(2)}%</span>
+            <span className="font-medium text-[9px] sm:text-sm min-w-[50px]">{percentage.toFixed(2)}%</span>
           </div>
         );
       },

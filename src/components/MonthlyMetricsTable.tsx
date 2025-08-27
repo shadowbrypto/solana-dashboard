@@ -635,20 +635,15 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
         setMonthlyVolumeData(organizedMonthlyData);
 
-        // Fetch projected volume data for the selected date
+        // Fetch projected volume data for the selected month
         try {
-          const projectedData = await ProjectedStatsApi.getProjectedStatsForDate(
-            format(date, 'yyyy-MM-dd')
-          );
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1; // getMonth() returns 0-based month
           
-          const projectedVolumeMap: Record<string, number> = {};
-          projectedData.forEach(item => {
-            projectedVolumeMap[item.protocol_name] = item.volume_usd;
-          });
-          
+          const projectedVolumeMap = await ProjectedStatsApi.getMonthlyProjectedVolumes(year, month);
           setProjectedVolumeData(projectedVolumeMap);
         } catch (error) {
-          console.error('Error fetching projected volume data:', error);
+          console.error('Error fetching monthly projected volume data:', error);
           setProjectedVolumeData({});
         }
 

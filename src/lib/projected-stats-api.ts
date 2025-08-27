@@ -107,6 +107,34 @@ export class ProjectedStatsApi {
   }
 
   /**
+   * Get aggregated monthly projected volumes for all protocols
+   */
+  static async getMonthlyProjectedVolumes(year: number, month: number): Promise<Record<string, number>> {
+    try {
+      // Create start and end dates for the month
+      const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of month
+      
+      const projectedData = await this.getProjectedStats(undefined, startDate, endDate);
+      
+      // Aggregate by protocol
+      const monthlyVolumes: Record<string, number> = {};
+      
+      projectedData.forEach(item => {
+        if (!monthlyVolumes[item.protocol_name]) {
+          monthlyVolumes[item.protocol_name] = 0;
+        }
+        monthlyVolumes[item.protocol_name] += item.volume_usd;
+      });
+      
+      return monthlyVolumes;
+    } catch (error) {
+      console.error('Error fetching monthly projected volumes:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Trigger update of projected data from Dune
    */
   static async updateProjectedData(): Promise<{ successCount: number; totalCount: number; protocols: string[] }> {

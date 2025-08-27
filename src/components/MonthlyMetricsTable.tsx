@@ -996,6 +996,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                             ? formatNumber(categoryTotals[metric.key] || 0)
                             : metric.key === 'monthly_growth'
                             ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
+                            : metric.key === 'adjusted_volume'
+                            ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
                             : metric.getValue
                               ? metric.format(metric.getValue(categoryTotals as any, undefined), true, undefined, categoryName)
                               : metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)}

@@ -42,81 +42,45 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
-    // Create balls for each protocol - limit to prevent performance issues
-    const maxBalls = 15; // Limit number of balls for performance
-    const selectedProtocols = protocolConfigs
-      .sort(() => Math.random() - 0.5) // Randomize
-      .slice(0, maxBalls);
+    // Create balls for all protocols to fill the screen
+    const ballsPerProtocol = Math.ceil(40 / protocolConfigs.length); // Aim for ~40 balls total
+    const allBalls: Ball[] = [];
     
-    const balls: Ball[] = selectedProtocols.map((protocol, index) => {
-      const radius = 25 + Math.random() * 15; // Smaller size range 25-40
-      const spacing = (dimensions.width - 100) / maxBalls;
-      return {
-        id: protocol.id,
-        x: 50 + (index * spacing) + (Math.random() - 0.5) * 20,
-        y: 100 + Math.random() * 200, // Start from top to drop down
-        vx: 0, // No initial horizontal velocity
-        vy: 0,
-        radius,
-        logo: `/assets/logos/${getProtocolLogoFilename(protocol.id)}`,
-        name: protocol.name,
-        mass: radius / 25, // Mass proportional to size
-      };
+    protocolConfigs.forEach((protocol, protocolIndex) => {
+      for (let i = 0; i < ballsPerProtocol; i++) {
+        const radius = 20 + Math.random() * 15; // Size range 20-35
+        allBalls.push({
+          id: `${protocol.id}-${i}`,
+          x: Math.random() * (dimensions.width - radius * 2) + radius,
+          y: -radius - Math.random() * dimensions.height, // Start above screen at various heights
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: Math.random() * 2, // Random initial downward velocity
+          radius,
+          logo: `/assets/logos/${getProtocolLogoFilename(protocol.id)}`,
+          name: protocol.name,
+          mass: radius / 20,
+        });
+      }
     });
+    
+    const balls = allBalls.slice(0, 40); // Limit to 40 balls max
 
     ballsRef.current = balls;
 
-    // Preload images immediately
+    // Preload images with simpler approach
     balls.forEach(ball => {
       const img = new Image();
-      // Remove crossOrigin to avoid CORS issues with local assets
+      img.src = ball.logo;
       
-      // Set a placeholder first to prevent flickering
-      const placeholderCanvas = document.createElement('canvas');
-      placeholderCanvas.width = ball.radius * 2;
-      placeholderCanvas.height = ball.radius * 2;
-      const pCtx = placeholderCanvas.getContext('2d');
-      if (pCtx) {
-        pCtx.fillStyle = 'rgba(30, 30, 30, 0.8)';
-        pCtx.beginPath();
-        pCtx.arc(ball.radius, ball.radius, ball.radius, 0, Math.PI * 2);
-        pCtx.fill();
-        
-        pCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        pCtx.font = `${ball.radius}px Arial`;
-        pCtx.textAlign = 'center';
-        pCtx.textBaseline = 'middle';
-        pCtx.fillText(ball.name[0].toUpperCase(), ball.radius, ball.radius);
-      }
-      
-      const placeholderImg = new Image();
-      placeholderImg.src = placeholderCanvas.toDataURL();
-      imagesRef.current.set(ball.id, placeholderImg);
-      
-      // Then load the actual image
+      // Store image directly once loaded
       img.onload = () => {
-        // Create a properly sized canvas for the logo
-        const logoCanvas = document.createElement('canvas');
-        logoCanvas.width = ball.radius * 2;
-        logoCanvas.height = ball.radius * 2;
-        const logoCtx = logoCanvas.getContext('2d');
-        if (logoCtx) {
-          logoCtx.drawImage(img, 0, 0, ball.radius * 2, ball.radius * 2);
-        }
-        
-        const logoImg = new Image();
-        logoImg.src = logoCanvas.toDataURL();
-        logoImg.onload = () => {
-          imagesRef.current.set(ball.id, logoImg);
-        };
+        imagesRef.current.set(ball.id, img);
       };
       
       img.onerror = () => {
-        // Keep the placeholder on error
+        // Don't set anything on error - let the fallback handle it
         console.log(`Failed to load logo for ${ball.name}`);
       };
-      
-      img.src = ball.logo;
     });
 
     return () => {
@@ -152,8 +116,8 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     const gravity = 0.15;
     const friction = 0.98;
     const groundFriction = 0.85; // Higher friction when on ground
-    const mouseRadius = 100;
-    const mouseForce = 30;
+    const mouseRadius = 60;
+    const mouseForce = 25;
     const dampening = 0.7;
     const maxVelocity = 20;
     const restThreshold = 0.5; // Velocity threshold to consider ball at rest
@@ -282,20 +246,25 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
         // Draw ball with double buffering to prevent flicker
         const img = imagesRef.current.get(ball.id);
         
+        // Draw ball
         ctx.save();
         
-        // Always draw the ball background first
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
+        // Create circular clipping path first
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.closePath();
+        
+        // Fill background
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.95)';
         ctx.fill();
         
+        // Clip for image
+        ctx.clip();
+        
         if (img && img.complete && img.naturalWidth > 0) {
-          // Create circular clipping path
-          ctx.beginPath();
-          ctx.arc(ball.x, ball.y, ball.radius - 1, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.clip();
+          // Enable image smoothing for better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           
           // Draw the image
           try {
@@ -307,15 +276,27 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
               ball.radius * 2
             );
           } catch (e) {
-            // If image fails to draw, it will show the background
+            // If image fails to draw, show initial
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = `${ball.radius}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(ball.name[0].toUpperCase(), ball.x, ball.y);
           }
+        } else {
+          // Fallback - show initial
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.font = `${ball.radius}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(ball.name[0].toUpperCase(), ball.x, ball.y);
         }
         
         ctx.restore();
         
-        // Always add border
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
+        // Add subtle border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
         ctx.stroke();
@@ -344,7 +325,7 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       ref={canvasRef}
       className={`absolute inset-0 w-full h-full pointer-events-auto ${className}`}
       style={{ 
-        opacity: 0.6,
+        opacity: 0.8,
         willChange: 'transform',
       }}
     />

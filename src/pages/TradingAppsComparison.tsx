@@ -314,12 +314,12 @@ export default function TradingAppsComparison() {
   }, [selectedProtocols]);
 
   return (
-    <div className="relative p-3 sm:p-4 lg:p-6">
-      {/* Background Animation */}
+    <div className="relative min-h-screen">
+      {/* Background Animation - positioned absolute to fill parent */}
       <TradingAppsBackground className="z-0" />
       
       {/* Content wrapper with higher z-index */}
-      <div className="relative z-10">
+      <div className="relative z-10 p-3 sm:p-4 lg:p-6 min-h-screen">
         {/* Header */}
         <h1 className="text-lg sm:text-2xl lg:text-3xl mb-4 sm:mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
           Trading Apps Comparison

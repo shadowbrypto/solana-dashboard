@@ -152,16 +152,18 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           ball.vx *= 0.9; // Quick horizontal stop
         }
         
-        // Mouse interaction
-        const dx = mouse.x - ball.x;
-        const dy = mouse.y - ball.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance < mouseRadius + ball.radius && distance > 0) {
-          // Calculate repulsion force
-          const force = (mouseRadius + ball.radius - distance) / distance * mouseForce;
-          ball.vx -= (dx / distance) * force / ball.mass;
-          ball.vy -= (dy / distance) * force / ball.mass;
+        // Mouse interaction only if not resting
+        if (!isResting) {
+          const dx = mouse.x - ball.x;
+          const dy = mouse.y - ball.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < mouseRadius + ball.radius && distance > 0) {
+            // Calculate repulsion force
+            const force = (mouseRadius + ball.radius - distance) / distance * mouseForce;
+            ball.vx -= (dx / distance) * force / ball.mass;
+            ball.vy -= (dy / distance) * force / ball.mass;
+          }
         }
         
         // Ball collision - stack like Tetris
@@ -340,7 +342,7 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       ref={canvasRef}
       className={`absolute inset-0 w-full h-full pointer-events-auto ${className}`}
       style={{ 
-        opacity: 0.4,
+        opacity: 0.15,
         willChange: 'transform',
       }}
     />

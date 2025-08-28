@@ -316,7 +316,7 @@ export default function TradingAppsComparison() {
   return (
     <div className="relative min-h-screen">
       {/* Background Animation - positioned absolute to fill parent */}
-      <TradingAppsBackground className="z-0" />
+      <TradingAppsBackground className="-z-10" />
       
       {/* Content wrapper with higher z-index */}
       <div className="relative z-10 p-3 sm:p-4 lg:p-6 min-h-screen">

@@ -50,11 +50,12 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     
     const balls: Ball[] = selectedProtocols.map((protocol, index) => {
       const radius = 25 + Math.random() * 15; // Smaller size range 25-40
+      const spacing = (dimensions.width - 100) / maxBalls;
       return {
         id: protocol.id,
-        x: Math.random() * (dimensions.width - radius * 2) + radius,
-        y: dimensions.height - radius - Math.random() * 50, // Start near bottom
-        vx: (Math.random() - 0.5) * 0.3,
+        x: 50 + (index * spacing) + (Math.random() - 0.5) * 20,
+        y: 100 + Math.random() * 200, // Start from top to drop down
+        vx: 0, // No initial horizontal velocity
         vy: 0,
         radius,
         logo: `/assets/logos/${getProtocolLogoFilename(protocol.id)}`,
@@ -65,36 +66,57 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
 
     ballsRef.current = balls;
 
-    // Preload images
+    // Preload images immediately
     balls.forEach(ball => {
       const img = new Image();
-      img.src = ball.logo;
-      img.onerror = () => {
-        // Create a fallback canvas with the first letter
-        const fallbackCanvas = document.createElement('canvas');
-        fallbackCanvas.width = ball.radius * 2;
-        fallbackCanvas.height = ball.radius * 2;
-        const ctx = fallbackCanvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = '#1a1a1a';
-          ctx.beginPath();
-          ctx.arc(ball.radius, ball.radius, ball.radius, 0, Math.PI * 2);
-          ctx.fill();
-          
-          ctx.fillStyle = '#666';
-          ctx.font = `${ball.radius}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(ball.name[0].toUpperCase(), ball.radius, ball.radius);
+      // Remove crossOrigin to avoid CORS issues with local assets
+      
+      // Set a placeholder first to prevent flickering
+      const placeholderCanvas = document.createElement('canvas');
+      placeholderCanvas.width = ball.radius * 2;
+      placeholderCanvas.height = ball.radius * 2;
+      const pCtx = placeholderCanvas.getContext('2d');
+      if (pCtx) {
+        pCtx.fillStyle = 'rgba(30, 30, 30, 0.8)';
+        pCtx.beginPath();
+        pCtx.arc(ball.radius, ball.radius, ball.radius, 0, Math.PI * 2);
+        pCtx.fill();
+        
+        pCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        pCtx.font = `${ball.radius}px Arial`;
+        pCtx.textAlign = 'center';
+        pCtx.textBaseline = 'middle';
+        pCtx.fillText(ball.name[0].toUpperCase(), ball.radius, ball.radius);
+      }
+      
+      const placeholderImg = new Image();
+      placeholderImg.src = placeholderCanvas.toDataURL();
+      imagesRef.current.set(ball.id, placeholderImg);
+      
+      // Then load the actual image
+      img.onload = () => {
+        // Create a properly sized canvas for the logo
+        const logoCanvas = document.createElement('canvas');
+        logoCanvas.width = ball.radius * 2;
+        logoCanvas.height = ball.radius * 2;
+        const logoCtx = logoCanvas.getContext('2d');
+        if (logoCtx) {
+          logoCtx.drawImage(img, 0, 0, ball.radius * 2, ball.radius * 2);
         }
         
-        const fallbackImg = new Image();
-        fallbackImg.src = fallbackCanvas.toDataURL();
-        imagesRef.current.set(ball.id, fallbackImg);
+        const logoImg = new Image();
+        logoImg.src = logoCanvas.toDataURL();
+        logoImg.onload = () => {
+          imagesRef.current.set(ball.id, logoImg);
+        };
       };
-      img.onload = () => {
-        imagesRef.current.set(ball.id, img);
+      
+      img.onerror = () => {
+        // Keep the placeholder on error
+        console.log(`Failed to load logo for ${ball.name}`);
       };
+      
+      img.src = ball.logo;
     });
 
     return () => {
@@ -127,12 +149,14 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const gravity = 0.08;
-    const friction = 0.995;
-    const mouseRadius = 80;
-    const mouseForce = 20;
-    const dampening = 0.92;
-    const maxVelocity = 15;
+    const gravity = 0.15;
+    const friction = 0.98;
+    const groundFriction = 0.85; // Higher friction when on ground
+    const mouseRadius = 100;
+    const mouseForce = 30;
+    const dampening = 0.7;
+    const maxVelocity = 20;
+    const restThreshold = 0.5; // Velocity threshold to consider ball at rest
 
     const animate = (currentTime: number) => {
       // Limit to 30 FPS for better performance
@@ -153,8 +177,11 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       
       // Update each ball
       balls.forEach((ball, index) => {
-        // Apply gravity
-        ball.vy += gravity;
+        // Only apply gravity if not resting on ground
+        const isOnGround = Math.abs(ball.y - (dimensions.height - ball.radius)) < 1;
+        if (!isOnGround) {
+          ball.vy += gravity;
+        }
         
         // Mouse interaction
         const dx = mouse.x - ball.x;
@@ -206,9 +233,18 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           }
         }
         
-        // Apply friction
-        ball.vx *= friction;
-        ball.vy *= friction;
+        // Apply friction (higher friction on ground)
+        if (isOnGround) {
+          ball.vx *= groundFriction;
+          ball.vy *= friction;
+          
+          // Stop tiny movements when on ground
+          if (Math.abs(ball.vx) < restThreshold) ball.vx = 0;
+          if (Math.abs(ball.vy) < restThreshold) ball.vy = 0;
+        } else {
+          ball.vx *= friction;
+          ball.vy *= friction;
+        }
         
         // Limit velocity
         const velocity = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
@@ -237,51 +273,52 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           ball.y = dimensions.height - ball.radius;
           ball.vy = -ball.vy * dampening;
           
-          // Add small random horizontal movement when hitting bottom
-          if (Math.abs(ball.vy) < 0.1 && Math.abs(ball.vx) < 0.1) {
-            ball.vx += (Math.random() - 0.5) * 0.3;
+          // Stop bouncing if velocity is too small
+          if (Math.abs(ball.vy) < restThreshold) {
+            ball.vy = 0;
           }
         }
         
-        // Draw ball
+        // Draw ball with double buffering to prevent flicker
         const img = imagesRef.current.get(ball.id);
-        if (img && img.complete) {
-          ctx.save();
-          
+        
+        ctx.save();
+        
+        // Always draw the ball background first
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        if (img && img.complete && img.naturalWidth > 0) {
           // Create circular clipping path
           ctx.beginPath();
-          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+          ctx.arc(ball.x, ball.y, ball.radius - 1, 0, Math.PI * 2);
           ctx.closePath();
           ctx.clip();
           
           // Draw the image
-          ctx.drawImage(
-            img,
-            ball.x - ball.radius,
-            ball.y - ball.radius,
-            ball.radius * 2,
-            ball.radius * 2
-          );
-          
-          ctx.restore();
-          
-          // Add subtle border
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-          ctx.stroke();
-        } else {
-          // Fallback circle
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-          ctx.beginPath();
-          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-          ctx.fill();
-          
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          try {
+            ctx.drawImage(
+              img,
+              ball.x - ball.radius,
+              ball.y - ball.radius,
+              ball.radius * 2,
+              ball.radius * 2
+            );
+          } catch (e) {
+            // If image fails to draw, it will show the background
+          }
         }
+        
+        ctx.restore();
+        
+        // Always add border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.stroke();
       });
       
       animationRef.current = requestAnimationFrame(animate);
@@ -307,8 +344,7 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       ref={canvasRef}
       className={`absolute inset-0 w-full h-full pointer-events-auto ${className}`}
       style={{ 
-        opacity: 0.2,
-        filter: 'blur(0.5px)',
+        opacity: 0.6,
         willChange: 'transform',
       }}
     />

@@ -42,28 +42,26 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
-    // Create balls for all protocols to fill the screen
-    const ballsPerProtocol = Math.ceil(40 / protocolConfigs.length); // Aim for ~40 balls total
-    const allBalls: Ball[] = [];
+    // Create many small balls with random protocols
+    const totalBalls = 80; // Many more balls
+    const balls: Ball[] = [];
     
-    protocolConfigs.forEach((protocol, protocolIndex) => {
-      for (let i = 0; i < ballsPerProtocol; i++) {
-        const radius = 20 + Math.random() * 15; // Size range 20-35
-        allBalls.push({
-          id: `${protocol.id}-${i}`,
-          x: Math.random() * (dimensions.width - radius * 2) + radius,
-          y: -radius - Math.random() * dimensions.height, // Start above screen at various heights
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: Math.random() * 2, // Random initial downward velocity
-          radius,
-          logo: `/assets/logos/${getProtocolLogoFilename(protocol.id)}`,
-          name: protocol.name,
-          mass: radius / 20,
-        });
-      }
-    });
-    
-    const balls = allBalls.slice(0, 40); // Limit to 40 balls max
+    for (let i = 0; i < totalBalls; i++) {
+      const protocol = protocolConfigs[Math.floor(Math.random() * protocolConfigs.length)];
+      const radius = 10 + Math.random() * 5; // Much smaller: 10-15
+      
+      balls.push({
+        id: `${protocol.id}-${i}`,
+        x: Math.random() * (dimensions.width - radius * 2) + radius,
+        y: Math.random() * (dimensions.height - radius * 2) + radius, // Start at random positions
+        vx: 0, // Start stationary
+        vy: 0,
+        radius,
+        logo: `/assets/logos/${getProtocolLogoFilename(protocol.id)}`,
+        name: protocol.name,
+        mass: radius / 10,
+      });
+    }
 
     ballsRef.current = balls;
 
@@ -113,14 +111,14 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const gravity = 0.15;
-    const friction = 0.98;
-    const groundFriction = 0.85; // Higher friction when on ground
-    const mouseRadius = 60;
-    const mouseForce = 25;
-    const dampening = 0.7;
-    const maxVelocity = 20;
-    const restThreshold = 0.5; // Velocity threshold to consider ball at rest
+    const gravity = 0.05; // Much gentler gravity
+    const friction = 0.99; // Higher friction for stability
+    const groundFriction = 0.95; // Very high ground friction
+    const mouseRadius = 50; // Smaller interaction radius
+    const mouseForce = 8; // Gentler mouse force
+    const dampening = 0.5; // More dampening
+    const maxVelocity = 8; // Lower max velocity
+    const restThreshold = 0.1; // Lower threshold for rest
 
     const animate = (currentTime: number) => {
       // Limit to 30 FPS for better performance
@@ -141,10 +139,17 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       
       // Update each ball
       balls.forEach((ball, index) => {
-        // Only apply gravity if not resting on ground
-        const isOnGround = Math.abs(ball.y - (dimensions.height - ball.radius)) < 1;
-        if (!isOnGround) {
+        // Apply gravity only if not settled
+        const isOnGround = ball.y >= (dimensions.height - ball.radius - 1);
+        const isResting = isOnGround && Math.abs(ball.vy) < restThreshold && Math.abs(ball.vx) < restThreshold;
+        
+        if (!isResting) {
           ball.vy += gravity;
+        } else {
+          // Force to rest position
+          ball.y = dimensions.height - ball.radius;
+          ball.vy = 0;
+          ball.vx *= 0.9; // Quick horizontal stop
         }
         
         // Mouse interaction
@@ -159,8 +164,10 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           ball.vy -= (dy / distance) * force / ball.mass;
         }
         
-        // Ball collision
-        for (let j = index + 1; j < balls.length; j++) {
+        // Ball collision - stack like Tetris
+        for (let j = 0; j < balls.length; j++) {
+          if (j === index) continue;
+          
           const other = balls[j];
           const dx = other.x - ball.x;
           const dy = other.y - ball.y;
@@ -168,32 +175,23 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           const minDistance = ball.radius + other.radius;
           
           if (distance < minDistance && distance > 0) {
-            // Elastic collision
-            const overlap = minDistance - distance;
-            const separationX = dx / distance * overlap * 0.5;
-            const separationY = dy / distance * overlap * 0.5;
-            
-            ball.x -= separationX;
-            ball.y -= separationY;
-            other.x += separationX;
-            other.y += separationY;
-            
-            // Update velocities
-            const normalX = dx / distance;
-            const normalY = dy / distance;
-            const relativeVelocity = {
-              x: other.vx - ball.vx,
-              y: other.vy - ball.vy,
-            };
-            
-            const speed = relativeVelocity.x * normalX + relativeVelocity.y * normalY;
-            if (speed < 0) return;
-            
-            const impulse = 2 * speed / (ball.mass + other.mass);
-            ball.vx += impulse * other.mass * normalX;
-            ball.vy += impulse * other.mass * normalY;
-            other.vx -= impulse * ball.mass * normalX;
-            other.vy -= impulse * ball.mass * normalY;
+            // Check if ball is above the other (falling onto it)
+            if (ball.y < other.y && ball.vy > 0) {
+              // Stack on top
+              ball.y = other.y - ball.radius - other.radius;
+              ball.vy = 0;
+              ball.vx *= 0.5; // Reduce horizontal movement when stacking
+            } else if (distance < minDistance * 0.9) {
+              // Side collision - just separate horizontally
+              const overlap = minDistance - distance;
+              const separationX = (dx / distance) * overlap;
+              
+              if (ball.x < other.x) {
+                ball.x -= separationX * 0.5;
+              } else {
+                ball.x += separationX * 0.5;
+              }
+            }
           }
         }
         
@@ -254,8 +252,8 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
         ctx.closePath();
         
-        // Fill background
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.95)';
+        // Fill background with solid color
+        ctx.fillStyle = '#1a1a1a';
         ctx.fill();
         
         // Clip for image
@@ -266,14 +264,31 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           
-          // Draw the image
+          // Draw the image with preserved aspect ratio
           try {
+            // Calculate aspect ratio
+            const imgAspect = img.naturalWidth / img.naturalHeight;
+            let drawWidth = ball.radius * 2;
+            let drawHeight = ball.radius * 2;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            if (imgAspect > 1) {
+              // Wider than tall
+              drawHeight = drawWidth / imgAspect;
+              offsetY = (ball.radius * 2 - drawHeight) / 2;
+            } else if (imgAspect < 1) {
+              // Taller than wide
+              drawWidth = drawHeight * imgAspect;
+              offsetX = (ball.radius * 2 - drawWidth) / 2;
+            }
+            
             ctx.drawImage(
               img,
-              ball.x - ball.radius,
-              ball.y - ball.radius,
-              ball.radius * 2,
-              ball.radius * 2
+              ball.x - ball.radius + offsetX,
+              ball.y - ball.radius + offsetY,
+              drawWidth,
+              drawHeight
             );
           } catch (e) {
             // If image fails to draw, show initial
@@ -325,7 +340,7 @@ export function TradingAppsBackground({ className = '' }: TradingAppsBackgroundP
       ref={canvasRef}
       className={`absolute inset-0 w-full h-full pointer-events-auto ${className}`}
       style={{ 
-        opacity: 0.8,
+        opacity: 0.4,
         willChange: 'transform',
       }}
     />

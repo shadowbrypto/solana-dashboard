@@ -15,6 +15,7 @@ import { MultiComparisonChart } from '../components/MultiComparisonChart';
 import { MarketShareComparisonChart } from '../components/MarketShareComparisonChart';
 import { Skeleton } from '../components/ui/skeleton';
 import { MultiComparisonMetricCardSkeleton } from '../components/MultiComparisonMetricCardSkeleton';
+import { TradingAppsBackground } from '../components/TradingAppsBackground';
 
 type TimeFrame = "7d" | "30d" | "3m" | "6m" | "1y" | "all";
 
@@ -313,11 +314,16 @@ export default function TradingAppsComparison() {
   }, [selectedProtocols]);
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6">
-      {/* Header */}
-      <h1 className="text-lg sm:text-2xl lg:text-3xl mb-4 sm:mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-        Trading Apps Comparison
-      </h1>
+    <div className="relative p-3 sm:p-4 lg:p-6">
+      {/* Background Animation */}
+      <TradingAppsBackground className="z-0" />
+      
+      {/* Content wrapper with higher z-index */}
+      <div className="relative z-10">
+        {/* Header */}
+        <h1 className="text-lg sm:text-2xl lg:text-3xl mb-4 sm:mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+          Trading Apps Comparison
+        </h1>
 
       {/* Protocol Selection */}
       <Card>
@@ -684,6 +690,7 @@ export default function TradingAppsComparison() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

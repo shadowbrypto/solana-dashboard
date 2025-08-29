@@ -117,12 +117,12 @@ export function DailyStatsCard({
                   {IconComponent && (
                     <IconComponent className="w-6 h-6 text-foreground flex-shrink-0" />
                   )}
-                  <div className="text-base text-foreground">
+                  <div className="text-sm text-foreground">
                     {row.app}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-base text-foreground">
+                  <div className="text-sm text-foreground">
                     {formatMetricValue(getMetricValue(row, activeMetric), activeMetric)}
                   </div>
                   <Badge 

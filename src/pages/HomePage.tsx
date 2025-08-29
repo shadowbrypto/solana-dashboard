@@ -219,7 +219,7 @@ export function HomePage() {
               ]}
             />
           </div>
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-sm">
             <DailyStatsCard
               data={[
                 {

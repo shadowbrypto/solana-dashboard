@@ -182,20 +182,129 @@ class DashboardService {
 
       const fearGreedIndex = calculateFearGreedIndex();
 
+      // Fetch chain-specific volume data
+      const chainVolumes = await this.getChainVolumes(yesterdayStr, dataType);
+
+      // Fetch launchpad data for timeline charts
+      const { data: launchpadData, error: launchpadError } = await supabase
+        .from('launchpad_stats')
+        .select('date, launches, graduations')
+        .gte('date', weekAgoStr)
+        .lte('date', yesterdayStr)
+        .order('date', { ascending: true });
+
+      if (launchpadError) {
+        console.error('Error fetching launchpad data:', launchpadError);
+      }
+
+      // Aggregate launchpad data by date
+      const launchpadTrends: Record<string, any> = {};
+      (launchpadData || []).forEach(row => {
+        if (!launchpadTrends[row.date]) {
+          launchpadTrends[row.date] = {
+            date: row.date,
+            launches: 0,
+            graduations: 0
+          };
+        }
+        launchpadTrends[row.date].launches += row.launches || 0;
+        launchpadTrends[row.date].graduations += row.graduations || 0;
+      });
+
+      // Convert to array and ensure we have 7 days
+      const launchpadTrendArray = Object.values(launchpadTrends).sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // Calculate yesterday's launchpad totals
+      const yesterdayLaunchpad = launchpadTrendArray[launchpadTrendArray.length - 1] || { launches: 0, graduations: 0 };
+      const dayBeforeLaunchpad = launchpadTrendArray[launchpadTrendArray.length - 2] || { launches: 0, graduations: 0 };
+      
+      // Calculate launchpad growth
+      const launchpadGrowth = {
+        launches: dayBeforeLaunchpad.launches ? ((yesterdayLaunchpad.launches - dayBeforeLaunchpad.launches) / dayBeforeLaunchpad.launches) * 100 : 0,
+        graduations: dayBeforeLaunchpad.graduations ? ((yesterdayLaunchpad.graduations - dayBeforeLaunchpad.graduations) / dayBeforeLaunchpad.graduations) * 100 : 0
+      };
+
+      // Fetch top 6 protocols with detailed stats for daily stats card
+      const { data: topProtocolsData, error: topProtocolsError } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, daily_users, new_users, trades')
+        .eq('chain', 'solana')
+        .eq('data_type', dataType)
+        .eq('date', yesterdayStr)
+        .order('volume_usd', { ascending: false })
+        .limit(6);
+
+      if (topProtocolsError) {
+        throw topProtocolsError;
+      }
+
+      // Get previous day data for growth calculations
+      const dayBeforeStr = format(startOfDay(subDays(new Date(), 2)), 'yyyy-MM-dd');
+      const { data: previousDayData, error: previousDayError } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, daily_users, new_users, trades')
+        .eq('chain', 'solana')
+        .eq('data_type', dataType)
+        .eq('date', dayBeforeStr);
+
+      if (previousDayError) {
+        console.error('Error fetching previous day data for growth:', previousDayError);
+      }
+
+      // Create lookup for previous day data
+      const previousDayLookup = (previousDayData || []).reduce((acc, row) => {
+        acc[row.protocol_name] = row;
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Calculate growth for each protocol
+      const topProtocolsWithGrowth = (topProtocolsData || []).map(protocol => {
+        const prevData = previousDayLookup[protocol.protocol_name];
+        
+        const calculateGrowth = (current: number, previous: number) => {
+          if (!previous || previous === 0) return 0;
+          return ((current - previous) / previous) * 100;
+        };
+
+        return {
+          app: protocol.protocol_name.charAt(0).toUpperCase() + protocol.protocol_name.slice(1),
+          protocolId: protocol.protocol_name,
+          volume: protocol.volume_usd || 0,
+          volumeGrowth: calculateGrowth(protocol.volume_usd || 0, prevData?.volume_usd || 0),
+          daus: protocol.daily_users || 0,
+          dausGrowth: calculateGrowth(protocol.daily_users || 0, prevData?.daily_users || 0),
+          newUsers: protocol.new_users || 0,
+          newUsersGrowth: calculateGrowth(protocol.new_users || 0, prevData?.new_users || 0),
+          trades: protocol.trades || 0,
+          tradesGrowth: calculateGrowth(protocol.trades || 0, prevData?.trades || 0)
+        };
+      });
+
       const result = {
         yesterday: yesterdayTotals,
         growth,
         trends: {
-          volume: trendArray.map(d => ({ name: format(new Date(d.date), 'EEE'), value: d.volume })),
-          users: trendArray.map(d => ({ name: format(new Date(d.date), 'EEE'), value: d.users })),
-          newUsers: trendArray.map(d => ({ name: format(new Date(d.date), 'EEE'), value: d.newUsers })),
-          trades: trendArray.map(d => ({ name: format(new Date(d.date), 'EEE'), value: d.trades }))
+          volume: trendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.volume, date: d.date })),
+          users: trendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.users, date: d.date })),
+          newUsers: trendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.newUsers, date: d.date })),
+          trades: trendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.trades, date: d.date })),
+          launches: launchpadTrendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.launches, date: d.date })),
+          graduations: launchpadTrendArray.map(d => ({ name: format(new Date(d.date), 'MMM d'), value: d.graduations, date: d.date }))
+        },
+        launchpad: {
+          launches: yesterdayLaunchpad.launches || 0,
+          graduations: yesterdayLaunchpad.graduations || 0,
+          growth: launchpadGrowth
         },
         rankings: {
           byVolume: topProtocolsByVolume,
           byUsers: topProtocolsByUsers,
           byTrades: topProtocolsByTrades
         },
+        chainVolumes,
+        topProtocols: topProtocolsWithGrowth,
         fearGreedIndex,
         lastUpdated: new Date().toISOString()
       };
@@ -207,6 +316,51 @@ class DashboardService {
     } catch (error) {
       console.error('Dashboard service error:', error);
       throw error;
+    }
+  }
+
+  async getChainVolumes(date: string, dataType: string = 'private') {
+    try {
+      // Fetch volume for each chain directly from database
+      // The database stores chain-specific data with separate entries per chain
+      const chains = ['solana', 'ethereum', 'base', 'bsc'];
+      const chainVolumes: Record<string, number> = {};
+
+      // Query each chain separately and get actual volumes
+      for (const chain of chains) {
+        const { data: chainData, error: chainError } = await supabase
+          .from('protocol_stats')
+          .select('volume_usd')
+          .eq('chain', chain)
+          .eq('data_type', chain === 'solana' ? dataType : 'public') // EVM chains use 'public' data type
+          .eq('date', date);
+
+        if (chainError) {
+          console.error(`Error fetching ${chain} volume:`, chainError);
+          chainVolumes[chain] = 0;
+        } else {
+          chainVolumes[chain] = (chainData || []).reduce((sum, row) => sum + (row.volume_usd || 0), 0);
+        }
+      }
+
+      const totalVolume = Object.values(chainVolumes).reduce((sum, vol) => sum + vol, 0);
+
+      return {
+        solana: Math.round(chainVolumes.solana || 0),
+        ethereum: Math.round(chainVolumes.ethereum || 0),
+        bsc: Math.round(chainVolumes.bsc || 0),
+        base: Math.round(chainVolumes.base || 0),
+        total: Math.round(totalVolume)
+      };
+    } catch (error) {
+      console.error('Chain volumes fetch error:', error);
+      return {
+        solana: 0,
+        ethereum: 0,
+        bsc: 0,
+        base: 0,
+        total: 0
+      };
     }
   }
 }

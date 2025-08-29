@@ -8,7 +8,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 interface GradientAreaCardProps {
   title: string;
   subtitle: string;
-  data: Array<{ name: string; value: number }>;
+  data: Array<{ name: string; value: number; date?: string }>;
   growth?: number;
   gradientId?: string;
   strokeColor?: string;
@@ -63,7 +63,7 @@ export function GradientAreaCard({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-[100px]">
+        <div className="h-[108px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
@@ -83,20 +83,68 @@ export function GradientAreaCard({
                 hide={true}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px'
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: number) => {
-                  if (value >= 1000000) {
-                    return [`$${(value / 1000000).toFixed(2)}M`, 'Volume'];
-                  } else if (value >= 1000) {
-                    return [`$${(value / 1000).toFixed(2)}K`, 'Volume'];
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const value = payload[0].value as number;
+                    const dataPoint = data.find(d => d.name === label);
+                    
+                    // Format date from backend date or label
+                    const formatDate = (dateStr: string, fallbackLabel: string) => {
+                      try {
+                        if (dateStr) {
+                          // If we have the full date from backend, format it properly
+                          const date = new Date(dateStr);
+                          const day = date.getDate();
+                          const month = date.toLocaleDateString('en-US', { month: 'short' });
+                          const year = date.getFullYear();
+                          return `${day} ${month}, ${year}`;
+                        } else {
+                          // Fallback to parsing the label (e.g., "Aug 25" -> "25 Aug, 2024")
+                          const [month, day] = fallbackLabel.split(' ');
+                          const currentYear = new Date().getFullYear();
+                          return `${day} ${month}, ${currentYear}`;
+                        }
+                      } catch {
+                        return fallbackLabel;
+                      }
+                    };
+
+                    const formatValue = (val: number) => {
+                      if (val >= 1000000) {
+                        return `$${(val / 1000000).toFixed(2)}M`;
+                      } else if (val >= 1000) {
+                        return `$${(val / 1000).toFixed(2)}K`;
+                      }
+                      return `$${val.toFixed(2)}`;
+                    };
+
+                    return (
+                      <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg min-w-[150px]">
+                        <div className="text-xs font-bold text-foreground mb-2">
+                          {formatDate(dataPoint?.date || '', label)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-1 h-3 rounded-sm"
+                            style={{ backgroundColor: strokeColor }}
+                          />
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-xs text-muted-foreground">
+                              {title === "Trading Volume" ? "Volume" : 
+                               title === "Daily Active Users" ? "DAUs" : 
+                               title === "New Users" ? "New Users" : 
+                               title === "Trades" ? "Trades" : 
+                               title === "Token Launches" ? "Launches" : title}
+                            </span>
+                            <span className="text-xs font-medium text-foreground">
+                              {formatValue(value)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
                   }
-                  return [`$${value.toFixed(2)}`, 'Volume'];
+                  return null;
                 }}
               />
               <Area

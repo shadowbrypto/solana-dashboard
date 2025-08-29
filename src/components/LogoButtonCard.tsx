@@ -25,8 +25,11 @@ export function LogoButtonCard({
   formatValue = (val) => val.toLocaleString(),
   className 
 }: LogoButtonCardProps) {
-  const [selectedButton, setSelectedButton] = useState<string | null>(null);
-  const [currentValue, setCurrentValue] = useState(defaultValue);
+  const [selectedButton, setSelectedButton] = useState<string | null>('solana');
+  const [currentValue, setCurrentValue] = useState(() => {
+    const solanaButton = buttons.find(b => b.id === 'solana');
+    return solanaButton ? solanaButton.value : defaultValue;
+  });
 
   const handleButtonClick = (buttonId: string, value: number) => {
     setSelectedButton(buttonId);
@@ -45,15 +48,15 @@ export function LogoButtonCard({
           {title}
         </CardDescription>
         <CardTitle 
-          className="text-4xl font-semibold tracking-tight cursor-pointer hover:text-primary transition-colors"
+          className="text-3xl font-semibold tracking-tight cursor-pointer hover:text-primary transition-colors"
           onClick={handleReset}
           title="Click to reset"
         >
           {formatValue(currentValue)}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-1 pb-4 flex flex-col justify-between h-18">
-        <div className="flex-1"></div>
+      <CardContent className="p-4 pt-0 pb-4 flex flex-col justify-between h-[100px]">
+        <div className="flex-1 min-h-0"></div>
         <div className="flex gap-2 justify-start">
           {buttons.map((button) => (
             <Button
@@ -61,7 +64,7 @@ export function LogoButtonCard({
               variant="ghost"
               size="sm"
               className={cn(
-                "h-10 w-10 rounded-xl p-0 flex items-center justify-center transition-colors border",
+                "h-8 w-8 rounded-lg p-0 flex items-center justify-center transition-colors border",
                 // Active/selected state - darker background with darker border
                 selectedButton === button.id && button.id === 'solana' && "bg-purple-200 border-purple-500 dark:bg-purple-800/30 dark:border-purple-500",
                 selectedButton === button.id && button.id === 'ethereum' && "bg-blue-200 border-blue-500 dark:bg-blue-800/30 dark:border-blue-500", 
@@ -75,7 +78,7 @@ export function LogoButtonCard({
               )}
               onClick={() => handleButtonClick(button.id, button.value)}
             >
-              <div className="w-7 h-7 flex items-center justify-center">
+              <div className="w-6 h-6 flex items-center justify-center">
                 <img 
                   src={button.logo} 
                   alt={button.label}

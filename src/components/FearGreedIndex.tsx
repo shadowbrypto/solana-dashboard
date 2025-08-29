@@ -32,14 +32,14 @@ export function FearGreedIndex({ value, className }: FearGreedIndexProps) {
           Fear & Greed Index
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-2 pt-0 pb-0">
-        <div className="relative w-full h-28 flex items-center justify-center">
+      <CardContent className="p-0 pt-8">
+        <div className="relative w-full h-[120px] flex items-end justify-center">
           {/* Semi-circular gradient background */}
           <svg
-            width="200"
-            height="120"
-            viewBox="0 0 200 120"
-            className="absolute"
+            width="280"
+            height="160"
+            viewBox="0 0 280 160"
+            className="absolute bottom-0"
           >
             <defs>
               {/* Gradient for the arc */}
@@ -58,27 +58,27 @@ export function FearGreedIndex({ value, className }: FearGreedIndexProps) {
             
             {/* Background arc (gray) */}
             <path
-              d="M 20 100 A 80 80 0 0 1 180 100"
+              d="M 40 140 A 100 100 0 0 1 240 140"
               fill="none"
               stroke="hsl(var(--muted))"
-              strokeWidth="8"
+              strokeWidth="12"
               strokeLinecap="round"
             />
             
             {/* Colored arc segments */}
             <path
-              d="M 20 100 A 80 80 0 0 1 180 100"
+              d="M 40 140 A 100 100 0 0 1 240 140"
               fill="none"
               stroke="url(#gaugeGradient)"
-              strokeWidth="6"
+              strokeWidth="10"
               strokeLinecap="round"
             />
             
             {/* Value indicator dot on the arc */}
             <circle
-              cx={100 + 80 * Math.cos((180 - angle) * Math.PI / 180)}
-              cy={100 + 80 * Math.sin((180 - angle) * Math.PI / 180)}
-              r="4"
+              cx={140 + 100 * Math.cos((180 - angle) * Math.PI / 180)}
+              cy={140 + 100 * Math.sin((180 - angle) * Math.PI / 180)}
+              r="6"
               fill="#1f2937"
               stroke="white"
               strokeWidth="2"

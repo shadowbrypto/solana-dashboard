@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Crown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getProtocolById } from '../lib/protocol-config';
 
@@ -35,18 +35,18 @@ export function DailyStatsCard({
 
   const formatCurrency = (value: number): string => {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return `$${(value / 1000000).toFixed(2)}M`;
     } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
+      return `$${(value / 1000).toFixed(2)}K`;
     }
-    return `$${value.toFixed(0)}`;
+    return `$${value.toFixed(2)}`;
   };
 
   const formatNumber = (value: number): string => {
     if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
+      return `${(value / 1000000).toFixed(2)}M`;
     } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}K`;
+      return `${(value / 1000).toFixed(2)}K`;
     }
     return value.toLocaleString();
   };
@@ -80,11 +80,11 @@ export function DailyStatsCard({
     { id: 'trades' as MetricType, label: 'Trades' }
   ];
 
-  // Take only first 5 rows
-  const displayData = data.slice(0, 5);
+  // Take only first 6 rows
+  const displayData = data.slice(0, 6);
 
   return (
-    <Card className={cn("overflow-hidden shadow-sm", className)}>
+    <Card className={cn("overflow-hidden shadow-sm h-full", className)}>
       <CardHeader className="p-4 pb-2">
         {/* Tabs */}
         <div className="flex space-x-2">
@@ -104,8 +104,8 @@ export function DailyStatsCard({
           ))}
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="space-y-4">
+      <CardContent className="p-4 pt-6 flex-1 flex flex-col">
+        <div className="space-y-6 flex-1">
           {/* Data rows */}
           {displayData.map((row, index) => {
             const protocol = getProtocolById(row.protocolId);
@@ -117,8 +117,19 @@ export function DailyStatsCard({
                   {IconComponent && (
                     <IconComponent className="w-6 h-6 text-foreground flex-shrink-0" />
                   )}
-                  <div className="text-sm text-foreground">
-                    {row.app}
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm text-foreground">
+                      {row.app}
+                    </div>
+                    {index === 0 && (
+                      <Crown className="w-4 h-4 text-yellow-500" />
+                    )}
+                    {index === 1 && (
+                      <Crown className="w-4 h-4 text-gray-400" />
+                    )}
+                    {index === 2 && (
+                      <Crown className="w-4 h-4 text-amber-600" />
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -154,7 +165,7 @@ export function DailyStatsCard({
               {displayData.map((row, index) => {
                 const totalValue = displayData.reduce((sum, item) => sum + getMetricValue(item, activeMetric), 0);
                 const percentage = (getMetricValue(row, activeMetric) / totalValue) * 100;
-                const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500'];
+                const colors = ['bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500', 'bg-cyan-500'];
                 
                 return (
                   <div 

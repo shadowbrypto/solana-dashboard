@@ -83,20 +83,49 @@ export function GradientBarCard({
                 hide={true}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px'
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: number) => {
-                  if (value >= 1000000) {
-                    return [`$${(value / 1000000).toFixed(2)}M`, 'Value'];
-                  } else if (value >= 1000) {
-                    return [`$${(value / 1000).toFixed(2)}K`, 'Value'];
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const value = payload[0].value as number;
+                    
+                    const formatValue = (val: number) => {
+                      if (val >= 1000000) {
+                        return `$${(val / 1000000).toFixed(2)}M`;
+                      } else if (val >= 1000) {
+                        return `$${(val / 1000).toFixed(2)}K`;
+                      }
+                      return `$${val.toFixed(2)}`;
+                    };
+
+                    const getMetricLabel = (chartTitle: string) => {
+                      if (chartTitle.includes("Volume")) return "Volume";
+                      if (chartTitle.includes("Users")) return "Users";
+                      if (chartTitle.includes("Trades")) return "Trades";
+                      return "Value";
+                    };
+
+                    return (
+                      <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg min-w-[140px]">
+                        <div className="text-xs font-bold text-foreground mb-2">
+                          {label}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-1 h-3 rounded-sm"
+                            style={{ backgroundColor: barColor }}
+                          />
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-xs text-muted-foreground">
+                              {getMetricLabel(title)}
+                            </span>
+                            <span className="text-xs font-medium text-foreground">
+                              {formatValue(value)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
                   }
-                  return [`$${value.toFixed(2)}`, 'Value'];
+                  return null;
                 }}
               />
               <Bar

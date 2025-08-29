@@ -19,12 +19,41 @@ export interface DashboardStats {
     users: Array<{ name: string; value: number }>;
     newUsers: Array<{ name: string; value: number }>;
     trades: Array<{ name: string; value: number }>;
+    launches: Array<{ name: string; value: number }>;
+    graduations: Array<{ name: string; value: number }>;
   };
   rankings?: {
     byVolume: Array<{ name: string; value: number }>;
     byUsers: Array<{ name: string; value: number }>;
     byTrades: Array<{ name: string; value: number }>;
   };
+  chainVolumes?: {
+    solana: number;
+    ethereum: number;
+    bsc: number;
+    base: number;
+    total: number;
+  };
+  launchpad?: {
+    launches: number;
+    graduations: number;
+    growth: {
+      launches: number;
+      graduations: number;
+    };
+  };
+  topProtocols?: Array<{
+    app: string;
+    protocolId: string;
+    volume: number;
+    volumeGrowth: number;
+    daus: number;
+    dausGrowth: number;
+    newUsers: number;
+    newUsersGrowth: number;
+    trades: number;
+    tradesGrowth: number;
+  }>;
   fearGreedIndex?: number;
   lastUpdated: string;
 }

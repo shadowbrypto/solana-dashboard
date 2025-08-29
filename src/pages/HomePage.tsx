@@ -6,7 +6,11 @@ import { FearGreedIndex } from '../components/FearGreedIndex';
 import { LogoButtonCard } from '../components/LogoButtonCard';
 import { DailyStatsCard } from '../components/DailyStatsCard';
 import { dashboardApi, DashboardStats } from '../lib/dashboard-api';
-import { Skeleton } from '../components/ui/skeleton';
+import { FearGreedSkeleton } from '../components/skeletons/FearGreedSkeleton';
+import { GradientAreaSkeleton } from '../components/skeletons/GradientAreaSkeleton';
+import { LogoButtonSkeleton } from '../components/skeletons/LogoButtonSkeleton';
+import { GradientBarSkeleton } from '../components/skeletons/GradientBarSkeleton';
+import { DailyStatsSkeleton } from '../components/skeletons/DailyStatsSkeleton';
 
 export function HomePage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -55,7 +59,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-4">
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">
           Welcome to Solana Analytics
@@ -65,21 +69,26 @@ export function HomePage() {
         </p>
       </div>
 
-      {/* Top row with 4 cards */}
+      {/* Main grid layout - coherent tile system */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {loading ? (
           <>
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <CardHeader className="p-4 pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-8 w-32 mt-2" />
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Skeleton className="h-[100px] w-full" />
-                </CardContent>
-              </Card>
-            ))}
+            {/* Fear & Greed Index - 1 tile */}
+            <FearGreedSkeleton />
+
+            {/* Token Launches - 2 tiles */}
+            <div className="xl:col-span-2 h-full">
+              <GradientAreaSkeleton className="h-full" />
+            </div>
+
+            {/* Volume by Chain - 1 tile */}
+            <LogoButtonSkeleton />
+
+            {/* Core metrics - 4 tiles */}
+            <GradientAreaSkeleton />
+            <GradientAreaSkeleton />
+            <GradientAreaSkeleton />
+            <GradientAreaSkeleton />
           </>
         ) : error ? (
           <Card className="col-span-full">
@@ -89,6 +98,67 @@ export function HomePage() {
           </Card>
         ) : stats ? (
           <>
+            {/* Fear & Greed Index - 1 tile */}
+            <FearGreedIndex 
+              value={stats.fearGreedIndex}
+            />
+
+            {/* Token Launches - 2 tiles */}
+            <div className="xl:col-span-2 h-full">
+              <GradientAreaCard
+                title="Token Launches"
+                subtitle={formatNumber(stats.launchpad.launches)}
+                data={stats.trends.launches}
+                growth={stats.launchpad.growth.launches}
+                gradientId="tokenLaunches"
+                strokeColor="#f59e0b"
+                gradientStartColor="#f59e0b"
+                gradientEndColor="#fbbf24"
+                className="h-full"
+              />
+            </div>
+
+            {/* Volume by Chain - 1 tile */}
+            <LogoButtonCard
+              title="Volume by Chain"
+              defaultValue={stats?.chainVolumes?.total || 24750000}
+              formatValue={(val) => {
+                if (val >= 1000000) {
+                  return `$${(val / 1000000).toFixed(1)}M`;
+                } else if (val >= 1000) {
+                  return `$${(val / 1000).toFixed(1)}K`;
+                }
+                return `$${val.toLocaleString()}`;
+              }}
+              buttons={[
+                {
+                  id: 'solana',
+                  logo: '/assets/logos/solana.jpg',
+                  value: stats?.chainVolumes?.solana || 15420000,
+                  label: 'Solana'
+                },
+                {
+                  id: 'ethereum',
+                  logo: '/assets/logos/ethereum.jpg',
+                  value: stats?.chainVolumes?.ethereum || 6890000,
+                  label: 'Ethereum'
+                },
+                {
+                  id: 'bsc',
+                  logo: '/assets/logos/bsc.jpg',
+                  value: stats?.chainVolumes?.bsc || 2440000,
+                  label: 'BSC'
+                },
+                {
+                  id: 'base',
+                  logo: '/assets/logos/base.jpg',
+                  value: stats?.chainVolumes?.base || 1850000,
+                  label: 'Base'
+                }
+              ]}
+            />
+
+            {/* Core metrics - 4 tiles */}
             <GradientAreaCard
               title="Trading Volume"
               subtitle={formatCurrency(stats.yesterday.volume)}
@@ -117,9 +187,9 @@ export function HomePage() {
               data={stats.trends.newUsers}
               growth={stats.growth.newUsers}
               gradientId="newUsers"
-              strokeColor="#f59e0b"
-              gradientStartColor="#f59e0b"
-              gradientEndColor="#fbbf24"
+              strokeColor="#10b981"
+              gradientStartColor="#10b981"
+              gradientEndColor="#34d399"
             />
 
             <GradientAreaCard
@@ -136,9 +206,17 @@ export function HomePage() {
         ) : null}
       </div>
 
-      {/* Bar chart cards row */}
-      {stats?.rankings && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Protocol rankings - coherent 4-column grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <GradientBarSkeleton />
+          <GradientBarSkeleton />
+          <div className="xl:col-span-2 xl:row-span-2">
+            <DailyStatsSkeleton />
+          </div>
+        </div>
+      ) : stats?.rankings ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <GradientBarCard
             title="Top Protocols by Volume"
             subtitle={formatCurrency(stats.rankings.byVolume.reduce((sum, item) => sum + item.value, 0))}
@@ -159,134 +237,17 @@ export function HomePage() {
             gradientEndColor="#f9a8d4"
           />
 
-          <GradientBarCard
-            title="Top Protocols by Trades"
-            subtitle={formatNumber(stats.rankings.byTrades.reduce((sum, item) => sum + item.value, 0))}
-            data={stats.rankings.byTrades}
-            barColor="#14b8a6"
-            gradientId="tradesBar"
-            gradientStartColor="#14b8a6"
-            gradientEndColor="#5eead4"
-          />
-        </div>
-      )}
 
-      {/* Fear & Greed Index, Logo Button Card and Daily Volume Card row */}
-      {stats?.fearGreedIndex !== undefined && (
-        <div className="flex justify-center gap-6">
-          <div className="w-56">
-            <FearGreedIndex 
-              value={stats.fearGreedIndex}
-            />
-          </div>
-          <div className="w-full max-w-xs">
-            <LogoButtonCard
-              title="Volume by Chain"
-              defaultValue={24750000}
-              formatValue={(val) => {
-                if (val >= 1000000) {
-                  return `$${(val / 1000000).toFixed(1)}M`;
-                } else if (val >= 1000) {
-                  return `$${(val / 1000).toFixed(1)}K`;
-                }
-                return `$${val.toLocaleString()}`;
-              }}
-              buttons={[
-                {
-                  id: 'solana',
-                  logo: '/assets/logos/solana.jpg',
-                  value: 15420000,
-                  label: 'Solana'
-                },
-                {
-                  id: 'ethereum',
-                  logo: '/assets/logos/ethereum.jpg',
-                  value: 6890000,
-                  label: 'Ethereum'
-                },
-                {
-                  id: 'bsc',
-                  logo: '/assets/logos/bsc.jpg',
-                  value: 2440000,
-                  label: 'BSC'
-                },
-                {
-                  id: 'base',
-                  logo: '/assets/logos/base.jpg',
-                  value: 1850000,
-                  label: 'Base'
-                }
-              ]}
-            />
-          </div>
-          <div className="w-full max-w-sm">
-            <DailyStatsCard
-              data={[
-                {
-                  app: "Trojan",
-                  protocolId: "trojan",
-                  volume: 45200000,
-                  volumeGrowth: 12.5,
-                  daus: 125000,
-                  dausGrowth: 8.3,
-                  newUsers: 8500,
-                  newUsersGrowth: 15.2,
-                  trades: 890000,
-                  tradesGrowth: 10.7
-                },
-                {
-                  app: "Photon",
-                  protocolId: "photon",
-                  volume: 32100000,
-                  volumeGrowth: -3.2,
-                  daus: 98000,
-                  dausGrowth: -2.1,
-                  newUsers: 6200,
-                  newUsersGrowth: 4.8,
-                  trades: 650000,
-                  tradesGrowth: -1.5
-                },
-                {
-                  app: "BonkBot",
-                  protocolId: "bonkbot",
-                  volume: 18900000,
-                  volumeGrowth: 8.7,
-                  daus: 65000,
-                  dausGrowth: 12.4,
-                  newUsers: 4100,
-                  newUsersGrowth: 18.9,
-                  trades: 420000,
-                  tradesGrowth: 6.3
-                },
-                {
-                  app: "Bloom",
-                  protocolId: "bloom",
-                  volume: 12400000,
-                  volumeGrowth: 15.3,
-                  daus: 42000,
-                  dausGrowth: 9.7,
-                  newUsers: 2800,
-                  newUsersGrowth: 22.1,
-                  trades: 280000,
-                  tradesGrowth: 13.8
-                },
-                {
-                  app: "Maestro",
-                  protocolId: "maestro",
-                  volume: 8600000,
-                  volumeGrowth: -1.8,
-                  daus: 28000,
-                  dausGrowth: 3.2,
-                  newUsers: 1900,
-                  newUsersGrowth: 7.4,
-                  trades: 185000,
-                  tradesGrowth: -0.9
-                }
-              ]}
-            />
-          </div>
+          {/* Daily Stats Card - 2x2 tiles */}
+          {stats?.topProtocols && (
+            <div className="xl:col-span-2 xl:row-span-2">
+              <DailyStatsCard
+                data={stats.topProtocols}
+              />
+            </div>
+          )}
         </div>
-      )}
+      ) : null}
 
     </div>
   );

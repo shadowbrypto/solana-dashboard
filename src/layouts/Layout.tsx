@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -20,6 +20,7 @@ const protocols = [
 ];
 
 const overviewPages = [
+  { id: 'home', name: 'Home', icon: Home, path: '/home' },
   { id: 'comparison', name: 'Trading Apps Comparison', icon: GitCompare, path: '/overview/comparison' },
   { id: 'all-launchpads', name: 'All Launchpads', icon: Rocket, path: '/overview/all-launchpads', new: true },
   // { id: 'weekly-insights', name: 'Weekly Insights', icon: Brain, path: '/overview/weekly-insights', beta: true }
@@ -134,6 +135,24 @@ export function Layout() {
         {/* Protocol Selection */}
         <nav className="flex-1 px-2 py-4 space-y-6 overflow-y-auto lg:pt-4 pt-2">
 
+          {/* Home Section - Above Overview */}
+          <div className="space-y-2">
+            <Button
+              key="home"
+              variant="ghost"
+              className={cn(
+                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
+                location.pathname === '/home' && "bg-muted text-foreground font-medium"
+              )}
+              onClick={() => handleReportChange('/home')}
+            >
+              <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
+                <Home className="h-4 w-4" />
+              </div>
+              Home
+            </Button>
+          </div>
+
           {/* Overview Section */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>
@@ -152,7 +171,7 @@ export function Layout() {
               All Trading Apps
             </Button>
             
-            {overviewPages.map((page) => {
+            {overviewPages.filter(page => page.id !== 'home').map((page) => {
               const Icon = page.icon;
               return (
                 <Button

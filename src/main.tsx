@@ -15,6 +15,7 @@ import TradingAppsComparison from "./pages/TradingAppsComparison";
 import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import CustomReports from "./pages/CustomReports";
+import { HomePage } from "./pages/HomePage";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <AppWrapper />,
+      },
+      {
+        path: "home",
+        element: <HomePage />,
       },
       {
         path: "overview",

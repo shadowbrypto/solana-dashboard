@@ -8,6 +8,7 @@ import dataUpdateRoutes from './routes/dataUpdateRoutes.js';
 import protocolConfigRoutes from './routes/protocolConfigRoutes.js';
 import projectedStatsRoutes from './routes/projectedStatsRoutes.js';
 import { launchpadRoutes } from './routes/launchpads.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,6 +37,7 @@ app.use('/api/data-update', dataUpdateRoutes);
 app.use('/api/protocol-config', protocolConfigRoutes);
 app.use('/api', projectedStatsRoutes); // Projected stats routes
 app.use('/api/launchpads', launchpadRoutes); // Launchpad routes
+app.use('/api/dashboard', dashboardRoutes); // Dashboard routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {

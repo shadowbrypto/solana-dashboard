@@ -4,7 +4,7 @@
 
 Successfully integrated 3 new protocols into the Sol Analytics Dashboard:
 - **Nova Terminal** (Trading Terminal)
-- **BonkBot Terminal** (Trading Terminal) 
+- **Telemetry** (Trading Terminal) 
 - **Slingshot** (Mobile App)
 
 ## Changes Made
@@ -17,7 +17,7 @@ Successfully integrated 3 new protocols into the Sol Analytics Dashboard:
 - Created centralized protocol configuration in `/src/lib/protocol-config.ts`
 - Added icons for all protocols using Lucide React:
   - Nova Terminal: `Terminal` icon
-  - BonkBot Terminal: `BotMessageSquare` icon  
+  - Telemetry: `BotMessageSquare` icon  
   - Slingshot: `Crosshair` icon
 - Added color schemes for new protocols in `/src/lib/colors.ts`
 
@@ -33,7 +33,7 @@ Successfully integrated 3 new protocols into the Sol Analytics Dashboard:
 
 ### 5. Navigation & UI ✅
 - New protocols appear in appropriate categories in sidebar navigation
-- "Trading Terminals" category now includes Nova Terminal and BonkBot Terminal
+- "Trading Terminals" category now includes Nova Terminal and Telemetry
 - "Mobile Apps" category now includes Slingshot
 - Updated protocol categories in `/src/lib/protocol-categories.ts`
 
@@ -82,7 +82,7 @@ Successfully integrated 3 new protocols into the Sol Analytics Dashboard:
 
 ### Data Availability
 - **Nova Terminal**: 94 days of data available
-- **BonkBot Terminal**: Data imported successfully
+- **Telemetry**: Data imported successfully
 - **Slingshot**: CSV fetched (may not have active data yet)
 
 ## Files Modified

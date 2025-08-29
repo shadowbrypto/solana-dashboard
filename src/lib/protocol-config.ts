@@ -23,7 +23,8 @@ import {
   BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon, 
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
-  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon
+  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon,
+  RhythmIcon, VyperIcon
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
@@ -63,8 +64,10 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'gmgnai', name: 'GmGnAi', icon: GMGNAIIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'padre', name: 'Padre', icon: PadreIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'nova terminal', name: 'Nova Terminal', icon: NovaIcon, category: 'Trading Terminals', chain: 'solana' },
-  { id: 'bonkbot terminal', name: 'BonkBot Terminal', icon: BonkBotIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'telemetry', name: 'Telemetry', icon: BonkBotIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'mevx', name: 'Mevx', icon: MevxIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'rhythm', name: 'Rhythm', icon: RhythmIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'vyper', name: 'Vyper', icon: VyperIcon, category: 'Trading Terminals', chain: 'solana' },
   
   // Solana - Mobile Apps
   { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps', chain: 'solana' },
@@ -123,7 +126,7 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
   switch (protocolId.toLowerCase()) {
     case 'bull x':
       return 'bullx.jpg';
-    case 'bonkbot terminal':
+    case 'telemetry':
       return 'bonkbot.jpg';
     case 'nova terminal':
       return 'nova.jpg';

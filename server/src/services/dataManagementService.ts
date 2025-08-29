@@ -44,11 +44,13 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "padre": { queryIds: [5099279], chain: 'solana' },
   "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },
   "vector": { queryIds: [4969231], chain: 'solana' },
-  "bonkbot terminal": { queryIds: [5212810], chain: 'solana' },
+  "telemetry": { queryIds: [5212810], chain: 'solana' },
   "nova terminal": { queryIds: [5196914], chain: 'solana' },
   "slingshot": { queryIds: [4968360], chain: 'solana' },
   "fomo": { queryIds: [5315650], chain: 'solana' },
   "mevx": { queryIds: [5498846], chain: 'solana' },
+  "rhythm": { queryIds: [5698641], chain: 'solana' },
+  "vyper": { queryIds: [5284061], chain: 'solana' },
   
   // Ethereum protocols - add your protocols here
   // Example:
@@ -75,11 +77,13 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "padre": { queryIds: [5099279], chain: 'solana' },
   "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },
   "vector": { queryIds: [4969231], chain: 'solana' },
-  "bonkbot terminal": { queryIds: [5212810], chain: 'solana' },
+  "telemetry": { queryIds: [5212810], chain: 'solana' },
   "nova terminal": { queryIds: [5196914], chain: 'solana' },
   "slingshot": { queryIds: [4968360], chain: 'solana' },
   "fomo": { queryIds: [5315650], chain: 'solana' },
   "mevx": { queryIds: [5498846], chain: 'solana' },
+  "rhythm": { queryIds: [5698641], chain: 'solana' },
+  "vyper": { queryIds: [5284061], chain: 'solana' },
   
   // Ethereum protocols - add your protocols here
   // Example:

@@ -121,9 +121,10 @@ export function useDataSync() {
     onSyncStart?: () => void, 
     onSyncSuccess?: (result: { csvFilesFetched: number; rowsImported: number; timestamp: string }) => void,
     onStepUpdate?: (step: string, progress: number) => void,
-    onStepComplete?: (step: string, result: { csvFilesFetched: number; rowsImported: number }) => void
+    onStepComplete?: (step: string, result: { csvFilesFetched: number; rowsImported: number }) => void,
+    forceSync?: boolean // Add parameter to bypass time restrictions for manual refreshes
   ) => {
-    if (state.isLoading || !state.canSync) {
+    if (state.isLoading || (!state.canSync && !forceSync)) {
       return;
     }
 

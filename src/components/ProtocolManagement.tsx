@@ -586,7 +586,9 @@ export function ProtocolManagement() {
             title: `${stepName} Data Synced`,
             description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
           });
-        }
+        },
+        // forceSync - bypass time restrictions for manual refresh
+        true
       );
     } catch (error) {
       toast({

@@ -14,7 +14,7 @@ export const protocolColors: { [key: string]: string } = {
   moonshot: "hsl(15 72% 50%)",  // Orange
   vector: "hsl(172 66% 50%)",   // Teal
   "nova terminal": "hsl(190 85% 50%)",     // Sky Blue
-  "bonkbot terminal": "hsl(39 96% 60%)",   // Amber
+  "telemetry": "hsl(39 96% 60%)",   // Amber
   slingshot: "hsl(110 75% 45%)",           // Lime Green
   fomo: "hsl(270 95% 60%)",             // Electric Purple
   

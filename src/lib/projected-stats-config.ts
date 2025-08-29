@@ -36,7 +36,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'gmgnai': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
   'padre': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
   'nova terminal': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'bonkbot terminal': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
+  'telemetry': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
   'mevx': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
   
   // Mobile Apps

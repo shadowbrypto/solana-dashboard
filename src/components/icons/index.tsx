@@ -96,5 +96,13 @@ export const MevxIcon = (props: any) => (
   <ProtocolLogo protocolId="mevx" protocolName="Mevx" fallbackIcon={Zap} {...props} />
 );
 
+export const RhythmIcon = (props: any) => (
+  <ProtocolLogo protocolId="rhythm" protocolName="Rhythm" fallbackIcon={Terminal} {...props} />
+);
+
+export const VyperIcon = (props: any) => (
+  <ProtocolLogo protocolId="vyper" protocolName="Vyper" fallbackIcon={Terminal} {...props} />
+);
+
 // Export chain logos
 export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

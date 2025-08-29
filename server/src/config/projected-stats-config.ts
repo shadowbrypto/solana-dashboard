@@ -36,8 +36,10 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'gmgnai': '4899849',
   'padre': '5622891',
   'nova terminal': '4899891',
-  'bonkbot terminal': '5666888',
+  'telemetry': '5666888',
   'mevx': '5666923',
+  'rhythm': '5698770',
+  'vyper': '5699029',
   
   // Mobile Apps
   'moonshot': '',

@@ -9,7 +9,6 @@ import protocolConfigRoutes from './routes/protocolConfigRoutes.js';
 import projectedStatsRoutes from './routes/projectedStatsRoutes.js';
 import { launchpadRoutes } from './routes/launchpads.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
-import monthlyStatsRoutes from './routes/monthlyStatsRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,7 +38,6 @@ app.use('/api/protocol-config', protocolConfigRoutes);
 app.use('/api', projectedStatsRoutes); // Projected stats routes
 app.use('/api/launchpads', launchpadRoutes); // Launchpad routes
 app.use('/api/dashboard', dashboardRoutes); // Dashboard routes
-app.use('/api/monthly-stats', monthlyStatsRoutes); // Monthly stats routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -80,5 +78,4 @@ app.listen(PORT, () => {
   console.log(`   - Protocol Config: http://localhost:${PORT}/api/protocol-config`);
   console.log(`   - Projected Stats: http://localhost:${PORT}/api/projected-stats`);
   console.log(`   - Launchpads: http://localhost:${PORT}/api/launchpads`);
-  console.log(`   - Monthly Stats: http://localhost:${PORT}/api/monthly-stats`);
 });

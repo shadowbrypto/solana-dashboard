@@ -572,8 +572,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             
             {/* Total Row */}
             {protocolData.length > 0 && (
-              <TableRow className="border-t-2 border-primary/20 bg-primary/10 hover:bg-primary/20 font-semibold">
-                <TableCell className="font-bold text-sm">Total</TableCell>
+              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
+                <TableCell className="font-bold text-sm" style={{ paddingLeft: '2rem' }}>Total</TableCell>
                 
                 {last7Days.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');

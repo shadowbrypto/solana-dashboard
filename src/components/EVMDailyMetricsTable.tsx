@@ -577,7 +577,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -762,8 +762,8 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
               );
                 })}
                 {/* Total Row */}
-                <TableRow className="border-t-2 border-border bg-muted/20">
-              <TableCell>
+                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
+              <TableCell style={{ paddingLeft: '3rem' }} className="rounded-bl-xl">
                 <span className="font-semibold">Total</span>
               </TableCell>
               {chains.map(chain => (
@@ -819,7 +819,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                   </Badge>
                 </div>
               </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center rounded-br-xl">
                     <WeeklyTrendChart data={totals.totalWeeklyTrend} growth={totals.totalGrowth} />
                   </TableCell>
                 </TableRow>

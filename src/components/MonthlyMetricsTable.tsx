@@ -1099,8 +1099,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
               })}
 
               {/* All Trading Apps Total Row */}
-              <TableRow className="font-bold bg-primary/10 border-t-2 border-primary/20 hover:bg-primary/20">
-                <TableCell className="font-medium text-xs sm:text-sm">
+              <TableRow className="font-bold bg-gray-200 dark:bg-gray-700 border-t-2 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-b-xl">
+                <TableCell className="font-medium text-xs sm:text-sm" style={{ paddingLeft: '2rem' }}>
                   All Trading Apps
                 </TableCell>
                 {orderedMetrics.map((metric) => {

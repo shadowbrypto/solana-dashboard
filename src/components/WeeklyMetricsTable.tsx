@@ -1158,9 +1158,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               
               {/* Total Row */}
               {!loading && (
-                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/30 hover:bg-gray-200 dark:hover:bg-gray-900/40 font-bold group transition-colors">
-                  <TableCell className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
-                    <span>Total</span>
+                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold group transition-colors rounded-b-xl">
+                  <TableCell className="sticky left-0 z-10 bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors rounded-bl-xl">
+                    <span className="pl-8">Total</span>
                   </TableCell>
                   {last7Days.map(day => {
                     const dateKey = format(day, 'yyyy-MM-dd');
@@ -1173,13 +1173,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                     }, 0);
                     
                     return (
-                      <TableCell key={dateKey} className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                      <TableCell key={dateKey} className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
                         {formatValue(dailyTotal)}
                       </TableCell>
                     );
                   })}
                   {selectedMetric !== 'daily_users' && (
-                    <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-2 sm:py-3 px-1 text-xs sm:text-sm transition-colors">
+                    <TableCell className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-2 sm:py-3 px-1 text-xs sm:text-sm transition-colors">
                       <Badge variant="outline" className="font-bold bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm py-0 -my-1">
                         {formatValue(last7Days.reduce((sum, day) => {
                           const dateKey = format(day, 'yyyy-MM-dd');
@@ -1195,7 +1195,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       </Badge>
                     </TableCell>
                   )}
-                  <TableCell className="text-center font-bold bg-gray-100 dark:bg-gray-900/30 group-hover:bg-gray-200 dark:group-hover:bg-gray-900/40 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]">
+                  <TableCell className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px] rounded-br-xl">
                     <div className="flex items-center justify-between w-full">
                       <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                         <ResponsiveContainer width="100%" height="100%">

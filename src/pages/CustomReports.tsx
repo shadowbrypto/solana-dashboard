@@ -61,6 +61,7 @@ interface ReportData {
 }
 
 type ReportType = 'daily' | 'weekly' | 'monthly';
+type TabType = 'protocol-reports' | 'trader-stats';
 
 const formatCurrency = (value: number): string => {
   if (value >= 1000000000) {
@@ -130,6 +131,9 @@ const getCategoryBadgeStyle = (category: string): string => {
 };
 
 export default function CustomReports() {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>('protocol-reports');
+  
   // Core state
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -562,8 +566,39 @@ export default function CustomReports() {
         </div>
       </div>
 
-      {/* Controls Section */}
-      <Card className="p-6 overflow-hidden">
+      {/* Tab Navigation */}
+      <div className="border-b border-border">
+        <nav className="flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('protocol-reports')}
+            className={cn(
+              "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors",
+              activeTab === 'protocol-reports'
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+            )}
+          >
+            Protocol Reports
+          </button>
+          <button
+            onClick={() => setActiveTab('trader-stats')}
+            className={cn(
+              "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors",
+              activeTab === 'trader-stats'
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+            )}
+          >
+            Trader Stats
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'protocol-reports' ? (
+        <>
+          {/* Controls Section */}
+          <Card className="p-6 overflow-hidden">
         <div className="space-y-6">
           {/* Top Row - Protocol, Report Type, and Metrics */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1235,17 +1270,23 @@ export default function CustomReports() {
         </CardContent>
       </Card>
 
-      {/* Action buttons below the report */}
-      <div className="flex justify-center gap-2 mt-4">
-        <Button variant="outline" size="sm" onClick={downloadReport}>
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-        <Button variant="outline" size="sm" onClick={copyToClipboard}>
-          <Copy className="h-4 w-4 mr-2" />
-          Copy
-        </Button>
-      </div>
+          {/* Action buttons below the report */}
+          <div className="flex justify-center gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={downloadReport}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button variant="outline" size="sm" onClick={copyToClipboard}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>Trader Stats functionality has been removed</p>
+        </div>
+      )}
     </div>
   );
 }

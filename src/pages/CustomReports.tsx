@@ -1313,7 +1313,7 @@ export default function CustomReports() {
 
 // Trader Stats Section Component
 function TraderStatsSection() {
-  const [selectedProtocol, setSelectedProtocol] = useState('axiom');
+  const [selectedProtocol, setSelectedProtocol] = useState('photon');
   const [traderData, setTraderData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [percentileLoading, setPercentileLoading] = useState(false);
@@ -1820,7 +1820,7 @@ function TraderStatsSection() {
                               </button>
                             </TableCell>
                             <TableCell className="text-right py-2">
-                              <span className="font-semibold">
+                              <span className="font-medium">
                                 {formatCurrency(trader.volume_usd)}
                               </span>
                             </TableCell>
@@ -1874,7 +1874,7 @@ function TraderStatsSection() {
                                   className="h-4 bg-muted/60 border border-blue-200 dark:border-blue-800 rounded-sm [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-purple-500"
                                 />
                               </div>
-                              <span className="font-semibold whitespace-nowrap">
+                              <span className="font-medium whitespace-nowrap">
                                 {formatCurrency(bracket.volume)}
                               </span>
                             </div>
@@ -1888,7 +1888,7 @@ function TraderStatsSection() {
                               </div>
                             ) : (
                               <div className="flex flex-col items-end gap-0.5">
-                                <span className="font-bold text-sm text-foreground">
+                                <span className="font-medium text-sm text-foreground">
                                   {deltaVolume >= 0 ? '+' : ''}{formatCurrency(deltaVolume)}
                                 </span>
                                 <Badge 

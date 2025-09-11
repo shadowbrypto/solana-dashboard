@@ -340,3 +340,116 @@ export async function getMonthlyAdjustedVolumes(year: number, month: number): Pr
     return {};
   }
 }
+
+/**
+ * Get latest projected data dates for all protocols
+ */
+export async function getLatestProjectedDates(): Promise<Record<string, { latest_date: string; is_current: boolean; days_behind: number }>> {
+  try {
+    // Get latest date for each protocol
+    const { data, error } = await supabase
+      .from('projected_stats')
+      .select('protocol_name, formatted_day')
+      .order('formatted_day', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Group by protocol and get the latest date for each
+    const latestDates: Record<string, { latest_date: string; is_current: boolean; days_behind: number }> = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    data?.forEach(item => {
+      if (!latestDates[item.protocol_name]) {
+        const latestDate = new Date(item.formatted_day);
+        const daysDiff = Math.floor((today.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        latestDates[item.protocol_name] = {
+          latest_date: item.formatted_day,
+          is_current: daysDiff <= 1, // Consider current if within 1 day
+          days_behind: daysDiff
+        };
+      }
+    });
+
+    return latestDates;
+  } catch (error) {
+    console.error('Error fetching latest projected dates:', error);
+    return {};
+  }
+}
+
+/**
+ * Update projected data for a specific protocol
+ */
+export async function updateProjectedDataForProtocol(protocolId: string): Promise<{ 
+  success: boolean; 
+  error?: string; 
+  recordsUpdated?: number; 
+  latestDate?: string 
+}> {
+  try {
+    console.log(`Starting projected data update for protocol: ${protocolId}`);
+    
+    // Check if Dune API key is configured
+    if (!process.env.DUNE_API_KEY) {
+      console.warn('DUNE_API_KEY is not configured. Projected stats update skipped.');
+      return { 
+        success: false, 
+        error: 'Dune API key not configured' 
+      };
+    }
+    
+    // Check if protocol has a valid Dune query ID
+    const duneQueryId = getDuneQueryId(protocolId);
+    if (!duneQueryId) {
+      return { 
+        success: false, 
+        error: `No Dune query ID configured for protocol: ${protocolId}` 
+      };
+    }
+    
+    console.log(`Fetching projected data for ${protocolId} with query ID ${duneQueryId}...`);
+    
+    const duneData = await fetchProjectedDataFromDune(duneQueryId);
+    
+    if (duneData.length === 0) {
+      return { 
+        success: false, 
+        error: `No data returned from Dune for protocol: ${protocolId}` 
+      };
+    }
+    
+    const projectedData: ProjectedStatsData[] = duneData.map(row => ({
+      protocol_name: protocolId,
+      formatted_day: row.formattedDay,
+      fees_sol: row.fees_sol,
+      volume_sol: row.volume_sol,
+      fees_usd: row.fees_usd,
+      volume_usd: row.volume_usd,
+    }));
+    
+    await saveProjectedStats(projectedData);
+    
+    // Get the latest date from the updated data
+    const latestDate = projectedData.length > 0 
+      ? projectedData.sort((a, b) => b.formatted_day.localeCompare(a.formatted_day))[0].formatted_day
+      : undefined;
+    
+    console.log(`✓ Updated ${projectedData.length} records for ${protocolId}`);
+    
+    return {
+      success: true,
+      recordsUpdated: projectedData.length,
+      latestDate
+    };
+  } catch (error) {
+    console.error(`Error updating projected data for ${protocolId}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}

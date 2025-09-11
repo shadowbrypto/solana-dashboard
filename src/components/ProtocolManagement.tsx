@@ -798,6 +798,12 @@ export function ProtocolManagement() {
     
     setRefreshingTraderStatsProtocols(prev => new Set([...prev, protocol]));
     
+    // Show starting toast notification
+    toast({
+      title: "Trader Stats Refresh Started",
+      description: `Starting refresh for ${protocol.charAt(0).toUpperCase() + protocol.slice(1)}...`,
+    });
+    
     try {
       const response = await fetch(`${API_BASE_URL}/trader-stats/refresh/${protocol}`, {
         method: 'POST',
@@ -815,8 +821,8 @@ export function ProtocolManagement() {
       if (result.success) {
         toast({
           variant: "success",
-          title: "Trader Stats Refreshed",
-          description: `Successfully refreshed ${protocol} with ${result.data?.tradersImported || 0} traders`,
+          title: "Trader Stats Refresh Complete",
+          description: `Successfully refreshed ${protocol.charAt(0).toUpperCase() + protocol.slice(1)} with ${result.data?.tradersImported?.toLocaleString() || '0'} trader records imported`,
         });
         
         // Reload data after successful refresh

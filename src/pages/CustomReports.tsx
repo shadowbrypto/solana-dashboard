@@ -1524,17 +1524,14 @@ function TraderStatsSection() {
             key={protocol.id}
             onClick={() => handleProtocolChange(protocol.id)}
             className={cn(
-              "relative flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
-              "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+              "relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors duration-150",
+              "bg-white focus:outline-none border-2",
               selectedProtocol === protocol.id
-                ? "bg-background shadow-sm border border-border"
-                : "hover:bg-muted/30"
+                ? "border-black text-foreground shadow-sm"
+                : "border-gray-300 text-muted-foreground hover:text-foreground"
             )}
           >
-            <div className={cn(
-              "w-5 h-5 rounded overflow-hidden bg-muted/20 ring-1 ring-border/30 flex-shrink-0",
-              selectedProtocol === protocol.id && "ring-2 ring-primary/20"
-            )}>
+            <div className="w-5 h-5 rounded overflow-hidden bg-muted/20 flex-shrink-0">
               <img 
                 src={`/assets/logos/${protocol.logo}`}
                 alt={protocol.name}

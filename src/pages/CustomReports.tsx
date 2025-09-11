@@ -10,6 +10,7 @@ import {
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Progress } from '../components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
   Select,
@@ -1437,11 +1438,6 @@ function TraderStatsSection() {
     return `$${value.toFixed(2)}`;
   };
 
-  const truncateAddress = (address: string): string => {
-    if (address.length <= 12) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
   // startIndex calculation moved to backend
 
 
@@ -1779,7 +1775,7 @@ function TraderStatsSection() {
                       <TableHead className="w-20 text-center">
                         {viewType === 'rank' ? 'Rank' : 'Top %'}
                       </TableHead>
-                      <TableHead className="text-center">
+                      <TableHead className={viewType === 'rank' ? 'text-left' : 'text-center'}>
                         {viewType === 'rank' ? 'Trader' : 'Rank Range'}
                       </TableHead>
                       <TableHead className="text-right">Volume</TableHead>
@@ -1812,14 +1808,14 @@ function TraderStatsSection() {
                                   navigator.clipboard.writeText(trader.user_address);
                                   toast({
                                     title: "Address copied",
-                                    description: `${truncateAddress(trader.user_address)} copied to clipboard`,
+                                    description: `${trader.user_address} copied to clipboard`,
                                     duration: 2000,
                                   });
                                 }}
                                 className="text-sm hover:bg-muted/50 px-2 py-1 rounded transition-colors cursor-pointer"
                                 title="Click to copy full address"
                               >
-                                {truncateAddress(trader.user_address)}
+                                {trader.user_address}
                               </button>
                             </TableCell>
                             <TableCell className="text-right py-2">
@@ -1848,7 +1844,7 @@ function TraderStatsSection() {
                             <Badge 
                               variant={bracket.percentile <= 10 ? "default" : "outline"}
                               className={cn(
-                                "w-12 h-6 rounded-lg flex items-center justify-center text-xs font-medium px-0.5",
+                                "w-12 h-6 rounded-lg flex items-center justify-center text-xs font-medium px-0",
                                 bracket.percentile <= 3 && "bg-yellow-500 text-yellow-50 hover:bg-yellow-600",
                                 bracket.percentile > 3 && bracket.percentile <= 5 && "bg-gray-400 text-gray-50 hover:bg-gray-500",
                                 bracket.percentile > 5 && bracket.percentile <= 10 && "bg-amber-600 text-amber-50 hover:bg-amber-700"
@@ -1860,16 +1856,24 @@ function TraderStatsSection() {
                           <TableCell className="text-center py-2 font-medium font-mono">
                             {bracket.rankRange}
                           </TableCell>
-                          <TableCell className="text-right py-2">
-                            <span className="font-semibold">
-                              {formatCurrency(bracket.volume)}
-                            </span>
+                          <TableCell className="py-2 max-w-24">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="w-32">
+                                <Progress 
+                                  value={bracket.volumeShare} 
+                                  className="h-4 bg-muted/60 border border-foreground/60 rounded-sm [&>div]:bg-foreground/80"
+                                />
+                              </div>
+                              <span className="font-semibold whitespace-nowrap">
+                                {formatCurrency(bracket.volume)}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right py-2">
                             <Badge 
                               variant="outline" 
                               className={cn(
-                                "font-medium text-xs",
+                                "font-medium text-xs whitespace-nowrap",
                                 bracket.percentile <= 10 && "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
                               )}
                             >
@@ -1893,7 +1897,7 @@ function TraderStatsSection() {
                           onClick={() => handlePageChange(currentPage - 1)}
                           className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         >
-                          &laquo;
+                          <ChevronLeft className="h-4 w-4" />
                         </PaginationPrevious>
                       </PaginationItem>
                       
@@ -1970,7 +1974,7 @@ function TraderStatsSection() {
                           onClick={() => handlePageChange(currentPage + 1)}
                           className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                         >
-                          &raquo;
+                          <ChevronRight className="h-4 w-4" />
                         </PaginationNext>
                       </PaginationItem>
                     </PaginationContent>

@@ -28,6 +28,8 @@ import {
   PaginationEllipsis,
   PaginationItem,
   PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from '../components/ui/pagination';
 import {
   Bar,
@@ -47,6 +49,8 @@ import { getDailyMetrics } from '../lib/protocol';
 import { protocolConfigs, getProtocolById, getProtocolLogoFilename, getAllCategories } from '../lib/protocol-config';
 import { DateRangeSelector } from '../components/ui/DateRangeSelector';
 import { getProtocolColor } from '../lib/colors';
+import { MetricCard } from '../components/MetricCard';
+import { MetricCardSkeleton } from '../components/MetricCardSkeleton';
 // @ts-ignore
 import domtoimage from 'dom-to-image';
 
@@ -63,6 +67,20 @@ interface ReportData {
 type ReportType = 'daily' | 'weekly' | 'monthly';
 type TabType = 'protocol-reports' | 'trader-stats';
 
+// Extend Window interface for protocol stats
+declare global {
+  interface Window {
+    protocolStats?: {
+      top1PercentShare: number;
+      top5PercentShare: number;
+      top1PercentVolume: number;
+      top5PercentVolume: number;
+      percentile99Volume: number;
+      percentile95Volume: number;
+    };
+  }
+}
+
 const formatCurrency = (value: number): string => {
   if (value >= 1000000000) {
     return `$${(value / 1000000000).toFixed(2)}B`;
@@ -75,7 +93,10 @@ const formatCurrency = (value: number): string => {
 };
 
 const formatNumber = (value: number): string => {
-  return value.toLocaleString();
+  if (value >= 10000) {
+    return value.toLocaleString();
+  }
+  return value.toString();
 };
 
 const formatGrowthPercentage = (growth: number): string => {
@@ -1283,10 +1304,622 @@ export default function CustomReports() {
           </div>
         </>
       ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          <p>Trader Stats functionality has been removed</p>
-        </div>
+        <TraderStatsSection />
       )}
+    </div>
+  );
+}
+
+// Trader Stats Section Component
+function TraderStatsSection() {
+  const [selectedProtocol, setSelectedProtocol] = useState('axiom');
+  const [traderData, setTraderData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [percentileLoading, setPercentileLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalVolume, setTotalVolume] = useState(0);
+  const [totalTraders, setTotalTraders] = useState(0);
+  const [allTraders, setAllTraders] = useState<any[]>([]);
+  const [percentileBrackets, setPercentileBrackets] = useState<any[]>([]);
+  const [viewType, setViewType] = useState<'rank' | 'percentile'>('rank');
+  const { toast } = useToast();
+  
+  const itemsPerPage = 10;
+
+  // Available protocols
+  const protocols = [
+    { id: 'photon', name: 'Photon', logo: 'photon.jpg' },
+    { id: 'axiom', name: 'Axiom', logo: 'axiom.jpg' }
+  ];
+
+  // Percentile data is now included in comprehensive endpoint
+
+  // Fetch all trader data from comprehensive backend API
+  const fetchTraderData = async (page: number = 1) => {
+    console.log('=== FETCH COMPREHENSIVE TRADER DATA ===');
+    console.log('selectedProtocol:', selectedProtocol);
+    console.log('page:', page);
+    console.log('viewType:', viewType);
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const backendUrl = 'http://localhost:3001/api/trader-stats';
+      const comprehensiveUrl = `${backendUrl}/comprehensive/${selectedProtocol}?page=${page}&limit=${itemsPerPage}`;
+      
+      console.log('🚀 Fetching comprehensive data:', comprehensiveUrl);
+
+      const response = await fetch(comprehensiveUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch comprehensive data');
+      }
+
+      const { data } = result;
+      console.log(`✅ Comprehensive data loaded (cached: ${result.cached}, age: ${result.cacheAge || 0}min)`);
+      
+      // Set all data from comprehensive response
+      setTotalTraders(data.metrics.totalTraders);
+      setTotalVolume(data.metrics.totalVolume);
+      setTraderData(data.rankData); // This is already paginated
+      setAllTraders(data.rankData); // Store current page data
+      setPercentileBrackets(data.percentileBrackets);
+      setTotalPages(data.pagination.totalPages);
+      setCurrentPage(data.pagination.currentPage);
+      
+      // Store metrics for cards (no window object needed)
+      window.protocolStats = {
+        top1PercentShare: data.metrics.top1PercentShare,
+        top5PercentShare: data.metrics.top5PercentShare,
+        top1PercentVolume: data.metrics.top1PercentVolume,
+        top5PercentVolume: data.metrics.top5PercentVolume,
+        percentile99Volume: data.metrics.percentile99Volume,
+        percentile95Volume: data.metrics.percentile95Volume
+      };
+      
+      console.log(`📊 Data Summary:`);
+      console.log(`  Total Traders: ${data.metrics.totalTraders.toLocaleString()}`);
+      console.log(`  Total Volume: $${data.metrics.totalVolume.toLocaleString()}`);
+      console.log(`  Rank Data: ${data.rankData.length} records (page ${data.pagination.currentPage}/${data.pagination.totalPages})`);
+      console.log(`  Percentile Brackets: ${data.percentileBrackets.length} brackets`);
+      console.log(`  Cache Status: ${result.cached ? `✅ Cached (${result.cacheAge}min old)` : '🆕 Fresh'}`);
+      
+    } catch (error: any) {
+      console.error('❌ Comprehensive API failed:', error);
+      setError(`Failed to load trader data: ${error.message}`);
+      setTraderData([]);
+      setTotalTraders(0);
+      setTotalVolume(0);
+      setTotalPages(1);
+      setAllTraders([]);
+      setPercentileBrackets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data when protocol, page, or view type changes
+  // Fetch comprehensive data when protocol or page changes
+  useEffect(() => {
+    fetchTraderData(currentPage);
+  }, [selectedProtocol, currentPage]);
+
+  // Reset to first page when protocol changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProtocol]);
+
+  const handleProtocolChange = (protocolId: string) => {
+    setSelectedProtocol(protocolId);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const formatCurrency = (value: number): string => {
+    if (value >= 1000000000) {
+      return `$${(value / 1000000000).toFixed(2)}B`;
+    } else if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(2)}M`;
+    } else if (value >= 1000) {
+      return `$${(value / 1000).toFixed(2)}K`;
+    }
+    return `$${value.toFixed(2)}`;
+  };
+
+  const truncateAddress = (address: string): string => {
+    if (address.length <= 12) return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  // startIndex calculation moved to backend
+
+
+  const downloadReport = async () => {
+    const reportElement = document.querySelector('[data-table="trader-stats"]') as HTMLElement;
+    
+    if (reportElement) {
+      try {
+        // @ts-ignore
+        const dataUrl = await domtoimage.toPng(reportElement, {
+          quality: 1,
+          bgcolor: '#ffffff',
+          cacheBust: true,
+          style: {
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }
+        });
+        
+        const link = document.createElement('a');
+        link.download = `${selectedProtocol}_Trader_Stats_${format(new Date(), 'yyyy_MM_dd')}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error downloading report:', error);
+        toast({
+          title: "Download failed",
+          description: "Failed to download trader stats report",
+          duration: 3000,
+        });
+      }
+    }
+  };
+
+  const copyToClipboard = async () => {
+    const reportElement = document.querySelector('[data-table="trader-stats"]') as HTMLElement;
+    
+    if (reportElement) {
+      try {
+        // @ts-ignore
+        const dataUrl = await domtoimage.toPng(reportElement, {
+          quality: 1,
+          bgcolor: '#ffffff',
+          cacheBust: true
+        });
+        
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob
+          })
+        ]);
+        
+        toast({
+          title: "Copied to clipboard",
+          description: "Trader stats report copied successfully",
+          duration: 2000,
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          title: "Copy failed",
+          description: "Failed to copy report to clipboard",
+          duration: 3000,
+        });
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Protocol Tabs */}
+      <div className="flex gap-2 mb-6">
+        {protocols.map((protocol) => (
+          <button
+            key={protocol.id}
+            onClick={() => handleProtocolChange(protocol.id)}
+            className={cn(
+              "relative flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200",
+              "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+              selectedProtocol === protocol.id
+                ? "bg-background shadow-sm border border-border"
+                : "hover:bg-muted/30"
+            )}
+          >
+            <div className={cn(
+              "w-5 h-5 rounded overflow-hidden bg-muted/20 ring-1 ring-border/30 flex-shrink-0",
+              selectedProtocol === protocol.id && "ring-2 ring-primary/20"
+            )}>
+              <img 
+                src={`/assets/logos/${protocol.logo}`}
+                alt={protocol.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+            <span className="text-sm font-medium">{protocol.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {loading ? (
+          <>
+            <MetricCardSkeleton
+              title="Total Volume"
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+            />
+            <MetricCardSkeleton
+              title="Total Traders"
+              type="users"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+            />
+            <MetricCardSkeleton
+              title="Top 1% Percentile Volume"
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+            />
+            <MetricCardSkeleton
+              title="Top 5% Percentile Volume"
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Total Volume"
+              value={totalVolume}
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+            />
+            
+            <MetricCard
+              title="Total Traders"
+              value={formatNumber(totalTraders)}
+              type="users"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+            />
+            
+            <MetricCard
+              title="Top 1% Percentile Volume"
+              value={window.protocolStats?.top1PercentVolume 
+                ? formatCurrency(window.protocolStats.top1PercentVolume)
+                : '--'
+              }
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+            />
+            
+            <MetricCard
+              title="Top 5% Percentile Volume"
+              value={window.protocolStats?.top5PercentVolume 
+                ? formatCurrency(window.protocolStats.top5PercentVolume)
+                : '--'
+              }
+              type="volume"
+              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Trader Stats Table */}
+      <Card data-table="trader-stats" className="w-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold">
+                Trader Statistics
+              </CardTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
+                  <img 
+                    src={`/assets/logos/${protocols.find(p => p.id === selectedProtocol)?.logo}`}
+                    alt={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <span>{protocols.find(p => p.id === selectedProtocol)?.name}</span>
+              </div>
+            </div>
+            
+            {/* View Type Tabs */}
+            <div className="flex bg-muted p-1 rounded-lg">
+              <button
+                onClick={() => setViewType('rank')}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewType === 'rank'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Rank
+              </button>
+              <button
+                onClick={() => setViewType('percentile')}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewType === 'percentile'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Percentile
+              </button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading || (viewType === 'percentile' && percentileLoading) ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
+                <span className="text-muted-foreground">
+                  {viewType === 'percentile' && percentileLoading 
+                    ? `Loading percentile calculations...`
+                    : `Loading trader statistics for ${protocols.find(p => p.id === selectedProtocol)?.name}...`
+                  }
+                </span>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <div className="text-muted-foreground">
+                <p className="mb-4">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => fetchTraderData(currentPage)}
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          ) : (viewType === 'rank' ? traderData.length > 0 : percentileBrackets.length > 0) ? (
+            <div>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-20 text-center">
+                        {viewType === 'rank' ? 'Rank' : 'Top %'}
+                      </TableHead>
+                      <TableHead className="text-center">
+                        {viewType === 'rank' ? 'Trader' : 'Rank Range'}
+                      </TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                      <TableHead className="text-right">Volume Share</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewType === 'rank' ? (
+                      traderData.map((trader, index) => {
+                        const rank = trader.rank || index + 1;
+                        
+                        return (
+                          <TableRow key={`${trader.user_address}-${index}`} className="hover:bg-muted/30 h-12">
+                            <TableCell className="text-center font-medium py-2">
+                              <Badge 
+                                variant={rank <= 3 ? "default" : "outline"}
+                                className={cn(
+                                  "w-8 h-6 rounded-lg flex items-center justify-center text-xs font-medium px-0.5",
+                                  rank === 1 && "bg-yellow-500 text-yellow-50 hover:bg-yellow-600",
+                                  rank === 2 && "bg-gray-400 text-gray-50 hover:bg-gray-500",
+                                  rank === 3 && "bg-amber-600 text-amber-50 hover:bg-amber-700"
+                                )}
+                              >
+                                #{rank}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-mono py-2">
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(trader.user_address);
+                                  toast({
+                                    title: "Address copied",
+                                    description: `${truncateAddress(trader.user_address)} copied to clipboard`,
+                                    duration: 2000,
+                                  });
+                                }}
+                                className="text-sm hover:bg-muted/50 px-2 py-1 rounded transition-colors cursor-pointer"
+                                title="Click to copy full address"
+                              >
+                                {truncateAddress(trader.user_address)}
+                              </button>
+                            </TableCell>
+                            <TableCell className="text-right py-2">
+                              <span className="font-semibold">
+                                {formatCurrency(trader.volume_usd)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right py-2">
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "font-medium text-xs",
+                                  rank <= 10 && "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                                )}
+                              >
+                                {trader.volumeShare ? trader.volumeShare.toFixed(3) : '0.000'}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      percentileBrackets.map((bracket) => (
+                        <TableRow key={`percentile-${bracket.percentile}`} className="hover:bg-muted/30 h-12">
+                          <TableCell className="text-center font-medium py-2">
+                            <Badge 
+                              variant={bracket.percentile <= 10 ? "default" : "outline"}
+                              className={cn(
+                                "w-12 h-6 rounded-lg flex items-center justify-center text-xs font-medium px-0.5",
+                                bracket.percentile <= 3 && "bg-yellow-500 text-yellow-50 hover:bg-yellow-600",
+                                bracket.percentile > 3 && bracket.percentile <= 5 && "bg-gray-400 text-gray-50 hover:bg-gray-500",
+                                bracket.percentile > 5 && bracket.percentile <= 10 && "bg-amber-600 text-amber-50 hover:bg-amber-700"
+                              )}
+                            >
+                              {bracket.percentile}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center py-2 font-medium font-mono">
+                            {bracket.rankRange}
+                          </TableCell>
+                          <TableCell className="text-right py-2">
+                            <span className="font-semibold">
+                              {formatCurrency(bracket.volume)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right py-2">
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "font-medium text-xs",
+                                bracket.percentile <= 10 && "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                              )}
+                            >
+                              {bracket.volumeShare.toFixed(1)}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination */}
+              {viewType === 'rank' && totalPages > 1 && (
+                <div className="w-full flex justify-end py-3">
+                  <Pagination className="ml-auto">
+                    <PaginationContent className="ml-auto justify-end">
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        >
+                          &laquo;
+                        </PaginationPrevious>
+                      </PaginationItem>
+                      
+                      {/* First page */}
+                      {currentPage > 3 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(1)}
+                              isActive={currentPage === 1}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                          {currentPage > 4 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Current page range */}
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        // Don't render if we already rendered this page number
+                        if ((currentPage > 3 && pageNum === 1) || (currentPage < totalPages - 2 && pageNum === totalPages)) {
+                          return null;
+                        }
+                        
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageNum)}
+                              isActive={currentPage === pageNum}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      {/* Last page */}
+                      {currentPage < totalPages - 2 && (
+                        <>
+                          {currentPage < totalPages - 3 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(totalPages)}
+                              isActive={currentPage === totalPages}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        >
+                          &raquo;
+                        </PaginationNext>
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No trader data available for {protocols.find(p => p.id === selectedProtocol)?.name}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Action buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={downloadReport}>
+          <Download className="h-4 w-4 mr-2" />
+          Download
+        </Button>
+        <Button variant="outline" size="sm" onClick={copyToClipboard}>
+          <Copy className="h-4 w-4 mr-2" />
+          Copy
+        </Button>
+      </div>
     </div>
   );
 }

@@ -32,6 +32,133 @@ export interface TraderAnalytics {
 }
 
 export class TraderStatsService {
+  // Get trader stats for a protocol with pagination
+  static async getTraderStatsPaginated(
+    protocol: string,
+    offset: number,
+    limit: number
+  ): Promise<TraderStats[]> {
+    try {
+      let query = supabase
+        .from('trader_stats')
+        .select('*')
+        .eq('protocol_name', protocol.toLowerCase())
+        .order('volume_usd', { ascending: false });
+
+      // Always use batching for consistency
+      if (limit > 1000) {
+        // For very large requests, fetch in batches
+        const allData: TraderStats[] = [];
+        const batchSize = 1000;
+        let currentOffset = offset;
+        let remaining = limit;
+        
+        while (remaining > 0) {
+          const currentBatch = Math.min(batchSize, remaining);
+          const { data, error } = await supabase
+            .from('trader_stats')
+            .select('*')
+            .eq('protocol_name', protocol.toLowerCase())
+            .order('volume_usd', { ascending: false })
+            .range(currentOffset, currentOffset + currentBatch - 1);
+            
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+          
+          allData.push(...data);
+          currentOffset += currentBatch;
+          remaining -= currentBatch;
+          
+          // Log progress for large datasets
+          if (allData.length % 5000 === 0) {
+            console.log(`Fetched ${allData.length} records so far...`);
+          }
+        }
+        
+        return allData;
+      } else {
+        // Standard pagination for smaller requests
+        const { data, error } = await query.range(offset, offset + limit - 1);
+        if (error) throw error;
+        return data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching paginated trader stats:', error);
+      throw error;
+    }
+  }
+
+  // Get total count of traders for a protocol
+  static async getTraderStatsCount(protocol: string): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from('trader_stats')
+        .select('*', { count: 'exact', head: true })
+        .eq('protocol_name', protocol.toLowerCase());
+
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('Error counting trader stats:', error);
+      throw error;
+    }
+  }
+
+  // Get total volume for a protocol (calculated at database level)
+  static async getTotalVolumeForProtocol(protocol: string): Promise<number> {
+    try {
+      // Try using the SQL function first
+      const { data: sqlResult, error: sqlError } = await supabase
+        .rpc('calculate_protocol_total_volume', { 
+          protocol_name: protocol.toLowerCase() 
+        });
+
+      if (!sqlError && sqlResult !== null) {
+        console.log(`Total volume for ${protocol} (SQL function): ${parseFloat(sqlResult).toLocaleString()}`);
+        return parseFloat(sqlResult);
+      }
+
+      console.log('SQL function not available, falling back to client calculation');
+      
+      // Fallback to client-side calculation with proper pagination
+      let totalVolume = 0;
+      let offset = 0;
+      const batchSize = 1000;
+      
+      // Fetch all records in batches to avoid the 1000 row limit
+      while (true) {
+        const { data, error } = await supabase
+          .from('trader_stats')
+          .select('volume_usd')
+          .eq('protocol_name', protocol.toLowerCase())
+          .range(offset, offset + batchSize - 1);
+
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        
+        // Add this batch's volume to total
+        const batchVolume = data.reduce((sum, trader) => {
+          const volume = parseFloat(trader.volume_usd?.toString() || '0');
+          return sum + (isNaN(volume) ? 0 : volume);
+        }, 0);
+        
+        totalVolume += batchVolume;
+        offset += batchSize;
+        
+        // Log progress for large datasets
+        if (offset % 10000 === 0) {
+          console.log(`Volume calculation progress: processed ${offset} records...`);
+        }
+      }
+
+      console.log(`Total volume for ${protocol} (client calculation): ${totalVolume.toLocaleString()}`);
+      return totalVolume;
+    } catch (error) {
+      console.error('Error calculating total volume:', error);
+      throw error;
+    }
+  }
+
   // Get trader stats for a protocol
   static async getTraderStats(
     protocol: string,
@@ -200,6 +327,82 @@ export class TraderStatsService {
     } catch (error) {
       console.error('Error fetching top traders across protocols:', error);
       throw error;
+    }
+  }
+
+  // Get pre-calculated percentiles from database
+  static async getProtocolPercentiles(protocol: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('protocol_percentiles')
+        .select('*')
+        .eq('protocol_name', protocol.toLowerCase())
+        .order('percentile', { ascending: true });
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        console.log(`No pre-calculated percentiles found for ${protocol}, triggering refresh...`);
+        await this.refreshProtocolPercentiles(protocol);
+        
+        // Try again after refresh
+        const { data: refreshedData, error: refreshError } = await supabase
+          .from('protocol_percentiles')
+          .select('*')
+          .eq('protocol_name', protocol.toLowerCase())
+          .order('percentile', { ascending: true });
+        
+        if (refreshError) throw refreshError;
+        return refreshedData || [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching protocol percentiles:', error);
+      throw error;
+    }
+  }
+
+  // Refresh percentiles for a protocol using SQL function
+  static async refreshProtocolPercentiles(protocol: string): Promise<void> {
+    try {
+      console.log(`Refreshing percentiles for ${protocol}...`);
+      
+      const { error } = await supabase.rpc('refresh_protocol_percentiles', {
+        protocol_name_param: protocol.toLowerCase()
+      });
+      
+      if (error) throw error;
+      console.log(`Successfully refreshed percentiles for ${protocol}`);
+    } catch (error) {
+      console.error('Error refreshing protocol percentiles:', error);
+      throw error;
+    }
+  }
+
+  // Check if percentiles need refresh (older than 1 hour)
+  static async shouldRefreshPercentiles(protocol: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('protocol_percentiles')
+        .select('calculated_at')
+        .eq('protocol_name', protocol.toLowerCase())
+        .order('calculated_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        return true; // No data exists, need refresh
+      }
+      
+      const lastCalculated = new Date(data[0].calculated_at);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      
+      return lastCalculated < oneHourAgo;
+    } catch (error) {
+      console.error('Error checking percentile refresh status:', error);
+      return true; // Err on the side of refreshing
     }
   }
 }

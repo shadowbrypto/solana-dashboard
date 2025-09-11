@@ -14,6 +14,12 @@ export const traderStatsQueries: TraderStatsQuery[] = [
     description: 'Photon trader volume data'
   },
   {
+    protocol: 'axiom',
+    chain: 'solana',
+    duneQueryId: '5755297',
+    description: 'Axiom trader volume data'
+  },
+  {
     protocol: 'jupiter',
     chain: 'solana',
     duneQueryId: 'XXXXX', // Replace with actual Dune query ID

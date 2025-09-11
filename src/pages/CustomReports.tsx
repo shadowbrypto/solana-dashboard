@@ -1446,20 +1446,52 @@ function TraderStatsSection() {
 
 
   const downloadReport = async () => {
-    const reportElement = document.querySelector('[data-table="trader-stats"]') as HTMLElement;
+    const reportElement = document.querySelector('[data-table="trader-stats-complete"]') as HTMLElement;
     
     if (reportElement) {
+      const rect = reportElement.getBoundingClientRect();
+      
+      if (rect.width === 0 || rect.height === 0) {
+        return;
+      }
+      
       try {
-        // @ts-ignore
-        const dataUrl = await domtoimage.toPng(reportElement, {
-          quality: 1,
-          bgcolor: '#ffffff',
-          cacheBust: true,
-          style: {
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-          }
-        });
+        const scale = 2;
+        const padding = 24;
+        const totalWidth = reportElement.offsetWidth + (padding * 2);
+        const totalHeight = reportElement.offsetHeight + (padding * 2);
+        
+        const dataUrl = await Promise.race([
+          domtoimage.toPng(reportElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            cacheBust: true,
+            style: {
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: totalWidth + 'px',
+              height: totalHeight + 'px',
+              padding: padding + 'px',
+              margin: '0px',
+              border: 'none',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              overflow: 'visible'
+            },
+            width: totalWidth * scale,
+            height: totalHeight * scale,
+            filter: (node: any) => {
+              // Exclude any elements with no-screenshot class
+              if (node.classList?.contains('no-screenshot')) {
+                return false;
+              }
+              return true;
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('dom-to-image timeout after 20 seconds')), 20000)
+          )
+        ]) as string;
         
         const link = document.createElement('a');
         link.download = `${selectedProtocol}_Trader_Stats_${format(new Date(), 'yyyy_MM_dd')}.png`;
@@ -1479,31 +1511,77 @@ function TraderStatsSection() {
   };
 
   const copyToClipboard = async () => {
-    const reportElement = document.querySelector('[data-table="trader-stats"]') as HTMLElement;
+    const reportElement = document.querySelector('[data-table="trader-stats-complete"]') as HTMLElement;
     
     if (reportElement) {
+      const rect = reportElement.getBoundingClientRect();
+      
+      if (rect.width === 0 || rect.height === 0) {
+        return;
+      }
+      
       try {
-        // @ts-ignore
-        const dataUrl = await domtoimage.toPng(reportElement, {
-          quality: 1,
-          bgcolor: '#ffffff',
-          cacheBust: true
-        });
+        const scale = 2;
+        const padding = 24;
+        const totalWidth = reportElement.offsetWidth + (padding * 2);
+        const totalHeight = reportElement.offsetHeight + (padding * 2);
+        
+        const dataUrl = await Promise.race([
+          domtoimage.toPng(reportElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            cacheBust: true,
+            style: {
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              width: totalWidth + 'px',
+              height: totalHeight + 'px',
+              padding: padding + 'px',
+              margin: '0px',
+              border: 'none',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              overflow: 'visible'
+            },
+            width: totalWidth * scale,
+            height: totalHeight * scale,
+            filter: (node: any) => {
+              // Exclude any elements with no-screenshot class
+              if (node.classList?.contains('no-screenshot')) {
+                return false;
+              }
+              return true;
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('dom-to-image timeout after 20 seconds')), 20000)
+          )
+        ]) as string;
         
         const response = await fetch(dataUrl);
         const blob = await response.blob();
         
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'image/png': blob
-          })
-        ]);
-        
-        toast({
-          title: "Copied to clipboard",
-          description: "Trader stats report copied successfully",
-          duration: 2000,
-        });
+        if (blob) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'image/png': blob
+              })
+            ]);
+            toast({
+              title: "Copied to clipboard",
+              description: "Trader stats report copied successfully",
+              duration: 2000,
+            });
+          } catch (clipboardError) {
+            console.error('Clipboard write failed:', clipboardError);
+            toast({
+              title: "Copy failed",
+              description: "Failed to copy to clipboard. Please try downloading instead.",
+              duration: 3000,
+            });
+          }
+        }
       } catch (error) {
         console.error('Error copying to clipboard:', error);
         toast({
@@ -1524,10 +1602,10 @@ function TraderStatsSection() {
             key={protocol.id}
             onClick={() => handleProtocolChange(protocol.id)}
             className={cn(
-              "relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors duration-150",
-              "bg-white focus:outline-none border-2",
+              "relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors duration-150",
+              "bg-white focus:outline-none border",
               selectedProtocol === protocol.id
-                ? "border-black text-foreground shadow-sm"
+                ? "border-black text-foreground shadow-md"
                 : "border-gray-300 text-muted-foreground hover:text-foreground"
             )}
           >
@@ -1547,76 +1625,78 @@ function TraderStatsSection() {
         ))}
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {loading ? (
-          <>
-            <MetricCardSkeleton
-              title="Total Volume"
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-            />
-            <MetricCardSkeleton
-              title="Total Traders"
-              type="users"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-            />
-            <MetricCardSkeleton
-              title="Top 1% Percentile Volume"
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-            />
-            <MetricCardSkeleton
-              title="Top 5% Percentile Volume"
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-            />
-          </>
-        ) : (
-          <>
-            <MetricCard
-              title="Total Volume"
-              value={totalVolume}
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
-            />
-            
-            <MetricCard
-              title="Total Traders"
-              value={formatNumber(totalTraders)}
-              type="users"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
-            />
-            
-            <MetricCard
-              title="Top 1% Percentile Volume"
-              value={window.protocolStats?.top1PercentVolume 
-                ? formatCurrency(window.protocolStats.top1PercentVolume)
-                : '--'
-              }
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
-            />
-            
-            <MetricCard
-              title="Top 5% Percentile Volume"
-              value={window.protocolStats?.top5PercentVolume 
-                ? formatCurrency(window.protocolStats.top5PercentVolume)
-                : '--'
-              }
-              type="volume"
-              protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
-              protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
-            />
-          </>
-        )}
-      </div>
+      {/* Complete Trader Stats Report - Metrics + Table */}
+      <div data-table="trader-stats-complete" className="space-y-6">
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {loading ? (
+            <>
+              <MetricCardSkeleton
+                title="Total Volume"
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              />
+              <MetricCardSkeleton
+                title="Total Traders"
+                type="users"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              />
+              <MetricCardSkeleton
+                title="Top 1% Percentile Volume"
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              />
+              <MetricCardSkeleton
+                title="Top 5% Percentile Volume"
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+              />
+            </>
+          ) : (
+            <>
+              <MetricCard
+                title="Total Volume"
+                value={totalVolume}
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+                protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+              />
+              
+              <MetricCard
+                title="Total Traders"
+                value={formatNumber(totalTraders)}
+                type="users"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+                protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+              />
+              
+              <MetricCard
+                title="Top 1% Percentile Volume"
+                value={window.protocolStats?.top1PercentVolume 
+                  ? formatCurrency(window.protocolStats.top1PercentVolume)
+                  : '--'
+                }
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+                protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+              />
+              
+              <MetricCard
+                title="Top 5% Percentile Volume"
+                value={window.protocolStats?.top5PercentVolume 
+                  ? formatCurrency(window.protocolStats.top5PercentVolume)
+                  : '--'
+                }
+                type="volume"
+                protocolName={protocols.find(p => p.id === selectedProtocol)?.name || selectedProtocol}
+                protocolLogo={protocols.find(p => p.id === selectedProtocol)?.logo}
+              />
+            </>
+          )}
+        </div>
 
-      {/* Trader Stats Table */}
-      <Card data-table="trader-stats" className="w-full">
+        {/* Trader Stats Table */}
+        <Card className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -1805,7 +1885,7 @@ function TraderStatsSection() {
               
               {/* Pagination */}
               {viewType === 'rank' && totalPages > 1 && (
-                <div className="w-full flex justify-end py-3">
+                <div className="w-full flex justify-end pt-3 pb-1">
                   <Pagination className="ml-auto">
                     <PaginationContent className="ml-auto justify-end">
                       <PaginationItem>
@@ -1905,6 +1985,7 @@ function TraderStatsSection() {
           )}
         </CardContent>
       </Card>
+      </div>
 
       {/* Action buttons */}
       <div className="flex justify-end gap-2">

@@ -1861,7 +1861,7 @@ function TraderStatsSection() {
                               <div className="w-32">
                                 <Progress 
                                   value={bracket.volumeShare} 
-                                  className="h-4 bg-muted/60 border border-foreground/60 rounded-sm [&>div]:bg-foreground/80"
+                                  className="h-4 bg-muted/60 border border-blue-200 dark:border-blue-800 rounded-sm [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-purple-500"
                                 />
                               </div>
                               <span className="font-semibold whitespace-nowrap">

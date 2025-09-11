@@ -1779,6 +1779,7 @@ function TraderStatsSection() {
                         {viewType === 'rank' ? 'Trader' : 'Rank Range'}
                       </TableHead>
                       <TableHead className="text-right">Volume</TableHead>
+                      {viewType === 'percentile' && <TableHead className="text-right">Delta</TableHead>}
                       <TableHead className="text-right">Volume Share</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1838,7 +1839,16 @@ function TraderStatsSection() {
                         );
                       })
                     ) : (
-                      percentileBrackets.map((bracket) => (
+                      percentileBrackets.map((bracket, index) => {
+                        // Calculate delta for rows after the first one
+                        const previousBracket = index > 0 ? percentileBrackets[index - 1] : null;
+                        const deltaVolume = previousBracket ? bracket.volume - previousBracket.volume : 0;
+                        // Calculate percentage based on total volume
+                        const deltaPercentageOfTotal = totalVolume > 0 
+                          ? ((deltaVolume / totalVolume) * 100) 
+                          : 0;
+                        
+                        return (
                         <TableRow key={`percentile-${bracket.percentile}`} className="hover:bg-muted/30 h-12">
                           <TableCell className="text-center font-medium py-2">
                             <Badge 
@@ -1856,7 +1866,7 @@ function TraderStatsSection() {
                           <TableCell className="text-center py-2 font-medium font-mono">
                             {bracket.rankRange}
                           </TableCell>
-                          <TableCell className="py-2 max-w-24">
+                          <TableCell className="py-2 max-w-32">
                             <div className="flex items-center justify-between w-full">
                               <div className="w-32">
                                 <Progress 
@@ -1868,6 +1878,32 @@ function TraderStatsSection() {
                                 {formatCurrency(bracket.volume)}
                               </span>
                             </div>
+                          </TableCell>
+                          {/* Delta Column - only for percentile view */}
+                          <TableCell className="text-right py-2">
+                            {index === 0 ? (
+                              <div className="flex flex-col items-end">
+                                <span className="text-muted-foreground text-xs">-</span>
+                                <span className="text-xs text-muted-foreground">-</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="font-bold text-sm text-foreground">
+                                  {deltaVolume >= 0 ? '+' : ''}{formatCurrency(deltaVolume)}
+                                </span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={cn(
+                                    "text-xs font-medium px-1.5 py-0.5 h-auto",
+                                    deltaVolume >= 0 
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800" 
+                                      : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800"
+                                  )}
+                                >
+                                  {deltaPercentageOfTotal >= 0 ? '+' : ''}{deltaPercentageOfTotal.toFixed(2)}%
+                                </Badge>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-right py-2">
                             <Badge 
@@ -1881,7 +1917,8 @@ function TraderStatsSection() {
                             </Badge>
                           </TableCell>
                         </TableRow>
-                      ))
+                        );
+                      })
                     )}
                   </TableBody>
                 </Table>

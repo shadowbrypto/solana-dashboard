@@ -392,7 +392,7 @@ router.get('/percentiles/:protocol', async (req: Request, res: Response) => {
       });
     }
     
-    let formattedBrackets = [];
+    let formattedBrackets: any[] = [];
     
     // Calculate percentiles dynamically for all protocols
     try {
@@ -714,6 +714,7 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
+    const { protocol } = req.params;
     console.error(`Error refreshing ${protocol} data:`, error);
     res.status(500).json({
       success: false,

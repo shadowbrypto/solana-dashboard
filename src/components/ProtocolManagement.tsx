@@ -793,7 +793,7 @@ export function ProtocolManagement() {
     }
   };
 
-  const handleRefreshIndividualTraderStats = async (protocol: 'photon' | 'axiom') => {
+  const handleRefreshIndividualTraderStats = async (protocol: 'photon' | 'axiom' | 'bloom' | 'trojan') => {
     if (refreshingTraderStatsProtocols.has(protocol)) return;
     
     setRefreshingTraderStatsProtocols(prev => new Set([...prev, protocol]));
@@ -1318,6 +1318,104 @@ export function ProtocolManagement() {
                   title="Refresh Axiom trader stats"
                 >
                   <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('axiom') ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+
+              {/* Bloom Trader Stats */}
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                  <img 
+                    src="/assets/logos/bloom.jpg"
+                    alt="Bloom" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = '';
+                        container.className = 'w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center';
+                        const iconElement = document.createElement('div');
+                        iconElement.innerHTML = '<svg class="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
+                        container.appendChild(iconElement);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground text-xs sm:text-base">Bloom</p>
+                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                      TRADERS
+                    </Badge>
+                  </div>
+                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <div className="w-1 h-1 rounded-full bg-green-600" />
+                    <span className="font-medium text-[10px] sm:text-xs">
+                      Dune: Available
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRefreshIndividualTraderStats('bloom');
+                  }}
+                  disabled={refreshingTraderStatsProtocols.has('bloom')}
+                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                  title="Refresh Bloom trader stats"
+                >
+                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('bloom') ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+
+              {/* Trojan Trader Stats */}
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
+                  <img 
+                    src="/assets/logos/trojan.jpg"
+                    alt="Trojan" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = '';
+                        container.className = 'w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center';
+                        const iconElement = document.createElement('div');
+                        iconElement.innerHTML = '<svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
+                        container.appendChild(iconElement);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground text-xs sm:text-base">Trojan</p>
+                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                      TRADERS
+                    </Badge>
+                  </div>
+                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <div className="w-1 h-1 rounded-full bg-green-600" />
+                    <span className="font-medium text-[10px] sm:text-xs">
+                      Dune: Available
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRefreshIndividualTraderStats('trojan');
+                  }}
+                  disabled={refreshingTraderStatsProtocols.has('trojan')}
+                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                  title="Refresh Trojan trader stats"
+                >
+                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('trojan') ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>

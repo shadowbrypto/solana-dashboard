@@ -102,7 +102,7 @@ router.get('/protocol/:protocol', async (req: Request, res: Response) => {
 
 // In-memory cache for percentile calculations
 const percentileCache = new Map<string, { data: any[], timestamp: number }>();
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
 
 // Comprehensive cache for all trader stats data
 const comprehensiveCache = new Map<string, { data: any, timestamp: number }>();
@@ -450,7 +450,7 @@ router.get('/percentiles/:protocol', async (req: Request, res: Response) => {
         data: formattedBrackets,
         timestamp: now
       });
-      console.log(`Cached percentiles for ${protocol} (30 minute expiry)`);
+      console.log(`Cached percentiles for ${protocol} (4 hour expiry)`);
     }
     
     res.json({
@@ -676,10 +676,10 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
     const { protocol } = req.params;
     console.log(`Full data refresh request for ${protocol}`);
     
-    if (!['photon', 'axiom'].includes(protocol.toLowerCase())) {
+    if (!['photon', 'axiom', 'bloom', 'trojan'].includes(protocol.toLowerCase())) {
       return res.status(400).json({
         success: false,
-        error: `Refresh not supported for protocol: ${protocol}. Only 'photon' and 'axiom' are supported.`
+        error: `Refresh not supported for protocol: ${protocol}. Only 'photon', 'axiom', 'bloom', and 'trojan' are supported.`
       });
     }
     
@@ -704,6 +704,23 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
       
     if (countError) throw countError;
     
+    // Step 4: Clear all caches for this protocol
+    console.log(`Clearing caches for ${protocol}...`);
+    
+    // Clear comprehensive cache
+    const comprehensiveCacheKey = `comprehensive_${protocol.toLowerCase()}`;
+    if (comprehensiveCache.has(comprehensiveCacheKey)) {
+      comprehensiveCache.delete(comprehensiveCacheKey);
+      console.log(`✅ Cleared comprehensive cache for ${protocol}`);
+    }
+    
+    // Clear percentile cache
+    const percentileCacheKey = `percentiles_${protocol.toLowerCase()}`;
+    if (percentileCache.has(percentileCacheKey)) {
+      percentileCache.delete(percentileCacheKey);
+      console.log(`✅ Cleared percentile cache for ${protocol}`);
+    }
+    
     res.json({
       success: true,
       message: `Successfully refreshed ${protocol}`,
@@ -726,9 +743,9 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
 // Refresh both Photon and Axiom trader data
 router.post('/refresh-all', async (req: Request, res: Response) => {
   try {
-    console.log('Full data refresh request for all protocols (Photon + Axiom)');
+    console.log('Full data refresh request for all protocols (Photon + Axiom + Bloom + Trojan)');
     
-    const protocols = ['photon', 'axiom'];
+    const protocols = ['photon', 'axiom', 'bloom', 'trojan'];
     const results = [];
     
     for (const protocol of protocols) {
@@ -754,6 +771,19 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
           .eq('protocol_name', protocol);
           
         if (countError) throw countError;
+        
+        // Clear caches for this protocol
+        const comprehensiveCacheKey = `comprehensive_${protocol}`;
+        if (comprehensiveCache.has(comprehensiveCacheKey)) {
+          comprehensiveCache.delete(comprehensiveCacheKey);
+          console.log(`✅ Cleared comprehensive cache for ${protocol}`);
+        }
+        
+        const percentileCacheKey = `percentiles_${protocol}`;
+        if (percentileCache.has(percentileCacheKey)) {
+          percentileCache.delete(percentileCacheKey);
+          console.log(`✅ Cleared percentile cache for ${protocol}`);
+        }
         
         results.push({
           protocol: protocol,

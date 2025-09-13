@@ -16,8 +16,20 @@ export const traderStatsQueries: TraderStatsQuery[] = [
   {
     protocol: 'axiom',
     chain: 'solana',
-    duneQueryId: '5755297',
+    duneQueryId: '5770971',
     description: 'Axiom trader volume data'
+  },
+  {
+    protocol: 'bloom',
+    chain: 'solana',
+    duneQueryId: '5755297',
+    description: 'Bloom trader volume data'
+  },
+  {
+    protocol: 'trojan',
+    chain: 'solana',
+    duneQueryId: '5770723',
+    description: 'Trojan trader volume data'
   },
   {
     protocol: 'jupiter',

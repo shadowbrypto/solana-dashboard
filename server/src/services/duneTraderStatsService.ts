@@ -41,7 +41,7 @@ export class DuneTraderStatsService {
 
       // Poll for results
       let attempts = 0;
-      const maxAttempts = 60; // 5 minutes timeout (5 second intervals)
+      const maxAttempts = 180; // 15 minutes timeout (5 second intervals)
       
       while (attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds

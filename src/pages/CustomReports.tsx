@@ -1332,7 +1332,9 @@ function TraderStatsSection() {
   // Available protocols
   const protocols = [
     { id: 'photon', name: 'Photon', logo: 'photon.jpg' },
-    { id: 'axiom', name: 'Axiom', logo: 'axiom.jpg' }
+    { id: 'axiom', name: 'Axiom', logo: 'axiom.jpg' },
+    { id: 'bloom', name: 'Bloom', logo: 'bloom.jpg' },
+    { id: 'trojan', name: 'Trojan', logo: 'trojan.jpg' }
   ];
 
   // Percentile data is now included in comprehensive endpoint

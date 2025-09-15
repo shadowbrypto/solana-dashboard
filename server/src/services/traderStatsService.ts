@@ -277,31 +277,151 @@ export class TraderStatsService {
     }
   }
 
-  // Import trader data from Dune (placeholder - implement based on your Dune integration)
+  // Import trader data - TIMEOUT RESISTANT VERSION
   static async importTraderData(
     protocol: string,
     date: Date,
     data: Array<{ user: string; volume_usd: number }>
   ): Promise<void> {
+    // Optimized for large datasets with timeout resistance
+    const BATCH_SIZE = 10000; // 10k rows for maximum reliability
+    const MAX_CONCURRENT = 8; // Reduced concurrency to prevent overloading DB
+    const MAX_RETRIES = 3; // Retry failed batches
+    
     try {
-      const records = data.map(item => ({
-        protocol_name: protocol.toLowerCase(),
-        user_address: item.user,
-        volume_usd: item.volume_usd,
-        date: format(date, 'yyyy-MM-dd'),
-        chain: traderStatsQueries.find(q => q.protocol === protocol)?.chain || 'solana'
-      }));
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`🚀 TRADER STATS IMPORT - ${protocol.toUpperCase()}`);
+      console.log(`${'='.repeat(60)}`);
+      console.log(`📅 Date: ${format(date, 'yyyy-MM-dd')}`);
+      console.log(`📊 Records to import: ${data.length.toLocaleString()}`);
+      console.log(`🔧 Batch size: ${BATCH_SIZE.toLocaleString()}`);
+      console.log(`🚀 Concurrent batches: ${MAX_CONCURRENT}`);
+      console.log(`📦 Total batches: ${Math.ceil(data.length / BATCH_SIZE)}`);
+      console.log(`${'='.repeat(60)}\n`);
 
-      const { error } = await supabase
-        .from('trader_stats')
-        .upsert(records, {
-          onConflict: 'protocol_name,user_address,date',
-          ignoreDuplicates: false
-        });
-
-      if (error) throw error;
+      // Step 1: Delete ALL existing data for this protocol
+      console.log(`🗑️ Step 1: Clearing existing ${protocol} data...`);
       
-      console.log(`Imported ${records.length} trader records for ${protocol} on ${format(date, 'yyyy-MM-dd')}`);
+      const { count: existingCount } = await supabase
+        .from('trader_stats')
+        .select('*', { count: 'exact', head: true })
+        .eq('protocol_name', protocol.toLowerCase());
+      
+      console.log(`   - Found ${(existingCount || 0).toLocaleString()} existing records to delete`);
+      
+      const { error: deleteError, count: deletedCount } = await supabase
+        .from('trader_stats')
+        .delete({ count: 'exact' })
+        .eq('protocol_name', protocol.toLowerCase());
+      
+      if (deleteError) {
+        console.error('❌ Delete operation failed:', deleteError);
+        throw deleteError;
+      }
+      
+      console.log(`   ✅ Deleted ${(deletedCount || 0).toLocaleString()} records\n`);
+
+      // Step 2: Prepare records
+      console.log(`🔧 Step 2: Preparing records...`);
+      const chain = traderStatsQueries.find(q => q.protocol === protocol)?.chain || 'solana';
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const protocolLower = protocol.toLowerCase();
+      
+      const records = new Array(data.length);
+      for (let i = 0; i < data.length; i++) {
+        records[i] = {
+          protocol_name: protocolLower,
+          user_address: data[i].user,
+          volume_usd: data[i].volume_usd,
+          date: dateStr,
+          chain: chain
+        };
+      }
+      
+      console.log(`   ✅ Prepared ${records.length.toLocaleString()} records\n`);
+
+      // Step 3: Parallel batch insertion
+      console.log(`💾 Step 3: Parallel batch insertion...`);
+      const startTime = Date.now();
+      let successCount = 0;
+      
+      // Create batches
+      const batches: any[][] = [];
+      for (let i = 0; i < records.length; i += BATCH_SIZE) {
+        batches.push(records.slice(i, Math.min(i + BATCH_SIZE, records.length)));
+      }
+      
+      // Timeout-resistant batch processing with retry logic
+      const processBatch = async (batch: any[], batchIndex: number, retryCount: number = 0): Promise<void> => {
+        const batchStart = Date.now();
+        
+        try {
+          // Use minimal options for speed with timeout handling
+          const { error } = await supabase
+            .from('trader_stats')
+            .insert(batch);
+
+          if (error) {
+            // Check if it's a timeout error that we can retry
+            if (error.code === '57014' && retryCount < MAX_RETRIES) {
+              console.log(`⚠️  Batch ${batchIndex + 1} timeout, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+              await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+              return processBatch(batch, batchIndex, retryCount + 1);
+            }
+            
+            console.error(`❌ Batch ${batchIndex + 1} failed after ${retryCount} retries:`, error.message);
+            throw error;
+          }
+
+          const batchTime = (Date.now() - batchStart) / 1000;
+          const batchSpeed = Math.round(batch.length / batchTime);
+          successCount += batch.length;
+          
+          const retryText = retryCount > 0 ? ` (retry ${retryCount})` : '';
+          console.log(`✅ Batch ${batchIndex + 1}/${batches.length}: ${batch.length.toLocaleString()} records in ${batchTime.toFixed(1)}s (${batchSpeed.toLocaleString()}/s)${retryText} - Total: ${successCount.toLocaleString()}/${records.length.toLocaleString()}`);
+        } catch (error: any) {
+          // Handle any other errors
+          if (error.code === '57014' && retryCount < MAX_RETRIES) {
+            console.log(`⚠️  Batch ${batchIndex + 1} timeout (catch), retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+            return processBatch(batch, batchIndex, retryCount + 1);
+          }
+          throw error;
+        }
+      };
+
+      // Ultra-optimized batch processing with rolling window
+      let completedBatches = 0;
+      let activeBatches = new Set<Promise<void>>();
+      
+      for (let i = 0; i < batches.length; i++) {
+        // Create batch promise
+        const batchPromise = processBatch(batches[i], i).then(() => {
+          completedBatches++;
+          activeBatches.delete(batchPromise);
+        });
+        
+        activeBatches.add(batchPromise);
+        
+        // Control concurrency with rolling window approach
+        if (activeBatches.size >= MAX_CONCURRENT) {
+          // Wait for at least one batch to complete
+          await Promise.race(Array.from(activeBatches));
+        }
+      }
+      
+      // Wait for all remaining batches to complete
+      await Promise.all(Array.from(activeBatches));
+      
+      const duration = (Date.now() - startTime) / 1000;
+      const speed = Math.round(successCount / duration);
+
+      console.log(`\n📊 Import Summary for ${protocol.toUpperCase()}:`);
+      console.log(`   ✅ Successfully imported: ${successCount.toLocaleString()} records`);
+      console.log(`   ⌚ Total time: ${duration.toFixed(1)} seconds`);
+      console.log(`   🚀 Speed: ${speed.toLocaleString()} records/second`);
+      
+      console.log(`\n✅ Import completed for ${protocol}\n${'='.repeat(60)}\n`);
     } catch (error) {
       console.error('Error importing trader data:', error);
       throw error;
@@ -403,6 +523,43 @@ export class TraderStatsService {
     } catch (error) {
       console.error('Error checking percentile refresh status:', error);
       return true; // Err on the side of refreshing
+    }
+  }
+
+  // Get row counts for all protocols
+  static async getAllProtocolRowCounts(): Promise<Record<string, number>> {
+    try {
+      const { data, error } = await supabase
+        .from('trader_stats')
+        .select('protocol_name')
+        .then(async ({ data, error }) => {
+          if (error) throw error;
+          
+          // Count records by protocol
+          const counts: Record<string, number> = {};
+          const protocols = ['photon', 'axiom', 'bloom', 'trojan'];
+          
+          for (const protocol of protocols) {
+            const { count, error: countError } = await supabase
+              .from('trader_stats')
+              .select('*', { count: 'exact', head: true })
+              .eq('protocol_name', protocol);
+            
+            if (!countError) {
+              counts[protocol] = count || 0;
+            } else {
+              counts[protocol] = 0;
+            }
+          }
+          
+          return { data: counts, error: null };
+        });
+
+      if (error) throw error;
+      return data || {};
+    } catch (error) {
+      console.error('Error getting protocol row counts:', error);
+      return {};
     }
   }
 }

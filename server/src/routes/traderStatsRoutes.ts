@@ -683,16 +683,7 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
       });
     }
     
-    // Step 1: Delete existing data
-    console.log(`Deleting existing ${protocol} trader data...`);
-    const { error: deleteError } = await supabase
-      .from('trader_stats')
-      .delete()
-      .eq('protocol_name', protocol.toLowerCase());
-    
-    if (deleteError) throw deleteError;
-    
-    // Step 2: Fetch fresh data from Dune
+    // Step 1: Fetch fresh data from Dune (includes deletion step)
     console.log(`Fetching fresh ${protocol} data from Dune...`);
     await DuneTraderStatsService.fetchAndImportTraderStats(protocol, new Date());
     
@@ -752,16 +743,7 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
       try {
         console.log(`\n=== Processing ${protocol} ===`);
         
-        // Delete existing data
-        const { error: deleteError } = await supabase
-          .from('trader_stats')
-          .delete()
-          .eq('protocol_name', protocol);
-        
-        if (deleteError) throw deleteError;
-        console.log(`Deleted existing ${protocol} data`);
-        
-        // Fetch fresh data from Dune
+        // Fetch fresh data from Dune (includes deletion step)
         await DuneTraderStatsService.fetchAndImportTraderStats(protocol, new Date());
         
         // Verify import
@@ -824,6 +806,24 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to refresh protocols'
+    });
+  }
+});
+
+// Get row counts for all protocols
+router.get('/row-counts', async (req: Request, res: Response) => {
+  try {
+    const counts = await TraderStatsService.getAllProtocolRowCounts();
+    
+    res.json({
+      success: true,
+      data: counts
+    });
+  } catch (error: any) {
+    console.error('Error getting protocol row counts:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get protocol row counts'
     });
   }
 });

@@ -212,6 +212,7 @@ export function ProtocolManagement() {
   const [latestDates, setLatestDates] = useState<Map<string, ProtocolLatestDate>>(new Map());
   const [launchpadLatestDates, setLaunchpadLatestDates] = useState<Map<string, LaunchpadLatestDate>>(new Map());
   const [dataTypePreference, setDataTypePreference] = useState<'private' | 'public'>('private');
+  const [traderStatsRowCounts, setTraderStatsRowCounts] = useState<Record<string, number>>({});
   const { toast } = useToast();
   
   const categories = getMutableAllCategoriesIncludingEVM(); // Show all protocols including EVM in management
@@ -240,6 +241,26 @@ export function ProtocolManagement() {
     };
     
     loadConfigs();
+  }, []);
+
+  // Fetch trader stats row counts - ONLY on page load, no polling
+  useEffect(() => {
+    const fetchTraderStatsRowCounts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/trader-stats/row-counts`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setTraderStatsRowCounts(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch trader stats row counts:', error);
+      }
+    };
+
+    // Only fetch on initial page load - no continuous polling
+    fetchTraderStatsRowCounts();
   }, []);
   
   // Handle data type preference change
@@ -692,6 +713,15 @@ export function ProtocolManagement() {
           title: "Trader Stats Refreshed",
           description: `Successfully refreshed ${protocol} with ${result.data?.tradersImported || 0} traders`,
         });
+        
+        // Refresh row counts after successful import
+        const countsResponse = await fetch(`${API_BASE_URL}/trader-stats/row-counts`);
+        if (countsResponse.ok) {
+          const countsData = await countsResponse.json();
+          if (countsData.success) {
+            setTraderStatsRowCounts(countsData.data);
+          }
+        }
       } else {
         throw new Error(result.error || 'Unknown error occurred');
       }
@@ -1250,12 +1280,12 @@ export function ProtocolManagement() {
                       TRADERS
                     </Badge>
                   </div>
-                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <div className="w-1 h-1 rounded-full bg-green-600" />
-                    <span className="font-medium text-[10px] sm:text-xs">
-                      Dune: Available
-                    </span>
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs font-medium"
+                  >
+                    {(traderStatsRowCounts['photon'] || 0).toLocaleString()} rows
+                  </Badge>
                 </div>
                 <Button
                   size="sm"
@@ -1299,12 +1329,12 @@ export function ProtocolManagement() {
                       TRADERS
                     </Badge>
                   </div>
-                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <div className="w-1 h-1 rounded-full bg-green-600" />
-                    <span className="font-medium text-[10px] sm:text-xs">
-                      Dune: Available
-                    </span>
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs font-medium"
+                  >
+                    {(traderStatsRowCounts['axiom'] || 0).toLocaleString()} rows
+                  </Badge>
                 </div>
                 <Button
                   size="sm"
@@ -1348,12 +1378,12 @@ export function ProtocolManagement() {
                       TRADERS
                     </Badge>
                   </div>
-                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <div className="w-1 h-1 rounded-full bg-green-600" />
-                    <span className="font-medium text-[10px] sm:text-xs">
-                      Dune: Available
-                    </span>
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs font-medium"
+                  >
+                    {(traderStatsRowCounts['bloom'] || 0).toLocaleString()} rows
+                  </Badge>
                 </div>
                 <Button
                   size="sm"
@@ -1397,12 +1427,12 @@ export function ProtocolManagement() {
                       TRADERS
                     </Badge>
                   </div>
-                  <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <div className="w-1 h-1 rounded-full bg-green-600" />
-                    <span className="font-medium text-[10px] sm:text-xs">
-                      Dune: Available
-                    </span>
-                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs font-medium"
+                  >
+                    {(traderStatsRowCounts['trojan'] || 0).toLocaleString()} rows
+                  </Badge>
                 </div>
                 <Button
                   size="sm"

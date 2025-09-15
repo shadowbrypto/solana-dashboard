@@ -1311,6 +1311,33 @@ export default function CustomReports() {
   );
 }
 
+// UI Cache for trader stats (separate from hook cache)
+interface UITraderStatsCache {
+  metrics: any;
+  rankData: any[];
+  percentileBrackets: any[];
+  pagination: any;
+  timestamp: number;
+}
+
+const uiTraderStatsCache = new Map<string, UITraderStatsCache>();
+const UI_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Clear UI cache only on actual page refresh (F5/Ctrl+R)
+const clearUICacheOnRefresh = () => {
+  // Check if this is a page navigation or refresh
+  const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+  
+  if (navigation && navigation.type === 'reload') {
+    // This is an actual page refresh (F5/Ctrl+R)
+    uiTraderStatsCache.clear();
+    console.log('🔄 Page refresh detected, clearing UI trader stats cache');
+  }
+};
+
+// Initialize UI cache clearing only on page refresh
+clearUICacheOnRefresh();
+
 // Trader Stats Section Component
 function TraderStatsSection() {
   const [selectedProtocol, setSelectedProtocol] = useState('photon');
@@ -1327,6 +1354,16 @@ function TraderStatsSection() {
   const [viewType, setViewType] = useState<'rank' | 'percentile'>('rank');
   const { toast } = useToast();
   
+  // Progress tracking state
+  const [loadingProgress, setLoadingProgress] = useState({
+    isLoading: false,
+    step: '',
+    percentage: 0,
+    processedCount: 0,
+    totalCount: 0,
+    fetchingCount: 0
+  });
+  
   const itemsPerPage = 10;
 
   // Available protocols
@@ -1339,15 +1376,100 @@ function TraderStatsSection() {
 
   // Percentile data is now included in comprehensive endpoint
 
-  // Fetch all trader data from comprehensive backend API
-  const fetchTraderData = async (page: number = 1) => {
+  // Poll progress endpoint
+  const pollProgress = async (protocol: string) => {
+    try {
+      const backendUrl = 'http://localhost:3001/api/trader-stats';
+      const progressUrl = `${backendUrl}/progress/${protocol}`;
+      
+      const response = await fetch(progressUrl);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.isLoading) {
+          setLoadingProgress({
+            isLoading: true,
+            step: result.data.step,
+            percentage: result.data.percentage,
+            processedCount: result.data.processedCount || 0,
+            totalCount: result.data.totalCount || 0,
+            fetchingCount: result.data.fetchingCount || 0
+          });
+          return true; // Still loading
+        }
+      }
+    } catch (error) {
+      console.error('Error polling progress:', error);
+    }
+    return false; // Not loading or error
+  };
+
+  // Fetch all trader data from comprehensive backend API with caching
+  const fetchTraderData = async (page: number = 1, forceRefresh: boolean = false) => {
     console.log('=== FETCH COMPREHENSIVE TRADER DATA ===');
     console.log('selectedProtocol:', selectedProtocol);
     console.log('page:', page);
     console.log('viewType:', viewType);
+    console.log('forceRefresh:', forceRefresh);
+    
+    // Check cache first unless forcing refresh
+    const cacheKey = `ui_${selectedProtocol}_${page}`;
+    const cached = uiTraderStatsCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (!forceRefresh && cached && (now - cached.timestamp < UI_CACHE_DURATION)) {
+      const cacheAge = Math.round((now - cached.timestamp) / 1000);
+      console.log(`⚡ INSTANT LOAD from cache for ${selectedProtocol} page ${page} (${cacheAge}s old)`);
+      
+      // Show loading briefly to prevent flashing old data, then load cached data
+      setLoading(true);
+      
+      // Use setTimeout to show skeleton briefly before loading cached data
+      setTimeout(() => {
+        // Update UI with cached data
+        setTotalTraders(cached.metrics.totalTraders);
+        setTotalVolume(cached.metrics.totalVolume);
+        setTraderData(cached.rankData);
+        setAllTraders(cached.rankData);
+        setPercentileBrackets(cached.percentileBrackets);
+        setTotalPages(cached.pagination.totalPages);
+        setCurrentPage(cached.pagination.currentPage);
+        
+        setLoading(false); // Hide loading after data is set
+      }, 100); // Brief 100ms delay to show skeleton
+      
+      // Update window stats for metric cards
+      window.protocolStats = {
+        top1PercentShare: cached.metrics.top1PercentShare,
+        top5PercentShare: cached.metrics.top5PercentShare,
+        top1PercentVolume: cached.metrics.top1PercentVolume,
+        top5PercentVolume: cached.metrics.top5PercentVolume,
+        percentile99Volume: cached.metrics.percentile99Volume,
+        percentile95Volume: cached.metrics.percentile95Volume
+      };
+      
+      return; // Exit early - no loading needed
+    }
     
     setLoading(true);
     setError(null);
+    
+    // Start progress tracking
+    setLoadingProgress({
+      isLoading: true,
+      step: 'Initializing...',
+      percentage: 0,
+      processedCount: 0,
+      totalCount: 0,
+      fetchingCount: 0
+    });
+    
+    // Start polling progress every 1 second for real-time feedback
+    const progressInterval = setInterval(async () => {
+      const isStillLoading = await pollProgress(selectedProtocol);
+      if (!isStillLoading) {
+        clearInterval(progressInterval);
+      }
+    }, 1000);
     
     try {
       const backendUrl = 'http://localhost:3001/api/trader-stats';
@@ -1366,6 +1488,13 @@ function TraderStatsSection() {
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch comprehensive data');
       }
+
+      // Update progress
+      setLoadingProgress(prev => ({
+        ...prev,
+        step: 'Finalizing data...',
+        percentage: 90
+      }));
 
       const { data } = result;
       console.log(`✅ Comprehensive data loaded (cached: ${result.cached}, age: ${result.cacheAge || 0}min)`);
@@ -1389,12 +1518,46 @@ function TraderStatsSection() {
         percentile95Volume: data.metrics.percentile95Volume
       };
       
+      // Cache the fresh data for instant future loads
+      const cacheKey = `ui_${selectedProtocol}_${page}`;
+      uiTraderStatsCache.set(cacheKey, {
+        metrics: data.metrics,
+        rankData: data.rankData,
+        percentileBrackets: data.percentileBrackets,
+        pagination: data.pagination,
+        timestamp: now
+      });
+      
       console.log(`📊 Data Summary:`);
       console.log(`  Total Traders: ${data.metrics.totalTraders.toLocaleString()}`);
       console.log(`  Total Volume: $${data.metrics.totalVolume.toLocaleString()}`);
       console.log(`  Rank Data: ${data.rankData.length} records (page ${data.pagination.currentPage}/${data.pagination.totalPages})`);
       console.log(`  Percentile Brackets: ${data.percentileBrackets.length} brackets`);
       console.log(`  Cache Status: ${result.cached ? `✅ Cached (${result.cacheAge}min old)` : '🆕 Fresh'}`);
+      console.log(`💾 UI data cached for ${selectedProtocol} page ${page}`);
+      
+      // Complete progress
+      setLoadingProgress({
+        isLoading: false,
+        step: 'Complete!',
+        percentage: 100,
+        processedCount: 0,
+        totalCount: 0,
+        fetchingCount: 0
+      });
+      
+      // Clear progress interval and state after a short delay
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setLoadingProgress({
+          isLoading: false,
+          step: '',
+          percentage: 0,
+          processedCount: 0,
+          totalCount: 0,
+          fetchingCount: 0
+        });
+      }, 1000);
       
     } catch (error: any) {
       console.error('❌ Comprehensive API failed:', error);
@@ -1405,15 +1568,26 @@ function TraderStatsSection() {
       setTotalPages(1);
       setAllTraders([]);
       setPercentileBrackets([]);
+      
+      // Clear progress interval and set error state
+      clearInterval(progressInterval);
+      setLoadingProgress({
+        isLoading: false,
+        step: 'Error occurred',
+        percentage: 0,
+        processedCount: 0,
+        totalCount: 0,
+        fetchingCount: 0
+      });
     } finally {
       setLoading(false);
     }
   };
 
   // Fetch data when protocol, page, or view type changes
-  // Fetch comprehensive data when protocol or page changes
+  // Fetch comprehensive data when protocol or page changes (uses cache if available)
   useEffect(() => {
-    fetchTraderData(currentPage);
+    fetchTraderData(currentPage, false); // Don't force refresh to allow caching
   }, [selectedProtocol, currentPage]);
 
   // Reset to first page when protocol changes
@@ -1422,7 +1596,41 @@ function TraderStatsSection() {
   }, [selectedProtocol]);
 
   const handleProtocolChange = (protocolId: string) => {
+    // Clear old data immediately to prevent showing wrong numbers during loading
+    setTotalTraders(0);
+    setTotalVolume(0);
+    setTraderData([]);
+    setAllTraders([]);
+    setPercentileBrackets([]);
+    setTotalPages(1);
+    setCurrentPage(1);
+    
+    // Clear window stats for metric cards
+    window.protocolStats = {
+      top1PercentShare: 0,
+      top5PercentShare: 0,
+      top1PercentVolume: 0,
+      top5PercentVolume: 0,
+      percentile99Volume: 0,
+      percentile95Volume: 0
+    };
+    
     setSelectedProtocol(protocolId);
+    // Note: useEffect will trigger fetchTraderData automatically
+  };
+
+  // Force refresh function for manual refresh
+  const forceRefreshData = () => {
+    fetchTraderData(currentPage, true); // Force refresh bypasses cache
+  };
+
+  // Clear cache function
+  const clearProtocolCache = () => {
+    const keysToDelete = Array.from(uiTraderStatsCache.keys()).filter(key => 
+      key.includes(`ui_${selectedProtocol}_`)
+    );
+    keysToDelete.forEach(key => uiTraderStatsCache.delete(key));
+    console.log(`🗑️ Cleared UI cache for ${selectedProtocol} (${keysToDelete.length} entries)`);
   };
 
   const handlePageChange = (page: number) => {
@@ -1601,10 +1809,10 @@ function TraderStatsSection() {
             onClick={() => handleProtocolChange(protocol.id)}
             className={cn(
               "relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors duration-150",
-              "bg-white focus:outline-none border",
+              "bg-background focus:outline-none border",
               selectedProtocol === protocol.id
-                ? "border-black text-foreground shadow-md"
-                : "border-gray-300 text-muted-foreground hover:text-foreground"
+                ? "border-foreground text-foreground shadow-md dark:border-white dark:shadow-white/10"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/50"
             )}
           >
             <div className="w-5 h-5 rounded overflow-hidden bg-muted/20 flex-shrink-0">
@@ -1622,6 +1830,7 @@ function TraderStatsSection() {
           </button>
         ))}
       </div>
+
 
       {/* Complete Trader Stats Report - Metrics + Table */}
       <div data-table="trader-stats-complete" className="space-y-6">
@@ -1744,7 +1953,7 @@ function TraderStatsSection() {
         </CardHeader>
         <CardContent>
           {loading || (viewType === 'percentile' && percentileLoading) ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
                 <span className="text-muted-foreground">
@@ -1754,6 +1963,28 @@ function TraderStatsSection() {
                   }
                 </span>
               </div>
+              {loadingProgress.isLoading && (
+                <div className="w-full max-w-lg space-y-3">
+                  {/* Progress bar with gradient like metric cards */}
+                  <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-500 ease-out rounded-full relative overflow-hidden"
+                      style={{ width: `${loadingProgress.percentage}%` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  {/* Real-time trader counts */}
+                  <div className="flex justify-end text-xs">
+                    {loadingProgress.totalCount > 0 && (
+                      <span className="font-mono text-foreground font-medium">
+                        {loadingProgress.processedCount.toLocaleString()}/{loadingProgress.totalCount.toLocaleString()} processed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : error ? (
             <div className="text-center py-8">

@@ -39,8 +39,140 @@ export interface TraderAnalytics {
   };
 }
 
+export interface TraderRankData {
+  user_address: string;
+  volume_usd: number;
+  rank: number;
+  volumeShare: number;
+  protocol_name: string;
+  date: string;
+  chain?: string;
+}
+
+export interface ComprehensiveTraderStats {
+  metrics: {
+    totalTraders: number;
+    totalVolume: number;
+    avgVolumePerTrader: number;
+    top1PercentVolume: number;
+    top5PercentVolume: number;
+    percentile99Volume: number;
+    percentile95Volume: number;
+    top1PercentShare: number;
+    top5PercentShare: number;
+  };
+  percentileBrackets: {
+    percentile: number;
+    traderCount: number;
+    rankRange: string;
+    volume: number;
+    volumeShare: number;
+  }[];
+}
+
+export interface PaginatedTraderResponse {
+  success: boolean;
+  data: TraderRankData[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+  cached?: boolean;
+  cacheAge?: number;
+}
+
 class TraderStatsApi {
   private baseUrl = `${API_BASE_URL}/trader-stats`;
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Get comprehensive stats (metrics + percentiles only) for Custom Reports
+  async getComprehensiveStats(protocol: string): Promise<ComprehensiveTraderStats> {
+    // Backend has smart 4-hour caching that clears on refresh, so we rely on that
+    // Use minimal frontend caching to avoid stale data after refreshes
+    const cacheKey = `comprehensive_${protocol}`;
+    const cached = this.cache.get(cacheKey);
+    
+    // Only use frontend cache for 30 seconds to allow quick re-renders
+    if (cached && Date.now() - cached.timestamp < 30000) {
+      return cached.data;
+    }
+
+    const response = await fetch(`${this.baseUrl}/comprehensive/${protocol}?page=1&limit=1`);
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch comprehensive stats');
+    }
+    
+    const comprehensiveStats = {
+      metrics: result.data.metrics,
+      percentileBrackets: result.data.percentileBrackets
+    };
+    
+    // Store with timestamp and backend cache info
+    this.cache.set(cacheKey, { 
+      data: { 
+        ...comprehensiveStats,
+        _cached: result.cached,
+        _cacheAge: result.cacheAge 
+      }, 
+      timestamp: Date.now() 
+    });
+    
+    return comprehensiveStats;
+  }
+
+  // Get paginated trader rank data for Rank tab with lazy loading
+  async getTraderRankData(
+    protocol: string,
+    page: number = 1,
+    pageSize: number = 100,
+    clearCache: boolean = false
+  ): Promise<PaginatedTraderResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: pageSize.toString()
+    });
+    
+    if (clearCache) {
+      params.append('clearCache', 'true');
+    }
+
+    // Backend handles smart 4-hour caching that clears on refresh
+    // We rely on backend caching and only do minimal frontend caching for UI responsiveness
+    const response = await fetch(`${this.baseUrl}/comprehensive/${protocol}?${params}`);
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch trader rank data');
+    }
+    
+    return {
+      success: true,
+      data: result.data.rankData,
+      pagination: result.data.pagination,
+      cached: result.cached,
+      cacheAge: result.cacheAge
+    };
+  }
+  
+  // Clear frontend cache when protocol is refreshed (call this after refresh operations)
+  clearProtocolCache(protocol: string): void {
+    const keysToDelete = Array.from(this.cache.keys()).filter(key => 
+      key.includes(protocol.toLowerCase())
+    );
+    keysToDelete.forEach(key => this.cache.delete(key));
+    console.log(`Cleared frontend cache for ${protocol}: ${keysToDelete.length} entries`);
+  }
+  
+  // Clear all frontend cache
+  clearAllCache(): void {
+    this.cache.clear();
+    console.log('Cleared all frontend trader stats cache');
+  }
 
   async getTraderStats(
     protocol: string,

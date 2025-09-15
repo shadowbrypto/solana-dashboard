@@ -108,54 +108,64 @@ const CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
 const comprehensiveCache = new Map<string, { data: any, timestamp: number }>();
 const COMPREHENSIVE_CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
 
-// Comprehensive endpoint that provides ALL data needed for frontend
+// Progress tracking for loading states
+const progressCache = new Map<string, any>();
+// Comprehensive endpoint that provides calculated metrics with lazy loading
 router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
+  const { protocol } = req.params;
+  
   try {
-    const { protocol } = req.params;
     const { page = 1, limit = 10, clearCache } = req.query;
     
     const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
+    const limitNum = Math.min(parseInt(limit as string), 500); // Cap initial load at 500
     
     console.log(`📊 Comprehensive request for ${protocol} - page ${pageNum}, limit ${limitNum}`);
     
     // Check cache first (unless clearCache is requested)
-    const cacheKey = `comprehensive_${protocol}`;
+    const cacheKey = `comprehensive_metrics_${protocol}`;
+    const progressKey = `loading_${protocol}`;
     const cached = clearCache ? null : comprehensiveCache.get(cacheKey);
     const now = Date.now();
     
-    if (cached && (now - cached.timestamp < COMPREHENSIVE_CACHE_DURATION)) {
-      const cacheAge = Math.round((now - cached.timestamp) / 1000 / 60);
-      console.log(`✅ Returning cached comprehensive data for ${protocol} (${cacheAge} minutes old)`);
-      
-      // Apply pagination to cached rank data
-      const rankData = cached.data.rankData;
-      const startIdx = (pageNum - 1) * limitNum;
-      const endIdx = startIdx + limitNum;
-      const paginatedRankData = rankData.slice(startIdx, endIdx);
-      
-      return res.json({
-        success: true,
-        data: {
-          ...cached.data,
-          rankData: paginatedRankData,
-          pagination: {
-            currentPage: pageNum,
-            pageSize: limitNum,
-            totalItems: rankData.length,
-            totalPages: Math.ceil(rankData.length / limitNum)
-          }
-        },
-        cached: true,
-        cacheAge: cacheAge
-      });
-    }
+    // Initialize progress tracking
+    progressCache.set(progressKey, {
+      isLoading: true,
+      step: 'Initializing trader analysis...',
+      percentage: 5,
+      startTime: now,
+      totalSteps: 10,
+      currentStep: 1,
+      processedCount: 0,
+      totalCount: 0
+    });
     
-    console.log(`🔄 Processing comprehensive data for ${protocol}...`);
+    // Get total count and volume (lightweight operations)
+    progressCache.set(progressKey, {
+      isLoading: true,
+      step: 'Counting traders in database...',
+      percentage: 10,
+      startTime: now,
+      totalSteps: 10,
+      currentStep: 2,
+      processedCount: 0,
+      totalCount: 0
+    });
     
-    // Get all raw trader data
     const total = await TraderStatsService.getTraderStatsCount(protocol);
     console.log(`Found ${total} traders for ${protocol}`);
+    
+    // Update progress with total count
+    progressCache.set(progressKey, {
+      isLoading: true,
+      step: 'Preparing data analysis...',
+      percentage: 20,
+      startTime: now,
+      totalSteps: 10,
+      currentStep: 3,
+      processedCount: 0,
+      totalCount: total
+    });
     
     if (total === 0) {
       return res.json({
@@ -185,114 +195,259 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
       });
     }
     
-    // Get all trader data (sorted by volume descending)
-    const allData = await TraderStatsService.getTraderStatsPaginated(protocol, 0, total);
-    console.log(`Retrieved ${allData.length} trader records`);
+    let metrics: any, percentileBrackets: any[], totalVolume: number;
     
-    // Calculate total volume from actual data (more accurate)
-    const totalVolume = allData.reduce((sum, trader) => {
-      return sum + parseFloat(trader.volume_usd?.toString() || '0');
-    }, 0);
-    console.log(`Total volume calculated from data: $${totalVolume.toLocaleString()}`);
+    // Check if we have cached metrics (expensive calculations)
+    if (cached && (now - cached.timestamp < COMPREHENSIVE_CACHE_DURATION)) {
+      const cacheAge = Math.round((now - cached.timestamp) / 1000 / 60);
+      console.log(`✅ Using cached metrics for ${protocol} (${cacheAge} minutes old)`);
+      metrics = cached.data.metrics;
+      percentileBrackets = cached.data.percentileBrackets;
+      totalVolume = cached.data.totalVolume;
+      
+      // Clear progress since we're using cached data
+      progressCache.delete(progressKey);
+    } else {
+      console.log(`🔄 Calculating comprehensive metrics for ${protocol}...`);
+      
+      // Update progress for calculation phase
+      const processedAt30 = Math.floor(total * 0.3); // Show 30% processed
+      progressCache.set(progressKey, {
+        isLoading: true,
+        step: 'Calculating total volume...',
+        percentage: 30,
+        startTime: now,
+        totalSteps: 10,
+        currentStep: 4,
+        processedCount: processedAt30,
+        totalCount: total
+      });
+      
+      try {
+        
+        // Direct sample-based calculation using top 5000 traders
+        const TOP_TRADERS_FOR_METRICS = Math.min(5000, total);
+        
+        // Update progress for trader data fetch
+        const processedAt40 = Math.floor(total * 0.4); // Show 40% processed
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Fetching top trader data...',
+          percentage: 40,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 5,
+          processedCount: processedAt40,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+        
+        const topTradersData = await TraderStatsService.getTraderStatsPaginated(protocol, 0, TOP_TRADERS_FOR_METRICS);
+        console.log(`Fetched ${topTradersData.length} top traders for calculation`);
+        
+        // Step 6: Progress after fetching trader data
+        const currentProcessed = Math.floor(total * 0.5); // Show 50% of records processed at this step
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Processing trader records...',
+          percentage: 50,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 6,
+          processedCount: currentProcessed,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+        
+        totalVolume = await TraderStatsService.getTotalVolumeForProtocol(protocol);
+        console.log(`Total volume: $${totalVolume.toLocaleString()}`);
+        
+        // Step 7: Volume calculation complete
+        const processedAt60 = Math.floor(total * 0.6); // Show 60% of records processed
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Computing volume metrics...',
+          percentage: 60,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 7,
+          processedCount: processedAt60,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+        
+        // Step 8: Calculate key metrics
+        const processedAt70 = Math.floor(total * 0.7); // Show 70% of records processed
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Calculating percentiles...',
+          percentage: 70,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 8,
+          processedCount: processedAt70,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+        
+        // Calculate metrics using sample data
+        const avgVolumePerTrader = total > 0 ? totalVolume / total : 0;
+        const top1Count = Math.floor(0.01 * total);
+        const top5Count = Math.floor(0.05 * total);
+        
+        const top1Volume = topTradersData.slice(0, Math.min(top1Count, topTradersData.length)).reduce((sum, trader) => {
+          return sum + parseFloat(trader.volume_usd?.toString() || '0');
+        }, 0);
+        
+        const top5Volume = topTradersData.slice(0, Math.min(top5Count, topTradersData.length)).reduce((sum, trader) => {
+          return sum + parseFloat(trader.volume_usd?.toString() || '0');
+        }, 0);
+        
+        const percentile99Volume = topTradersData[Math.min(top1Count - 1, topTradersData.length - 1)] ? 
+          parseFloat(topTradersData[Math.min(top1Count - 1, topTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
+        const percentile95Volume = topTradersData[Math.min(top5Count - 1, topTradersData.length - 1)] ? 
+          parseFloat(topTradersData[Math.min(top5Count - 1, topTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
+        
+        const top1PercentShare = totalVolume > 0 ? (top1Volume / totalVolume) * 100 : 0;
+        const top5PercentShare = totalVolume > 0 ? (top5Volume / totalVolume) * 100 : 0;
+        
+        metrics = {
+          totalTraders: total,
+          totalVolume,
+          avgVolumePerTrader,
+          top1PercentVolume: top1Volume,
+          top5PercentVolume: top5Volume,
+          percentile99Volume,
+          percentile95Volume,
+          top1PercentShare,
+          top5PercentShare
+        };
+        
+        // Step 9: Generate percentile brackets
+        const processedAt80 = Math.floor(total * 0.8); // Show 80% of records processed
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Building percentile brackets...',
+          percentage: 80,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 9,
+          processedCount: processedAt80,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+        
+        // Calculate percentile brackets using sample data
+        const percentiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 50, 75, 100];
+        percentileBrackets = percentiles.map(percentile => {
+          const rankCutoff = Math.floor((percentile / 100) * total);
+          const sampleCutoff = Math.min(rankCutoff, topTradersData.length);
+          const tradersInPercentile = topTradersData.slice(0, sampleCutoff);
+          const traderCount = rankCutoff;
+          const bracketVolume = tradersInPercentile.reduce((sum, trader) => {
+            return sum + parseFloat(trader.volume_usd?.toString() || '0');
+          }, 0);
+          const volumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
+          const rankRange = traderCount > 0 ? `1-${traderCount}` : '0';
+          
+          return {
+            percentile,
+            traderCount,
+            rankRange,
+            volume: bracketVolume,
+            volumeShare: sampleCutoff < rankCutoff ? volumeShare * (rankCutoff / sampleCutoff) : volumeShare
+          };
+        });
+        
+        console.log(`📊 Calculation complete: ${percentileBrackets.length} brackets`);
+        
+        // Step 10: Finalizing results
+        const processedAt95 = Math.floor(total * 0.95); // Show 95% of records processed
+        progressCache.set(progressKey, {
+          isLoading: true,
+          step: 'Finalizing analysis...',
+          percentage: 95,
+          startTime: now,
+          totalSteps: 10,
+          currentStep: 10,
+          processedCount: processedAt95,
+          totalCount: total,
+          fetchingCount: TOP_TRADERS_FOR_METRICS
+        });
+      } catch (error) {
+        // Clear progress on error
+        progressCache.delete(progressKey);
+        throw error;
+      }
+      
+      // Cache the expensive metrics calculations
+      comprehensiveCache.set(cacheKey, {
+        data: { metrics, percentileBrackets, totalVolume },
+        timestamp: now
+      });
+      
+      console.log(`💾 Cached comprehensive metrics for ${protocol} (4 hour expiry)`);
+    }
     
-    // Calculate metrics
-    const avgVolumePerTrader = total > 0 ? totalVolume / total : 0;
-    const top1Count = Math.floor(0.01 * total);
-    const top5Count = Math.floor(0.05 * total);
+    // Fetch only the requested page of rank data (true lazy loading)
+    const offset = (pageNum - 1) * limitNum;
+    console.log(`🔄 Fetching page ${pageNum}: offset=${offset}, limit=${limitNum}`);
     
-    const top1Volume = allData.slice(0, top1Count).reduce((sum, trader) => {
-      return sum + parseFloat(trader.volume_usd?.toString() || '0');
-    }, 0);
+    const paginatedData = await TraderStatsService.getTraderStatsPaginated(
+      protocol,
+      offset,
+      limitNum
+    );
     
-    const top5Volume = allData.slice(0, top5Count).reduce((sum, trader) => {
-      return sum + parseFloat(trader.volume_usd?.toString() || '0');
-    }, 0);
+    console.log(`Retrieved ${paginatedData.length} paginated records`);
     
-    const percentile99Volume = allData[top1Count - 1] ? parseFloat(allData[top1Count - 1].volume_usd?.toString() || '0') : 0;
-    const percentile95Volume = allData[top5Count - 1] ? parseFloat(allData[top5Count - 1].volume_usd?.toString() || '0') : 0;
-    
-    const top1PercentShare = totalVolume > 0 ? (top1Volume / totalVolume) * 100 : 0;
-    const top5PercentShare = totalVolume > 0 ? (top5Volume / totalVolume) * 100 : 0;
-    
-    console.log(`📈 Metrics calculated: top1%=${top1Volume.toLocaleString()}, top5%=${top5Volume.toLocaleString()}`);
-    
-    // Prepare rank data with all calculations done
-    const rankData = allData.map((trader, index) => ({
+    // Add calculated fields to paginated data
+    const rankData = paginatedData.map((trader, index) => ({
       ...trader,
-      rank: index + 1,
+      rank: offset + index + 1,
       volumeShare: totalVolume > 0 ? ((parseFloat(trader.volume_usd?.toString() || '0') / totalVolume) * 100) : 0,
       volume_usd: parseFloat(trader.volume_usd?.toString() || '0')
     }));
     
-    // Calculate percentile brackets
-    const percentiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 50, 75, 100];
-    const percentileBrackets = percentiles.map(percentile => {
-      const rankCutoff = Math.floor((percentile / 100) * total);
-      const tradersInPercentile = allData.slice(0, rankCutoff);
-      const traderCount = tradersInPercentile.length;
-      const bracketVolume = tradersInPercentile.reduce((sum, trader) => {
-        return sum + parseFloat(trader.volume_usd?.toString() || '0');
-      }, 0);
-      const volumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
-      const rankRange = traderCount > 0 ? `1-${traderCount}` : '0';
-      
-      return {
-        percentile,
-        traderCount,
-        rankRange,
-        volume: bracketVolume,
-        volumeShare
-      };
+    // Final progress update - 100% complete
+    progressCache.set(progressKey, {
+      isLoading: false,
+      step: 'Analysis complete!',
+      percentage: 100,
+      startTime: now,
+      totalSteps: 10,
+      currentStep: 10,
+      processedCount: total,
+      totalCount: total,
+      fetchingCount: 0
     });
-    
-    console.log(`📊 Calculated ${percentileBrackets.length} percentile brackets`);
-    
-    // Prepare comprehensive response
-    const comprehensiveData = {
-      metrics: {
-        totalTraders: total,
-        totalVolume,
-        avgVolumePerTrader,
-        top1PercentVolume: top1Volume,
-        top5PercentVolume: top5Volume,
-        percentile99Volume,
-        percentile95Volume,
-        top1PercentShare,
-        top5PercentShare
-      },
-      rankData,
-      percentileBrackets
-    };
-    
-    // Cache the comprehensive data
-    comprehensiveCache.set(cacheKey, {
-      data: comprehensiveData,
-      timestamp: now
-    });
-    
-    console.log(`💾 Cached comprehensive data for ${protocol} (4 hour expiry)`);
-    
-    // Apply pagination to rank data for response
-    const startIdx = (pageNum - 1) * limitNum;
-    const endIdx = startIdx + limitNum;
-    const paginatedRankData = rankData.slice(startIdx, endIdx);
     
     res.json({
       success: true,
       data: {
-        ...comprehensiveData,
-        rankData: paginatedRankData,
+        metrics,
+        rankData,
+        percentileBrackets,
         pagination: {
           currentPage: pageNum,
           pageSize: limitNum,
-          totalItems: rankData.length,
-          totalPages: Math.ceil(rankData.length / limitNum)
+          totalItems: total,
+          totalPages: Math.ceil(total / limitNum)
         }
       },
-      cached: false
+      cached: cached ? true : false
     });
     
+    // Clear progress after successful completion
+    setTimeout(() => {
+      progressCache.delete(progressKey);
+    }, 2000);
+    
   } catch (error) {
+    // Clear progress on error  
+    const progressKey = `loading_${protocol}`;
+    progressCache.delete(progressKey);
+    
     console.error('Error in comprehensive endpoint:', error);
     res.status(500).json({
       success: false,
@@ -824,6 +979,39 @@ router.get('/row-counts', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to get protocol row counts'
+    });
+  }
+});
+
+// Get loading progress for a protocol
+router.get('/progress/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const progressKey = `loading_${protocol}`;
+    const progress = progressCache.get(progressKey);
+    
+    if (!progress) {
+      return res.json({
+        success: true,
+        data: {
+          isLoading: false,
+          step: '',
+          percentage: 0,
+          totalSteps: 0,
+          currentStep: 0
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: progress
+    });
+  } catch (error: any) {
+    console.error('Error getting loading progress:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get loading progress'
     });
   }
 });

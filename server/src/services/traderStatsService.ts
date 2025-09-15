@@ -88,9 +88,23 @@ export class TraderStatsService {
     }
   }
 
-  // Get total count of traders for a protocol
+  // Get total count of traders for a protocol (optimized SQL function)
   static async getTraderStatsCount(protocol: string): Promise<number> {
     try {
+      // Try using the optimized SQL function first
+      const { data: sqlResult, error: sqlError } = await supabase
+        .rpc('get_protocol_trader_count', { 
+          protocol_name: protocol.toLowerCase() 
+        });
+
+      if (!sqlError && sqlResult !== null) {
+        console.log(`Total trader count for ${protocol} (SQL function): ${sqlResult.toLocaleString()}`);
+        return parseInt(sqlResult);
+      }
+
+      console.log('SQL function not available, falling back to count query');
+      
+      // Fallback to regular count
       const { count, error } = await supabase
         .from('trader_stats')
         .select('*', { count: 'exact', head: true })
@@ -523,6 +537,135 @@ export class TraderStatsService {
     } catch (error) {
       console.error('Error checking percentile refresh status:', error);
       return true; // Err on the side of refreshing
+    }
+  }
+
+  // Get comprehensive stats using optimized SQL function
+  static async getComprehensiveProtocolStats(protocol: string): Promise<any> {
+    try {
+      console.log(`🚀 Getting comprehensive stats for ${protocol} using optimized SQL...`);
+      
+      // Use the optimized SQL function that calculates everything in one query
+      const { data: statsResult, error: statsError } = await supabase
+        .rpc('get_comprehensive_protocol_stats', { 
+          protocol_name_param: protocol.toLowerCase() 
+        });
+
+      if (statsError) {
+        console.log('SQL function not available, falling back to calculation method');
+        throw statsError;
+      }
+
+      if (!statsResult || statsResult.length === 0) {
+        console.log(`No data found for ${protocol}`);
+        return {
+          totalTraders: 0,
+          totalVolume: 0,
+          avgVolumePerTrader: 0,
+          top1PercentVolume: 0,
+          top5PercentVolume: 0,
+          percentile99Volume: 0,
+          percentile95Volume: 0,
+          top1PercentShare: 0,
+          top5PercentShare: 0
+        };
+      }
+
+      const stats = statsResult[0];
+      console.log(`✅ Comprehensive stats calculated for ${protocol}: ${stats.total_traders} traders, $${parseFloat(stats.total_volume).toLocaleString()} total volume`);
+
+      return {
+        totalTraders: parseInt(stats.total_traders),
+        totalVolume: parseFloat(stats.total_volume),
+        avgVolumePerTrader: parseFloat(stats.avg_volume_per_trader),
+        top1PercentVolume: parseFloat(stats.top_1_percent_volume),
+        top5PercentVolume: parseFloat(stats.top_5_percent_volume),
+        percentile99Volume: parseFloat(stats.percentile_99_volume),
+        percentile95Volume: parseFloat(stats.percentile_95_volume),
+        top1PercentShare: parseFloat(stats.top_1_percent_share),
+        top5PercentShare: parseFloat(stats.top_5_percent_share)
+      };
+    } catch (error) {
+      console.error('Error getting comprehensive protocol stats:', error);
+      throw error;
+    }
+  }
+
+  // Get percentile brackets using optimized SQL function
+  static async getOptimizedPercentileBrackets(protocol: string): Promise<any[]> {
+    try {
+      console.log(`🚀 Getting percentile brackets for ${protocol} using optimized SQL...`);
+      
+      const { data: bracketsResult, error: bracketsError } = await supabase
+        .rpc('get_protocol_percentile_brackets', { 
+          protocol_name_param: protocol.toLowerCase() 
+        });
+
+      if (bracketsError) {
+        console.log('SQL function not available, falling back to calculation method');
+        throw bracketsError;
+      }
+
+      if (!bracketsResult || bracketsResult.length === 0) {
+        console.log(`No percentile data found for ${protocol}`);
+        return [];
+      }
+
+      console.log(`✅ Percentile brackets calculated for ${protocol}: ${bracketsResult.length} brackets`);
+
+      return bracketsResult.map((bracket: any) => ({
+        percentile: parseInt(bracket.percentile),
+        traderCount: parseInt(bracket.trader_count),
+        rankRange: bracket.rank_range,
+        volume: parseFloat(bracket.volume),
+        volumeShare: parseFloat(bracket.volume_share)
+      }));
+    } catch (error) {
+      console.error('Error getting percentile brackets:', error);
+      throw error;
+    }
+  }
+
+  // Get paginated traders with pre-calculated stats using optimized SQL
+  static async getOptimizedTradersPaginated(
+    protocol: string,
+    page: number,
+    limit: number
+  ): Promise<any[]> {
+    try {
+      console.log(`🚀 Getting paginated traders for ${protocol} (page ${page}, limit ${limit}) using optimized SQL...`);
+      
+      const { data: tradersResult, error: tradersError } = await supabase
+        .rpc('get_top_traders_with_stats', { 
+          protocol_name_param: protocol.toLowerCase(),
+          page_num: page,
+          page_size: limit
+        });
+
+      if (tradersError) {
+        console.log('SQL function not available, falling back to regular pagination');
+        throw tradersError;
+      }
+
+      if (!tradersResult) {
+        console.log(`No trader data found for ${protocol}`);
+        return [];
+      }
+
+      console.log(`✅ Retrieved ${tradersResult.length} traders for ${protocol} page ${page}`);
+
+      return tradersResult.map((trader: any) => ({
+        protocol_name: trader.protocol_name,
+        user_address: trader.user_address,
+        volume_usd: parseFloat(trader.volume_usd),
+        date: trader.date,
+        chain: trader.chain,
+        rank: parseInt(trader.rank),
+        volumeShare: parseFloat(trader.volume_share)
+      }));
+    } catch (error) {
+      console.error('Error getting optimized paginated traders:', error);
+      throw error;
     }
   }
 

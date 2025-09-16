@@ -835,19 +835,19 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           </div>
         </div>
         
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto lg:overflow-x-visible" data-table="weekly-metrics">
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto" data-table="weekly-metrics">
           <Table>
             <TableHeader>
               <TableRow className="h-16">
-                <TableHead className="w-[180px] sticky left-0 z-20 bg-background py-3 sm:py-4 text-xs sm:text-sm rounded-tl-xl">Protocol</TableHead>
+                <TableHead className="w-[100px] sticky left-0 z-20 bg-background py-2 sm:py-3 text-xs sm:text-sm rounded-tl-xl">Protocol</TableHead>
                 {last7Days.map((day) => {
                   const dayOfWeek = day.getDay(); // 0 = Sunday, 6 = Saturday
                   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                   
                   return (
-                    <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                    <TableHead key={day.toISOString()} className="text-center min-w-[90px] px-1 py-2 sm:py-3 text-xs sm:text-sm">
                       <div className="flex flex-col items-center gap-1.5">
-                        <span className="text-sm font-medium">{format(day, 'MMM dd')}</span>
+                        <span className="text-sm font-medium whitespace-nowrap">{format(day, 'MMM dd')}</span>
                         <Badge 
                           variant="outline" 
                           className={`text-xs font-normal px-2 py-0.5 min-w-[36px] justify-center ${
@@ -863,9 +863,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   );
                 })}
                 {selectedMetric !== 'daily_users' && (
-                  <TableHead className="text-center min-w-[100px] px-1 py-3 sm:py-4 text-xs sm:text-sm">Weekly Total</TableHead>
+                  <TableHead className="text-center min-w-[90px] px-1 py-2 sm:py-3 text-xs sm:text-sm">Weekly Total</TableHead>
                 )}
-                <TableHead className="text-center min-w-[150px] px-1 py-3 sm:py-4 text-xs sm:text-sm">
+                <TableHead className="text-center min-w-[130px] px-1 py-2 sm:py-3 text-xs sm:text-sm">
                   {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
                 </TableHead>
               </TableRow>
@@ -913,7 +913,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                         )}
                         onClick={() => toggleCollapse(categoryName)}
                       >
-                        <TableCell className={cn("sticky left-0 z-10 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                        <TableCell className={cn("sticky left-0 z-10 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
                           <div className="flex items-center gap-2">
                             <ChevronRight 
                               className={cn(
@@ -988,7 +988,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             </div>
                             {selectedMetric !== 'daily_users' ? (
                               <div className={cn(
-                                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                                "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ",
                                 calculateCategoryWeekOnWeekGrowth(categoryName) >= 0
                                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                   : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1005,7 +1005,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 {formatGrowthPercentage(calculateCategoryWeekOnWeekGrowth(categoryName))}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground text-xs -ml-8">—</span>
+                              <span className="text-muted-foreground text-xs ">—</span>
                             )}
                           </div>
                         </TableCell>
@@ -1023,7 +1023,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             key={protocol.id}
                             className="hover:bg-muted/50 transition-colors group"
                           >
-                            <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                            <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={(e) => {
@@ -1127,7 +1127,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 </div>
                                 {selectedMetric !== 'daily_users' ? (
                                   <div className={cn(
-                                    "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                                    "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ",
                                     calculateWeekOnWeekGrowth(protocol.id) >= 0
                                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                       : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1144,7 +1144,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                     {formatGrowthPercentage(calculateWeekOnWeekGrowth(protocol.id))}
                                   </div>
                                 ) : (
-                                  <span className="text-muted-foreground text-xs -ml-8">—</span>
+                                  <span className="text-muted-foreground text-xs ">—</span>
                                 )}
                               </div>
                             </TableCell>
@@ -1159,8 +1159,8 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               {/* Total Row */}
               {!loading && (
                 <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold group transition-colors rounded-b-xl">
-                  <TableCell className="sticky left-0 z-10 bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 font-bold py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors rounded-bl-xl">
-                    <span className="pl-8">Total</span>
+                  <TableCell className="sticky left-0 z-10 bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors rounded-bl-xl">
+                    <span>Total</span>
                   </TableCell>
                   {last7Days.map(day => {
                     const dateKey = format(day, 'yyyy-MM-dd');
@@ -1226,7 +1226,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       </div>
                       {selectedMetric !== 'daily_users' ? (
                         <div className={cn(
-                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium -ml-8",
+                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ",
                           calculateTotalWeekOnWeekGrowth() >= 0
                             ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                             : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
@@ -1243,7 +1243,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                           {formatGrowthPercentage(calculateTotalWeekOnWeekGrowth())}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-xs -ml-8">—</span>
+                        <span className="text-muted-foreground text-xs ">—</span>
                       )}
                     </div>
                   </TableCell>

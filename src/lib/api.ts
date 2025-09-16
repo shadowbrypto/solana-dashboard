@@ -251,21 +251,52 @@ export const protocolApi = {
     }>(endpoint);
   },
 
-  // Get EVM monthly metrics for a date range
-  async getEVMMonthlyMetrics(startDate: Date, endDate: Date, dataType?: 'private' | 'public'): Promise<{
-    dailyVolumes: Record<Protocol, Record<string, number>>;
-    chainDistribution: Record<Protocol, Record<string, number>>;
-  }> {
-    // Use legacy API directly for EVM monthly metrics (always uses 'public' data type)
-    const startDateStr = format(startDate, 'yyyy-MM-dd');
+
+  // Get weekly metrics (unified endpoint for both Solana and EVM)
+  async getWeeklyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
     const endDateStr = format(endDate, 'yyyy-MM-dd');
-    const dataTypeParam = dataType ? `&dataType=${dataType}` : '';
-    const endpoint = `/protocols/evm-monthly-metrics?startDate=${startDateStr}&endDate=${endDateStr}${dataTypeParam}`;
+    const params = new URLSearchParams({
+      endDate: endDateStr,
+      chain: chain
+    });
     
-    return apiRequest<{
-      dailyVolumes: Record<Protocol, Record<string, number>>;
-      chainDistribution: Record<Protocol, Record<string, number>>;
-    }>(endpoint);
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+    
+    const endpoint = `/protocols/weekly-metrics?${params.toString()}`;
+    return apiRequest(endpoint);
+  },
+
+  // Get monthly metrics (unified endpoint for both Solana and EVM)
+  async getMonthlyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    const params = new URLSearchParams({
+      endDate: endDateStr,
+      chain: chain
+    });
+    
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+    
+    const endpoint = `/protocols/monthly-metrics?${params.toString()}`;
+    return apiRequest(endpoint);
+  },
+
+  // Get monthly insights (optimized endpoint for highlights)
+  async getMonthlyInsights(endDate: Date, dataType?: 'private' | 'public'): Promise<any> {
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    const params = new URLSearchParams({
+      endDate: endDateStr
+    });
+    
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+    
+    const endpoint = `/protocols/monthly-insights?${params.toString()}`;
+    return apiRequest(endpoint);
   }
 };
 

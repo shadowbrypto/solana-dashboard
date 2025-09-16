@@ -990,6 +990,599 @@ export async function getEVMDailyData(protocol: string, dateStr: string, dataTyp
 }
 
 // Get latest data dates for all protocols (SOL and EVM)
+// Get optimized monthly metrics for Solana (including monthly growth)
+export async function getSolanaMonthlyMetrics(endDate: Date, dataType: string = 'private') {
+  const cacheKey = `solana_monthly_metrics_${format(endDate, 'yyyy-MM')}_${dataType}`;
+  
+  const cachedEntry = insightsCache.get(cacheKey);
+  if (cachedEntry && isCacheValid(cachedEntry)) {
+    return cachedEntry.data;
+  }
+  
+  try {
+    // Get current month and previous month boundaries
+    const currentMonthStart = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    const currentMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+    const previousMonthStart = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
+    
+    // Get all data for current and previous month in parallel
+    const [currentData, previousData] = await Promise.all([
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', format(currentMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(currentMonthEnd, 'yyyy-MM-dd')),
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', format(previousMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(previousMonthEnd, 'yyyy-MM-dd'))
+    ]);
+
+    if (currentData.error) throw currentData.error;
+    if (previousData.error) throw previousData.error;
+
+    // Get all possible Solana protocols, not just those with current/previous data
+    const allSolanaProtocols = getSolanaProtocols();
+    const protocolsWithData = new Set([
+      ...(currentData.data || []).map(d => d.protocol_name),
+      ...(previousData.data || []).map(d => d.protocol_name)
+    ]);
+
+    // Include both protocols with data AND all defined Solana protocols
+    // Create a map for case-insensitive matching
+    const protocolCaseMap = new Map<string, string>();
+    protocolsWithData.forEach(p => protocolCaseMap.set(p.toLowerCase(), p));
+    allSolanaProtocols.forEach(p => {
+      const lowerP = p.toLowerCase();
+      if (!protocolCaseMap.has(lowerP)) {
+        protocolCaseMap.set(lowerP, p);
+      }
+    });
+    const protocols = new Set([...protocolCaseMap.values()]);
+
+    const monthlyData: Record<string, any> = {};
+    const previousMonthData: Record<string, any> = {};
+    const monthlyVolumeData: Record<string, Record<string, number>> = {};
+
+    for (const protocol of protocols) {
+      // Aggregate current month
+      const currentProtocolData = (currentData.data || []).filter(d => d.protocol_name === protocol);
+      const totalVolume = currentProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0);
+      const totalNewUsers = currentProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0);
+      const totalTrades = currentProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0);
+      const totalFees = currentProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0);
+
+      // Aggregate previous month
+      const previousProtocolData = (previousData.data || []).filter(d => d.protocol_name === protocol);
+      const prevTotalVolume = previousProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0);
+      const prevTotalNewUsers = previousProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0);
+      const prevTotalTrades = previousProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0);
+      const prevTotalFees = previousProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0);
+
+      // Calculate monthly growth
+      const monthlyGrowth = prevTotalVolume > 0 ? (totalVolume - prevTotalVolume) / prevTotalVolume : 0;
+
+      monthlyData[protocol] = {
+        total_volume_usd: totalVolume,
+        numberOfNewUsers: totalNewUsers,
+        daily_trades: totalTrades,
+        total_fees_usd: totalFees,
+        monthly_growth: monthlyGrowth
+      };
+
+      previousMonthData[protocol] = {
+        total_volume_usd: prevTotalVolume,
+        numberOfNewUsers: prevTotalNewUsers,
+        daily_trades: prevTotalTrades,
+        total_fees_usd: prevTotalFees,
+        monthly_growth: 0
+      };
+    }
+
+    // Get 6-month volume trend data with pagination to fetch ALL records
+    const startDate = format(new Date(endDate.getFullYear(), endDate.getMonth() - 5, 1), 'yyyy-MM-dd');
+    console.log(`Solana: Querying 6-month data from ${startDate} to ${format(endDate, 'yyyy-MM-dd')} with data_type=${dataType}`);
+    
+    // Fetch all data with pagination
+    let allLast6MonthsData: any[] = [];
+    let hasMore = true;
+    let page = 0;
+    const PAGE_SIZE = 1000;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, date')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', startDate)
+        .lte('date', format(endDate, 'yyyy-MM-dd'))
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) {
+        console.error('Error fetching 6-month data page', page, error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allLast6MonthsData = allLast6MonthsData.concat(data);
+        console.log(`Solana: Fetched page ${page}, ${data.length} records, total so far: ${allLast6MonthsData.length}`);
+        page++;
+        hasMore = data.length === PAGE_SIZE; // Continue if we got a full page
+      } else {
+        hasMore = false;
+      }
+    }
+
+    console.log(`Solana: Final total 6-month records: ${allLast6MonthsData.length}`);
+    const last6MonthsData = { data: allLast6MonthsData, error: null };
+
+    // Always initialize monthlyVolumeData for all protocols, even with empty data
+    for (const protocol of protocols) {
+      monthlyVolumeData[protocol] = {};
+    }
+
+    if (!last6MonthsData.error && last6MonthsData.data) {
+      console.log(`Solana: Found ${last6MonthsData.data.length} records for 6-month trend data`);
+      
+      
+      // Group by protocol and month - use case-insensitive matching
+      for (const protocol of protocols) {
+        // Try exact match first, then case-insensitive
+        let protocolTrendData = last6MonthsData.data.filter(d => d.protocol_name === protocol);
+        if (protocolTrendData.length === 0) {
+          protocolTrendData = last6MonthsData.data.filter(d => d.protocol_name.toLowerCase() === protocol.toLowerCase());
+        }
+        
+        // Aggregate by month
+        const monthlyAggregated: Record<string, number> = {};
+        protocolTrendData.forEach(d => {
+          const monthKey = d.date.substring(0, 7); // YYYY-MM
+          if (!monthlyAggregated[monthKey]) monthlyAggregated[monthKey] = 0;
+          monthlyAggregated[monthKey] += Number(d.volume_usd) || 0;
+        });
+        
+        monthlyVolumeData[protocol] = monthlyAggregated;
+        if (protocolTrendData.length > 0) {
+          console.log(`Solana ${protocol}: found ${protocolTrendData.length} records, ${Object.keys(monthlyAggregated).length} months`, monthlyAggregated);
+        } else {
+          console.log(`Solana ${protocol}: NO TREND DATA FOUND`);
+        }
+      }
+    }
+
+    // Ensure all protocols have all 6 months, fill with zeros if missing
+    const last6Months = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(endDate.getFullYear(), endDate.getMonth() - i, 1);
+      last6Months.push(format(monthDate, 'yyyy-MM'));
+    }
+    
+    for (const protocol of protocols) {
+      for (const monthKey of last6Months) {
+        if (!(monthKey in monthlyVolumeData[protocol])) {
+          monthlyVolumeData[protocol][monthKey] = 0;
+        }
+      }
+    }
+
+    const result = {
+      monthlyData,
+      previousMonthData,
+      monthlyVolumeData,
+      sortedProtocols: Array.from(protocols).sort((a, b) => 
+        (monthlyData[b]?.total_volume_usd || 0) - (monthlyData[a]?.total_volume_usd || 0)
+      )
+    };
+
+    insightsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+    
+  } catch (error) {
+    console.error('Error fetching Solana monthly metrics:', error);
+    throw error;
+  }
+}
+
+// Get optimized monthly metrics for EVM
+export async function getEVMMonthlyMetrics(endDate: Date, dataType: string = 'public') {
+  const cacheKey = `evm_monthly_metrics_${format(endDate, 'yyyy-MM')}_${dataType}`;
+  
+  const cachedEntry = insightsCache.get(cacheKey);
+  if (cachedEntry && isCacheValid(cachedEntry)) {
+    return cachedEntry.data;
+  }
+  
+  try {
+    // Get current month and previous month boundaries
+    const currentMonthStart = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    const currentMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+    const previousMonthStart = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
+    
+    // Get all EVM data for current and previous month in parallel
+    const [currentData, previousData] = await Promise.all([
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date, chain')
+        .eq('data_type', dataType)
+        .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'])
+        .gte('date', format(currentMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(currentMonthEnd, 'yyyy-MM-dd')),
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date, chain')
+        .eq('data_type', dataType)
+        .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'])
+        .gte('date', format(previousMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(previousMonthEnd, 'yyyy-MM-dd'))
+    ]);
+
+    if (currentData.error) throw currentData.error;
+    if (previousData.error) throw previousData.error;
+
+    // Get all possible EVM protocols, not just those with current/previous data
+    const allEVMProtocols = getEVMProtocols();
+    const protocolsWithData = new Set([
+      ...(currentData.data || []).map(d => d.protocol_name),
+      ...(previousData.data || []).map(d => d.protocol_name)
+    ]);
+    // Include both protocols with data AND all defined EVM protocols
+    // Create a map for case-insensitive matching
+    const protocolCaseMap = new Map<string, string>();
+    protocolsWithData.forEach(p => protocolCaseMap.set(p.toLowerCase(), p));
+    allEVMProtocols.forEach(p => {
+      const lowerP = p.toLowerCase();
+      if (!protocolCaseMap.has(lowerP)) {
+        protocolCaseMap.set(lowerP, p);
+      }
+    });
+    const protocols = new Set([...protocolCaseMap.values()]);
+
+    const monthlyData: Record<string, any> = {};
+    const previousMonthData: Record<string, any> = {};
+    const monthlyVolumeData: Record<string, Record<string, number>> = {};
+
+    for (const protocol of protocols) {
+      // Aggregate current month
+      const currentProtocolData = (currentData.data || []).filter(d => d.protocol_name === protocol);
+      const totalVolume = currentProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0);
+      const totalNewUsers = currentProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0);
+      const totalTrades = currentProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0);
+      const totalFees = currentProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0);
+
+      // Aggregate by chain for current month
+      const chainVolumes: Record<string, number> = {};
+      ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'].forEach(chain => {
+        chainVolumes[chain] = currentProtocolData
+          .filter(d => d.chain === chain)
+          .reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0);
+      });
+
+      // Aggregate previous month
+      const previousProtocolData = (previousData.data || []).filter(d => d.protocol_name === protocol);
+      const prevTotalVolume = previousProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0);
+      const prevTotalNewUsers = previousProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0);
+      const prevTotalTrades = previousProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0);
+      const prevTotalFees = previousProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0);
+
+      // Calculate monthly growth
+      const monthlyGrowth = prevTotalVolume > 0 ? (totalVolume - prevTotalVolume) / prevTotalVolume : 0;
+
+      monthlyData[protocol] = {
+        total_volume_usd: totalVolume,
+        numberOfNewUsers: totalNewUsers,
+        daily_trades: totalTrades,
+        total_fees_usd: totalFees,
+        monthly_growth: monthlyGrowth,
+        // Add chain-specific data
+        ethereum_volume: chainVolumes.ethereum || 0,
+        base_volume: chainVolumes.base || 0,
+        bsc_volume: chainVolumes.bsc || 0,
+        avax_volume: chainVolumes.avax || 0,
+        arbitrum_volume: chainVolumes.arbitrum || 0,
+        polygon_volume: chainVolumes.polygon || 0
+      };
+
+      previousMonthData[protocol] = {
+        total_volume_usd: prevTotalVolume,
+        numberOfNewUsers: prevTotalNewUsers,
+        daily_trades: prevTotalTrades,
+        total_fees_usd: prevTotalFees,
+        monthly_growth: 0
+      };
+    }
+
+    // Get 6-month volume trend data with pagination to fetch ALL records
+    const startDate = format(new Date(endDate.getFullYear(), endDate.getMonth() - 5, 1), 'yyyy-MM-dd');
+    console.log(`EVM: Querying 6-month data from ${startDate} to ${format(endDate, 'yyyy-MM-dd')} with data_type=${dataType}`);
+    
+    // Fetch all data with pagination
+    let allLast6MonthsData: any[] = [];
+    let hasMore = true;
+    let page = 0;
+    const PAGE_SIZE = 1000;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, date')
+        .eq('data_type', dataType)
+        .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon'])
+        .gte('date', startDate)
+        .lte('date', format(endDate, 'yyyy-MM-dd'))
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) {
+        console.error('Error fetching EVM 6-month data page', page, error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allLast6MonthsData = allLast6MonthsData.concat(data);
+        console.log(`EVM: Fetched page ${page}, ${data.length} records, total so far: ${allLast6MonthsData.length}`);
+        page++;
+        hasMore = data.length === PAGE_SIZE;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    console.log(`EVM: Final total 6-month records: ${allLast6MonthsData.length}`);
+    const last6MonthsData = { data: allLast6MonthsData, error: null };
+
+    // Always initialize monthlyVolumeData for all protocols, even with empty data
+    for (const protocol of protocols) {
+      monthlyVolumeData[protocol] = {};
+    }
+
+    if (!last6MonthsData.error && last6MonthsData.data) {
+      console.log(`EVM: Found ${last6MonthsData.data.length} records for 6-month trend data`);
+      
+      // Group by protocol and month - use case-insensitive matching
+      for (const protocol of protocols) {
+        // Try exact match first, then case-insensitive
+        let protocolTrendData = last6MonthsData.data.filter(d => d.protocol_name === protocol);
+        if (protocolTrendData.length === 0) {
+          protocolTrendData = last6MonthsData.data.filter(d => d.protocol_name.toLowerCase() === protocol.toLowerCase());
+        }
+        
+        // Aggregate by month
+        const monthlyAggregated: Record<string, number> = {};
+        protocolTrendData.forEach(d => {
+          const monthKey = d.date.substring(0, 7); // YYYY-MM
+          if (!monthlyAggregated[monthKey]) monthlyAggregated[monthKey] = 0;
+          monthlyAggregated[monthKey] += Number(d.volume_usd) || 0;
+        });
+        
+        monthlyVolumeData[protocol] = monthlyAggregated;
+        if (protocolTrendData.length > 0) {
+          console.log(`EVM ${protocol}: found ${protocolTrendData.length} records, ${Object.keys(monthlyAggregated).length} months`);
+        }
+      }
+    }
+
+    // Ensure all protocols have all 6 months, fill with zeros if missing
+    const last6Months = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(endDate.getFullYear(), endDate.getMonth() - i, 1);
+      last6Months.push(format(monthDate, 'yyyy-MM'));
+    }
+    
+    for (const protocol of protocols) {
+      for (const monthKey of last6Months) {
+        if (!(monthKey in monthlyVolumeData[protocol])) {
+          monthlyVolumeData[protocol][monthKey] = 0;
+        }
+      }
+    }
+
+    const result = {
+      monthlyData,
+      previousMonthData,
+      monthlyVolumeData,
+      sortedProtocols: Array.from(protocols).sort((a, b) => 
+        (monthlyData[b]?.total_volume_usd || 0) - (monthlyData[a]?.total_volume_usd || 0)
+      )
+    };
+
+    insightsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+    
+  } catch (error) {
+    console.error('Error fetching EVM monthly metrics:', error);
+    throw error;
+  }
+}
+
+// Get optimized monthly insights for highlights
+export async function getMonthlyInsights(endDate: Date, dataType: string = 'private') {
+  const cacheKey = `monthly_insights_${format(endDate, 'yyyy-MM')}_${dataType}`;
+  
+  const cachedEntry = insightsCache.get(cacheKey);
+  if (cachedEntry && isCacheValid(cachedEntry)) {
+    return cachedEntry.data;
+  }
+  
+  try {
+    // Get date boundaries for current, previous, and 3 months of historical data
+    const currentMonthStart = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    const currentMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
+    const previousMonthStart = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
+    const threeMonthsAgoStart = new Date(endDate.getFullYear(), endDate.getMonth() - 3, 1);
+    
+    // Get all data in parallel queries
+    const [currentData, previousData, historicalData] = await Promise.all([
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date, daily_users')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', format(currentMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(currentMonthEnd, 'yyyy-MM-dd')),
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date, daily_users')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', format(previousMonthStart, 'yyyy-MM-dd'))
+        .lte('date', format(previousMonthEnd, 'yyyy-MM-dd')),
+      supabase
+        .from('protocol_stats')
+        .select('protocol_name, volume_usd, new_users, trades, fees_usd, date, daily_users')
+        .eq('data_type', dataType)
+        .eq('chain', 'solana')
+        .gte('date', format(threeMonthsAgoStart, 'yyyy-MM-dd'))
+        .lte('date', format(currentMonthEnd, 'yyyy-MM-dd'))
+    ]);
+
+    if (currentData.error) throw currentData.error;
+    if (previousData.error) throw previousData.error;
+    if (historicalData.error) throw historicalData.error;
+
+    // Group data by protocol
+    const protocols = new Set([
+      ...(currentData.data || []).map(d => d.protocol_name),
+      ...(previousData.data || []).map(d => d.protocol_name),
+      ...(historicalData.data || []).map(d => d.protocol_name)
+    ]);
+
+    const performances: Record<string, any> = {};
+    
+    for (const protocol of protocols) {
+      // Aggregate current month
+      const currentProtocolData = (currentData.data || []).filter(d => d.protocol_name === protocol);
+      const currentMetrics = {
+        total_volume_usd: currentProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0),
+        daily_users: currentProtocolData.reduce((max, d) => Math.max(max, Number(d.daily_users) || 0), 0),
+        numberOfNewUsers: currentProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0),
+        daily_trades: currentProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0),
+        total_fees_usd: currentProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0)
+      };
+
+      // Skip protocols with no current volume
+      if (currentMetrics.total_volume_usd === 0) continue;
+
+      // Aggregate previous month
+      const previousProtocolData = (previousData.data || []).filter(d => d.protocol_name === protocol);
+      const previousMetrics = {
+        total_volume_usd: previousProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0),
+        daily_users: previousProtocolData.reduce((max, d) => Math.max(max, Number(d.daily_users) || 0), 0),
+        numberOfNewUsers: previousProtocolData.reduce((sum, d) => sum + (Number(d.new_users) || 0), 0),
+        daily_trades: previousProtocolData.reduce((sum, d) => sum + (Number(d.trades) || 0), 0),
+        total_fees_usd: previousProtocolData.reduce((sum, d) => sum + (Number(d.fees_usd) || 0), 0)
+      };
+
+      // Calculate trends
+      const volume1m = previousMetrics.total_volume_usd > 0 ? 
+        (currentMetrics.total_volume_usd - previousMetrics.total_volume_usd) / previousMetrics.total_volume_usd : 0;
+      
+      const users1m = previousMetrics.daily_users > 0 ? 
+        (currentMetrics.daily_users - previousMetrics.daily_users) / previousMetrics.daily_users : 0;
+      
+      const trades1m = previousMetrics.daily_trades > 0 ? 
+        (currentMetrics.daily_trades - previousMetrics.daily_trades) / previousMetrics.daily_trades : 0;
+
+      // Calculate 3-month historical average
+      const historicalProtocolData = (historicalData.data || []).filter(d => d.protocol_name === protocol);
+      const avg3mVolume = historicalProtocolData.length > 0 ?
+        historicalProtocolData.reduce((sum, d) => sum + (Number(d.volume_usd) || 0), 0) / historicalProtocolData.length : 0;
+      
+      const volume3m = avg3mVolume > 0 ? (currentMetrics.total_volume_usd - avg3mVolume) / avg3mVolume : 0;
+
+      // Calculate monthly consistency (simplified reliability metric)
+      const monthlyVolumes = [currentMetrics.total_volume_usd, previousMetrics.total_volume_usd];
+      const avgMonthlyVolume = monthlyVolumes.reduce((sum, vol) => sum + vol, 0) / monthlyVolumes.length;
+      const volumeVariance = monthlyVolumes.reduce((sum, vol) => sum + Math.pow(vol - avgMonthlyVolume, 2), 0) / monthlyVolumes.length;
+      const consistency = avgMonthlyVolume > 0 ? avgMonthlyVolume * (1 / (1 + Math.sqrt(volumeVariance) / avgMonthlyVolume)) : 0;
+
+      performances[protocol] = {
+        current: currentMetrics,
+        previous: previousMetrics,
+        trends: {
+          volume1m,
+          volume3m,
+          users1m,
+          trades1m,
+          consistency
+        }
+      };
+    }
+
+    // Generate insights
+    const insights: any[] = [];
+    const performancesList = Object.entries(performances).map(([protocol, perf]) => ({
+      protocol,
+      ...perf
+    }));
+
+    // Top Volume Leader
+    if (performancesList.length > 0) {
+      const topByVolume = performancesList.reduce((best, current) => 
+        (current as any).current.total_volume_usd > (best as any).current.total_volume_usd ? current : best
+      );
+      
+      insights.push({
+        type: 'success',
+        title: 'Monthly Volume Leader',
+        description: `Dominated the month with $${((topByVolume as any).current.total_volume_usd / 1000000).toFixed(2)}M in total volume`,
+        protocol: (topByVolume as any).protocol,
+        value: (topByVolume as any).current.total_volume_usd,
+        trend: (topByVolume as any).trends.volume1m
+      });
+
+      // Biggest Monthly Gainer
+      const gainers = performancesList.filter((p: any) => p.trends.volume1m > 0.1); // > 10% growth
+      if (gainers.length > 0) {
+        const biggestGainer = gainers.reduce((best, current) => 
+          (current as any).trends.volume1m > (best as any).trends.volume1m ? current : best
+        );
+        
+        insights.push({
+          type: 'info',
+          title: 'Biggest Monthly Gainer',
+          description: `Grew by ${((biggestGainer as any).trends.volume1m * 100).toFixed(1)}% month-over-month`,
+          protocol: (biggestGainer as any).protocol,
+          trend: (biggestGainer as any).trends.volume1m
+        });
+      }
+
+      // Most Consistent Performer
+      const mostConsistent = performancesList.reduce((best, current) => 
+        (current as any).trends.consistency > (best as any).trends.consistency ? current : best
+      );
+      
+      insights.push({
+        type: 'success',
+        title: 'Most Consistent Performer',
+        description: 'Maintained steady performance throughout the month',
+        protocol: (mostConsistent as any).protocol,
+        value: (mostConsistent as any).trends.consistency
+      });
+    }
+
+    const result = {
+      performances,
+      insights,
+      totalProtocols: performancesList.length
+    };
+
+    insightsCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    return result;
+    
+  } catch (error) {
+    console.error('Error fetching monthly insights:', error);
+    throw error;
+  }
+}
+
 export async function getLatestDataDates(dataType?: string): Promise<{
   protocol_name: string;
   latest_date: string;
@@ -1081,136 +1674,163 @@ export async function getLatestDataDates(dataType?: string): Promise<{
   }
 }
 
-export async function getEVMWeeklyMetrics(startDate: string, endDate: string, dataType?: string): Promise<{
-  dailyVolumes: Record<string, Record<string, number>>;
-  chainDistribution: Record<string, Record<string, number>>;
-}> {
-  console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate}`);
-  
-  const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
-  const evmProtocols = ['banana', 'bloom', 'maestro', 'sigma'];
-  const effectiveDataType = 'public'; // ALWAYS use public for EVM protocols
-  
-  console.log(`EVM Chains:`, evmChains);
-  console.log(`EVM Protocols:`, evmProtocols);
-  console.log(`Effective Data Type:`, effectiveDataType);
-  
+/**
+ * Get EVM weekly metrics with growth calculations (optimized single query)
+ */
+export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'public') {
   try {
-    // First, let's check what EVM data actually exists in the database
-    const { data: evmDataCheck, error: checkError } = await supabase
+    // Calculate start dates for current and previous week
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6); // 7 days total including endDate
+    
+    const prevWeekEndDate = new Date(endDate);
+    prevWeekEndDate.setDate(endDate.getDate() - 7);
+    const prevWeekStartDate = new Date(prevWeekEndDate);
+    prevWeekStartDate.setDate(prevWeekEndDate.getDate() - 6);
+
+    console.log(`Fetching optimized EVM weekly metrics:
+      Current week: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}
+      Previous week: ${prevWeekStartDate.toISOString().split('T')[0]} to ${prevWeekEndDate.toISOString().split('T')[0]}
+      Data type: ${dataType}`);
+
+    const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
+    const evmProtocols = getEVMProtocols(); // Use centralized list
+
+    // Single optimized query to get both current and previous week data
+    const { data, error } = await supabase
       .from('protocol_stats')
-      .select('protocol_name, chain, data_type, date')
-      .neq('chain', 'solana')
-      .order('date', { ascending: false })
-      .limit(20);
-    
-    console.log('Sample EVM data in database (most recent first):', evmDataCheck);
-    
-    // Quick test query for Sigma specifically
-    const { data: sigmaTest, error: sigmaError } = await supabase
-      .from('protocol_stats')
-      .select('protocol_name, date, chain, volume_usd, data_type')
-      .eq('protocol_name', 'sigma')
-      .gte('date', '2025-07-25')
-      .lte('date', '2025-07-31')
-      .limit(10);
-    
-    console.log('Sigma test query results:', sigmaTest);
-    
-    // Also check date range of available EVM data
-    const { data: dateRangeCheck, error: rangeError } = await supabase
-      .from('protocol_stats')
-      .select('date')
-      .neq('chain', 'solana')
-      .order('date', { ascending: false })
-      .limit(1);
-    
-    const { data: oldestDateCheck, error: oldestError } = await supabase
-      .from('protocol_stats')
-      .select('date')
-      .neq('chain', 'solana')
-      .order('date', { ascending: true })
-      .limit(1);
-    
-    console.log('EVM data date range:', {
-      mostRecent: dateRangeCheck?.[0]?.date,
-      oldest: oldestDateCheck?.[0]?.date,
-      requestedRange: `${startDate} to ${endDate}`
-    });
-    
-    // Query database for the date range across all EVM chains and protocols
-    const { data: weeklyData, error: weeklyError } = await supabase
-      .from('protocol_stats')
-      .select('protocol_name, date, chain, volume_usd')
+      .select('protocol_name, date, volume_usd, chain')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
-      .eq('data_type', effectiveDataType)
-      .gte('date', startDate)
-      .lte('date', endDate)
+      .eq('data_type', dataType)
+      .gte('date', prevWeekStartDate.toISOString().split('T')[0])
+      .lte('date', endDate.toISOString().split('T')[0])
       .order('protocol_name')
       .order('date');
 
-    if (weeklyError) {
-      console.error('Error fetching EVM weekly data:', weeklyError);
-      throw weeklyError;
+    if (error) {
+      console.error('Supabase error in getEVMWeeklyMetricsOptimized:', error);
+      throw error;
     }
 
-    console.log(`Found ${weeklyData?.length || 0} EVM weekly records`);
-    if (weeklyData && weeklyData.length > 0) {
-      console.log(`Sample data:`, weeklyData.slice(0, 3));
-    } else {
-      console.log(`No data found for query with:`, {
-        chains: evmChains,
-        protocols: evmProtocols,
-        dataType: effectiveDataType,
-        startDate,
-        endDate
-      });
-      
-      // Log what data exists for debugging
-      console.log('No data found with current query, checking what exists...');
-      const { data: broadQuery, error: broadError } = await supabase
-        .from('protocol_stats')
-        .select('protocol_name, chain, data_type')
-        .neq('chain', 'solana')
-        .gte('date', startDate)
-        .lte('date', endDate);
-      
-      console.log('Available EVM data in date range:', broadQuery?.slice(0, 10));
+    if (!data || data.length === 0) {
+      console.log('No EVM data found for the specified date range');
+      return { 
+        weeklyData: {}, 
+        dateRange: { 
+          startDate: startDate.toISOString().split('T')[0], 
+          endDate: endDate.toISOString().split('T')[0] 
+        },
+        totalProtocols: 0
+      };
     }
 
-    // Process the data by protocol and date
-    const dailyVolumes: Record<string, Record<string, number>> = {};
-    const chainDistribution: Record<string, Record<string, number>> = {};
+    // Group data by protocol and calculate metrics
+    const protocolData: Record<string, any> = {};
 
-    if (weeklyData) {
-      weeklyData.forEach(record => {
-        const protocolName = record.protocol_name;
-        const date = record.date;
-        const chain = record.chain;
-        const volume = Number(record.volume_usd) || 0;
+    // Initialize all EVM protocols
+    evmProtocols.forEach(protocol => {
+      protocolData[protocol] = {
+        dailyVolumes: {},
+        chainVolumes: {
+          ethereum: 0,
+          base: 0,
+          bsc: 0,
+          avax: 0,
+          arbitrum: 0
+        },
+        currentWeekTotal: 0,
+        previousWeekTotal: 0,
+        weeklyTrend: []
+      };
+    });
 
-        // Initialize protocol if not exists
-        if (!dailyVolumes[protocolName]) {
-          dailyVolumes[protocolName] = {};
+    // Process each record
+    data.forEach(record => {
+      const protocol = record.protocol_name;
+      const date = record.date;
+      const volume = Number(record.volume_usd) || 0;
+      const chain = record.chain;
+
+      // Skip if protocol not in our list
+      if (!protocolData[protocol]) {
+        return;
+      }
+
+      const recordDate = new Date(date);
+      const isCurrentWeek = recordDate >= startDate && recordDate <= endDate;
+      const isPreviousWeek = recordDate >= prevWeekStartDate && recordDate <= prevWeekEndDate;
+
+      if (isCurrentWeek) {
+        // Current week data
+        if (!protocolData[protocol].dailyVolumes[date]) {
+          protocolData[protocol].dailyVolumes[date] = 0;
         }
-        if (!chainDistribution[protocolName]) {
-          chainDistribution[protocolName] = {};
-        }
-
-        // Aggregate volume by date (sum across all chains for that protocol)
-        dailyVolumes[protocolName][date] = (dailyVolumes[protocolName][date] || 0) + volume;
+        protocolData[protocol].dailyVolumes[date] += volume;
+        protocolData[protocol].currentWeekTotal += volume;
         
-        // Aggregate volume by chain for the entire period
-        chainDistribution[protocolName][chain] = (chainDistribution[protocolName][chain] || 0) + volume;
-      });
-    }
+        // Aggregate by chain for current week
+        if (protocolData[protocol].chainVolumes[chain] !== undefined) {
+          protocolData[protocol].chainVolumes[chain] += volume;
+        }
+      } else if (isPreviousWeek) {
+        // Previous week data for growth calculation
+        protocolData[protocol].previousWeekTotal += volume;
+      }
+    });
 
-    console.log(`Processed EVM weekly data for ${Object.keys(dailyVolumes).length} protocols`);
-    return { dailyVolumes, chainDistribution };
+    // Calculate growth percentages and prepare final response
+    const weeklyData: Record<string, any> = {};
+    const protocolTotals: Array<{ protocol: string; volume: number }> = [];
+
+    Object.entries(protocolData).forEach(([protocol, data]) => {
+      // Calculate growth percentage
+      const weeklyGrowth = data.previousWeekTotal > 0 
+        ? (data.currentWeekTotal - data.previousWeekTotal) / data.previousWeekTotal 
+        : (data.currentWeekTotal > 0 ? 1 : 0);
+
+      // Create weekly trend array (sorted by date)
+      const dateKeys = Object.keys(data.dailyVolumes).sort();
+      const weeklyTrend = dateKeys.map(date => data.dailyVolumes[date] || 0);
+
+      weeklyData[protocol] = {
+        totalVolume: data.currentWeekTotal,
+        dailyVolumes: data.dailyVolumes,
+        chainVolumes: data.chainVolumes,
+        weeklyGrowth,
+        weeklyTrend,
+        previousWeekTotal: data.previousWeekTotal
+      };
+
+      // Add to totals for ranking (only protocols with data)
+      if (data.currentWeekTotal > 0) {
+        protocolTotals.push({
+          protocol,
+          volume: data.currentWeekTotal
+        });
+      }
+    });
+
+    // Sort protocols by volume
+    const sortedProtocols = protocolTotals
+      .sort((a, b) => b.volume - a.volume)
+      .map(p => p.protocol);
+
+    const result = {
+      weeklyData,
+      dateRange: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      },
+      totalProtocols: protocolTotals.length,
+      sortedProtocols
+    };
+
+    console.log(`Successfully processed optimized EVM weekly data for ${protocolTotals.length} protocols`);
+    return result;
 
   } catch (error) {
-    console.error('Error in getEVMWeeklyMetrics:', error);
+    console.error('Error in getEVMWeeklyMetricsOptimized:', error);
     throw error;
   }
 }
@@ -1253,6 +1873,183 @@ export async function getCumulativeVolume(protocolName: string, endDate: Date, d
 
   } catch (error) {
     console.error(`Error getting cumulative volume for ${protocolName}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get Solana weekly metrics with growth calculations (optimized single query)
+ */
+export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = 'private') {
+  try {
+    // Calculate start dates for current and previous week
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6); // 7 days total including endDate
+    
+    const prevWeekEndDate = new Date(endDate);
+    prevWeekEndDate.setDate(endDate.getDate() - 7);
+    const prevWeekStartDate = new Date(prevWeekEndDate);
+    prevWeekStartDate.setDate(prevWeekEndDate.getDate() - 6);
+
+    console.log(`Fetching Solana weekly metrics:
+      Current week: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}
+      Previous week: ${prevWeekStartDate.toISOString().split('T')[0]} to ${prevWeekEndDate.toISOString().split('T')[0]}
+      Data type: ${dataType}`);
+
+    // Single optimized query to get both current and previous week data
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, volume_usd, daily_users, new_users, trades, fees_usd')
+      .eq('chain', 'solana')
+      .eq('data_type', dataType)
+      .gte('date', prevWeekStartDate.toISOString().split('T')[0])
+      .lte('date', endDate.toISOString().split('T')[0])
+      .order('protocol_name')
+      .order('date');
+
+    if (error) {
+      console.error('Supabase error in getSolanaWeeklyMetrics:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No data found for the specified date range');
+      return { weeklyData: {}, topProtocols: [], dateRange: { startDate: startDate.toISOString().split('T')[0], endDate: endDate.toISOString().split('T')[0] } };
+    }
+
+    // Group data by protocol and calculate metrics
+    const protocolData: Record<string, any> = {};
+    const solanaProtocols = getSolanaProtocols();
+
+    // Initialize all Solana protocols
+    solanaProtocols.forEach(protocol => {
+      protocolData[protocol] = {
+        dailyMetrics: {
+          volume: {},
+          users: {},
+          newUsers: {},
+          trades: {}
+        },
+        currentWeekTotal: {
+          volume: 0,
+          users: 0,
+          newUsers: 0,
+          trades: 0
+        },
+        previousWeekTotal: {
+          volume: 0,
+          users: 0,
+          newUsers: 0,
+          trades: 0
+        }
+      };
+    });
+
+    // Process each record
+    data.forEach(record => {
+      const protocol = record.protocol_name;
+      const date = record.date;
+      const volume = Number(record.volume_usd) || 0;
+      const users = Number(record.daily_users) || 0;
+      const newUsers = Number(record.new_users) || 0;
+      const trades = Number(record.trades) || 0;
+
+      // Skip if protocol not in our list
+      if (!protocolData[protocol]) {
+        return;
+      }
+
+      const recordDate = new Date(date);
+      const isCurrentWeek = recordDate >= startDate && recordDate <= endDate;
+      const isPreviousWeek = recordDate >= prevWeekStartDate && recordDate <= prevWeekEndDate;
+
+      if (isCurrentWeek) {
+        // Current week data
+        protocolData[protocol].dailyMetrics.volume[date] = volume;
+        protocolData[protocol].dailyMetrics.users[date] = users;
+        protocolData[protocol].dailyMetrics.newUsers[date] = newUsers;
+        protocolData[protocol].dailyMetrics.trades[date] = trades;
+        
+        protocolData[protocol].currentWeekTotal.volume += volume;
+        protocolData[protocol].currentWeekTotal.users += users;
+        protocolData[protocol].currentWeekTotal.newUsers += newUsers;
+        protocolData[protocol].currentWeekTotal.trades += trades;
+      } else if (isPreviousWeek) {
+        // Previous week data for growth calculation
+        protocolData[protocol].previousWeekTotal.volume += volume;
+        protocolData[protocol].previousWeekTotal.users += users;
+        protocolData[protocol].previousWeekTotal.newUsers += newUsers;
+        protocolData[protocol].previousWeekTotal.trades += trades;
+      }
+    });
+
+    // Calculate growth percentages and prepare final response
+    const weeklyData: Record<string, any> = {};
+    const protocolTotals: Array<{ protocol: string; volume: number; users: number; newUsers: number; trades: number }> = [];
+
+    Object.entries(protocolData).forEach(([protocol, data]) => {
+      // Calculate growth percentages
+      const volumeGrowth = data.previousWeekTotal.volume > 0 
+        ? (data.currentWeekTotal.volume - data.previousWeekTotal.volume) / data.previousWeekTotal.volume 
+        : (data.currentWeekTotal.volume > 0 ? 1 : 0);
+
+      const userGrowth = data.previousWeekTotal.users > 0 
+        ? (data.currentWeekTotal.users - data.previousWeekTotal.users) / data.previousWeekTotal.users 
+        : (data.currentWeekTotal.users > 0 ? 1 : 0);
+
+      const newUserGrowth = data.previousWeekTotal.newUsers > 0 
+        ? (data.currentWeekTotal.newUsers - data.previousWeekTotal.newUsers) / data.previousWeekTotal.newUsers 
+        : (data.currentWeekTotal.newUsers > 0 ? 1 : 0);
+
+      const tradeGrowth = data.previousWeekTotal.trades > 0 
+        ? (data.currentWeekTotal.trades - data.previousWeekTotal.trades) / data.previousWeekTotal.trades 
+        : (data.currentWeekTotal.trades > 0 ? 1 : 0);
+
+      weeklyData[protocol] = {
+        dailyMetrics: data.dailyMetrics,
+        weeklyTotals: data.currentWeekTotal,
+        previousWeekTotals: data.previousWeekTotal,
+        growth: {
+          volume: volumeGrowth,
+          users: userGrowth,
+          newUsers: newUserGrowth,
+          trades: tradeGrowth
+        }
+      };
+
+      // Add to totals for ranking (only protocols with data)
+      if (data.currentWeekTotal.volume > 0 || data.currentWeekTotal.users > 0) {
+        protocolTotals.push({
+          protocol,
+          volume: data.currentWeekTotal.volume,
+          users: data.currentWeekTotal.users,
+          newUsers: data.currentWeekTotal.newUsers,
+          trades: data.currentWeekTotal.trades
+        });
+      }
+    });
+
+    // Sort protocols by volume and get top 3
+    const topProtocols = protocolTotals
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 3)
+      .map(p => p.protocol);
+
+    const result = {
+      weeklyData,
+      topProtocols,
+      dateRange: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      },
+      totalProtocols: protocolTotals.length
+    };
+
+    console.log(`Successfully processed weekly data for ${protocolTotals.length} Solana protocols`);
+    return result;
+
+  } catch (error) {
+    console.error('Error in getSolanaWeeklyMetrics:', error);
     throw error;
   }
 }

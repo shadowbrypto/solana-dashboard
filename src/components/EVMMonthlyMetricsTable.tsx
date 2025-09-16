@@ -102,69 +102,65 @@ const fetchEVMMonthlyData = async (protocols: Protocol[], endDate: Date): Promis
   console.log(`Fetching EVM monthly data for ${protocols.length} protocols for ${format(endDate, 'MMM yyyy')}`);
   
   try {
-    // Get last 6 months for trend charts
-    const last6Months = eachMonthOfInterval({
-      start: subMonths(endDate, 5),
-      end: endDate
-    });
+    console.log('Fetching optimized EVM monthly data...');
     
-    console.log('Fetching data for last 6 months:', last6Months.map(m => format(m, 'MMM yyyy')));
+    // Single optimized API call instead of multiple monthly API calls
+    const optimizedData = await protocolApi.getMonthlyMetrics(endOfMonth(endDate), 'evm', 'public');
+    console.log('Received optimized EVM monthly data:', optimizedData);
     
-    // Fetch current month data for totals
-    const currentMonthData = await protocolApi.getEVMMonthlyMetrics(currentMonthStart, currentMonthEnd, 'public');
-    console.log('Current month data:', currentMonthData);
-    
-    // Fetch all 6 months data for trends
-    const monthlyDataPromises = last6Months.map(async (month) => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
-      try {
-        const monthData = await protocolApi.getEVMMonthlyMetrics(monthStart, monthEnd, 'public');
-        return { month: format(month, 'yyyy-MM'), data: monthData };
-      } catch (error) {
-        console.error(`Error fetching data for ${format(month, 'MMM yyyy')}:`, error);
-        return { month: format(month, 'yyyy-MM'), data: { dailyVolumes: {}, chainDistribution: {} } };
+    // Transform backend data to match existing frontend structure
+    const processedData: EVMProtocolData[] = optimizedData.sortedProtocols.map((protocol: string) => {
+      const protocolMonthlyData = optimizedData.monthlyData[protocol];
+      const protocolPreviousData = optimizedData.previousMonthData[protocol];
+      const protocolVolumeData = optimizedData.monthlyVolumeData[protocol];
+      
+      if (!protocolMonthlyData) {
+        return {
+          protocol: protocol as Protocol,
+          totalVolume: 0,
+          chainVolumes: {
+            ethereum: 0,
+            base: 0,
+            bsc: 0,
+            avax: 0,
+            arbitrum: 0
+          },
+          monthlyGrowth: 0,
+          sixMonthTrend: [],
+          previousMonthVolume: 0
+        };
       }
-    });
-    
-    const monthlyDataResults = await Promise.all(monthlyDataPromises);
-    console.log('6 month trend data:', monthlyDataResults);
-    
-    // Convert API data to display format
-    const processedData: EVMProtocolData[] = Object.entries(currentMonthData.dailyVolumes).map(([protocol, dailyVolumes]) => {
-      const totalVolume = Object.values(dailyVolumes).reduce((sum, vol) => sum + vol, 0);
       
-      // Use real chain distribution data from API
-      const protocolChainData = currentMonthData.chainDistribution[protocol] || {};
-      const chainVolumes: ChainVolume = {
-        ethereum: protocolChainData.ethereum || 0,
-        base: protocolChainData.base || 0,
-        bsc: protocolChainData.bsc || 0,
-        avax: protocolChainData.avax || 0,
-        arbitrum: protocolChainData.arbitrum || 0
-      };
-      
-      // Calculate 6-month trend for this protocol
-      const sixMonthTrend = monthlyDataResults.map(({ data }) => {
-        const protocolMonthData = data.dailyVolumes[protocol];
-        if (!protocolMonthData) return 0;
-        return Object.values(protocolMonthData).reduce((sum: number, vol: number) => sum + vol, 0);
+      // Generate 6-month trend from monthly volume data
+      const last6Months = eachMonthOfInterval({
+        start: subMonths(endDate, 5),
+        end: endDate
+      });
+      const sixMonthTrend = last6Months.map(month => {
+        const monthKey = format(month, 'yyyy-MM');
+        return protocolVolumeData?.[monthKey] || 0;
       });
       
-      // Calculate monthly growth (compare current month vs previous month)
-      const currentMonthTotal = sixMonthTrend[5] || 0; // Current month (last in array)
-      const previousMonthTotal = sixMonthTrend[4] || 0; // Previous month
+      // Calculate monthly growth
+      const currentMonthTotal = protocolMonthlyData.total_volume_usd || 0;
+      const previousMonthTotal = protocolPreviousData?.total_volume_usd || 0;
       const monthlyGrowth = previousMonthTotal > 0 ? (currentMonthTotal - previousMonthTotal) / previousMonthTotal : 0;
       
-      return { 
-        protocol: protocol as Protocol, 
-        totalVolume, 
-        chainVolumes, 
-        monthlyGrowth, 
+      return {
+        protocol: protocol as Protocol,
+        totalVolume: currentMonthTotal,
+        chainVolumes: {
+          ethereum: protocolMonthlyData.ethereum_volume || 0,
+          base: protocolMonthlyData.base_volume || 0,
+          bsc: protocolMonthlyData.bsc_volume || 0,
+          avax: protocolMonthlyData.avax_volume || 0,
+          arbitrum: protocolMonthlyData.arbitrum_volume || 0
+        },
+        monthlyGrowth,
         sixMonthTrend,
         previousMonthVolume: previousMonthTotal
       };
-    }).sort((a, b) => b.totalVolume - a.totalVolume);
+    });
 
     console.log('Processed monthly data with 6-month trends:', processedData);
     return processedData;

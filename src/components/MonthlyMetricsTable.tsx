@@ -16,7 +16,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { MonthPicker } from "./MonthPicker";
-import { getDailyMetrics } from "../lib/protocol";
+import { protocolApi } from "../lib/api";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
@@ -130,6 +130,7 @@ interface MonthlyData {
   numberOfNewUsers: number;
   daily_trades: number;
   total_fees_usd: number;
+  monthly_growth: number;
 }
 
 function getGradientColor(value: number, min: number, max: number, allValues: number[]): string {
@@ -183,19 +184,36 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
   // Monthly trend functions
   const getMonthlyVolumeChart = (protocolId: Protocol) => {
-    const protocolMonthlyData = monthlyVolumeData[protocolId];
-    if (!protocolMonthlyData) return [];
+    // Try exact match first, then case variations
+    let protocolMonthlyData = monthlyVolumeData[protocolId];
+    
+    if (!protocolMonthlyData) {
+      // Try capitalizing first letter
+      const capitalizedId = protocolId.charAt(0).toUpperCase() + protocolId.slice(1);
+      protocolMonthlyData = monthlyVolumeData[capitalizedId];
+    }
+    
+    if (!protocolMonthlyData) {
+      // Try finding by case-insensitive match
+      const keys = Object.keys(monthlyVolumeData);
+      const matchingKey = keys.find(key => key.toLowerCase() === protocolId.toLowerCase());
+      if (matchingKey) {
+        protocolMonthlyData = monthlyVolumeData[matchingKey];
+      }
+    }
+    
     
     const last6Months = eachMonthOfInterval({
       start: subMonths(date, 5),
       end: date
     });
     
+    // Always return 6 data points, even if protocol data is missing
     return last6Months.map((month, index) => {
       const monthKey = format(month, 'yyyy-MM');
       return {
         month: index,
-        value: protocolMonthlyData[monthKey] || 0
+        value: (protocolMonthlyData && protocolMonthlyData[monthKey]) || 0
       };
     });
   };
@@ -576,64 +594,21 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
     const fetchData = async () => {
       setTopProtocols([]);
       try {
-        // Get month boundaries
-        const currentMonthStart = startOfMonth(date);
-        const currentMonthEnd = endOfMonth(date);
-        const previousMonthStart = startOfMonth(subMonths(date, 1));
-        const previousMonthEnd = endOfMonth(subMonths(date, 1));
-
-        // Get all days in current and previous month
-        const currentMonthDays = eachDayOfInterval({ start: currentMonthStart, end: currentMonthEnd });
-        const previousMonthDays = eachDayOfInterval({ start: previousMonthStart, end: previousMonthEnd });
-
-        // Fetch all daily data for both months
-        const [currentDailyData, previousDailyData] = await Promise.all([
-          Promise.all(currentMonthDays.map(day => getDailyMetrics(day))),
-          Promise.all(previousMonthDays.map(day => getDailyMetrics(day)))
-        ]);
-
-        // Fetch monthly volume data for trend charts (last 6 months)
-        const last6Months = eachMonthOfInterval({
-          start: subMonths(date, 5),
-          end: date
-        });
+        console.log('Fetching optimized Solana monthly data...');
         
-        const monthlyPromises = last6Months.map(async (month) => {
-          const monthStart = startOfMonth(month);
-          const monthEnd = endOfMonth(month);
-          const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
-          const monthDailyData = await Promise.all(monthDays.map(day => getDailyMetrics(day)));
-          
-          // Aggregate monthly data for this month
-          const monthlyAggregated: Record<Protocol, number> = {};
-          protocols.forEach(protocol => {
-            monthlyAggregated[protocol] = 0;
-          });
-          
-          monthDailyData.forEach(dayData => {
-            protocols.forEach(protocol => {
-              const protocolData = dayData[protocol];
-              if (protocolData) {
-                monthlyAggregated[protocol] += protocolData.total_volume_usd;
-              }
-            });
-          });
-          
-          return { month: format(month, 'yyyy-MM'), data: monthlyAggregated };
-        });
+        // Single optimized API call instead of hundreds of daily metric calls
+        const optimizedData = await protocolApi.getMonthlyMetrics(endOfMonth(date), 'solana', 'private');
         
-        const monthlyResults = await Promise.all(monthlyPromises);
+        console.log('Received optimized Solana monthly data:', optimizedData);
         
-        // Organize monthly volume data by protocol
-        const organizedMonthlyData: Record<Protocol, Record<string, number>> = {};
-        protocols.forEach(protocol => {
-          organizedMonthlyData[protocol] = {};
-          monthlyResults.forEach(({ month, data }) => {
-            organizedMonthlyData[protocol][month] = data[protocol] || 0;
-          });
-        });
-
-        setMonthlyVolumeData(organizedMonthlyData);
+        // Set data from optimized API response
+        setMonthlyData(optimizedData.monthlyData);
+        setPreviousMonthData(optimizedData.previousMonthData);
+        setMonthlyVolumeData(optimizedData.monthlyVolumeData);
+        
+        // Set top 3 protocols based on volume
+        const top3 = optimizedData.sortedProtocols.slice(0, 3).map((protocol: string) => protocol as Protocol);
+        setTopProtocols(top3);
 
         // Fetch projected volume data for the selected month
         try {
@@ -647,66 +622,9 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
           setProjectedVolumeData({});
         }
 
-        // Aggregate monthly data for each protocol
-        const currentAggregated: Record<Protocol, MonthlyData> = {};
-        const previousAggregated: Record<Protocol, MonthlyData> = {};
-
-        // Initialize with empty data
-        protocols.forEach(protocol => {
-          currentAggregated[protocol] = {
-            total_volume_usd: 0,
-            numberOfNewUsers: 0,
-            daily_trades: 0,
-            total_fees_usd: 0
-          };
-          previousAggregated[protocol] = {
-            total_volume_usd: 0,
-            numberOfNewUsers: 0,
-            daily_trades: 0,
-            total_fees_usd: 0
-          };
-        });
-
-        // Aggregate current month data
-        currentDailyData.forEach(dayData => {
-          protocols.forEach(protocol => {
-            const protocolData = dayData[protocol];
-            if (protocolData) {
-              currentAggregated[protocol].total_volume_usd += protocolData.total_volume_usd;
-              currentAggregated[protocol].numberOfNewUsers += protocolData.numberOfNewUsers;
-              currentAggregated[protocol].daily_trades += protocolData.daily_trades;
-              currentAggregated[protocol].total_fees_usd += protocolData.total_fees_usd;
-            }
-          });
-        });
-
-        // Aggregate previous month data
-        previousDailyData.forEach(dayData => {
-          protocols.forEach(protocol => {
-            const protocolData = dayData[protocol];
-            if (protocolData) {
-              previousAggregated[protocol].total_volume_usd += protocolData.total_volume_usd;
-              previousAggregated[protocol].numberOfNewUsers += protocolData.numberOfNewUsers;
-              previousAggregated[protocol].daily_trades += protocolData.daily_trades;
-              previousAggregated[protocol].total_fees_usd += protocolData.total_fees_usd;
-            }
-          });
-        });
-
-        // Sort protocols by volume to find the top 3
-        const sortedByVolume = Object.entries(currentAggregated)
-          .filter(([_, metrics]) => metrics?.total_volume_usd > 0)
-          .sort((a, b) => (b[1]?.total_volume_usd || 0) - (a[1]?.total_volume_usd || 0));
-        
-        setMonthlyData(currentAggregated);
-        
-        // Set top 3 protocols
-        const top3 = sortedByVolume.slice(0, 3).map(([protocol]) => protocol as Protocol);
-        setTopProtocols(top3);
-        
-        setPreviousMonthData(previousAggregated);
+        console.log('Optimized Solana monthly data loaded');
       } catch (error) {
-        console.error('Error fetching monthly metrics:', error);
+        console.error('Error fetching optimized monthly metrics:', error);
         setMonthlyData({});
         setPreviousMonthData({});
         setMonthlyVolumeData({});
@@ -933,11 +851,10 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                 const visibleProtocols = orderedProtocols.filter(p => !hiddenProtocols.has(p));
                 const categoryTotals = orderedMetrics.reduce((acc, metric) => {
                   if (metric.key === 'monthly_growth') {
-                    const currentVolume = visibleProtocols
-                      .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.total_volume_usd || 0), 0);
-                    const previousVolume = visibleProtocols
-                      .reduce((sum, p) => sum + (previousMonthData[p as Protocol]?.total_volume_usd || 0), 0);
-                    acc[metric.key] = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
+                    // Use backend-calculated monthly growth averages
+                    const categoryGrowthSum = visibleProtocols
+                      .reduce((sum, p) => sum + (monthlyData[p as Protocol]?.monthly_growth || 0), 0);
+                    acc[metric.key] = visibleProtocols.length > 0 ? categoryGrowthSum / visibleProtocols.length : 0;
                   } else if (metric.key === 'market_share') {
                     // Calculate category market share based on total volume
                     const categoryVolume = visibleProtocols
@@ -1106,13 +1023,12 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                 {orderedMetrics.map((metric) => {
                   let total: number;
                   if (metric.key === 'monthly_growth') {
-                    const currentVolume = protocols
+                    // Use backend-calculated monthly growth averages for total row
+                    const allProtocolsGrowthSum = protocols
                       .filter(p => p !== 'all')
-                      .reduce((sum, p) => sum + (monthlyData[p]?.total_volume_usd || 0), 0);
-                    const previousVolume = protocols
-                      .filter(p => p !== 'all')
-                      .reduce((sum, p) => sum + (previousMonthData[p]?.total_volume_usd || 0), 0);
-                    total = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
+                      .reduce((sum, p) => sum + (monthlyData[p]?.monthly_growth || 0), 0);
+                    const validProtocolsCount = protocols.filter(p => p !== 'all').length;
+                    total = validProtocolsCount > 0 ? allProtocolsGrowthSum / validProtocolsCount : 0;
                   } else if (metric.key === 'market_share') {
                     total = 1; // 100% by definition for all protocols
                   } else if (metric.key === 'adjusted_volume') {

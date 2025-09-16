@@ -17,6 +17,8 @@ import { AreaChart, Area, ResponsiveContainer, ComposedChart, Bar, Line, XAxis, 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
+import { Settings } from "../lib/settings";
+import { protocolApi } from "../lib/api";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -74,6 +76,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('total_volume_usd');
   const [last7Days, setLast7Days] = useState<Date[]>([]);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
+  const [optimizedWeeklyData, setOptimizedWeeklyData] = useState<any>(null);
   const { toast } = useToast();
 
   const metricOptions = [
@@ -129,100 +132,87 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   useEffect(() => {
-    const fetchLast7DaysData = async () => {
+    const fetchWeeklyData = async () => {
       setLoading(true);
       try {
-        // Generate last 7 days ending with endDate
-        const startDate = subDays(endDate, 6); // 6 days before endDate gives us 7 days total
+        console.log('Fetching optimized weekly data for Solana protocols...');
+        
+        // Generate last 7 days ending with endDate for UI consistency
+        const startDate = subDays(endDate, 6);
         const days = eachDayOfInterval({ start: startDate, end: endDate });
         setLast7Days(days);
         
-        // Fetch data for each day
-        const dailyPromises = days.map(day => getDailyMetrics(day));
-        const dailyResults = await Promise.all(dailyPromises);
+        // Get data type preference
+        const dataType = Settings.getDataTypePreference();
         
-        // Organize data by protocol
+        // Single optimized API call instead of 14+ individual calls
+        const weeklyData = await protocolApi.getWeeklyMetrics(endDate, 'solana', dataType);
+        
+        console.log('Received optimized weekly data:', weeklyData);
+        
+        // Transform backend data to match existing frontend structure
         const organizedData: DailyData = {};
         const organizedVolumeData: VolumeData = {};
+        const prevWeekData: DailyData = {};
+        
+        // Map of metric keys between frontend and backend
+        const metricMapping = {
+          'total_volume_usd': 'volume',
+          'daily_users': 'users', 
+          'numberOfNewUsers': 'newUsers',
+          'daily_trades': 'trades'
+        };
         
         protocols.forEach(protocol => {
           organizedData[protocol] = {};
           organizedVolumeData[protocol] = {};
+          prevWeekData[protocol] = {};
           
-          dailyResults.forEach((dayData, index) => {
-            const dateKey = format(days[index], 'yyyy-MM-dd');
-            if (dayData[protocol]) {
-              organizedData[protocol][dateKey] = dayData[protocol][selectedMetric] || 0;
-              organizedVolumeData[protocol][dateKey] = dayData[protocol]['total_volume_usd'] || 0;
-            } else {
+          const protocolData = weeklyData.weeklyData[protocol];
+          if (protocolData) {
+            // Current week daily data
+            days.forEach(day => {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+              
+              organizedData[protocol][dateKey] = protocolData.dailyMetrics[backendMetricKey]?.[dateKey] || 0;
+              organizedVolumeData[protocol][dateKey] = protocolData.dailyMetrics.volume[dateKey] || 0;
+            });
+          } else {
+            // No data for this protocol, initialize with zeros
+            days.forEach(day => {
+              const dateKey = format(day, 'yyyy-MM-dd');
               organizedData[protocol][dateKey] = 0;
               organizedVolumeData[protocol][dateKey] = 0;
-            }
-          });
+            });
+          }
         });
         
         setDailyData(organizedData);
         setVolumeData(organizedVolumeData);
+        setPreviousWeekData(prevWeekData); // We'll calculate growth from weeklyData
         
-        // Calculate protocol totals for the selected metric and sort for ranking
-        const protocolTotals = protocols.map(protocol => {
-          const total = days.reduce((sum, day) => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            return sum + (organizedData[protocol]?.[dateKey] || 0);
-          }, 0);
-          return { protocol, total };
-        });
+        // Store the optimized weekly data for growth calculations
+        setOptimizedWeeklyData(weeklyData);
         
-        // Sort by total (highest first) and get top 3
-        const sortedProtocols = protocolTotals
-          .filter(p => p.total > 0)
-          .sort((a, b) => b.total - a.total);
+        // Set top protocols from backend response
+        setTopProtocols(weeklyData.topProtocols as Protocol[]);
         
-        const top3 = sortedProtocols.slice(0, 3).map(p => p.protocol as Protocol);
-        setTopProtocols(top3);
-        
-        // Fetch previous week data
-        const prevWeekStart = subDays(startDate, 7);
-        const prevWeekEnd = subDays(endDate, 7);
-        const prevWeekDays = eachDayOfInterval({ start: prevWeekStart, end: prevWeekEnd });
-        
-        try {
-          const prevWeekPromises = prevWeekDays.map(day => getDailyMetrics(day));
-          const prevWeekResults = await Promise.all(prevWeekPromises);
-          
-          // Organize previous week data by protocol
-          const prevWeekOrganizedData: DailyData = {};
-          
-          protocols.forEach(protocol => {
-            prevWeekOrganizedData[protocol] = {};
-            
-            prevWeekResults.forEach((dayData, index) => {
-              const dateKey = format(prevWeekDays[index], 'yyyy-MM-dd');
-              if (dayData[protocol]) {
-                prevWeekOrganizedData[protocol][dateKey] = dayData[protocol][selectedMetric] || 0;
-              } else {
-                prevWeekOrganizedData[protocol][dateKey] = 0;
-              }
-            });
-          });
-          
-          setPreviousWeekData(prevWeekOrganizedData);
-        } catch (prevWeekError) {
-          console.error('Error fetching previous week data:', prevWeekError);
-          setPreviousWeekData({});
-        }
+        console.log('Successfully processed optimized weekly data');
         
       } catch (error) {
-        console.error('Error fetching last 7 days data:', error);
+        console.error('Error fetching optimized weekly data:', error);
         setDailyData({});
+        setVolumeData({});
         setTopProtocols([]);
         setPreviousWeekData({});
+        setOptimizedWeeklyData(null);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchLast7DaysData();
+    fetchWeeklyData();
   }, [endDate, protocols, selectedMetric]);
 
   const handleDateChange = (direction: 'prev' | 'next') => {
@@ -267,103 +257,47 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const calculateWeekOnWeekGrowth = (protocolId: string): number => {
-    const protocolData = dailyData[protocolId];
-    const prevProtocolData = previousWeekData[protocolId];
+    if (!optimizedWeeklyData || !optimizedWeeklyData.weeklyData[protocolId]) return 0;
     
-    if (!protocolData || !prevProtocolData || last7Days.length === 0) return 0;
-
-    // For Daily Active Users, calculate average instead of total
-    if (selectedMetric === 'daily_users') {
-      // Calculate this week's average
-      const thisWeekValues = last7Days.map(day => {
-        const dateKey = format(day, 'yyyy-MM-dd');
-        return protocolData[dateKey] || 0;
-      });
-      const thisWeekAverage = thisWeekValues.reduce((sum, val) => sum + val, 0) / thisWeekValues.length;
-
-      // Calculate last week's average
-      const lastWeekValues = Object.values(prevProtocolData);
-      const lastWeekAverage = lastWeekValues.reduce((sum, val) => sum + val, 0) / lastWeekValues.length;
-
-      if (lastWeekAverage === 0) return 0;
-      return (thisWeekAverage - lastWeekAverage) / lastWeekAverage;
-    }
-
-    // For other metrics, use total
-    const thisWeekTotal = last7Days.reduce((sum, day) => {
-      const dateKey = format(day, 'yyyy-MM-dd');
-      return sum + (protocolData[dateKey] || 0);
-    }, 0);
-
-    const lastWeekTotal = Object.values(prevProtocolData).reduce((sum, value) => sum + value, 0);
-
-    if (lastWeekTotal === 0) return 0;
-    return (thisWeekTotal - lastWeekTotal) / lastWeekTotal;
+    const protocolData = optimizedWeeklyData.weeklyData[protocolId];
+    const metricMapping = {
+      'total_volume_usd': 'volume',
+      'daily_users': 'users', 
+      'numberOfNewUsers': 'newUsers',
+      'daily_trades': 'trades'
+    };
+    
+    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+    return protocolData.growth[backendMetricKey] || 0;
   };
 
   const calculateCategoryWeekOnWeekGrowth = (categoryName: string): number => {
-    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    if (!optimizedWeeklyData) return 0;
     
-    // Check if we have enough data
-    if (last7Days.length === 0 || Object.keys(previousWeekData).length === 0) return 0;
-
-    // For Daily Active Users, calculate average instead of total
-    if (selectedMetric === 'daily_users') {
-      // Calculate this week's average for category
-      const thisWeekDailyTotals = last7Days.map(day => {
-        const dateKey = format(day, 'yyyy-MM-dd');
-        return categoryProtocols.reduce((daySum, protocol) => {
-          const protocolData = dailyData[protocol.id];
-          if (protocolData && protocolData[dateKey] !== undefined) {
-            return daySum + protocolData[dateKey];
-          }
-          return daySum;
-        }, 0);
-      });
-      const thisWeekAverage = thisWeekDailyTotals.reduce((sum, val) => sum + val, 0) / thisWeekDailyTotals.length;
-
-      // Calculate last week's average for category
-      const lastWeekDates = Object.keys(previousWeekData[categoryProtocols[0]?.id] || {});
-      const lastWeekDailyTotals = lastWeekDates.map(dateKey => {
-        return categoryProtocols.reduce((daySum, protocol) => {
-          const prevProtocolData = previousWeekData[protocol.id];
-          if (prevProtocolData && prevProtocolData[dateKey] !== undefined) {
-            return daySum + prevProtocolData[dateKey];
-          }
-          return daySum;
-        }, 0);
-      });
-      const lastWeekAverage = lastWeekDailyTotals.length > 0 
-        ? lastWeekDailyTotals.reduce((sum, val) => sum + val, 0) / lastWeekDailyTotals.length 
-        : 0;
-
-      if (lastWeekAverage === 0) return 0;
-      return (thisWeekAverage - lastWeekAverage) / lastWeekAverage;
-    }
-
-    // For other metrics, use total
-    const thisWeekTotal = last7Days.reduce((weekSum, day) => {
-      const dateKey = format(day, 'yyyy-MM-dd');
-      return weekSum + categoryProtocols.reduce((daySum, protocol) => {
-        const protocolData = dailyData[protocol.id];
-        if (protocolData && protocolData[dateKey] !== undefined) {
-          return daySum + protocolData[dateKey];
-        }
-        return daySum;
-      }, 0);
-    }, 0);
-
-    // Calculate last week's total for category from previousWeekData
-    let lastWeekTotal = 0;
+    const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+    const metricMapping = {
+      'total_volume_usd': 'volume',
+      'daily_users': 'users', 
+      'numberOfNewUsers': 'newUsers',
+      'daily_trades': 'trades'
+    };
+    
+    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+    
+    // Calculate category totals from optimized backend data
+    let categoryCurrentTotal = 0;
+    let categoryPreviousTotal = 0;
+    
     categoryProtocols.forEach(protocol => {
-      const prevProtocolData = previousWeekData[protocol.id];
-      if (prevProtocolData) {
-        lastWeekTotal += Object.values(prevProtocolData).reduce((sum, value) => sum + value, 0);
+      const protocolData = optimizedWeeklyData.weeklyData[protocol.id];
+      if (protocolData) {
+        categoryCurrentTotal += protocolData.weeklyTotals[backendMetricKey] || 0;
+        categoryPreviousTotal += protocolData.previousWeekTotals[backendMetricKey] || 0;
       }
     });
-
-    if (lastWeekTotal === 0) return 0;
-    return (thisWeekTotal - lastWeekTotal) / lastWeekTotal;
+    
+    if (categoryPreviousTotal === 0) return categoryCurrentTotal > 0 ? 1 : 0;
+    return (categoryCurrentTotal - categoryPreviousTotal) / categoryPreviousTotal;
   };
   
   const getCategoryVolumeData = (categoryName: string) => {
@@ -555,68 +489,31 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   };
 
   const calculateTotalWeekOnWeekGrowth = (): number => {
-    if (last7Days.length < 7 || Object.keys(previousWeekData).length === 0) return 0;
-
-    // For Daily Active Users, calculate average instead of total
-    if (selectedMetric === 'daily_users') {
-      // Calculate this week's daily totals
-      const thisWeekDailyTotals = last7Days.map(day => {
-        const dateKey = format(day, 'yyyy-MM-dd');
-        return protocols.reduce((sum, protocol) => {
-          const protocolData = dailyData[protocol];
-          if (protocolData && protocolData[dateKey] !== undefined) {
-            return sum + protocolData[dateKey];
-          }
-          return sum;
-        }, 0);
-      });
-      const thisWeekAverage = thisWeekDailyTotals.reduce((sum, val) => sum + val, 0) / thisWeekDailyTotals.length;
-
-      // Calculate last week's daily totals
-      const lastWeekDates = Object.keys(previousWeekData[protocols[0]] || {});
-      const lastWeekDailyTotals = lastWeekDates.map(dateKey => {
-        return protocols.reduce((sum, protocol) => {
-          const prevProtocolData = previousWeekData[protocol];
-          if (prevProtocolData && prevProtocolData[dateKey] !== undefined) {
-            return sum + prevProtocolData[dateKey];
-          }
-          return sum;
-        }, 0);
-      });
-      const lastWeekAverage = lastWeekDailyTotals.length > 0 
-        ? lastWeekDailyTotals.reduce((sum, val) => sum + val, 0) / lastWeekDailyTotals.length 
-        : 0;
-
-      if (lastWeekAverage === 0) return 0;
-      return (thisWeekAverage - lastWeekAverage) / lastWeekAverage;
-    }
-
-    // For other metrics, use total
-    const thisWeekTotal = last7Days.reduce((weekSum, day) => {
-      const dateKey = format(day, 'yyyy-MM-dd');
-      const dayTotal = protocols.reduce((sum, protocol) => {
-        const protocolData = dailyData[protocol];
-        if (protocolData && protocolData[dateKey] !== undefined) {
-          return sum + protocolData[dateKey];
-        }
-        return sum;
-      }, 0);
-      return weekSum + dayTotal;
-    }, 0);
-
-    // Calculate last week's total
-    let lastWeekTotal = 0;
+    if (!optimizedWeeklyData) return 0;
+    
+    const metricMapping = {
+      'total_volume_usd': 'volume',
+      'daily_users': 'users', 
+      'numberOfNewUsers': 'newUsers',
+      'daily_trades': 'trades'
+    };
+    
+    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+    
+    // Calculate totals from optimized backend data
+    let totalCurrentWeek = 0;
+    let totalPreviousWeek = 0;
+    
     protocols.forEach(protocol => {
-      const prevProtocolData = previousWeekData[protocol];
-      if (prevProtocolData) {
-        lastWeekTotal += Object.values(prevProtocolData).reduce((sum, value) => sum + value, 0);
+      const protocolData = optimizedWeeklyData.weeklyData[protocol];
+      if (protocolData) {
+        totalCurrentWeek += protocolData.weeklyTotals[backendMetricKey] || 0;
+        totalPreviousWeek += protocolData.previousWeekTotals[backendMetricKey] || 0;
       }
     });
-
-    if (lastWeekTotal === 0) return 0;
     
-    // Calculate percentage change
-    return (thisWeekTotal - lastWeekTotal) / lastWeekTotal;
+    if (totalPreviousWeek === 0) return totalCurrentWeek > 0 ? 1 : 0;
+    return (totalCurrentWeek - totalPreviousWeek) / totalPreviousWeek;
   };
 
   const toggleCollapse = (categoryName: string) => {

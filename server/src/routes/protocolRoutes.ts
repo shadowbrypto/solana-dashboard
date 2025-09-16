@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getEVMWeeklyMetrics, getCumulativeVolume } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -93,6 +93,57 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch daily metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/weekly-metrics
+// Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults to 'solana')
+router.get('/weekly-metrics', async (req: Request, res: Response) => {
+  try {
+    const { endDate, dataType, chain } = req.query;
+    
+    if (!endDate || typeof endDate !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'endDate parameter is required and must be in YYYY-MM-DD format' 
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(endDate)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'endDate must be in YYYY-MM-DD format' 
+      });
+    }
+
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid endDate provided' 
+      });
+    }
+
+    const chainFilter = typeof chain === 'string' ? chain : 'solana';
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
+    
+    let weeklyMetrics;
+    if (chainFilter === 'evm') {
+      weeklyMetrics = await getEVMWeeklyMetrics(endDateObj, dataTypeFilter);
+    } else {
+      weeklyMetrics = await getSolanaWeeklyMetrics(endDateObj, dataTypeFilter);
+    }
+    
+    res.json({ success: true, data: weeklyMetrics });
+  } catch (error) {
+    console.error('Error fetching weekly metrics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch weekly metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
@@ -525,69 +576,98 @@ router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/protocols/evm-weekly-metrics
-// Get EVM weekly metrics for all protocols
-router.get('/evm-weekly-metrics', async (req: Request, res: Response) => {
+
+// GET /api/protocols/monthly-metrics
+// Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults to 'solana')
+router.get('/monthly-metrics', async (req: Request, res: Response) => {
   try {
-    const { startDate, endDate, dataType } = req.query;
+    const { endDate, dataType, chain } = req.query;
     
-    if (!startDate || !endDate) {
+    if (!endDate || typeof endDate !== 'string') {
       return res.status(400).json({ 
         success: false, 
-        error: 'startDate and endDate parameters are required' 
+        error: 'endDate parameter is required and must be in YYYY-MM-DD format' 
       });
     }
 
-    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(endDate)) {
       return res.status(400).json({ 
         success: false, 
-        error: 'startDate and endDate must be strings in YYYY-MM-DD format' 
+        error: 'endDate must be in YYYY-MM-DD format' 
       });
     }
 
-    console.log(`Fetching EVM weekly metrics from ${startDate} to ${endDate} with dataType: ${dataType || 'public'}`);
-    const weeklyData = await getEVMWeeklyMetrics(startDate, endDate, typeof dataType === 'string' ? dataType : 'public');
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid endDate provided' 
+      });
+    }
 
-    res.json({ success: true, data: weeklyData });
+    const chainFilter = typeof chain === 'string' ? chain : 'solana';
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
+    
+    let monthlyMetrics;
+    if (chainFilter === 'evm') {
+      monthlyMetrics = await getEVMMonthlyMetrics(endDateObj, dataTypeFilter);
+    } else {
+      monthlyMetrics = await getSolanaMonthlyMetrics(endDateObj, dataTypeFilter);
+    }
+    
+    res.json({ success: true, data: monthlyMetrics });
   } catch (error) {
-    console.error('Error fetching EVM weekly metrics:', error);
+    console.error('Error fetching monthly metrics:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch EVM weekly metrics',
+      error: 'Failed to fetch monthly metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
-// GET /api/protocols/evm-monthly-metrics
-// Get EVM monthly metrics for all protocols
-router.get('/evm-monthly-metrics', async (req: Request, res: Response) => {
+// GET /api/protocols/monthly-insights
+// Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private')
+router.get('/monthly-insights', async (req: Request, res: Response) => {
   try {
-    const { startDate, endDate, dataType } = req.query;
+    const { endDate, dataType } = req.query;
     
-    if (!startDate || !endDate) {
+    if (!endDate || typeof endDate !== 'string') {
       return res.status(400).json({ 
         success: false, 
-        error: 'startDate and endDate parameters are required' 
+        error: 'endDate parameter is required and must be in YYYY-MM-DD format' 
       });
     }
 
-    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(endDate)) {
       return res.status(400).json({ 
         success: false, 
-        error: 'startDate and endDate must be strings in YYYY-MM-DD format' 
+        error: 'endDate must be in YYYY-MM-DD format' 
       });
     }
 
-    console.log(`Fetching EVM monthly metrics from ${startDate} to ${endDate} with dataType: ${dataType || 'public'}`);
-    const monthlyData = await getEVMWeeklyMetrics(startDate, endDate, typeof dataType === 'string' ? dataType : 'public');
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid endDate provided' 
+      });
+    }
 
-    res.json({ success: true, data: monthlyData });
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
+    
+    const monthlyInsights = await getMonthlyInsights(endDateObj, dataTypeFilter);
+    
+    res.json({ success: true, data: monthlyInsights });
   } catch (error) {
-    console.error('Error fetching EVM monthly metrics:', error);
+    console.error('Error fetching monthly insights:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch EVM monthly metrics',
+      error: 'Failed to fetch monthly insights',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

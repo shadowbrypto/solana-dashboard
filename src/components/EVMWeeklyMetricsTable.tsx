@@ -105,76 +105,62 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }, [protocolData, last7Days, hiddenProtocols]);
 
   useEffect(() => {
-    console.log('EVM Weekly useEffect triggered with:', {
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd'),
-      startDateObject: startDate,
-      endDateObject: endDate,
-      currentYear: new Date().getFullYear()
-    });
-
-    const fetchData = async () => {
+    const fetchOptimizedData = async () => {
       setLoading(true);
       try {
-        console.log(`Fetching EVM weekly data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
-        // EVM protocols always use 'public' data type (handled by backend)
-        const data = await protocolApi.getEVMWeeklyMetrics(startDate, endDate, 'public');
-        console.log('Raw API response:', data);
+        console.log('Fetching optimized EVM weekly data...');
         
-        // Fetch previous week data
-        const prevWeekStartDate = subDays(startDate, 7);
-        const prevWeekEndDate = subDays(endDate, 7);
-        let previousWeekData: any = null;
-        try {
-          previousWeekData = await protocolApi.getEVMWeeklyMetrics(prevWeekStartDate, prevWeekEndDate, 'public');
-          console.log('Previous week data:', previousWeekData);
-        } catch (prevWeekError) {
-          console.error('Error fetching previous week data:', prevWeekError);
-        }
+        // Single optimized API call instead of 2 separate calls
+        const optimizedData = await protocolApi.getWeeklyMetrics(endDate, 'evm', 'public');
         
-        // Convert API data to display format
-        const processedData: ProtocolWeeklyData[] = Object.entries(data.dailyVolumes).map(([protocol, dailyVolumes]) => {
-          const totalVolume = Object.values(dailyVolumes).reduce((sum, vol) => sum + vol, 0);
+        console.log('Received optimized EVM weekly data:', optimizedData);
+        
+        // Transform backend data to match existing frontend structure
+        const processedData: ProtocolWeeklyData[] = optimizedData.sortedProtocols.map(protocol => {
+          const protocolWeeklyData = optimizedData.weeklyData[protocol];
           
-          // Calculate previous week total
-          let previousWeekTotal = 0;
-          if (previousWeekData && previousWeekData.dailyVolumes[protocol]) {
-            previousWeekTotal = Object.values(previousWeekData.dailyVolumes[protocol]).reduce((sum: number, vol: any) => sum + vol, 0);
+          if (!protocolWeeklyData) {
+            return {
+              protocol,
+              totalVolume: 0,
+              dailyVolumes: {},
+              chainVolumes: {
+                ethereum: 0,
+                base: 0,
+                bsc: 0,
+                avax: 0,
+                arbitrum: 0
+              },
+              weeklyGrowth: 0,
+              weeklyTrend: [],
+              previousWeekTotal: 0
+            };
           }
           
-          // Use real chain distribution data from API
-          const protocolChainData = data.chainDistribution[protocol] || {};
-          const chainVolumes: ChainVolume = {
-            ethereum: protocolChainData.ethereum || 0,
-            base: protocolChainData.base || 0,
-            bsc: protocolChainData.bsc || 0,
-            avax: protocolChainData.avax || 0,
-            arbitrum: protocolChainData.arbitrum || 0
+          return {
+            protocol,
+            totalVolume: protocolWeeklyData.totalVolume,
+            dailyVolumes: protocolWeeklyData.dailyVolumes,
+            chainVolumes: protocolWeeklyData.chainVolumes,
+            weeklyGrowth: protocolWeeklyData.weeklyGrowth,
+            weeklyTrend: protocolWeeklyData.weeklyTrend,
+            previousWeekTotal: protocolWeeklyData.previousWeekTotal || 0
           };
-          
-          // Calculate weekly growth (compare previous week total vs current week total)
-          const weeklyGrowth = previousWeekTotal > 0 ? (totalVolume - previousWeekTotal) / previousWeekTotal : 0;
-          
-          // Create weekly trend array
-          const dateKeys = Object.keys(dailyVolumes).sort();
-          const weeklyTrend = dateKeys.map(date => dailyVolumes[date] || 0);
-          
-          return { protocol, totalVolume, dailyVolumes, chainVolumes, weeklyGrowth, weeklyTrend, previousWeekTotal };
-        }).sort((a, b) => b.totalVolume - a.totalVolume);
+        });
 
-        console.log('Processed data:', processedData);
+        console.log('Processed optimized data:', processedData);
         setProtocolData(processedData);
-        console.log('EVM weekly data loaded:', processedData.length, 'protocols');
+        console.log('Optimized EVM weekly data loaded:', processedData.length, 'protocols');
       } catch (error) {
-        console.error('Error fetching EVM weekly data:', error);
+        console.error('Error fetching optimized EVM weekly data:', error);
         setProtocolData([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [startDate, endDate]);
+    fetchOptimizedData();
+  }, [endDate]);
 
   const toggleProtocolVisibility = (protocol: string) => {
     setHiddenProtocols(prev => {

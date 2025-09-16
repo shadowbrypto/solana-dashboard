@@ -421,9 +421,9 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                 
                 return (
-                  <TableHead key={day.toISOString()} className="text-center w-[85px] px-2">
+                  <TableHead key={day.toISOString()} className="text-center w-[100px] px-2">
                     <div className="flex flex-col items-center gap-1.5">
-                      <span className="text-sm font-medium">{format(day, 'MMM dd')}</span>
+                      <span className="text-sm font-medium whitespace-nowrap">{format(day, 'MMM dd')}</span>
                       <Badge 
                         variant="outline" 
                         className={`text-xs font-normal px-2 py-0.5 min-w-[36px] justify-center ${

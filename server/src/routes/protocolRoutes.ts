@@ -57,10 +57,10 @@ router.get('/total-stats', async (req: Request, res: Response) => {
 });
 
 // GET /api/protocols/daily-metrics
-// Query params: date (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private')
+// Query params: date (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults based on dataType)
 router.get('/daily-metrics', async (req: Request, res: Response) => {
   try {
-    const { date, dataType } = req.query;
+    const { date, dataType, chain } = req.query;
     
     if (!date || typeof date !== 'string') {
       return res.status(400).json({ 
@@ -86,8 +86,28 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
       });
     }
 
-    const dailyMetrics = await getDailyMetrics(dateObj);
-    res.json({ success: true, data: dailyMetrics });
+    const chainFilter = typeof chain === 'string' ? chain : 'solana';
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
+
+    // Return data differently based on chain
+    if (chainFilter === 'solana') {
+      const dailyMetrics = await getDailyMetrics(dateObj, dataTypeFilter);
+      
+      // Convert to array format that frontend expects
+      const dataArray = Object.entries(dailyMetrics).map(([protocol_name, metrics]) => ({
+        protocol_name,
+        volume_usd: metrics.total_volume_usd,
+        daily_users: metrics.daily_users,
+        new_users: metrics.numberOfNewUsers,
+        trades: metrics.daily_trades,
+        fees_usd: metrics.total_fees_usd
+      }));
+      
+      res.json({ success: true, data: dataArray });
+    } else {
+      // For EVM, we need a different function - for now return empty
+      res.json({ success: true, data: [] });
+    }
   } catch (error) {
     console.error('Error fetching daily metrics:', error);
     res.status(500).json({ 
@@ -514,7 +534,7 @@ router.post('/sync-evm', async (req: Request, res: Response) => {
     console.log('Starting EVM data sync for all protocols...');
     
     // Get all EVM protocols and sync them individually
-    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm'];
+    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm', 'padre_evm'];
     const results = [];
     
     for (const protocol of evmProtocols) {

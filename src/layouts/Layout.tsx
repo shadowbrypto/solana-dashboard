@@ -432,7 +432,6 @@ export function Layout() {
             })}
           </div>
 
-
           {/* Admin Section */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Admin</h3>

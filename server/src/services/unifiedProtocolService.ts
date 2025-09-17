@@ -313,8 +313,14 @@ export class UnifiedProtocolService {
       
       if (protocolData) {
         // Calculate daily growth and weekly trend
-        const dailyGrowth = await this.calculateDailyGrowth(protocolName, params.date, params.chain, params.dataType);
-        const weeklyTrend = await this.calculateWeeklyTrend(protocolName, params.date, params.chain, params.dataType);
+        // For EVM protocols, always pass 'evm' to ensure all chains are included
+        const isEVMProtocol = params.chain === 'evm' || protocolData.chains.some((c: string) => 
+          ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'].includes(c)
+        );
+        const chainForCalc = isEVMProtocol ? 'evm' : params.chain;
+        
+        const dailyGrowth = await this.calculateDailyGrowth(protocolName, params.date, chainForCalc, params.dataType);
+        const weeklyTrend = await this.calculateWeeklyTrend(protocolName, params.date, chainForCalc, params.dataType);
         
         return {
           success: true,
@@ -446,31 +452,135 @@ export class UnifiedProtocolService {
   // Calculate daily growth for a protocol
   private async calculateDailyGrowth(protocolName: string, currentDate: string, chain?: string, dataType?: string): Promise<number> {
     try {
-      const currentDateObj = new Date(currentDate);
-      const previousDateObj = new Date(currentDateObj);
-      previousDateObj.setDate(previousDateObj.getDate() - 1);
+      console.log(`calculateDailyGrowth called with:`, { protocolName, currentDate, chain, dataType });
+      
+      // Parse date more explicitly to avoid timezone issues
+      const [year, month, day] = currentDate.split('-').map(Number);
+      const currentDateObj = new Date(year, month - 1, day); // month is 0-indexed
+      const previousDateObj = new Date(year, month - 1, day - 1);
       const previousDate = format(previousDateObj, 'yyyy-MM-dd');
       
       // Get both current and previous day data in a single query for better performance
       const startDate = format(previousDateObj, 'yyyy-MM-dd');
       const endDate = currentDate;
       
-      const params = { protocol: protocolName, startDate, endDate, chain: chain as any, dataType: dataType as any };
-      const result = await this.getMetrics(params);
+      // CRITICAL: For EVM protocols, we MUST get ALL chain data
+      // Do NOT pass a specific chain filter if it's an EVM protocol
+      const isEVM = chain === 'evm' || (dataType === 'public' && !chain);
+      const queryParams = { 
+        protocol: protocolName, 
+        startDate, 
+        endDate, 
+        chain: isEVM ? 'evm' : chain as any, // Force EVM to get all chains
+        dataType: dataType as any 
+      };
+      
+      console.log(`Growth calculation query params:`, queryParams);
+      
+      // IMPORTANT: Bypass cache for growth calculations to ensure fresh data
+      const cacheKey = UnifiedProtocolService.generateCacheKey('metrics', queryParams);
+      unifiedCache.delete(cacheKey);
+      
+      const result = await this.getMetrics(queryParams);
       
       if (!result.data) return 0;
       
+      // Debug: Show what dates and chains exist in the data
+      const availableDates = [...new Set(result.data.map((row: any) => row.date))].sort();
+      const availableChains = [...new Set(result.data.map((row: any) => row.chain))].sort();
+      const availableProtocols = [...new Set(result.data.map((row: any) => row.protocol_name))];
+      
+      // CRITICAL: Check if we got the right protocol
+      if (availableProtocols.length > 0 && !availableProtocols.includes(protocolName)) {
+        console.error(`PROTOCOL MISMATCH! Requested: ${protocolName}, Got: ${availableProtocols.join(', ')}`);
+      }
+      
+      console.log(`Growth calculation data for ${protocolName}:`, {
+        availableDates,
+        availableChains,
+        availableProtocols,
+        totalRows: result.data.length,
+        chainParam: chain,
+        queryParams
+      });
+      
+      // For EVM protocols, aggregate across all chains properly
+      // IMPORTANT: Also filter by protocol name to ensure we only sum the requested protocol
       const currentVolume = result.data
-        .filter((row: any) => row.date === currentDate)
+        .filter((row: any) => row.date === currentDate && row.protocol_name === protocolName)
         .reduce((sum: number, row: any) => sum + (Number(row.volume_usd) || 0), 0);
       
       const previousVolume = result.data
-        .filter((row: any) => row.date === previousDate)
+        .filter((row: any) => row.date === previousDate && row.protocol_name === protocolName)
         .reduce((sum: number, row: any) => sum + (Number(row.volume_usd) || 0), 0);
       
-      // Calculate growth percentage
-      if (previousVolume === 0) return 0;
-      return (currentVolume - previousVolume) / previousVolume;
+      const growth = previousVolume === 0 ? 0 : (currentVolume - previousVolume) / previousVolume;
+      
+      // CRITICAL DEBUG: Log all protocols to see the actual calculations
+      console.log(`
+========================================
+DAILY GROWTH CALCULATION DETAILS
+========================================
+Protocol: ${protocolName}
+Chain Parameter: ${chain}
+Current Date: ${currentDate}
+Previous Date: ${previousDate}
+Current Volume: $${currentVolume.toLocaleString()}
+Previous Volume: $${previousVolume.toLocaleString()}
+Volume Change: $${(currentVolume - previousVolume).toLocaleString()}
+Growth: ${(growth * 100).toFixed(2)}%
+Expected for Banana Sep 16: -12.6%
+========================================
+      `);
+      
+      // Debug for all protocols to track the issue
+      if (true) {  // Always log for debugging
+        const currentDateRows = result.data.filter((row: any) => row.date === currentDate && row.protocol_name === protocolName);
+        const previousDateRows = result.data.filter((row: any) => row.date === previousDate && row.protocol_name === protocolName);
+        
+        console.log(`${protocolName.toUpperCase()} DETAILED DEBUG:`, {
+          protocolName,
+          chainParam: chain,
+          currentDate,
+          previousDate,
+          currentVolume,
+          previousVolume,
+          growth,
+          growthPercent: (growth * 100).toFixed(1) + '%',
+          currentDateBreakdown: currentDateRows.map((row: any) => ({
+            protocol: row.protocol_name,
+            chain: row.chain,
+            volume: row.volume_usd,
+            date: row.date
+          })),
+          previousDateBreakdown: previousDateRows.map((row: any) => ({
+            protocol: row.protocol_name,
+            chain: row.chain,
+            volume: row.volume_usd,
+            date: row.date
+          })),
+          allProtocolsInData: [...new Set(result.data.map((row: any) => row.protocol_name))],
+          dataRows: result.data.length,
+          queryParams
+        });
+      }
+      
+      console.log(`Daily growth calculation for ${protocolName} (${chain}):`, {
+        currentDate,
+        previousDate,
+        currentVolume,
+        previousVolume,
+        growth,
+        growthPercent: (growth * 100).toFixed(1) + '%',
+        dataRows: result.data.length,
+        dateFilters: {
+          currentDateMatches: result.data.filter((row: any) => row.date === currentDate).length,
+          previousDateMatches: result.data.filter((row: any) => row.date === previousDate).length
+        }
+      });
+      
+      // Return the calculated growth
+      return growth;
     } catch (error) {
       console.error('Error calculating daily growth:', error);
       return 0;
@@ -480,22 +590,63 @@ export class UnifiedProtocolService {
   // Calculate weekly trend for a protocol
   private async calculateWeeklyTrend(protocolName: string, currentDate: string, chain?: string, dataType?: string): Promise<number[]> {
     try {
-      const currentDateObj = new Date(currentDate);
-      const weeklyTrend: number[] = [];
+      console.log(`calculateWeeklyTrend called with:`, { protocolName, currentDate, chain, dataType });
       
-      // Get last 7 days of data
+      // Parse date more explicitly to avoid timezone issues
+      const [year, month, day] = currentDate.split('-').map(Number);
+      const currentDateObj = new Date(year, month - 1, day);
+      
+      // Calculate start date (6 days before current date)
+      const startDateObj = new Date(year, month - 1, day - 6);
+      const startDate = format(startDateObj, 'yyyy-MM-dd');
+      const endDate = currentDate;
+      
+      // CRITICAL: For EVM protocols, we MUST get ALL chain data
+      const isEVM = chain === 'evm' || (dataType === 'public' && !chain);
+      const queryParams = { 
+        protocol: protocolName, 
+        startDate, 
+        endDate, 
+        chain: isEVM ? 'evm' : chain as any, // Force EVM to get all chains
+        dataType: dataType as any 
+      };
+      
+      console.log(`Weekly trend query params:`, queryParams);
+      
+      // IMPORTANT: Bypass cache for trend calculations to ensure fresh data
+      const cacheKey = UnifiedProtocolService.generateCacheKey('metrics', queryParams);
+      unifiedCache.delete(cacheKey);
+      
+      const result = await this.getMetrics(queryParams);
+      
+      if (!result.data) return Array(7).fill(0);
+      
+      // Group data by date and sum volumes for EVM multi-chain protocols
+      const dailyVolumes = new Map<string, number>();
+      
+      result.data.forEach((row: any) => {
+        const date = row.date;
+        const volume = Number(row.volume_usd) || 0;
+        dailyVolumes.set(date, (dailyVolumes.get(date) || 0) + volume);
+      });
+      
+      // Build array for the 7 days in order (oldest to newest)
+      const weeklyTrend: number[] = [];
       for (let i = 6; i >= 0; i--) {
-        const dateObj = new Date(currentDateObj);
-        dateObj.setDate(dateObj.getDate() - i);
+        const dateObj = new Date(year, month - 1, day - i);
         const dateStr = format(dateObj, 'yyyy-MM-dd');
-        
-        const params = { protocol: protocolName, date: dateStr, chain: chain as any, dataType: dataType as any };
-        const result = await this.getMetrics(params);
-        const volume = result.data?.reduce((sum: number, row: any) => 
-          sum + (Number(row.volume_usd) || 0), 0) || 0;
-        
-        weeklyTrend.push(volume);
+        weeklyTrend.push(dailyVolumes.get(dateStr) || 0);
       }
+      
+      console.log(`Weekly trend calculation for ${protocolName} (${chain}):`, {
+        dateRange: `${startDate} to ${endDate}`,
+        chainParam: chain,
+        isEVM,
+        dailyVolumes: Object.fromEntries(dailyVolumes),
+        weeklyTrend,
+        dataRows: result.data.length,
+        chains: [...new Set(result.data.map((row: any) => row.chain))]
+      });
       
       return weeklyTrend;
     } catch (error) {
@@ -508,6 +659,7 @@ export class UnifiedProtocolService {
   static clearCache(pattern?: string): void {
     if (!pattern) {
       unifiedCache.clear();
+      console.log('Unified cache cleared completely');
       return;
     }
     
@@ -519,6 +671,7 @@ export class UnifiedProtocolService {
     });
     
     keysToDelete.forEach(key => unifiedCache.delete(key));
+    console.log(`Cleared ${keysToDelete.length} cache entries matching pattern: ${pattern}`);
   }
 }
 

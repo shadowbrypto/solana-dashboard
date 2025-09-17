@@ -132,7 +132,7 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
         const performances: EVMProtocolPerformance[] = [];
         
         // EVM protocols list
-        const evmProtocols: Protocol[] = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm'];
+        const evmProtocols: Protocol[] = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm', 'padre_evm'];
 
         // Fetch data for current day and historical periods
         const [currentData, currentStandaloneData] = await Promise.all([

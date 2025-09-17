@@ -440,15 +440,18 @@ export function ProtocolManagement() {
     setRefreshingProtocols(prev => new Set([...prev, protocolId]));
     
     try {
+      // Check if this is an EVM protocol to determine data type
+      const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
+      const isEVMProtocol = protocol?.chain === 'evm';
+      
+      // For EVM protocols, always use 'public', otherwise use user preference
+      const dataType = isEVMProtocol ? 'public' : dataTypePreference;
+      
       // Use unified sync endpoint - backend will route EVM protocols automatically
-      const result = await dataSyncApi.syncProtocolData(protocolId, dataTypePreference);
+      const result = await dataSyncApi.syncProtocolData(protocolId, dataType);
       
       // Clear frontend cache for this protocol
       clearProtocolFrontendCache(protocolId);
-      
-      // Check if this is an EVM protocol for different toast message
-      const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
-      const isEVMProtocol = protocol?.chain === 'evm';
       
       toast({
         variant: "success",

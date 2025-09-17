@@ -80,6 +80,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'maestro_evm', name: 'Maestro', icon: MaestroEVMIcon, category: 'EVM', chain: 'evm' },
   { id: 'bloom_evm', name: 'Bloom', icon: BloomEVMIcon, category: 'EVM', chain: 'evm' },
   { id: 'banana_evm', name: 'Banana', icon: BananaEVMIcon, category: 'EVM', chain: 'evm' },
+  { id: 'padre_evm', name: 'Padre', icon: PadreIcon, category: 'EVM', chain: 'evm' },
 ];
 
 // Helper functions
@@ -139,6 +140,8 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'bloom.jpg';
     case 'banana_evm':
       return 'banana.jpg';
+    case 'padre_evm':
+      return 'padre.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

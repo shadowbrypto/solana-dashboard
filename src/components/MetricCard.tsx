@@ -124,10 +124,10 @@ export function MetricCard({
           </div>
 
           {/* Bottom Section - Protocol Name and Data Freshness */}
-          <div className="flex items-center justify-between mt-auto">
+          <div className="flex items-center justify-between mt-auto gap-2">
             {/* Protocol Name */}
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
                 {protocolLogo ? (
                   <img 
                     src={`/assets/logos/${protocolLogo}`}
@@ -154,7 +154,7 @@ export function MetricCard({
 
             {/* Data Freshness Indicator */}
             {dataFreshness && (
-              <div className={`flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border transition-all duration-200 ${
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md border transition-all duration-200 flex-shrink-0 min-w-[50px] max-w-[80px] sm:max-w-none ${
                 dataFreshness.isCurrent 
                   ? 'bg-green-50/50 border-green-200/50 dark:bg-green-950/20 dark:border-green-800/30' 
                   : dataFreshness.isOneDayOld
@@ -163,7 +163,7 @@ export function MetricCard({
                   ? 'bg-red-50/50 border-red-200/50 dark:bg-red-950/20 dark:border-red-800/30'
                   : 'bg-amber-50/50 border-amber-200/50 dark:bg-amber-950/20 dark:border-amber-800/30'
               }`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                   dataFreshness.isCurrent 
                     ? 'bg-green-500' 
                     : dataFreshness.isOneDayOld
@@ -172,7 +172,7 @@ export function MetricCard({
                     ? 'bg-red-500'
                     : 'bg-amber-500'
                 }`} />
-                <span className="text-[8px] sm:text-[10px] font-medium text-muted-foreground">
+                <span className="text-[8px] sm:text-[10px] font-medium text-muted-foreground whitespace-nowrap">
                   {dataFreshness.dateStr}
                 </span>
               </div>

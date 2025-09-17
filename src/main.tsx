@@ -16,6 +16,7 @@ import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import CustomReports from "./pages/CustomReports";
 import { HomePage } from "./pages/HomePage";
+import PadrePage from "./pages/PadrePage";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
@@ -144,6 +145,25 @@ const router = createBrowserRouter([
                 }
               >
                 <CustomReports />
+              </React.Suspense>
+            ),
+          },
+        ],
+      },
+      {
+        path: "evm",
+        children: [
+          {
+            path: "padre",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <PadrePage />
               </React.Suspense>
             ),
           },

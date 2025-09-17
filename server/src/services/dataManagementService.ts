@@ -57,7 +57,8 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "sigma_evm": { queryIds: [5430634], chain: 'evm' },
   "maestro_evm": { queryIds: [3832557], chain: 'evm' },
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
-  "banana_evm": { queryIds: [4750709], chain: 'evm' }
+  "banana_evm": { queryIds: [4750709], chain: 'evm' },
+  "padre_evm": { queryIds: [5793181], chain: 'evm' }
 };
 
 // Private data sources (when dataType is 'private' or default)
@@ -90,7 +91,8 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "sigma_evm": { queryIds: [5430634], chain: 'evm' },
   "maestro_evm": { queryIds: [3832557], chain: 'evm' },
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
-  "banana_evm": { queryIds: [4750709], chain: 'evm' }
+  "banana_evm": { queryIds: [4750709], chain: 'evm' },
+  "padre_evm": { queryIds: [5793181], chain: 'evm' }
 };
 
 // Get protocol sources based on data type

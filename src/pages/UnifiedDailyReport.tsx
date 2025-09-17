@@ -5,10 +5,12 @@ import { DailyMetricsTable } from "../components/DailyMetricsTable";
 import { DailyHighlights } from "../components/DailyHighlights";
 import { EVMDailyMetricsTable } from "../components/EVMDailyMetricsTable";
 import { EVMDailyHighlights } from "../components/EVMDailyHighlights";
+import { MetricCard } from "../components/MetricCard";
 import { getAllProtocols } from "../lib/protocol-categories";
 import { getProtocolsByChain } from "../lib/protocol-config";
 import { Settings } from "../lib/settings";
 import { Skeleton } from "../components/ui/skeleton";
+import { protocolApi } from "../lib/api";
 
 type ChainType = 'solana' | 'evm';
 
@@ -117,6 +119,7 @@ export default function UnifiedDailyReport() {
   const [data, setData] = useState<
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
+  const [axiomRevenue, setAxiomRevenue] = useState<number>(0);
 
   // Memoize protocols based on chain type
   const protocols = useMemo(() => {
@@ -225,6 +228,46 @@ export default function UnifiedDailyReport() {
     setData(mockData);
   }, [date, protocols, chainType]);
 
+  // Fetch Axiom revenue for Trojan missed revenue card
+  useEffect(() => {
+    const fetchAxiomRevenue = async () => {
+      if (chainType !== 'solana') return; // Only fetch for Solana view
+      
+      try {
+        console.log('Fetching Axiom revenue for date:', format(date, 'yyyy-MM-dd'));
+        const dataType = 'private'; // Use private data for Solana
+        
+        // Fetch daily metrics for the specific date
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const response = await fetch(`${API_BASE_URL}/protocols/daily-metrics?date=${dateStr}&chain=solana&dataType=${dataType}`);
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Daily metrics response:', result);
+        
+        if (result.success && result.data) {
+          // Find Axiom in the response data
+          const axiomData = result.data.find((protocol: any) => protocol.protocol_name === 'axiom');
+          const revenue = axiomData?.fees_usd || 0; // Use fees_usd for revenue calculation
+          console.log('Axiom revenue (fees) for', dateStr, ':', revenue);
+          setAxiomRevenue(revenue);
+        } else {
+          console.warn('No data found for date:', dateStr);
+          setAxiomRevenue(0);
+        }
+      } catch (error) {
+        console.error('Error fetching Axiom revenue:', error);
+        setAxiomRevenue(0);
+      }
+    };
+
+    fetchAxiomRevenue();
+  }, [date, chainType]);
+
   // Persist date changes
   useEffect(() => {
     Settings.setLastSelectedDate('daily', date.toISOString());
@@ -330,6 +373,22 @@ export default function UnifiedDailyReport() {
           {chainType === 'solana' ? (
             <>
               <DailyHighlights date={date} />
+              
+              {/* Trojan Missed Revenue Card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-1">
+                  <MetricCard
+                    title="Trojan Missed Revenue Opportunity"
+                    value={`$${Math.round(axiomRevenue * 0.5).toLocaleString()}`}
+                    description={`50% of Axiom's daily fees ($${Math.round(axiomRevenue).toLocaleString()})`}
+                    type="volume"
+                    protocolName="Trojan"
+                    protocolLogo="trojan.jpg"
+                    latestDate={date}
+                  />
+                </div>
+              </div>
+              
               <DailyMetricsTable protocols={protocols} date={date} onDateChange={setDate} />
             </>
           ) : (

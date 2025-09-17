@@ -277,19 +277,24 @@ const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, 
     value 
   }));
 
-  // Calculate trend direction
-  const firstHalf = data.slice(0, Math.ceil(data.length / 2));
-  const secondHalf = data.slice(Math.ceil(data.length / 2));
-  const firstAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
-  
-  let trendColor = '#6B7280'; // neutral gray
-  if (secondAvg > firstAvg * 1.05) trendColor = '#22c55e'; // green for upward
-  else if (secondAvg < firstAvg * 0.95) trendColor = '#ef4444'; // red for downward
+  // Debug log to see actual growth values
+  if (Math.abs(growth) > 0.05) { // Log significant growth values
+    console.log(`Growth data:`, { 
+      growth, 
+      growthPercent: (growth * 100).toFixed(2) + '%',
+      isPositive: growth >= 0
+    });
+  }
 
-  const isNeutral = Math.abs(growth) < 0.0001; // Less than 0.01% - more sensitive
+  // Use daily growth to determine area chart color (should match growth badge)
+  const isNeutral = Math.abs(growth) < 0.0001; // Less than 0.01%
   const isPositive = growth >= 0;
   const absPercentage = Math.abs(growth * 100);
+  
+  let trendColor = '#6B7280'; // neutral gray
+  if (!isNeutral) {
+    trendColor = isPositive ? '#22c55e' : '#ef4444'; // green for positive, red for negative
+  }
 
   return (
     <div className="flex items-center justify-between w-full">

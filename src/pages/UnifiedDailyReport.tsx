@@ -6,6 +6,7 @@ import { DailyHighlights } from "../components/DailyHighlights";
 import { EVMDailyMetricsTable } from "../components/EVMDailyMetricsTable";
 import { EVMDailyHighlights } from "../components/EVMDailyHighlights";
 import { MetricCard } from "../components/MetricCard";
+import { MetricCardSkeleton } from "../components/MetricCardSkeleton";
 import { getAllProtocols } from "../lib/protocol-categories";
 import { getProtocolsByChain } from "../lib/protocol-config";
 import { Settings } from "../lib/settings";
@@ -120,6 +121,7 @@ export default function UnifiedDailyReport() {
     Record<string, Record<Protocol, ProtocolMetrics>>
   >({});
   const [axiomRevenue, setAxiomRevenue] = useState<number>(0);
+  const [axiomLoading, setAxiomLoading] = useState(false);
 
   // Memoize protocols based on chain type
   const protocols = useMemo(() => {
@@ -231,8 +233,13 @@ export default function UnifiedDailyReport() {
   // Fetch Axiom revenue for Trojan missed revenue card
   useEffect(() => {
     const fetchAxiomRevenue = async () => {
-      if (chainType !== 'solana') return; // Only fetch for Solana view
+      if (chainType !== 'solana') {
+        setAxiomRevenue(0);
+        setAxiomLoading(false);
+        return;
+      }
       
+      setAxiomLoading(true);
       try {
         console.log('Fetching Axiom revenue for date:', format(date, 'yyyy-MM-dd'));
         const dataType = 'private'; // Use private data for Solana
@@ -262,6 +269,8 @@ export default function UnifiedDailyReport() {
       } catch (error) {
         console.error('Error fetching Axiom revenue:', error);
         setAxiomRevenue(0);
+      } finally {
+        setAxiomLoading(false);
       }
     };
 
@@ -377,16 +386,24 @@ export default function UnifiedDailyReport() {
               {/* Trojan Missed Revenue Card */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-1">
-                  <MetricCard
-                    title="Trojan Missed Revenue Opportunity"
-                    value={axiomRevenue > 0 ? Math.round(axiomRevenue * 0.5) : 0}
-                    description={axiomRevenue > 0 ? `50% of Axiom's daily fees ($${axiomRevenue.toFixed(2)})` : `Calculating from Axiom fees... (Current: $${axiomRevenue})`}
-                    type="volume"
-                    prefix="$"
-                    protocolName="Trojan"
-                    protocolLogo="trojan.jpg"
-                    latestDate={date}
-                  />
+                  {axiomLoading ? (
+                    <MetricCardSkeleton
+                      title="Trojan Missed Revenue Opportunity"
+                      type="volume"
+                      protocolName="Trojan"
+                    />
+                  ) : (
+                    <MetricCard
+                      title="Trojan Missed Revenue Opportunity"
+                      value={axiomRevenue > 0 ? Math.round(axiomRevenue * 0.5) : 0}
+                      description={axiomRevenue > 0 ? `50% of Axiom's daily fees ($${axiomRevenue.toFixed(2)})` : `Calculating from Axiom fees... (Current: $${axiomRevenue})`}
+                      type="volume"
+                      prefix="$"
+                      protocolName="Trojan"
+                      protocolLogo="trojan.jpg"
+                      latestDate={date}
+                    />
+                  )}
                 </div>
               </div>
               

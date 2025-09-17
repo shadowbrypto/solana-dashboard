@@ -1332,22 +1332,22 @@ export async function getSolanaDailyHighlights(date: Date, dataType: string = 'p
       
       // Calculate 7-day trends
       if (data.historical7d.length > 0) {
-        const avg7dVolume = data.historical7d.reduce((sum, d) => sum + d.total_volume_usd, 0) / data.historical7d.length;
+        const avg7dVolume = data.historical7d.reduce((sum: number, d: any) => sum + d.total_volume_usd, 0) / data.historical7d.length;
         data.trends.volume7d = avg7dVolume > 0 ? (current.total_volume_usd - avg7dVolume) / avg7dVolume : 0;
         
-        const avg7dUsers = data.historical7d.reduce((sum, d) => sum + d.daily_users, 0) / data.historical7d.length;
+        const avg7dUsers = data.historical7d.reduce((sum: number, d: any) => sum + d.daily_users, 0) / data.historical7d.length;
         data.trends.users7d = avg7dUsers > 0 ? (current.daily_users - avg7dUsers) / avg7dUsers : 0;
         
         // Calculate consistency (high volume + low volatility)
         const volumeVariance = data.historical7d.length > 1 ? 
-          data.historical7d.reduce((sum, d) => sum + Math.pow(d.total_volume_usd - avg7dVolume, 2), 0) / data.historical7d.length : 0;
+          data.historical7d.reduce((sum: number, d: any) => sum + Math.pow(d.total_volume_usd - avg7dVolume, 2), 0) / data.historical7d.length : 0;
         const coefficientOfVariation = avg7dVolume > 0 ? Math.sqrt(volumeVariance) / avg7dVolume : 1;
         data.trends.consistency = avg7dVolume * (1 / (1 + coefficientOfVariation));
       }
       
       // Calculate 30-day trends
       if (data.historical30d.length > 0) {
-        const avg30dVolume = data.historical30d.reduce((sum, d) => sum + d.total_volume_usd, 0) / data.historical30d.length;
+        const avg30dVolume = data.historical30d.reduce((sum: number, d: any) => sum + d.total_volume_usd, 0) / data.historical30d.length;
         data.trends.volume30d = avg30dVolume > 0 ? (current.total_volume_usd - avg30dVolume) / avg30dVolume : 0;
       }
     });
@@ -1413,7 +1413,7 @@ export async function getSolanaDailyHighlights(date: Date, dataType: string = 'p
         current.trends.consistency > best.trends.consistency ? current : best
       );
       
-      const avg7dVolume = mostReliable.historical7d.reduce((sum, d) => sum + d.total_volume_usd, 0) / mostReliable.historical7d.length;
+      const avg7dVolume = mostReliable.historical7d.reduce((sum: number, d: any) => sum + d.total_volume_usd, 0) / mostReliable.historical7d.length;
       insights.push({
         type: 'info',
         title: 'Reliable High Performer',

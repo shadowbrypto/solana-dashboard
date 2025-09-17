@@ -15,7 +15,7 @@ import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
-import { DatePicker } from "./DatePicker";
+import { DateNavigator } from "./DateNavigator";
 import { protocolApi } from "../lib/api";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
@@ -804,8 +804,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               </button>
             </div>
           </div>
-          <div className="w-full sm:w-[240px] flex sm:justify-end">
-            <DatePicker date={date} onDateChange={handleDateChange} />
+          <div className="w-full sm:w-auto flex sm:justify-end">
+            <DateNavigator date={date} onDateChange={handleDateChange} />
           </div>
         </div>
 

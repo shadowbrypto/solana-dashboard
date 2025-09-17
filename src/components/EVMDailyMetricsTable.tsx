@@ -14,7 +14,7 @@ import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Badge } from "./ui/badge";
-import { DatePicker } from "./DatePicker";
+import { DateNavigator } from "./DateNavigator";
 import { useToast } from "../hooks/use-toast";
 import { Settings } from "../lib/settings";
 import { protocolApi } from "../lib/api";
@@ -421,8 +421,8 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
             </button>
           </div>
         </div>
-        <div className="w-[240px]">
-          <DatePicker date={date} onDateChange={handleDateChange} />
+        <div className="w-auto">
+          <DateNavigator date={date} onDateChange={handleDateChange} />
         </div>
       </div>
 

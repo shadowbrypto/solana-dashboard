@@ -382,6 +382,7 @@ export default function UnifiedDailyReport() {
                     value={axiomRevenue > 0 ? Math.round(axiomRevenue * 0.5) : 0}
                     description={axiomRevenue > 0 ? `50% of Axiom's daily fees ($${axiomRevenue.toFixed(2)})` : `Calculating from Axiom fees... (Current: $${axiomRevenue})`}
                     type="volume"
+                    prefix="$"
                     protocolName="Trojan"
                     protocolLogo="trojan.jpg"
                     latestDate={date}

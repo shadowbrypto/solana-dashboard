@@ -118,6 +118,7 @@ export function MetricCard({
           <div className="flex-1 flex items-center justify-center py-2 sm:py-4">
             <div className="text-center">
               <div className="text-2xl sm:text-4xl lg:text-5xl font-semibold font-mono tracking-tight bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+                {prefix && (typeof value === 'number' ? value !== 0 : true) && prefix}
                 {typeof value === 'number' ? formatNumber(value) : value}
               </div>
             </div>

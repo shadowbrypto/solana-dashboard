@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -89,30 +89,66 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
     const chainFilter = typeof chain === 'string' ? chain : 'solana';
     const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
 
-    // Return data differently based on chain
-    if (chainFilter === 'solana') {
-      const dailyMetrics = await getDailyMetrics(dateObj, dataTypeFilter);
-      
-      // Convert to array format that frontend expects
-      const dataArray = Object.entries(dailyMetrics).map(([protocol_name, metrics]) => ({
-        protocol_name,
-        volume_usd: metrics.total_volume_usd,
-        daily_users: metrics.daily_users,
-        new_users: metrics.numberOfNewUsers,
-        trades: metrics.daily_trades,
-        fees_usd: metrics.total_fees_usd
-      }));
-      
-      res.json({ success: true, data: dataArray });
+    // Use the new optimized functions for both chains
+    let dailyMetrics;
+    if (chainFilter === 'evm') {
+      dailyMetrics = await getEVMDailyMetrics(dateObj, dataTypeFilter);
     } else {
-      // For EVM, we need a different function - for now return empty
-      res.json({ success: true, data: [] });
+      dailyMetrics = await getSolanaDailyMetrics(dateObj, dataTypeFilter);
     }
+    
+    res.json({ success: true, data: dailyMetrics });
   } catch (error) {
     console.error('Error fetching daily metrics:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch daily metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/daily-highlights-sol
+// Query params: date (required, format: YYYY-MM-DD), dataType (optional, 'private' or 'public', defaults to 'private')
+router.get('/daily-highlights-sol', async (req: Request, res: Response) => {
+  try {
+    const { date, dataType } = req.query;
+    
+    if (!date || typeof date !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Date parameter is required and must be in YYYY-MM-DD format' 
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Date must be in YYYY-MM-DD format' 
+      });
+    }
+
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid date provided' 
+      });
+    }
+
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
+    
+    console.log(`Fetching Solana daily highlights for date: ${date}, dataType: ${dataTypeFilter}`);
+    const highlights = await getSolanaDailyHighlights(dateObj, dataTypeFilter);
+    
+    res.json({ success: true, data: highlights });
+  } catch (error) {
+    console.error('Error fetching Solana daily highlights:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch daily highlights',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
@@ -437,6 +473,7 @@ router.get('/evm-daily/:protocol', async (req: Request, res: Response) => {
     });
   }
 });
+
 
 // GET /api/protocols/health
 router.get('/health', (req: Request, res: Response) => {

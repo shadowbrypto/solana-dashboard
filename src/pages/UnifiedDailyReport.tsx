@@ -249,10 +249,10 @@ export default function UnifiedDailyReport() {
         const result = await response.json();
         console.log('Daily metrics response:', result);
         
-        if (result.success && result.data) {
-          // Find Axiom in the response data
-          const axiomData = result.data.find((protocol: any) => protocol.protocol_name === 'axiom');
-          const revenue = axiomData?.fees_usd || 0; // Use fees_usd for revenue calculation
+        if (result.success && result.data && result.data.protocols) {
+          // Access Axiom from the protocols object
+          const axiomData = result.data.protocols.axiom;
+          const revenue = axiomData?.fees || 0; // Use fees for revenue calculation (API returns 'fees', not 'fees_usd')
           console.log('Axiom revenue (fees) for', dateStr, ':', revenue);
           setAxiomRevenue(revenue);
         } else {
@@ -379,8 +379,8 @@ export default function UnifiedDailyReport() {
                 <div className="md:col-span-1">
                   <MetricCard
                     title="Trojan Missed Revenue Opportunity"
-                    value={`$${Math.round(axiomRevenue * 0.5).toLocaleString()}`}
-                    description={`50% of Axiom's daily fees ($${Math.round(axiomRevenue).toLocaleString()})`}
+                    value={axiomRevenue > 0 ? Math.round(axiomRevenue * 0.5) : 0}
+                    description={axiomRevenue > 0 ? `50% of Axiom's daily fees ($${axiomRevenue.toFixed(2)})` : `Calculating from Axiom fees... (Current: $${axiomRevenue})`}
                     type="volume"
                     protocolName="Trojan"
                     protocolLogo="trojan.jpg"

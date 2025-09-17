@@ -17,6 +17,7 @@ import { Badge } from "./ui/badge";
 import { DatePicker } from "./DatePicker";
 import { useToast } from "../hooks/use-toast";
 import { Settings } from "../lib/settings";
+import { protocolApi } from "../lib/api";
 // @ts-ignore
 import domtoimage from "dom-to-image";
 
@@ -95,182 +96,6 @@ const getGrowthBadgeClasses = (growth: number): string => {
 };
 
 
-
-const fetchStandaloneChainVolumes = async (date: Date): Promise<{avax: number, arbitrum: number}> => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const dateStr = format(date, 'yyyy-MM-dd');
-  
-  try {
-    const [avaxResponse, arbResponse] = await Promise.all([
-      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=avax&dataType=public`),
-      fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=arbitrum&dataType=public`)
-    ]);
-    
-    const avaxData = avaxResponse.ok ? await avaxResponse.json() : null;
-    const arbData = arbResponse.ok ? await arbResponse.json() : null;
-    
-    return {
-      avax: avaxData?.success ? avaxData.data.totalVolume || 0 : 0,
-      arbitrum: arbData?.success ? arbData.data.totalVolume || 0 : 0
-    };
-  } catch (error) {
-    console.error('Failed to fetch standalone chain volumes:', error);
-    return { avax: 0, arbitrum: 0 };
-  }
-};
-
-const fetchEVMDailyData = async (protocols: Protocol[], date: Date, includePreviousDay: boolean = false): Promise<{ current: EVMProtocolData[], previous?: EVMProtocolData[], standaloneVolumes?: { current: {avax: number, arbitrum: number}, previous?: {avax: number, arbitrum: number} } }> => {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const dateStr = format(date, 'yyyy-MM-dd');
-  const previousDateStr = format(subDays(date, 1), 'yyyy-MM-dd');
-  const dataType = 'public'; // Always use public for EVM data
-  
-  console.log(`Fetching EVM data for ${protocols.length} protocols on ${dateStr}`);
-  
-  // Fetch data for all EVM protocols for the selected date
-  const protocolDataPromises = protocols.filter(p => p !== 'all').map(async (protocol) => {
-    const cleanProtocol = protocol.replace('_evm', '');
-    
-    try {
-      console.log(`Fetching data for ${cleanProtocol} on ${dateStr}`);
-      
-      // Use unified API endpoint
-      const protocolResponse = await fetch(`${API_BASE_URL}/unified/daily?date=${dateStr}&chain=evm&protocol=${cleanProtocol}&dataType=${dataType}`);
-      
-      if (!protocolResponse.ok) {
-        throw new Error(`API returned ${protocolResponse.status}: ${protocolResponse.statusText}`);
-      }
-      
-      const result = await protocolResponse.json();
-      
-      if (result.success && result.data) {
-        console.log(`Successfully fetched ${cleanProtocol} data:`, result.data);
-        
-        return {
-          protocol,
-          totalVolume: result.data.totalVolume || 0,
-          chainVolumes: {
-            ethereum: result.data.chainVolumes?.ethereum || 0,
-            base: result.data.chainVolumes?.base || 0,
-            bsc: result.data.chainVolumes?.bsc || 0,
-            avax: result.data.chainVolumes?.avax || result.data.chainVolumes?.avalanche || 0,
-            arbitrum: result.data.chainVolumes?.arbitrum || result.data.chainVolumes?.arb || 0
-          },
-          dailyGrowth: result.data.dailyGrowth || 0,
-          weeklyTrend: result.data.weeklyTrend || Array(7).fill(0)
-        };
-      } else {
-        throw new Error(`API returned success:false - ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch real data for ${cleanProtocol}:`, error);
-      
-      // Return empty data if API fails - no fake data
-      return {
-        protocol,
-        totalVolume: 0,
-        chainVolumes: {
-          ethereum: 0,
-          base: 0,
-          bsc: 0,
-          avax: 0,
-          arbitrum: 0
-        },
-        dailyGrowth: 0,
-        weeklyTrend: Array(7).fill(0)
-      };
-    }
-  });
-  
-  const protocolData = await Promise.all(protocolDataPromises);
-  
-  console.log(`Fetched data for ${protocolData.length} protocols`);
-  
-  // Fetch standalone chain volumes
-  const currentStandaloneVolumes = await fetchStandaloneChainVolumes(date);
-  
-  // If we need previous day data, fetch it
-  if (includePreviousDay) {
-    const previousDataPromises = protocols.filter(p => p !== 'all').map(async (protocol) => {
-      const cleanProtocol = protocol.replace('_evm', '');
-      
-      try {
-        const protocolResponse = await fetch(`${API_BASE_URL}/unified/daily?date=${previousDateStr}&chain=evm&protocol=${cleanProtocol}&dataType=${dataType}`);
-        
-        if (!protocolResponse.ok) {
-          throw new Error(`API returned ${protocolResponse.status}`);
-        }
-        
-        const result = await protocolResponse.json();
-        
-        if (result.success && result.data) {
-          return {
-            protocol,
-            totalVolume: result.data.totalVolume || 0,
-            chainVolumes: {
-              ethereum: result.data.chainVolumes?.ethereum || 0,
-              base: result.data.chainVolumes?.base || 0,
-              bsc: result.data.chainVolumes?.bsc || 0,
-              avax: result.data.chainVolumes?.avax || result.data.chainVolumes?.avalanche || 0,
-              arbitrum: result.data.chainVolumes?.arbitrum || result.data.chainVolumes?.arb || 0
-            },
-            dailyGrowth: result.data.dailyGrowth || 0,
-            weeklyTrend: result.data.weeklyTrend || Array(7).fill(0)
-          };
-        } else {
-          return {
-            protocol,
-            totalVolume: 0,
-            chainVolumes: {
-              ethereum: 0,
-              base: 0,
-              bsc: 0,
-              avax: 0,
-              arbitrum: 0
-            },
-            dailyGrowth: 0,
-            weeklyTrend: Array(7).fill(0)
-          };
-        }
-      } catch (error) {
-        return {
-          protocol,
-          totalVolume: 0,
-          chainVolumes: {
-            ethereum: 0,
-            base: 0,
-            bsc: 0,
-            avax: 0,
-            arbitrum: 0
-          },
-          dailyGrowth: 0,
-          weeklyTrend: Array(7).fill(0)
-        };
-      }
-    });
-    
-    const previousData = await Promise.all(previousDataPromises);
-    const previousStandaloneVolumes = await fetchStandaloneChainVolumes(subDays(date, 1));
-    
-    return { 
-      current: protocolData, 
-      previous: previousData,
-      standaloneVolumes: {
-        current: currentStandaloneVolumes,
-        previous: previousStandaloneVolumes
-      }
-    };
-  }
-  
-  return { 
-    current: protocolData,
-    standaloneVolumes: {
-      current: currentStandaloneVolumes
-    }
-  };
-};
-
-
 const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, growth }) => {
   const chartData = data.map((value, index) => ({ 
     day: index, 
@@ -338,12 +163,17 @@ const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, 
 
 export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDailyMetricsTableProps) {
   const [evmData, setEvmData] = useState<EVMProtocolData[]>([]);
-  const [previousDayData, setPreviousDayData] = useState<EVMProtocolData[]>([]);
-  const [standaloneVolumes, setStandaloneVolumes] = useState<{ current: {avax: number, arbitrum: number}, previous?: {avax: number, arbitrum: number} }>({ current: { avax: 0, arbitrum: 0 } });
+  const [standaloneVolumes, setStandaloneVolumes] = useState<{ current: {avax: number, arbitrum: number} }>({ current: { avax: 0, arbitrum: 0 } });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const [backendTotals, setBackendTotals] = useState<{
+    totalVolume: number;
+    chainTotals: Record<string, number>;
+    totalGrowth: number;
+    totalWeeklyTrend: number[];
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -352,35 +182,54 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       setError(null);
       
       try {
-        const result = await fetchEVMDailyData(protocols, date, true);
+        // Use the new optimized API endpoint - EVM always uses 'public' data type
+        const dataType = 'public';
+        console.log('Calling getDailyMetricsOptimized with:', { date: date.toISOString().split('T')[0], chain: 'evm', dataType });
+        const optimizedData = await protocolApi.getDailyMetricsOptimized(date, 'evm', dataType);
         
-        setEvmData(result.current);
-        setPreviousDayData(result.previous || []);
-        setStandaloneVolumes(result.standaloneVolumes || { current: { avax: 0, arbitrum: 0 } });
+        // Transform the optimized data to match the component's data structure
+        const transformedData: EVMProtocolData[] = Object.entries(optimizedData.protocols).map(([protocolName, data]) => ({
+          protocol: (protocolName + '_evm') as Protocol,
+          totalVolume: data.totalVolume,
+          chainVolumes: data.chainVolumes as ChainVolume,
+          dailyGrowth: data.dailyGrowth,
+          weeklyTrend: data.weeklyTrend
+        }));
         
-        // Set top 3 protocols based on volume
-        const sortedByVolume = result.current
-          .filter(d => d.totalVolume > 0)
-          .sort((a, b) => b.totalVolume - a.totalVolume);
-        const top3 = sortedByVolume.slice(0, 3).map(d => d.protocol);
-        setTopProtocols(top3);
+        console.log('Backend protocols received:', Object.keys(optimizedData.protocols));
+        console.log('Transformed protocol data:', transformedData);
+        console.log('Expected protocols from props:', protocols);
+        
+        setEvmData(transformedData);
+        setStandaloneVolumes({ current: optimizedData.standaloneChains });
+        setBackendTotals(optimizedData.totals);
+        
+        // Set top protocols from the backend response
+        setTopProtocols(optimizedData.topProtocols.map(p => (p + '_evm') as Protocol));
       } catch (err) {
         console.error('Error loading EVM daily data:', err);
         setError('Failed to load data from database');
-        setEvmData([]); // Show empty state on error
+        setEvmData([]);
         setTopProtocols([]);
+        setBackendTotals(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [protocols, date]);
+  }, [date]);
 
   const chains = Object.keys(chainNames) as (keyof ChainVolume)[];
 
   // Calculate totals (excluding hidden protocols)
   const totals = useMemo(() => {
+    // If we have backend totals and no protocols are hidden, use them directly
+    if (backendTotals && hiddenProtocols.size === 0) {
+      return backendTotals;
+    }
+    
+    // Otherwise, calculate totals based on visible protocols only
     const visibleData = evmData.filter(data => !hiddenProtocols.has(data.protocol));
     const totalVolume = visibleData.reduce((sum, data) => sum + data.totalVolume, 0);
     
@@ -390,19 +239,14 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       return acc;
     }, {} as any);
     
-    // Calculate total growth based on previous day total volume (including standalone chains)
+    // Calculate total growth - if some protocols are hidden, we can't use backend's total growth
     let totalGrowth = 0;
-    if (previousDayData.length > 0 && standaloneVolumes.previous) {
-      const previousProtocolVolume = previousDayData
-        .filter(data => !hiddenProtocols.has(data.protocol))
-        .reduce((sum, data) => sum + data.totalVolume, 0);
-      
-      const previousTotalVolume = previousProtocolVolume + standaloneVolumes.previous.avax + standaloneVolumes.previous.arbitrum;
-      const currentTotalVolume = totalVolume + standaloneVolumes.current.avax + standaloneVolumes.current.arbitrum;
-      
-      if (previousTotalVolume > 0) {
-        totalGrowth = (currentTotalVolume - previousTotalVolume) / previousTotalVolume;
-      }
+    if (hiddenProtocols.size > 0 && visibleData.length > 0) {
+      // Calculate average growth of visible protocols
+      const growthSum = visibleData.reduce((sum, data) => sum + data.dailyGrowth, 0);
+      totalGrowth = growthSum / visibleData.length;
+    } else if (backendTotals) {
+      totalGrowth = backendTotals.totalGrowth;
     }
 
     // Calculate total weekly trend (sum across all visible protocols for each day)
@@ -418,7 +262,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
       totalGrowth,
       totalWeeklyTrend
     };
-  }, [evmData, previousDayData, hiddenProtocols, standaloneVolumes]);
+  }, [evmData, hiddenProtocols, backendTotals]);
 
   const handleDateChange = (newDate?: Date) => {
     if (newDate) {

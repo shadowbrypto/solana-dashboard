@@ -297,6 +297,37 @@ export const protocolApi = {
     
     const endpoint = `/protocols/monthly-insights?${params.toString()}`;
     return apiRequest(endpoint);
+  },
+
+  // Get daily metrics (unified endpoint for both Solana and EVM)
+  async getDailyMetricsOptimized(date: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const params = new URLSearchParams({
+      date: dateStr,
+      chain: chain
+    });
+    
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+    
+    const endpoint = `/protocols/daily-metrics?${params.toString()}`;
+    return apiRequest(endpoint);
+  },
+
+  // Get daily highlights for Solana (optimized single call)
+  async getDailyHighlightsSol(date: Date, dataType?: 'private' | 'public'): Promise<any> {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const params = new URLSearchParams({
+      date: dateStr
+    });
+    
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+    
+    const endpoint = `/protocols/daily-highlights-sol?${params.toString()}`;
+    return apiRequest(endpoint);
   }
 };
 

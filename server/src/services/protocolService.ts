@@ -1044,7 +1044,7 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
     // Fetch projected volume data for the date
     const { data: projectedData, error: projectedError } = await supabase
       .from('projected_stats')
-      .select('protocol_name, volume_usd')
+      .select('protocol_name, volume_usd, fees_usd')
       .eq('formatted_day', dateStr);
       
     // Don't throw error for projected data - it's optional
@@ -1066,7 +1066,8 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
         dailyGrowth: 0,
         weeklyTrend: Array(7).fill(0),
         marketShare: 0,
-        projectedVolume: 0
+        projectedVolume: 0,
+        projectedFees: 0
       };
     });
     
@@ -1086,7 +1087,8 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
             dailyGrowth: 0,
             weeklyTrend: Array(7).fill(0),
             marketShare: 0,
-            projectedVolume: 0
+            projectedVolume: 0,
+            projectedFees: 0
           };
         }
         
@@ -1104,6 +1106,7 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
         const protocol = record.protocol_name;
         if (protocolData[protocol]) {
           protocolData[protocol].projectedVolume = Number(record.volume_usd) || 0;
+          protocolData[protocol].projectedFees = Number(record.fees_usd) || 0;
         }
       });
     }

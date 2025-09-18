@@ -253,7 +253,7 @@ export const protocolApi = {
 
 
   // Get weekly metrics (unified endpoint for both Solana and EVM)
-  async getWeeklyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+  async getWeeklyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public', metric?: string): Promise<any> {
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const params = new URLSearchParams({
       endDate: endDateStr,
@@ -262,6 +262,10 @@ export const protocolApi = {
     
     if (dataType) {
       params.append('dataType', dataType);
+    }
+    
+    if (metric) {
+      params.append('metric', metric);
     }
     
     const endpoint = `/protocols/weekly-metrics?${params.toString()}`;

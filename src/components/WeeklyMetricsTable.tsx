@@ -145,8 +145,18 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         // Get data type preference
         const dataType = Settings.getDataTypePreference();
         
+        // Map frontend metric keys to backend metric keys for ranking
+        const rankingMetricMapping = {
+          'total_volume_usd': 'volume',
+          'daily_users': 'users', 
+          'numberOfNewUsers': 'newUsers',
+          'daily_trades': 'trades'
+        };
+        
+        const backendMetric = rankingMetricMapping[selectedMetric] || 'volume';
+        
         // Single optimized API call instead of 14+ individual calls
-        const weeklyData = await protocolApi.getWeeklyMetrics(endDate, 'solana', dataType);
+        const weeklyData = await protocolApi.getWeeklyMetrics(endDate, 'solana', dataType, backendMetric);
         
         console.log('Received optimized weekly data:', weeklyData);
         

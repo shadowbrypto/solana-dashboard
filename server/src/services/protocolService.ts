@@ -2603,7 +2603,7 @@ export async function getCumulativeVolume(protocolName: string, endDate: Date, d
 /**
  * Get Solana weekly metrics with growth calculations (optimized single query)
  */
-export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = 'private') {
+export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = 'private', rankingMetric: string = 'volume') {
   try {
     // Calculate start dates for current and previous week
     const startDate = new Date(endDate);
@@ -2752,9 +2752,20 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
       }
     });
 
-    // Sort protocols by volume and get top 3
+    // Sort protocols by the specified ranking metric and get top 3
     const topProtocols = protocolTotals
-      .sort((a, b) => b.volume - a.volume)
+      .sort((a, b) => {
+        switch (rankingMetric) {
+          case 'users':
+            return b.users - a.users;
+          case 'newUsers':
+            return b.newUsers - a.newUsers;
+          case 'trades':
+            return b.trades - a.trades;
+          default: // 'volume'
+            return b.volume - a.volume;
+        }
+      })
       .slice(0, 3)
       .map(p => p.protocol);
 

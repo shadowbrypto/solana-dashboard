@@ -155,10 +155,10 @@ router.get('/daily-highlights-sol', async (req: Request, res: Response) => {
 });
 
 // GET /api/protocols/weekly-metrics
-// Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults to 'solana')
+// Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults to 'solana'), metric (optional, ranking metric for topProtocols)
 router.get('/weekly-metrics', async (req: Request, res: Response) => {
   try {
-    const { endDate, dataType, chain } = req.query;
+    const { endDate, dataType, chain, metric } = req.query;
     
     if (!endDate || typeof endDate !== 'string') {
       return res.status(400).json({ 
@@ -186,12 +186,13 @@ router.get('/weekly-metrics', async (req: Request, res: Response) => {
 
     const chainFilter = typeof chain === 'string' ? chain : 'solana';
     const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
+    const rankingMetric = typeof metric === 'string' ? metric : 'volume';
     
     let weeklyMetrics;
     if (chainFilter === 'evm') {
       weeklyMetrics = await getEVMWeeklyMetrics(endDateObj, dataTypeFilter);
     } else {
-      weeklyMetrics = await getSolanaWeeklyMetrics(endDateObj, dataTypeFilter);
+      weeklyMetrics = await getSolanaWeeklyMetrics(endDateObj, dataTypeFilter, rankingMetric);
     }
     
     res.json({ success: true, data: weeklyMetrics });

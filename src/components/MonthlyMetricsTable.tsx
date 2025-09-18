@@ -15,7 +15,7 @@ import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
-import { MonthPicker } from "./MonthPicker";
+import { MonthNavigator } from "./MonthNavigator";
 import { protocolApi } from "../lib/api";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
@@ -33,8 +33,8 @@ const LoadingSkeleton = () => (
           <div className="h-5 sm:h-6 w-48 bg-muted rounded animate-pulse" />
           <div className="h-4 w-16 bg-muted rounded animate-pulse" />
         </div>
-        <div className="w-full sm:w-[240px] flex sm:justify-end">
-          <div className="h-10 w-full sm:w-[240px] bg-muted rounded animate-pulse" />
+        <div className="w-full sm:w-auto flex sm:justify-end">
+          <div className="h-10 w-full sm:w-[260px] bg-muted rounded animate-pulse" />
         </div>
       </div>
 
@@ -793,8 +793,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
               </button>
             </div>
           </div>
-          <div className="w-full sm:w-[240px] flex sm:justify-end">
-            <MonthPicker date={date} onDateChange={handleDateChange} />
+          <div className="w-full sm:w-auto flex sm:justify-end">
+            <MonthNavigator date={date} onDateChange={handleDateChange} />
           </div>
         </div>
 

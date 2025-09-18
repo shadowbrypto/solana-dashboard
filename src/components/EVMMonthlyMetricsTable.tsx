@@ -14,7 +14,7 @@ import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Badge } from "./ui/badge";
-import { MonthPicker } from "./MonthPicker";
+import { MonthNavigator } from "./MonthNavigator";
 import { useToast } from "../hooks/use-toast";
 import { protocolApi } from "../lib/api";
 // @ts-ignore
@@ -474,8 +474,8 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
             </button>
           </div>
         </div>
-        <div className="w-[180px] flex justify-end">
-          <MonthPicker date={endDate} onDateChange={handleDateChange} />
+        <div className="w-auto flex justify-end">
+          <MonthNavigator date={endDate} onDateChange={handleDateChange} />
         </div>
       </div>
 

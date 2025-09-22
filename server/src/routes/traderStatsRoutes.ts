@@ -225,25 +225,26 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
       
       try {
         
-        // Direct sample-based calculation using top 5000 traders
-        const TOP_TRADERS_FOR_METRICS = Math.min(5000, total);
+        // Fetch ALL traders to get accurate statistics (no sampling)
+        console.log(`Fetching all ${total} traders for accurate percentile calculations...`);
         
         // Update progress for trader data fetch
         const processedAt40 = Math.floor(total * 0.4); // Show 40% processed
         progressCache.set(progressKey, {
           isLoading: true,
-          step: 'Fetching top trader data...',
+          step: `Fetching all ${total} traders for accurate calculations...`,
           percentage: 40,
           startTime: now,
           totalSteps: 10,
           currentStep: 5,
           processedCount: processedAt40,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
         
-        const topTradersData = await TraderStatsService.getTraderStatsPaginated(protocol, 0, TOP_TRADERS_FOR_METRICS);
-        console.log(`Fetched ${topTradersData.length} top traders for calculation`);
+        // Fetch ALL traders using paginated queries
+        const allTradersData = await TraderStatsService.getTraderStatsPaginated(protocol, 0, total);
+        console.log(`Fetched ${allTradersData.length} traders for calculation`);
         
         // Step 6: Progress after fetching trader data
         const currentProcessed = Math.floor(total * 0.5); // Show 50% of records processed at this step
@@ -256,7 +257,7 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           currentStep: 6,
           processedCount: currentProcessed,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
         
         totalVolume = await TraderStatsService.getTotalVolumeForProtocol(protocol);
@@ -273,7 +274,7 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           currentStep: 7,
           processedCount: processedAt60,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
         
         // Step 8: Calculate key metrics
@@ -287,26 +288,26 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           currentStep: 8,
           processedCount: processedAt70,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
         
-        // Calculate metrics using sample data
+        // Calculate metrics using ALL trader data for accuracy
         const avgVolumePerTrader = total > 0 ? totalVolume / total : 0;
         const top1Count = Math.floor(0.01 * total);
         const top5Count = Math.floor(0.05 * total);
         
-        const top1Volume = topTradersData.slice(0, Math.min(top1Count, topTradersData.length)).reduce((sum, trader) => {
+        const top1Volume = allTradersData.slice(0, Math.min(top1Count, allTradersData.length)).reduce((sum, trader) => {
           return sum + parseFloat(trader.volume_usd?.toString() || '0');
         }, 0);
         
-        const top5Volume = topTradersData.slice(0, Math.min(top5Count, topTradersData.length)).reduce((sum, trader) => {
+        const top5Volume = allTradersData.slice(0, Math.min(top5Count, allTradersData.length)).reduce((sum, trader) => {
           return sum + parseFloat(trader.volume_usd?.toString() || '0');
         }, 0);
         
-        const percentile99Volume = topTradersData[Math.min(top1Count - 1, topTradersData.length - 1)] ? 
-          parseFloat(topTradersData[Math.min(top1Count - 1, topTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
-        const percentile95Volume = topTradersData[Math.min(top5Count - 1, topTradersData.length - 1)] ? 
-          parseFloat(topTradersData[Math.min(top5Count - 1, topTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
+        const percentile99Volume = allTradersData[Math.min(top1Count - 1, allTradersData.length - 1)] ? 
+          parseFloat(allTradersData[Math.min(top1Count - 1, allTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
+        const percentile95Volume = allTradersData[Math.min(top5Count - 1, allTradersData.length - 1)] ? 
+          parseFloat(allTradersData[Math.min(top5Count - 1, allTradersData.length - 1)].volume_usd?.toString() || '0') : 0;
         
         const top1PercentShare = totalVolume > 0 ? (top1Volume / totalVolume) * 100 : 0;
         const top5PercentShare = totalVolume > 0 ? (top5Volume / totalVolume) * 100 : 0;
@@ -334,16 +335,15 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           currentStep: 9,
           processedCount: processedAt80,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
         
-        // Calculate percentile brackets using sample data
+        // Calculate percentile brackets using ALL trader data
         const percentiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 50, 75, 100];
         percentileBrackets = percentiles.map(percentile => {
           const rankCutoff = Math.floor((percentile / 100) * total);
-          const sampleCutoff = Math.min(rankCutoff, topTradersData.length);
-          const tradersInPercentile = topTradersData.slice(0, sampleCutoff);
-          const traderCount = rankCutoff;
+          const tradersInPercentile = allTradersData.slice(0, rankCutoff);
+          const traderCount = tradersInPercentile.length;
           const bracketVolume = tradersInPercentile.reduce((sum, trader) => {
             return sum + parseFloat(trader.volume_usd?.toString() || '0');
           }, 0);
@@ -380,7 +380,7 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           currentStep: 10,
           processedCount: processedAt95,
           totalCount: total,
-          fetchingCount: TOP_TRADERS_FOR_METRICS
+          fetchingCount: total
         });
       } catch (error) {
         // Clear progress on error

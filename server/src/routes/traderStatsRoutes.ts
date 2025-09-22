@@ -347,7 +347,15 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
           const bracketVolume = tradersInPercentile.reduce((sum, trader) => {
             return sum + parseFloat(trader.volume_usd?.toString() || '0');
           }, 0);
-          const volumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
+          // Calculate volume share based on actual bracket volume
+          // Percentile should never exceed 100%
+          const rawVolumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
+          const volumeShare = Math.min(rawVolumeShare, 100);
+          
+          // Log if we had to cap the value
+          if (rawVolumeShare > 100) {
+            console.warn(`⚠️ Percentile ${percentile}% for ${protocol} had volume share ${rawVolumeShare.toFixed(1)}% - capped to 100%`);
+          }
           const rankRange = traderCount > 0 ? `1-${traderCount}` : '0';
           
           return {
@@ -355,7 +363,7 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
             traderCount,
             rankRange,
             volume: bracketVolume,
-            volumeShare: sampleCutoff < rankCutoff ? volumeShare * (rankCutoff / sampleCutoff) : volumeShare
+            volumeShare
           };
         });
         
@@ -567,7 +575,14 @@ router.get('/percentiles/:protocol', async (req: Request, res: Response) => {
         const bracketVolume = tradersInPercentile.reduce((sum, trader) => {
           return sum + parseFloat(trader.volume_usd?.toString() || '0');
         }, 0);
-        const volumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
+        // Ensure percentile volume share never exceeds 100%
+        const rawVolumeShare = totalVolume > 0 ? (bracketVolume / totalVolume) * 100 : 0;
+        const volumeShare = Math.min(rawVolumeShare, 100);
+        
+        // Log if we had to cap the value
+        if (rawVolumeShare > 100) {
+          console.warn(`⚠️ Percentile ${percentile}% for ${protocol} had volume share ${rawVolumeShare.toFixed(1)}% - capped to 100%`);
+        }
         const rankRange = traderCount > 0 ? `1-${traderCount}` : '0';
         
         return {

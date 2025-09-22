@@ -79,6 +79,7 @@ declare global {
       percentile99Volume: number;
       percentile95Volume: number;
     };
+    lastLoadedProtocol?: string;
   }
 }
 
@@ -1420,22 +1421,45 @@ function TraderStatsSection() {
       const cacheAge = Math.round((now - cached.timestamp) / 1000);
       console.log(`⚡ INSTANT LOAD from cache for ${selectedProtocol} page ${page} (${cacheAge}s old)`);
       
-      // Show loading briefly to prevent flashing old data, then load cached data
-      setLoading(true);
+      // Only use instant cache loading if we're already on this protocol
+      // This prevents showing wrong data when switching protocols
+      const isAlreadyShowingThisProtocol = traderData.length > 0 && 
+        window.lastLoadedProtocol === selectedProtocol;
       
-      // Use setTimeout to show skeleton briefly before loading cached data
-      setTimeout(() => {
-        // Update UI with cached data
-        setTotalTraders(cached.metrics.totalTraders);
-        setTotalVolume(cached.metrics.totalVolume);
-        setTraderData(cached.rankData);
-        setAllTraders(cached.rankData);
-        setPercentileBrackets(cached.percentileBrackets);
-        setTotalPages(cached.pagination.totalPages);
-        setCurrentPage(cached.pagination.currentPage);
-        
-        setLoading(false); // Hide loading after data is set
-      }, 100); // Brief 100ms delay to show skeleton
+      if (isAlreadyShowingThisProtocol) {
+        // Same protocol, instant load
+        setLoading(true);
+        setTimeout(() => {
+          // Update UI with cached data
+          setTotalTraders(cached.metrics.totalTraders);
+          setTotalVolume(cached.metrics.totalVolume);
+          setTraderData(cached.rankData);
+          setAllTraders(cached.rankData);
+          setPercentileBrackets(cached.percentileBrackets);
+          setTotalPages(cached.pagination.totalPages);
+          setCurrentPage(cached.pagination.currentPage);
+          
+          setLoading(false); // Hide loading after data is set
+          window.lastLoadedProtocol = selectedProtocol;
+        }, 100); // Brief 100ms delay to show skeleton
+      } else {
+        // Different protocol, show loading for at least 500ms to prevent confusion
+        setLoading(true);
+        setTimeout(() => {
+          // Update UI with cached data
+          setTotalTraders(cached.metrics.totalTraders);
+          setTotalVolume(cached.metrics.totalVolume);
+          setTraderData(cached.rankData);
+          setAllTraders(cached.rankData);
+          setPercentileBrackets(cached.percentileBrackets);
+          setTotalPages(cached.pagination.totalPages);
+          setCurrentPage(cached.pagination.currentPage);
+          
+          setLoading(false); // Hide loading after data is set
+          setPercentileLoading(false);
+          window.lastLoadedProtocol = selectedProtocol;
+        }, 500); // Longer delay when switching protocols
+      }
       
       // Update window stats for metric cards
       window.protocolStats = {
@@ -1507,6 +1531,9 @@ function TraderStatsSection() {
       setPercentileBrackets(data.percentileBrackets);
       setTotalPages(data.pagination.totalPages);
       setCurrentPage(data.pagination.currentPage);
+      
+      // Track the last loaded protocol
+      window.lastLoadedProtocol = selectedProtocol;
       
       // Store metrics for cards (no window object needed)
       window.protocolStats = {
@@ -1581,6 +1608,7 @@ function TraderStatsSection() {
       });
     } finally {
       setLoading(false);
+      setPercentileLoading(false);
     }
   };
 
@@ -1596,6 +1624,10 @@ function TraderStatsSection() {
   }, [selectedProtocol]);
 
   const handleProtocolChange = (protocolId: string) => {
+    // Set loading state FIRST before clearing data
+    setLoading(true);
+    setPercentileLoading(true);
+    
     // Clear old data immediately to prevent showing wrong numbers during loading
     setTotalTraders(0);
     setTotalVolume(0);

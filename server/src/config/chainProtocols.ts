@@ -11,7 +11,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'axiom': { solana: true, evm: false },
   'bonkbot': { solana: true, evm: false },
   'bullx': { solana: true, evm: false },
-  'gmgnai': { solana: true, evm: false },
+  'gmgnai': { solana: true, evm: true },
   'moonshot': { solana: true, evm: false },
   'nova': { solana: true, evm: false },
   'padre': { solana: true, evm: true },

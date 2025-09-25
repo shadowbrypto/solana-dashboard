@@ -6,7 +6,7 @@ import App from "./App";
 import { Layout } from "./layouts/Layout";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import UnifiedDailyReport from "./pages/UnifiedDailyReport";
+import DailyReport from "./pages/DailyReport";
 import MonthlyReport from "./pages/MonthlyReport";
 import WeeklyReport from "./pages/WeeklyReport";
 import WeeklyInsights from "./pages/WeeklyInsights";
@@ -16,7 +16,6 @@ import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import CustomReports from "./pages/CustomReports";
 import { HomePage } from "./pages/HomePage";
-import PadrePage from "./pages/PadrePage";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
 
@@ -102,7 +101,7 @@ const router = createBrowserRouter([
                   </div>
                 }
               >
-                <UnifiedDailyReport />
+                <DailyReport />
               </React.Suspense>
             ),
           },
@@ -145,25 +144,6 @@ const router = createBrowserRouter([
                 }
               >
                 <CustomReports />
-              </React.Suspense>
-            ),
-          },
-        ],
-      },
-      {
-        path: "evm",
-        children: [
-          {
-            path: "padre",
-            element: (
-              <React.Suspense
-                fallback={
-                  <div className="flex items-center justify-center min-h-screen">
-                    Loading...
-                  </div>
-                }
-              >
-                <PadrePage />
               </React.Suspense>
             ),
           },

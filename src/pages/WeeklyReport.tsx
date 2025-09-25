@@ -102,10 +102,7 @@ export default function WeeklyReport() {
       {/* Header with Toggle */}
       <div className="mb-6 lg:mb-8">
         <>
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold">
-                Weekly Report
-              </h1>
+            <div className="flex items-center justify-end mb-4">
               
               {/* Chain Type Toggle */}
               <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">

@@ -103,7 +103,7 @@ const ContentSkeleton = () => (
   </div>
 );
 
-export default function UnifiedDailyReport() {
+export default function DailyReport() {
   // Initialize chain type from localStorage or default to solana
   const [chainType, setChainType] = useState<ChainType>(() => {
     const saved = localStorage.getItem('preferredChainType') as ChainType;
@@ -291,10 +291,7 @@ export default function UnifiedDailyReport() {
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
       {/* Header with Toggle - Always visible */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">
-          Daily Report
-        </h1>
+      <div className="flex items-center justify-end">
         
         {/* Chain Type Toggle */}
         <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">
@@ -387,7 +384,8 @@ export default function UnifiedDailyReport() {
         <div key={chainType} className="space-y-4 lg:space-y-6">
           {chainType === 'solana' ? (
             <>
-              <DailyHighlights date={date} />
+              {/* HIGHLIGHTS TEMPORARILY DISABLED */}
+              {/* <DailyHighlights date={date} /> */}
               
               {/* Trojan Missed Revenue Card */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,7 +415,8 @@ export default function UnifiedDailyReport() {
             </>
           ) : (
             <>
-              <EVMDailyHighlights date={date} />
+              {/* HIGHLIGHTS TEMPORARILY DISABLED */}
+              {/* <EVMDailyHighlights date={date} /> */}
               <EVMDailyMetricsTable 
                 protocols={protocols}
                 date={date}

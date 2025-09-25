@@ -66,7 +66,7 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
 const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // Solana protocols
   "trojan": { queryIds: [4251075], chain: 'solana' },
-  "photon": { queryIds: [4852143], chain: 'solana' },
+  "photon": { queryIds: [5845657, 5845717, 5845732], chain: 'solana' },
   "bullx": { queryIds: [3823331], chain: 'solana' },
   "axiom": { queryIds: [5556317, 5376750, 5376740, 5376694, 4663709, 5829313], chain: 'solana' },
   "gmgnai": { queryIds: [4231939], chain: 'solana' },

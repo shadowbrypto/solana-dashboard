@@ -290,8 +290,23 @@ export default function DailyReport() {
 
   return (
     <div className="space-y-4 lg:space-y-6 p-2 sm:p-0">
-      {/* Header with Toggle - Always visible */}
-      <div className="flex items-center justify-end">
+      {/* Header with Title and Toggle */}
+      <div className="flex items-center justify-between mb-6">
+        {/* Empty space for balance */}
+        <div className="flex-1"></div>
+        
+        {/* Title Section - Centered */}
+        <div className="flex flex-col text-center flex-1">
+          <h1 className="text-3xl sm:text-4xl font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
+            Daily Report
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Real-time protocol analytics and insights
+          </p>
+        </div>
+        
+        {/* Toggle Section */}
+        <div className="flex justify-end flex-1">
         
         {/* Chain Type Toggle */}
         <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">
@@ -374,6 +389,7 @@ export default function DailyReport() {
               EVM
             </span>
           </button>
+        </div>
         </div>
       </div>
 

@@ -784,7 +784,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   return (
     <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 sm:pb-4 gap-2 sm:gap-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-1 sm:gap-2">
               <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>

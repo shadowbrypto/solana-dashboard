@@ -401,7 +401,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
 
   return (
     <div data-table="evm-daily-metrics" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>

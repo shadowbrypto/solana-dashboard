@@ -663,7 +663,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   return (
     <div className="relative space-y-3" data-table="weekly-metrics-full">
-        <div className="flex items-center justify-between pb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">Weekly Report</h2>
             <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">

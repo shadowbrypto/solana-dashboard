@@ -25,7 +25,7 @@
     "server:import-csv": "cd server && npm run import-csv",
     "server:import-csv-upsert": "cd server && npm run import-csv-upsert",
     "dev:full": "concurrently \"npm run server:dev\" \"npm run dev\"",
-    "start:full": "concurrently \"npm run server:start\" \"npm run start\""
+    "start:full": "npm run server:start & npm run start"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -75,7 +75,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
-    "vite": "^6.2.6",
+    "tinyglobby": "^0.2.0",
+    "vite": "^5.4.8",
     "vite-plugin-node-polyfills": "^0.23.0",
     "vitest": "^3.2.4"
   }

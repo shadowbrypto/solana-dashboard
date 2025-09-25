@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, eachMonthOfInterval } from "date-fns";
-import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import domtoimage from "dom-to-image";
@@ -772,9 +772,8 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 lg:p-6 shadow-sm overflow-hidden">
-        <div data-table="monthly-metrics" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-3 sm:gap-0">
+    <div data-table="monthly-metrics" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
@@ -803,22 +802,12 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[150px] sm:w-[200px] py-0.5 text-xs sm:text-sm">Protocol</TableHead>
-                {orderedMetrics.map((metric, index) => (
+                {orderedMetrics.map((metric) => (
                   <TableHead 
                     key={metric.key} 
-                    className={`text-right py-0.5 cursor-move select-none transition-colors hover:bg-muted/50 text-xs sm:text-sm ${
-                      draggedColumn === index ? 'opacity-50' : ''
-                    }`}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, index)}
-                    onDragEnd={handleDragEnd}
+                    className="text-right py-0.5 text-xs sm:text-sm"
                   >
-                    <div className="flex items-center gap-1 sm:gap-2 justify-end">
-                      <span className="truncate">{metric.label}</span>
-                      <GripVertical className="w-2 h-2 sm:w-3 sm:h-3 opacity-50 flex-shrink-0" />
-                    </div>
+                    <span className="truncate">{metric.label}</span>
                   </TableHead>
                 ))}
               </TableRow>
@@ -1211,7 +1200,6 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
             </TableBody>
           </Table>
           </div>
-        </div>
         
         <div className="flex justify-end gap-2 pt-4">
           <button
@@ -1229,6 +1217,6 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
             Copy
           </button>
         </div>
-      </div>
+    </div>
   );
 }

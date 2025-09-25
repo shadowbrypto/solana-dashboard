@@ -403,7 +403,8 @@ export default function DailyReport() {
               {/* HIGHLIGHTS TEMPORARILY DISABLED */}
               {/* <DailyHighlights date={date} /> */}
               
-              {/* Trojan Missed Revenue Card */}
+              {/* Trojan Missed Revenue Card - TEMPORARILY COMMENTED OUT */}
+              {/* 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-1">
                   {axiomLoading ? (
@@ -426,6 +427,7 @@ export default function DailyReport() {
                   )}
                 </div>
               </div>
+              */}
               
               <DailyMetricsTable protocols={protocols} date={date} onDateChange={setDate} />
             </>

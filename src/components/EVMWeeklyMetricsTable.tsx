@@ -301,7 +301,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
 
   if (loading) {
     return (
-      <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6">
+      <div className="space-y-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded"></div>
           <div className="h-64 bg-muted rounded"></div>
@@ -311,8 +311,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-6">
-      <div className="space-y-4" data-table="evm-weekly-metrics">
+    <div className="relative space-y-3" data-table="evm-weekly-metrics">
         <div className="flex items-center justify-between pb-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -650,7 +649,6 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
           </TableBody>
         </Table>
         </div>
-      </div>
       
       {/* Action buttons below the table */}
       <div className="flex justify-end gap-2 mt-4 no-screenshot">

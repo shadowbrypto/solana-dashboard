@@ -453,12 +453,11 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 shadow-sm overflow-hidden">
-      <div data-table="evm-monthly-metrics" className="space-y-4">
-        <div className="flex items-center justify-between">
+    <div data-table="evm-monthly-metrics" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">Monthly Report</h2>
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
             <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
               EVM
             </span>
@@ -474,16 +473,16 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
             </button>
           </div>
         </div>
-        <div className="w-auto flex justify-end">
+        <div className="w-full sm:w-auto flex sm:justify-end">
           <MonthNavigator date={endDate} onDateChange={handleDateChange} />
         </div>
       </div>
 
-      <div className="rounded-xl border">
-        <Table>
+      <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Protocol</TableHead>
+              <TableHead className="w-[150px] sm:w-[200px]">Protocol</TableHead>
               {chains.map(chain => (
                 <TableHead key={chain} className="text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -507,8 +506,8 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="text-right w-[180px]">Total Volume</TableHead>
-              <TableHead className="text-center w-[140px]">Growth</TableHead>
+              <TableHead className="text-right">Total Volume</TableHead>
+              <TableHead className="text-center">Growth</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -713,7 +712,6 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
             )}
           </TableBody>
         </Table>
-      </div>
       </div>
       
       <div className="flex justify-end gap-2 pt-4">

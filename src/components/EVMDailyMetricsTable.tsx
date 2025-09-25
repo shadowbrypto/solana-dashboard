@@ -400,12 +400,11 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
   };
 
   return (
-    <div className="space-y-4 rounded-xl border bg-gradient-to-b from-background to-muted/20 p-3 sm:p-4 shadow-sm overflow-hidden">
-      <div data-table="evm-daily-metrics" className="space-y-4">
-        <div className="flex items-center justify-between">
+    <div data-table="evm-daily-metrics" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 gap-2 sm:gap-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">Daily Report</h2>
+            <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
               EVM
             </span>
@@ -676,7 +675,6 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
             )}
           </TableBody>
         </Table>
-      </div>
       </div>
       
       <div className="flex justify-end gap-2 pt-4">

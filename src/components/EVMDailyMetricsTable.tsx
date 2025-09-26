@@ -400,281 +400,283 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
   };
 
   return (
-    <div data-table="evm-daily-metrics" className="space-y-4">
+    <div className="space-y-4">
+      <div data-table="evm-daily-metrics" className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
-              EVM
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
+              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
+                EVM
+              </span>
+            </div>
+            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+              >
+                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-            <button
-              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-            >
-              {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-            </button>
+          <div className="w-auto">
+            <DateNavigator date={date} onDateChange={handleDateChange} />
           </div>
         </div>
-        <div className="w-auto">
-          <DateNavigator date={date} onDateChange={handleDateChange} />
-        </div>
-      </div>
 
-      <div className="rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Protocol</TableHead>
-              {chains.map(chain => (
-                <TableHead key={chain} className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <div
-                      className="p-1 rounded-md"
-                      style={{ 
-                        backgroundColor: `${chainColors[chain] || '#6B7280'}15`
-                      }}
-                    >
-                      <img
-                        src={`/assets/logos/${chain}.jpg`}
-                        alt={chainNames[chain] || chain}
-                        className="w-5 h-5 rounded-full border border-background object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                    {chainNames[chain]}
-                  </div>
-                </TableHead>
-              ))}
-              <TableHead className="text-right w-[180px]">Total Volume</TableHead>
-              <TableHead className="text-center w-[140px]">Growth</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+        <div className="rounded-xl border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={chains.length + 3} className="text-center py-8">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
-                    <span className="text-muted-foreground">Loading EVM protocol data...</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : error ? (
-              <TableRow>
-                <TableCell colSpan={chains.length + 3} className="text-center py-8">
-                  <div className="text-muted-foreground">
-                    <p>{error}</p>
-                    <p className="text-sm mt-1">Using fallback data</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              <>
-                {evmData
-                  .sort((a, b) => b.totalVolume - a.totalVolume)
-                  .filter(data => !hiddenProtocols.has(data.protocol))
-                  .map((data) => {
-              const protocolName = data.protocol.replace('_evm', '');
-              const isHidden = hiddenProtocols.has(data.protocol);
-              return (
-                <TableRow key={data.protocol} className="transition-colors hover:bg-muted/30">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleProtocolVisibility(data.protocol);
+                <TableHead className="w-[200px]">Protocol</TableHead>
+                {chains.map(chain => (
+                  <TableHead key={chain} className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <div
+                        className="p-1 rounded-md"
+                        style={{ 
+                          backgroundColor: `${chainColors[chain] || '#6B7280'}15`
                         }}
-                        className="opacity-0 hover:opacity-100 transition-opacity duration-200"
-                        title={isHidden ? "Show protocol" : "Hide protocol"}
                       >
-                        {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      </button>
-                      <div className="w-6 h-6 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getProtocolLogoFilename(data.protocol)}`}
-                          alt={protocolName} 
-                          className="w-full h-full object-cover"
+                        <img
+                          src={`/assets/logos/${chain}.jpg`}
+                          alt={chainNames[chain] || chain}
+                          className="w-5 h-5 rounded-full border border-background object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                              container.appendChild(iconEl);
-                            }
+                            target.style.display = 'none';
                           }}
                         />
                       </div>
-                      <span className="font-medium capitalize">{protocolName}</span>
-                      {topProtocols.includes(data.protocol) && (
-                        <Badge 
-                          variant="secondary"
-                          className={cn(
-                            "ml-2 h-4 px-2 text-xs font-medium flex-shrink-0",
-                            topProtocols.indexOf(data.protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-                            topProtocols.indexOf(data.protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-                            topProtocols.indexOf(data.protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
-                          )}
-                        >
-                          #{topProtocols.indexOf(data.protocol) + 1}
-                        </Badge>
-                      )}
+                      {chainNames[chain]}
+                    </div>
+                  </TableHead>
+                ))}
+                <TableHead className="text-right w-[180px]">Total Volume</TableHead>
+                <TableHead className="text-center w-[140px]">Growth</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={chains.length + 3} className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
+                      <span className="text-muted-foreground">Loading EVM protocol data...</span>
                     </div>
                   </TableCell>
-                  {chains.map(chain => (
-                    <TableCell key={chain} className="text-right">
-                      <Badge 
-                        variant="outline" 
-                        className="font-medium text-sm border-0"
-                        style={{ 
-                          backgroundColor: `${chainColors[chain] || '#6B7280'}15`,
-                          color: chainColors[chain] || '#6B7280'
-                        }}
-                      >
-                        {data.chainVolumes[chain] > 0 ? formatVolume(data.chainVolumes[chain]) : '-'}
-                      </Badge>
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-right">
-                    <div className="flex items-center gap-1">
-                      {data.totalVolume > 0 && (
-                        <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                          {/* Display chain volumes including AVAX and ARB */}
-                          {(() => {
-                            console.log(`Rendering bar chart for ${data.protocol}:`, {
-                              totalVolume: data.totalVolume,
-                              chainVolumes: data.chainVolumes,
-                              entries: Object.entries(data.chainVolumes)
-                            });
-                            
-                            return Object.entries(data.chainVolumes).map(([chain, volume], index) => {
-                              const chainVolume = volume || 0;
-                              if (chainVolume === 0) {
-                                console.log(`Skipping ${chain} for ${data.protocol}: volume is 0`);
-                                return null;
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={chains.length + 3} className="text-center py-8">
+                    <div className="text-muted-foreground">
+                      <p>{error}</p>
+                      <p className="text-sm mt-1">Using fallback data</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <>
+                  {evmData
+                    .sort((a, b) => b.totalVolume - a.totalVolume)
+                    .filter(data => !hiddenProtocols.has(data.protocol))
+                    .map((data) => {
+                const protocolName = data.protocol.replace('_evm', '');
+                const isHidden = hiddenProtocols.has(data.protocol);
+                return (
+                  <TableRow key={data.protocol} className="transition-colors hover:bg-muted/30">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProtocolVisibility(data.protocol);
+                          }}
+                          className="opacity-0 hover:opacity-100 transition-opacity duration-200"
+                          title={isHidden ? "Show protocol" : "Hide protocol"}
+                        >
+                          {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        </button>
+                        <div className="w-6 h-6 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
+                          <img 
+                            src={`/assets/logos/${getProtocolLogoFilename(data.protocol)}`}
+                            alt={protocolName} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '';
+                                container.className = 'w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center';
+                                const iconEl = document.createElement('div');
+                                iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                container.appendChild(iconEl);
                               }
-                              
-                              const percentage = (chainVolume / data.totalVolume) * 100;
-                              const previousPercentage = Object.entries(data.chainVolumes)
-                                .slice(0, index)
-                                .reduce((sum, [prevChain, prevVolume]) => {
-                                  return sum + ((prevVolume || 0) / data.totalVolume) * 100;
-                                }, 0);
-                              
-                              const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
-                              const chainColor = chainBarColors[chain] || '#6B7280';
-                              
-                              console.log(`Rendering ${chain} segment for ${data.protocol}:`, {
-                                volume: chainVolume,
-                                percentage: percentage.toFixed(1),
-                                color: chainColor,
-                                left: previousPercentage.toFixed(1)
+                            }}
+                          />
+                        </div>
+                        <span className="font-medium capitalize">{protocolName}</span>
+                        {topProtocols.includes(data.protocol) && (
+                          <Badge 
+                            variant="secondary"
+                            className={cn(
+                              "ml-2 h-4 px-2 text-xs font-medium flex-shrink-0",
+                              topProtocols.indexOf(data.protocol) === 0 && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+                              topProtocols.indexOf(data.protocol) === 1 && "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+                              topProtocols.indexOf(data.protocol) === 2 && "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                            )}
+                          >
+                            #{topProtocols.indexOf(data.protocol) + 1}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    {chains.map(chain => (
+                      <TableCell key={chain} className="text-right">
+                        <Badge 
+                          variant="outline" 
+                          className="font-medium text-sm border-0"
+                          style={{ 
+                            backgroundColor: `${chainColors[chain] || '#6B7280'}15`,
+                            color: chainColors[chain] || '#6B7280'
+                          }}
+                        >
+                          {data.chainVolumes[chain] > 0 ? formatVolume(data.chainVolumes[chain]) : '-'}
+                        </Badge>
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-right">
+                      <div className="flex items-center gap-1">
+                        {data.totalVolume > 0 && (
+                          <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                            {/* Display chain volumes including AVAX and ARB */}
+                            {(() => {
+                              console.log(`Rendering bar chart for ${data.protocol}:`, {
+                                totalVolume: data.totalVolume,
+                                chainVolumes: data.chainVolumes,
+                                entries: Object.entries(data.chainVolumes)
                               });
                               
-                              return (
-                                <div
-                                  key={chain}
-                                  className="absolute h-full transition-all duration-300 hover:opacity-80"
-                                  style={{
-                                    left: `${previousPercentage}%`,
-                                    width: `${percentage}%`,
-                                    backgroundColor: chainColor
-                                  }}
-                                  title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
-                                />
-                              );
-                            });
-                          })()}
-                        </div>
-                      )}
-                      <Badge variant="outline" className="font-medium ml-1 bg-background text-sm">
-                        {formatVolume(data.totalVolume)}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <WeeklyTrendChart data={data.weeklyTrend} growth={data.dailyGrowth} />
-                  </TableCell>
-                </TableRow>
-              );
-                })}
-                {/* Total Row */}
-                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
-              <TableCell style={{ paddingLeft: '3rem' }} className="rounded-bl-xl">
-                <span className="font-semibold">Total</span>
-              </TableCell>
-              {chains.map(chain => (
-                <TableCell key={chain} className="text-right">
-                  <Badge 
-                    variant="outline" 
-                    className="font-semibold text-sm border-0"
-                    style={{ 
-                      backgroundColor: `${chainColors[chain] || '#6B7280'}15`,
-                      color: chainColors[chain] || '#6B7280'
-                    }}
-                  >
-                    {totals.chainTotals[chain] > 0 ? formatVolume(totals.chainTotals[chain]) : '-'}
-                  </Badge>
+                              return Object.entries(data.chainVolumes).map(([chain, volume], index) => {
+                                const chainVolume = volume || 0;
+                                if (chainVolume === 0) {
+                                  console.log(`Skipping ${chain} for ${data.protocol}: volume is 0`);
+                                  return null;
+                                }
+                                
+                                const percentage = (chainVolume / data.totalVolume) * 100;
+                                const previousPercentage = Object.entries(data.chainVolumes)
+                                  .slice(0, index)
+                                  .reduce((sum, [prevChain, prevVolume]) => {
+                                    return sum + ((prevVolume || 0) / data.totalVolume) * 100;
+                                  }, 0);
+                                
+                                const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
+                                const chainColor = chainBarColors[chain] || '#6B7280';
+                                
+                                console.log(`Rendering ${chain} segment for ${data.protocol}:`, {
+                                  volume: chainVolume,
+                                  percentage: percentage.toFixed(1),
+                                  color: chainColor,
+                                  left: previousPercentage.toFixed(1)
+                                });
+                                
+                                return (
+                                  <div
+                                    key={chain}
+                                    className="absolute h-full transition-all duration-300 hover:opacity-80"
+                                    style={{
+                                      left: `${previousPercentage}%`,
+                                      width: `${percentage}%`,
+                                      backgroundColor: chainColor
+                                    }}
+                                    title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
+                                  />
+                                );
+                              });
+                            })()}
+                          </div>
+                        )}
+                        <Badge variant="outline" className="font-medium ml-1 bg-background text-sm">
+                          {formatVolume(data.totalVolume)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <WeeklyTrendChart data={data.weeklyTrend} growth={data.dailyGrowth} />
+                    </TableCell>
+                  </TableRow>
+                );
+                  })}
+                  {/* Total Row */}
+                  <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
+                <TableCell style={{ paddingLeft: '3rem' }} className="rounded-bl-xl">
+                  <span className="font-semibold">Total</span>
                 </TableCell>
-              ))}
-              <TableCell className="text-right">
-                <div className="flex items-center gap-1">
-                  {totals.totalVolume > 0 && (
-                    <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                      {/* Display all chain volumes including AVAX and ARB */}
-                      {Object.entries(totals.chainTotals).map(([chain, volume], index) => {
-                        const chainVolume = volume || 0;
-                        if (chainVolume === 0) return null;
-                        
-                        const percentage = (chainVolume / totals.totalVolume) * 100;
-                        const previousPercentage = Object.entries(totals.chainTotals)
-                          .slice(0, index)
-                          .reduce((sum, [prevChain, prevVolume]) => {
-                            return sum + ((prevVolume || 0) / totals.totalVolume) * 100;
-                          }, 0);
-                        
-                        const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
-                        const chainColor = chainBarColors[chain] || '#6B7280';
-                        
-                        return (
-                          <div
-                            key={chain}
-                            className="absolute h-full transition-all duration-300 hover:opacity-80"
-                            style={{
-                              left: `${previousPercentage}%`,
-                              width: `${percentage}%`,
-                              backgroundColor: chainColor
-                            }}
-                            title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  <Badge variant="outline" className="font-semibold ml-1 bg-background text-sm">
-                    {formatVolume(totals.totalVolume)}
-                  </Badge>
-                </div>
-              </TableCell>
-                  <TableCell className="text-center rounded-br-xl">
-                    <WeeklyTrendChart data={totals.totalWeeklyTrend} growth={totals.totalGrowth} />
+                {chains.map(chain => (
+                  <TableCell key={chain} className="text-right">
+                    <Badge 
+                      variant="outline" 
+                      className="font-semibold text-sm border-0"
+                      style={{ 
+                        backgroundColor: `${chainColors[chain] || '#6B7280'}15`,
+                        color: chainColors[chain] || '#6B7280'
+                      }}
+                    >
+                      {totals.chainTotals[chain] > 0 ? formatVolume(totals.chainTotals[chain]) : '-'}
+                    </Badge>
                   </TableCell>
-                </TableRow>
-              </>
-            )}
-          </TableBody>
-        </Table>
+                ))}
+                <TableCell className="text-right">
+                  <div className="flex items-center gap-1">
+                    {totals.totalVolume > 0 && (
+                      <div className="relative w-40 h-4 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                        {/* Display all chain volumes including AVAX and ARB */}
+                        {Object.entries(totals.chainTotals).map(([chain, volume], index) => {
+                          const chainVolume = volume || 0;
+                          if (chainVolume === 0) return null;
+                          
+                          const percentage = (chainVolume / totals.totalVolume) * 100;
+                          const previousPercentage = Object.entries(totals.chainTotals)
+                            .slice(0, index)
+                            .reduce((sum, [prevChain, prevVolume]) => {
+                              return sum + ((prevVolume || 0) / totals.totalVolume) * 100;
+                            }, 0);
+                          
+                          const chainDisplayName = chainNames[chain] || additionalChainNames[chain] || chain;
+                          const chainColor = chainBarColors[chain] || '#6B7280';
+                          
+                          return (
+                            <div
+                              key={chain}
+                              className="absolute h-full transition-all duration-300 hover:opacity-80"
+                              style={{
+                                left: `${previousPercentage}%`,
+                                width: `${percentage}%`,
+                                backgroundColor: chainColor
+                              }}
+                              title={`${chainDisplayName}: ${formatVolume(chainVolume)} (${percentage.toFixed(1)}%)`}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                    <Badge variant="outline" className="font-semibold ml-1 bg-background text-sm">
+                      {formatVolume(totals.totalVolume)}
+                    </Badge>
+                  </div>
+                </TableCell>
+                    <TableCell className="text-center rounded-br-xl">
+                      <WeeklyTrendChart data={totals.totalWeeklyTrend} growth={totals.totalGrowth} />
+                    </TableCell>
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
       <div className="flex justify-end gap-2 pt-4">

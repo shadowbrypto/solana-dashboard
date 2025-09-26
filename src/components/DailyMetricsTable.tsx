@@ -783,8 +783,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
   return (
-    <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+    <div className="space-y-4">
+      <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-1 sm:gap-2">
               <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
@@ -1231,9 +1232,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               </TableRow>
             </TableBody>
           </Table>
-          </div>
-        
-        <div className="flex justify-end gap-2 pt-4">
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={downloadReport}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"

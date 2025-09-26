@@ -772,8 +772,9 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
   };
 
   return (
-    <div data-table="monthly-metrics" className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+    <div className="space-y-4">
+      <div data-table="monthly-metrics" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
@@ -1199,9 +1200,10 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
               </TableRow>
             </TableBody>
           </Table>
-          </div>
-        
-        <div className="flex justify-end gap-2 pt-4">
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={downloadReport}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"

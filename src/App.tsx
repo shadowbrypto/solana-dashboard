@@ -587,8 +587,8 @@ const MainContent = (): JSX.Element => {
               return null;
             })()
           )}
-          <div className="flex items-center justify-center gap-3">
-            <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl text-center font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent tracking-tight">
               {protocol === "all"
                 ? "Overview"
                 : getProtocolName(protocol)}{" "}

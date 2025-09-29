@@ -321,7 +321,7 @@ export default function TradingAppsComparison() {
       {/* Content wrapper with higher z-index */}
       <div className="relative z-10 p-3 sm:p-4 lg:p-6 min-h-screen">
         {/* Header */}
-        <h1 className="text-lg sm:text-2xl lg:text-3xl mb-4 sm:mb-6 lg:mb-8 text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl mb-8 sm:mb-10 lg:mb-12 text-center font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent tracking-tight">
           Trading Apps Comparison
         </h1>
 

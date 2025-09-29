@@ -435,11 +435,11 @@ export default function AllLaunchpads() {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       {/* Header */}
-      <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-          <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+      <div className="flex flex-col items-center justify-center gap-4 mb-8 lg:mb-10">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-600/20 to-teal-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+          <Rocket className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600" />
         </div>
-        <h1 className="text-2xl sm:text-3xl text-foreground text-center font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl text-center font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent tracking-tight">
           All Launchpads Overview
         </h1>
       </div>

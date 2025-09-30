@@ -187,7 +187,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   };
 
   const downloadReport = async () => {
-    const tableElement = document.querySelector('[data-table="evm-weekly-metrics"]') as HTMLElement;
+    const tableElement = document.querySelector('[data-screenshot-content="true"]') as HTMLElement;
     
     if (tableElement) {
       const rect = tableElement.getBoundingClientRect();
@@ -203,7 +203,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             quality: 1,
             bgcolor: '#ffffff',
             width: (tableElement.scrollWidth + 40) * scale,
-            height: (tableElement.scrollHeight + 50) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
@@ -237,7 +237,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   };
 
   const copyToClipboard = async () => {
-    const tableElement = document.querySelector('[data-table="evm-weekly-metrics"]') as HTMLElement;
+    const tableElement = document.querySelector('[data-screenshot-content="true"]') as HTMLElement;
     
     if (tableElement) {
       const rect = tableElement.getBoundingClientRect();
@@ -253,7 +253,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
             quality: 1,
             bgcolor: '#ffffff',
             width: (tableElement.scrollWidth + 40) * scale,
-            height: (tableElement.scrollHeight + 50) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
             style: {
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
@@ -312,6 +312,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
 
   return (
     <div className="relative space-y-3" data-table="evm-weekly-metrics">
+      <div data-screenshot-content="true">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -649,6 +650,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
           </TableBody>
         </Table>
         </div>
+      </div>
       
       {/* Action buttons below the table */}
       <div className="flex justify-end gap-2 mt-4 no-screenshot">

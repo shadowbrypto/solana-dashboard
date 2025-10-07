@@ -24,7 +24,7 @@ import {
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
   SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon,
-  RhythmIcon, VyperIcon
+  RhythmIcon, VyperIcon, OpenSeaIcon
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
@@ -68,6 +68,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'mevx', name: 'Mevx', icon: MevxIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'rhythm', name: 'Rhythm', icon: RhythmIcon, category: 'Trading Terminals', chain: 'solana' },
   { id: 'vyper', name: 'Vyper', icon: VyperIcon, category: 'Trading Terminals', chain: 'solana' },
+  { id: 'opensea', name: 'OpenSea', icon: OpenSeaIcon, category: 'Trading Terminals', chain: 'solana' },
   
   // Solana - Mobile Apps
   { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile Apps', chain: 'solana' },

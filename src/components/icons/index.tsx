@@ -104,5 +104,9 @@ export const VyperIcon = (props: any) => (
   <ProtocolLogo protocolId="vyper" protocolName="Vyper" fallbackIcon={Terminal} {...props} />
 );
 
+export const OpenSeaIcon = (props: any) => (
+  <ProtocolLogo protocolId="opensea" protocolName="OpenSea" fallbackIcon={ArrowUpRight} {...props} />
+);
+
 // Export chain logos
 export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

@@ -51,6 +51,7 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "mevx": { queryIds: [5498846], chain: 'solana' },
   "rhythm": { queryIds: [5698641], chain: 'solana' },
   "vyper": { queryIds: [5284061], chain: 'solana' },
+  "opensea": { queryIds: [5910228], chain: 'solana' },
   
   // Ethereum protocols - add your protocols here
   // Example:
@@ -86,6 +87,7 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "mevx": { queryIds: [5498846], chain: 'solana' },
   "rhythm": { queryIds: [5698641], chain: 'solana' },
   "vyper": { queryIds: [5284061], chain: 'solana' },
+  "opensea": { queryIds: [5910228], chain: 'solana' },
   
   // Ethereum protocols - add your protocols here
   // Example:

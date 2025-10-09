@@ -72,7 +72,7 @@ export function clearProtocolFrontendCache(protocolName?: string): void {
 
 // Clear cache for all EVM protocols
 export function clearEVMProtocolsCaches(): void {
-  const evmProtocols = ['sigma', 'maestro', 'bloom', 'banana']; // Clean names without _evm suffix
+  const evmProtocols = ['sigma', 'maestro', 'bloom', 'banana', 'photon']; // Clean names without _evm suffix
   
   evmProtocols.forEach(protocol => {
     clearProtocolFrontendCache(protocol);

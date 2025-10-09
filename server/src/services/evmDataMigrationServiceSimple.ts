@@ -242,7 +242,8 @@ export class SimpleEVMDataMigrationService {
       'bloom_evm': 4824799,
       'banana_evm': 4750709,
       'padre_evm': 5793181,
-      'gmgnai_evm': 5823908
+      'gmgnai_evm': 5823908,
+      'photon_evm': 5929750
     };
 
     return queryMap[protocolName] || null;

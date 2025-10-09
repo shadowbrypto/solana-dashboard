@@ -60,7 +60,8 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
   "banana_evm": { queryIds: [4750709], chain: 'evm' },
   "padre_evm": { queryIds: [5793181], chain: 'evm' },
-  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' }
+  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
+  "photon_evm": { queryIds: [5929750], chain: 'evm' }
 };
 
 // Private data sources (when dataType is 'private' or default)
@@ -96,7 +97,8 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
   "banana_evm": { queryIds: [4750709], chain: 'evm' },
   "padre_evm": { queryIds: [5793181], chain: 'evm' },
-  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' }
+  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
+  "photon_evm": { queryIds: [5929750], chain: 'evm' }
 };
 
 // Get protocol sources based on data type

@@ -397,7 +397,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
           </div>
         </div>
 
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto mt-4">
           <Table className="w-full [&_th]:px-2 [&_td]:px-2">
           <TableHeader>
             <TableRow className="h-16">

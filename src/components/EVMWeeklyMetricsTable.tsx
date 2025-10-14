@@ -5,6 +5,7 @@ import { AreaChart, Area, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } fro
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { ChevronLeft, ChevronRight, Calendar, Download, Copy, Eye, EyeOff } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
@@ -13,6 +14,8 @@ import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { useToast } from "../hooks/use-toast";
 // @ts-ignore
 import domtoimage from "dom-to-image";
+
+type MetricKey = 'volume' | 'users' | 'newUsers';
 
 interface EVMWeeklyMetricsTableProps {
   protocols: Protocol[];
@@ -31,11 +34,15 @@ interface ChainVolume {
 interface ProtocolWeeklyData {
   protocol: string;
   totalVolume: number;
+  totalUsers: number;
+  totalNewUsers: number;
   dailyVolumes: Record<string, number>; // date -> volume
+  dailyUsers: Record<string, number>; // date -> users
+  dailyNewUsers: Record<string, number>; // date -> new users
   chainVolumes: ChainVolume;
   weeklyGrowth: number;
   weeklyTrend: number[];
-  previousWeekTotal?: number; // Add previous week total
+  previousWeekTotal?: number;
 }
 
 // Chain color mapping for consistent UI
@@ -56,6 +63,10 @@ const formatCurrency = (value: number): string => {
   return `$${value.toFixed(2)}`;
 };
 
+const formatNumber = (value: number): string => {
+  return value.toLocaleString();
+};
+
 const formatGrowthPercentage = (growth: number): string => {
   const percentage = growth * 100;
   const sign = percentage >= 0 ? '+' : '';
@@ -71,7 +82,16 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   const [protocolData, setProtocolData] = useState<ProtocolWeeklyData[]>([]);
   const [loading, setLoading] = useState(false);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('volume');
   const { toast } = useToast();
+
+  const metricOptions = [
+    { key: 'volume' as MetricKey, label: 'Volume', format: formatCurrency },
+    { key: 'users' as MetricKey, label: 'DAUs', format: formatNumber },
+    { key: 'newUsers' as MetricKey, label: 'New Users', format: formatNumber },
+  ];
+
+  const selectedMetricOption = metricOptions.find(m => m.key === selectedMetric) || metricOptions[0];
 
   const startDate = useMemo(() => subDays(endDate, 6), [endDate]);
   const last7Days = useMemo(() => eachDayOfInterval({ start: startDate, end: endDate }), [startDate, endDate]);

@@ -2425,7 +2425,7 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
     // Single optimized query to get both current and previous week data
     const { data, error } = await supabase
       .from('protocol_stats')
-      .select('protocol_name, date, volume_usd, chain')
+      .select('protocol_name, date, volume_usd, chain, daily_users, new_users')
       .in('chain', evmChains)
       .in('protocol_name', evmProtocols)
       .eq('data_type', dataType)
@@ -2458,6 +2458,8 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
     evmProtocols.forEach(protocol => {
       protocolData[protocol] = {
         dailyVolumes: {},
+        dailyUsers: {},
+        dailyNewUsers: {},
         chainVolumes: {
           ethereum: 0,
           base: 0,
@@ -2466,7 +2468,11 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
           arbitrum: 0
         },
         currentWeekTotal: 0,
+        currentWeekUsers: 0,
+        currentWeekNewUsers: 0,
         previousWeekTotal: 0,
+        previousWeekUsers: 0,
+        previousWeekNewUsers: 0,
         weeklyTrend: []
       };
     });
@@ -2476,6 +2482,8 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
       const protocol = record.protocol_name;
       const date = record.date;
       const volume = Number(record.volume_usd) || 0;
+      const users = Number(record.daily_users) || 0;
+      const newUsers = Number(record.new_users) || 0;
       const chain = record.chain;
 
       // Skip if protocol not in our list
@@ -2492,9 +2500,21 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
         if (!protocolData[protocol].dailyVolumes[date]) {
           protocolData[protocol].dailyVolumes[date] = 0;
         }
+        if (!protocolData[protocol].dailyUsers[date]) {
+          protocolData[protocol].dailyUsers[date] = 0;
+        }
+        if (!protocolData[protocol].dailyNewUsers[date]) {
+          protocolData[protocol].dailyNewUsers[date] = 0;
+        }
+
         protocolData[protocol].dailyVolumes[date] += volume;
+        protocolData[protocol].dailyUsers[date] += users;
+        protocolData[protocol].dailyNewUsers[date] += newUsers;
+
         protocolData[protocol].currentWeekTotal += volume;
-        
+        protocolData[protocol].currentWeekUsers += users;
+        protocolData[protocol].currentWeekNewUsers += newUsers;
+
         // Aggregate by chain for current week
         if (protocolData[protocol].chainVolumes[chain] !== undefined) {
           protocolData[protocol].chainVolumes[chain] += volume;
@@ -2502,6 +2522,8 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
       } else if (isPreviousWeek) {
         // Previous week data for growth calculation
         protocolData[protocol].previousWeekTotal += volume;
+        protocolData[protocol].previousWeekUsers += users;
+        protocolData[protocol].previousWeekNewUsers += newUsers;
       }
     });
 
@@ -2521,7 +2543,11 @@ export async function getEVMWeeklyMetrics(endDate: Date, dataType: string = 'pub
 
       weeklyData[protocol] = {
         totalVolume: data.currentWeekTotal,
+        totalUsers: data.currentWeekUsers,
+        totalNewUsers: data.currentWeekNewUsers,
         dailyVolumes: data.dailyVolumes,
+        dailyUsers: data.dailyUsers,
+        dailyNewUsers: data.dailyNewUsers,
         chainVolumes: data.chainVolumes,
         weeklyGrowth,
         weeklyTrend,

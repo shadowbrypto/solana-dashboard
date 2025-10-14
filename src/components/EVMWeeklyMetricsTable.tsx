@@ -378,7 +378,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
 
         <div className="flex items-center justify-between mt-3">
           <div className="flex items-center gap-2 group">
-            <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)} className="w-auto">
+            <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)} className="w-[300px]">
               <TabsList className="grid w-full grid-cols-3">
                 {metricOptions.map((option) => (
                   <TabsTrigger key={option.key} value={option.key} className="text-sm">
@@ -491,8 +491,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 );
               })}
               {selectedMetric !== 'users' && (
-                <TableHead className="text-right w-[180px]">
-                  {selectedMetric === 'volume' ? 'Total Volume' : 'Total New Users'}
+                <TableHead className={cn("text-right", selectedMetric === 'volume' ? "w-[180px]" : "w-[120px]")}>
+                  Weekly Total
                 </TableHead>
               )}
               <TableHead className="text-center w-[160px]">
@@ -591,23 +591,41 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   )}
                   
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-[50px] h-[32px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                            <Area
-                              type="monotone"
-                              dataKey="value"
-                              stroke={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                              strokeWidth={1.5}
-                              fill={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                              fillOpacity={0.2}
-                              dot={false}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                    {selectedMetric === 'users' ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-[80px] h-[32px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                              <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#3b82f6"
+                                strokeWidth={1.5}
+                                fill="#3b82f6"
+                                fillOpacity={0.2}
+                                dot={false}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
-                      {selectedMetric !== 'users' ? (
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="w-[50px] h-[32px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                              <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                                strokeWidth={1.5}
+                                fill={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                                fillOpacity={0.2}
+                                dot={false}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
                         <div className={cn(
                           "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
                           item.weeklyGrowth >= 0
@@ -625,10 +643,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                           )}
                           <span>{Math.abs(item.weeklyGrowth * 100).toFixed(1)}%</span>
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -704,23 +720,41 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 )}
                 
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-[50px] h-[32px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={totals.totalWeeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                          <Area
-                            type="monotone"
-                            dataKey="value"
-                            stroke={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                            strokeWidth={1.5}
-                            fill={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                            fillOpacity={0.2}
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                  {selectedMetric === 'users' ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-[80px] h-[32px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={totals.totalWeeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                            <Area
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#3b82f6"
+                              strokeWidth={1.5}
+                              fill="#3b82f6"
+                              fillOpacity={0.2}
+                              dot={false}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
-                    {selectedMetric !== 'users' ? (
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="w-[50px] h-[32px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={totals.totalWeeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                            <Area
+                              type="monotone"
+                              dataKey="value"
+                              stroke={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                              strokeWidth={1.5}
+                              fill={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                              fillOpacity={0.2}
+                              dot={false}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
                       <div className={cn(
                         "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
                         totals.totalWeeklyGrowth >= 0
@@ -738,10 +772,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                         )}
                         <span>{Math.abs(totals.totalWeeklyGrowth * 100).toFixed(1)}%</span>
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">—</span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             )}

@@ -100,6 +100,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   const totals = useMemo(() => {
     const visibleData = protocolData.filter(item => !hiddenProtocols.has(item.protocol));
     const totalVolume = visibleData.reduce((sum, item) => sum + item.totalVolume, 0);
+    const totalUsers = visibleData.reduce((sum, item) => sum + item.totalUsers, 0);
+    const totalNewUsers = visibleData.reduce((sum, item) => sum + item.totalNewUsers, 0);
     const totalPreviousWeekVolume = visibleData.reduce((sum, item) => sum + (item.previousWeekTotal || 0), 0);
     const totalChainVolumes: ChainVolume = {
       ethereum: visibleData.reduce((sum, item) => sum + item.chainVolumes.ethereum, 0),
@@ -109,20 +111,44 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
       arbitrum: visibleData.reduce((sum, item) => sum + item.chainVolumes.arbitrum, 0)
     };
     const totalDailyVolumes: Record<string, number> = {};
+    const totalDailyUsers: Record<string, number> = {};
+    const totalDailyNewUsers: Record<string, number> = {};
     last7Days.forEach(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
       totalDailyVolumes[dateStr] = visibleData.reduce((sum, item) => sum + (item.dailyVolumes[dateStr] || 0), 0);
+      totalDailyUsers[dateStr] = visibleData.reduce((sum, item) => sum + (item.dailyUsers[dateStr] || 0), 0);
+      totalDailyNewUsers[dateStr] = visibleData.reduce((sum, item) => sum + (item.dailyNewUsers[dateStr] || 0), 0);
     });
+
+    // Get daily values based on selected metric
+    const getDailyValue = (dateStr: string) => {
+      switch (selectedMetric) {
+        case 'users': return totalDailyUsers[dateStr] || 0;
+        case 'newUsers': return totalDailyNewUsers[dateStr] || 0;
+        default: return totalDailyVolumes[dateStr] || 0;
+      }
+    };
+
     const totalWeeklyTrend = last7Days.map(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
-      return totalDailyVolumes[dateStr] || 0;
+      return getDailyValue(dateStr);
     });
-    const totalWeeklyGrowth = totalPreviousWeekVolume > 0 
-      ? (totalVolume - totalPreviousWeekVolume) / totalPreviousWeekVolume 
+    const totalWeeklyGrowth = totalPreviousWeekVolume > 0
+      ? (totalVolume - totalPreviousWeekVolume) / totalPreviousWeekVolume
       : 0;
 
-    return { totalVolume, totalChainVolumes, totalDailyVolumes, totalWeeklyTrend, totalWeeklyGrowth };
-  }, [protocolData, last7Days, hiddenProtocols]);
+    return {
+      totalVolume,
+      totalUsers,
+      totalNewUsers,
+      totalChainVolumes,
+      totalDailyVolumes,
+      totalDailyUsers,
+      totalDailyNewUsers,
+      totalWeeklyTrend,
+      totalWeeklyGrowth
+    };
+  }, [protocolData, last7Days, hiddenProtocols, selectedMetric]);
 
   useEffect(() => {
     const fetchOptimizedData = async () => {
@@ -138,12 +164,16 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
         // Transform backend data to match existing frontend structure
         const processedData: ProtocolWeeklyData[] = optimizedData.sortedProtocols.map(protocol => {
           const protocolWeeklyData = optimizedData.weeklyData[protocol];
-          
+
           if (!protocolWeeklyData) {
             return {
               protocol,
               totalVolume: 0,
+              totalUsers: 0,
+              totalNewUsers: 0,
               dailyVolumes: {},
+              dailyUsers: {},
+              dailyNewUsers: {},
               chainVolumes: {
                 ethereum: 0,
                 base: 0,
@@ -156,11 +186,15 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
               previousWeekTotal: 0
             };
           }
-          
+
           return {
             protocol,
             totalVolume: protocolWeeklyData.totalVolume,
+            totalUsers: protocolWeeklyData.totalUsers || 0,
+            totalNewUsers: protocolWeeklyData.totalNewUsers || 0,
             dailyVolumes: protocolWeeklyData.dailyVolumes,
+            dailyUsers: protocolWeeklyData.dailyUsers || {},
+            dailyNewUsers: protocolWeeklyData.dailyNewUsers || {},
             chainVolumes: protocolWeeklyData.chainVolumes,
             weeklyGrowth: protocolWeeklyData.weeklyGrowth,
             weeklyTrend: protocolWeeklyData.weeklyTrend,
@@ -180,7 +214,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     };
 
     fetchOptimizedData();
-  }, [endDate]);
+  }, [endDate, selectedMetric]);
 
   const toggleProtocolVisibility = (protocol: string) => {
     setHiddenProtocols(prev => {
@@ -245,7 +279,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
         ]) as string;
         
         const link = document.createElement('a');
-        link.download = `EVM Weekly Report - ${format(endDate, 'dd.MM')}.png`;
+        link.download = `EVM Weekly Report - ${selectedMetricOption.label} - ${format(endDate, 'dd.MM')}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -334,24 +368,36 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     <div className="relative space-y-3" data-table="evm-weekly-metrics">
       <div data-screenshot-content="true">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
-                EVM
-              </span>
-            </div>
-            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <button
-                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-              >
-                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
+              EVM
+            </span>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center gap-2 group">
+            <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)} className="w-auto">
+              <TabsList className="grid w-full grid-cols-3">
+                {metricOptions.map((option) => (
+                  <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                    {option.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <button
+              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+            >
+              {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+            </button>
+          </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -444,8 +490,14 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   </TableHead>
                 );
               })}
-              <TableHead className="text-right w-[180px]">Total Volume</TableHead>
-              <TableHead className="text-center w-[160px]">Weekly Trend</TableHead>
+              {selectedMetric !== 'users' && (
+                <TableHead className="text-right w-[180px]">
+                  {selectedMetric === 'volume' ? 'Total Volume' : 'Total New Users'}
+                </TableHead>
+              )}
+              <TableHead className="text-center w-[160px]">
+                {selectedMetric === 'users' ? 'Weekly Trend' : 'Trend & Growth'}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -483,34 +535,155 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   
                   {last7Days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
-                    const dayVolume = item.dailyVolumes[dateStr] || 0;
+                    const getDayValue = () => {
+                      switch (selectedMetric) {
+                        case 'users': return item.dailyUsers[dateStr] || 0;
+                        case 'newUsers': return item.dailyNewUsers[dateStr] || 0;
+                        default: return item.dailyVolumes[dateStr] || 0;
+                      }
+                    };
+                    const dayValue = getDayValue();
                     return (
                       <TableCell key={dateStr} className="text-right text-sm">
-                        {formatCurrency(dayVolume)}
+                        {selectedMetricOption.format(dayValue)}
                       </TableCell>
                     );
                   })}
                   
+                  {selectedMetric !== 'users' && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center gap-2 justify-end">
+                        <Badge variant="outline" className="font-medium text-sm bg-background">
+                          {selectedMetric === 'volume' ? formatCurrency(item.totalVolume) : formatNumber(item.totalNewUsers)}
+                        </Badge>
+                        {selectedMetric === 'volume' && item.totalVolume > 0 && (
+                          <div className="relative w-24 h-3 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                            {Object.entries(item.chainVolumes).map(([chain, volume], index) => {
+                              const chainVolume = volume || 0;
+                              if (chainVolume === 0) return null;
+
+                              const percentage = (chainVolume / item.totalVolume) * 100;
+                              const previousPercentage = Object.entries(item.chainVolumes)
+                                .slice(0, index)
+                                .reduce((sum, [prevChain, prevVolume]) => {
+                                  return sum + ((prevVolume || 0) / item.totalVolume) * 100;
+                                }, 0);
+
+                              const chainColor = chainColors[chain] || '#6B7280';
+
+                              return (
+                                <div
+                                  key={chain}
+                                  className="absolute top-0 h-full"
+                                  style={{
+                                    left: `${previousPercentage}%`,
+                                    width: `${percentage}%`,
+                                    backgroundColor: chainColor,
+                                  }}
+                                  title={`${chain}: ${formatCurrency(chainVolume)} (${percentage.toFixed(1)}%)`}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-[50px] h-[32px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                            <Area
+                              type="monotone"
+                              dataKey="value"
+                              stroke={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                              strokeWidth={1.5}
+                              fill={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
+                              fillOpacity={0.2}
+                              dot={false}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {selectedMetric !== 'users' ? (
+                        <div className={cn(
+                          "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                          item.weeklyGrowth >= 0
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        )}>
+                          {item.weeklyGrowth >= 0 ? (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                            </svg>
+                          ) : (
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                            </svg>
+                          )}
+                          <span>{Math.abs(item.weeklyGrowth * 100).toFixed(1)}%</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+                })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={last7Days.length + (selectedMetric === 'users' ? 2 : 3)} className="text-center text-muted-foreground py-8">
+                  No data available for the selected period
+                </TableCell>
+              </TableRow>
+            )}
+            
+            {/* Total Row */}
+            {protocolData.length > 0 && (
+              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
+                <TableCell className="font-bold text-sm" style={{ paddingLeft: '2rem' }}>Total</TableCell>
+                
+                {last7Days.map((day) => {
+                  const dateStr = format(day, 'yyyy-MM-dd');
+                  const getDayValue = () => {
+                    switch (selectedMetric) {
+                      case 'users': return totals.totalDailyUsers[dateStr] || 0;
+                      case 'newUsers': return totals.totalDailyNewUsers[dateStr] || 0;
+                      default: return totals.totalDailyVolumes[dateStr] || 0;
+                    }
+                  };
+                  const dayValue = getDayValue();
+                  return (
+                    <TableCell key={dateStr} className="text-right font-bold text-sm">
+                      {selectedMetricOption.format(dayValue)}
+                    </TableCell>
+                  );
+                })}
+                
+                {selectedMetric !== 'users' && (
                   <TableCell className="text-right">
                     <div className="flex items-center gap-2 justify-end">
-                      <Badge variant="outline" className="font-medium text-sm bg-background">
-                        {formatCurrency(item.totalVolume)}
+                      <Badge variant="outline" className="font-bold text-sm bg-background">
+                        {selectedMetric === 'volume' ? formatCurrency(totals.totalVolume) : formatNumber(totals.totalNewUsers)}
                       </Badge>
-                      {item.totalVolume > 0 && (
+                      {selectedMetric === 'volume' && totals.totalVolume > 0 && (
                         <div className="relative w-24 h-3 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                          {Object.entries(item.chainVolumes).map(([chain, volume], index) => {
+                          {Object.entries(totals.totalChainVolumes).map(([chain, volume], index) => {
                             const chainVolume = volume || 0;
                             if (chainVolume === 0) return null;
-                            
-                            const percentage = (chainVolume / item.totalVolume) * 100;
-                            const previousPercentage = Object.entries(item.chainVolumes)
+
+                            const percentage = (chainVolume / totals.totalVolume) * 100;
+                            const previousPercentage = Object.entries(totals.totalChainVolumes)
                               .slice(0, index)
                               .reduce((sum, [prevChain, prevVolume]) => {
-                                return sum + ((prevVolume || 0) / item.totalVolume) * 100;
+                                return sum + ((prevVolume || 0) / totals.totalVolume) * 100;
                               }, 0);
-                            
+
                             const chainColor = chainColors[chain] || '#6B7280';
-                            
+
                             return (
                               <div
                                 key={chain}
@@ -528,115 +701,16 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                       )}
                     </div>
                   </TableCell>
-                  
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-[50px] h-[32px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={item.weeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                              strokeWidth={1.5}
-                              fill={item.weeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
-                              fillOpacity={0.2}
-                              dot={false}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className={cn(
-                        "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-                        item.weeklyGrowth >= 0
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      )}>
-                        {item.weeklyGrowth >= 0 ? (
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                          </svg>
-                        ) : (
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                          </svg>
-                        )}
-                        <span>{Math.abs(item.weeklyGrowth * 100).toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-                })
-            ) : (
-              <TableRow>
-                <TableCell colSpan={last7Days.length + 3} className="text-center text-muted-foreground py-8">
-                  No data available for the selected period
-                </TableCell>
-              </TableRow>
-            )}
-            
-            {/* Total Row */}
-            {protocolData.length > 0 && (
-              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
-                <TableCell className="font-bold text-sm" style={{ paddingLeft: '2rem' }}>Total</TableCell>
-                
-                {last7Days.map((day) => {
-                  const dateStr = format(day, 'yyyy-MM-dd');
-                  const dayVolume = totals.totalDailyVolumes[dateStr] || 0;
-                  return (
-                    <TableCell key={dateStr} className="text-right font-bold text-sm">
-                      {formatCurrency(dayVolume)}
-                    </TableCell>
-                  );
-                })}
-                
-                <TableCell className="text-right">
-                  <div className="flex items-center gap-2 justify-end">
-                    <Badge variant="outline" className="font-bold text-sm bg-background">
-                      {formatCurrency(totals.totalVolume)}
-                    </Badge>
-                    {totals.totalVolume > 0 && (
-                      <div className="relative w-24 h-3 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                        {Object.entries(totals.totalChainVolumes).map(([chain, volume], index) => {
-                          const chainVolume = volume || 0;
-                          if (chainVolume === 0) return null;
-                          
-                          const percentage = (chainVolume / totals.totalVolume) * 100;
-                          const previousPercentage = Object.entries(totals.totalChainVolumes)
-                            .slice(0, index)
-                            .reduce((sum, [prevChain, prevVolume]) => {
-                              return sum + ((prevVolume || 0) / totals.totalVolume) * 100;
-                            }, 0);
-                          
-                          const chainColor = chainColors[chain] || '#6B7280';
-                          
-                          return (
-                            <div
-                              key={chain}
-                              className="absolute top-0 h-full"
-                              style={{
-                                left: `${previousPercentage}%`,
-                                width: `${percentage}%`,
-                                backgroundColor: chainColor,
-                              }}
-                              title={`${chain}: ${formatCurrency(chainVolume)} (${percentage.toFixed(1)}%)`}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
+                )}
                 
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="w-[50px] h-[32px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={totals.totalWeeklyTrend.map((value, index) => ({ day: index, value }))} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
-                          <Area 
-                            type="monotone" 
-                            dataKey="value" 
+                          <Area
+                            type="monotone"
+                            dataKey="value"
                             stroke={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
                             strokeWidth={1.5}
                             fill={totals.totalWeeklyGrowth >= 0 ? "#22c55e" : "#ef4444"}
@@ -646,23 +720,27 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className={cn(
-                      "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
-                      totals.totalWeeklyGrowth >= 0
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                    )}>
-                      {totals.totalWeeklyGrowth >= 0 ? (
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
-                        </svg>
-                      ) : (
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
-                        </svg>
-                      )}
-                      <span>{Math.abs(totals.totalWeeklyGrowth * 100).toFixed(1)}%</span>
-                    </div>
+                    {selectedMetric !== 'users' ? (
+                      <div className={cn(
+                        "flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium",
+                        totals.totalWeeklyGrowth >= 0
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      )}>
+                        {totals.totalWeeklyGrowth >= 0 ? (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                          </svg>
+                        ) : (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                          </svg>
+                        )}
+                        <span>{Math.abs(totals.totalWeeklyGrowth * 100).toFixed(1)}%</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

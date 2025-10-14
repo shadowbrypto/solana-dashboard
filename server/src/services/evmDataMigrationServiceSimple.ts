@@ -136,10 +136,19 @@ export class SimpleEVMDataMigrationService {
       // Chain volume column mapping
       const chainVolumeMapping = {
         'ethereum': 'ethereumVolumeUSD',
-        'base': 'baseVolumeUSD', 
+        'base': 'baseVolumeUSD',
         'arbitrum': 'arbitrumVolumeUSD',
         'bsc': 'bscVolumeUSD',
         'avax': 'avalancheVolumeUSD'
+      };
+
+      // Chain user metrics column mapping (currently only BSC has user data)
+      const chainUsersMapping = {
+        'bsc': 'bscNumberOfUsers'
+      };
+
+      const chainNewUsersMapping = {
+        'bsc': 'bscNumberOfNewUsers'
       };
 
       const results = [];
@@ -147,6 +156,9 @@ export class SimpleEVMDataMigrationService {
       // Process each chain
       for (const [chain, volumeColumn] of Object.entries(chainVolumeMapping)) {
         console.log(`Processing ${chain} data for ${cleanProtocolName}...`);
+        console.log(`  Volume column: ${volumeColumn}`);
+        console.log(`  Users column: ${chainUsersMapping[chain as keyof typeof chainUsersMapping] || 'none'}`);
+        console.log(`  New users column: ${chainNewUsersMapping[chain as keyof typeof chainNewUsersMapping] || 'none'}`);
 
         // Map CSV rows to database records for this chain
         const chainRecords = csvData.map((row: any) => {
@@ -167,20 +179,45 @@ export class SimpleEVMDataMigrationService {
           const volumeValue = row[volumeColumn];
           const volume = volumeValue ? parseFloat(volumeValue) : 0;
 
+          // Get user metrics for this specific chain (currently only BSC has data)
+          const usersColumn = chainUsersMapping[chain as keyof typeof chainUsersMapping];
+          const newUsersColumn = chainNewUsersMapping[chain as keyof typeof chainNewUsersMapping];
+
+          const usersValue = usersColumn ? row[usersColumn] : null;
+          const newUsersValue = newUsersColumn ? row[newUsersColumn] : null;
+
+          const dailyUsers = usersValue ? parseFloat(usersValue) : 0;
+          const newUsers = newUsersValue ? parseFloat(newUsersValue) : 0;
+
+          // Debug log for first BSC row
+          if (chain === 'bsc' && parsedDate === '2025-10-14') {
+            console.log(`BSC USER DATA DEBUG for ${cleanProtocolName}:`, {
+              chain,
+              date: parsedDate,
+              usersColumn,
+              newUsersColumn,
+              usersValue,
+              newUsersValue,
+              dailyUsers,
+              newUsers,
+              volume
+            });
+          }
+
           return {
             protocol_name: cleanProtocolName,  // Use clean name without _evm
             chain: chain,
             date: parsedDate,
             volume_usd: volume,
-            daily_users: 0,
-            new_users: 0,
+            daily_users: dailyUsers,
+            new_users: newUsers,
             trades: 0,
             fees_usd: 0,
             data_type: dataType
           };
-        }).filter(record => 
-          // Only include records with valid dates and volume > 0
-          record.date && record.volume_usd > 0
+        }).filter(record =>
+          // Only include records with valid dates and (volume > 0 OR user data exists)
+          record.date && (record.volume_usd > 0 || record.daily_users > 0 || record.new_users > 0)
         );
 
         if (chainRecords.length === 0) {
@@ -191,6 +228,11 @@ export class SimpleEVMDataMigrationService {
             success: true
           });
           continue;
+        }
+
+        // Debug: Log first BSC record
+        if (chain === 'bsc' && chainRecords.length > 0) {
+          console.log(`First BSC record for ${cleanProtocolName}:`, JSON.stringify(chainRecords[0], null, 2));
         }
 
         // Insert records in batches

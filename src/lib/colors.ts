@@ -17,7 +17,11 @@ export const protocolColors: { [key: string]: string } = {
   "telemetry": "hsl(39 96% 60%)",   // Amber
   slingshot: "hsl(110 75% 45%)",           // Lime Green
   fomo: "hsl(270 95% 60%)",             // Electric Purple
-  
+  mevx: "hsl(195 85% 50%)",             // Cyan
+  rhythm: "hsl(330 80% 55%)",           // Pink
+  vyper: "hsl(90 70% 45%)",             // Yellow Green
+  opensea: "hsl(210 100% 50%)",         // Ocean Blue
+
   // EVM Protocol Colors (distinct from their Solana counterparts)
   sigma: "hsl(300 85% 55%)",            // Magenta
   sigma_evm: "hsl(300 85% 55%)",        // Magenta

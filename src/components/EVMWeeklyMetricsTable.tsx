@@ -471,16 +471,16 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
               {last7Days.map((day) => {
                 const dayOfWeek = day.getDay(); // 0 = Sunday, 6 = Saturday
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                
+
                 return (
-                  <TableHead key={day.toISOString()} className="text-center w-[100px] px-2">
-                    <div className="flex flex-col items-center gap-1.5">
+                  <TableHead key={day.toISOString()} className="text-right w-[100px] px-2">
+                    <div className="flex flex-col items-end gap-1.5">
                       <span className="text-sm font-medium whitespace-nowrap">{format(day, 'MMM dd')}</span>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`text-xs font-normal px-2 py-0.5 min-w-[36px] justify-center ${
-                          isWeekend 
-                            ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' 
+                          isWeekend
+                            ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
                             : 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
                         }`}
                       >
@@ -495,7 +495,7 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                   Weekly Total
                 </TableHead>
               )}
-              <TableHead className="text-center w-[160px]">
+              <TableHead className={cn(selectedMetric === 'users' ? "text-center" : "text-right", "w-[160px]")}>
                 {selectedMetric === 'users' ? 'Weekly Trend' : 'Trend & Growth'}
               </TableHead>
             </TableRow>

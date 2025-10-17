@@ -19,11 +19,11 @@ import {
   TrendingUp,
   LucideIcon
 } from 'lucide-react';
-import { 
-  BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon, 
-  BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon, 
+import {
+  BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon,
+  BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon,
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
-  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon,
+  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon,
   RhythmIcon, VyperIcon, OpenSeaIcon
 } from '../components/icons/index';
 
@@ -84,6 +84,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'padre_evm', name: 'Padre', icon: PadreIcon, category: 'EVM', chain: 'evm' },
   { id: 'gmgnai_evm', name: 'GmGnAi', icon: GMGNAIIcon, category: 'EVM', chain: 'evm' },
   { id: 'photon_evm', name: 'Photon', icon: PhotonIcon, category: 'EVM', chain: 'evm' },
+  { id: 'mevx_evm', name: 'Mevx', icon: MevxEVMIcon, category: 'EVM', chain: 'evm' },
 ];
 
 // Helper functions
@@ -149,6 +150,8 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'gmgnai.jpg';
     case 'photon_evm':
       return 'photon.jpg';
+    case 'mevx_evm':
+      return 'mevx.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

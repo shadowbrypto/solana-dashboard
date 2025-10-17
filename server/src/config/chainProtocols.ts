@@ -19,7 +19,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'soltradingbot': { solana: true, evm: false },
   'trojan': { solana: true, evm: false },
   'vector': { solana: true, evm: false },
-  'mevx': { solana: true, evm: false },
+  'mevx': { solana: true, evm: true },
   'telemetry': { solana: true, evm: false },
   'nova terminal': { solana: true, evm: false },
   'slingshot': { solana: true, evm: false },

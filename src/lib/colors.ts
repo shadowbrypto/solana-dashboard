@@ -29,6 +29,7 @@ export const protocolColors: { [key: string]: string } = {
   bloom_evm: "hsl(160 90% 40%)",        // Forest Green (different from regular bloom)
   banana_evm: "hsl(50 100% 50%)",       // Bright Yellow (different from regular banana blue)
   photon_evm: "hsl(280 91% 65%)",       // Bright Purple (matching Solana photon)
+  mevx_evm: "hsl(195 85% 50%)",         // Cyan (matching Solana mevx)
 };
 
 export const protocolColorsList = Object.values(protocolColors);

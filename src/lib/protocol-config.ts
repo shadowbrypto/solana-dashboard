@@ -23,7 +23,7 @@ import {
   BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon,
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon,
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
-  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon,
+  SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon, AxiomEVMIcon,
   RhythmIcon, VyperIcon, OpenSeaIcon
 } from '../components/icons/index';
 
@@ -85,6 +85,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'gmgnai_evm', name: 'GmGnAi', icon: GMGNAIIcon, category: 'EVM', chain: 'evm' },
   { id: 'photon_evm', name: 'Photon', icon: PhotonIcon, category: 'EVM', chain: 'evm' },
   { id: 'mevx_evm', name: 'Mevx', icon: MevxEVMIcon, category: 'EVM', chain: 'evm' },
+  { id: 'axiom_evm', name: 'Axiom', icon: AxiomEVMIcon, category: 'EVM', chain: 'evm' },
 ];
 
 // Helper functions
@@ -152,6 +153,8 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'photon.jpg';
     case 'mevx_evm':
       return 'mevx.jpg';
+    case 'axiom_evm':
+      return 'axiom.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

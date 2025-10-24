@@ -286,7 +286,8 @@ export class SimpleEVMDataMigrationService {
       'padre_evm': 5793181,
       'gmgnai_evm': 5823908,
       'photon_evm': 5929750,
-      'mevx_evm': 5498756
+      'mevx_evm': 5498756,
+      'axiom_evm': 6031024
     };
 
     return queryMap[protocolName] || null;

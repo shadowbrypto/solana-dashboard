@@ -3,6 +3,7 @@ import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregated
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
+import { getEVMProtocols } from '../config/chainProtocols.js';
 
 const router = Router();
 
@@ -570,9 +571,10 @@ router.get('/latest-dates', async (req: Request, res: Response) => {
 router.post('/sync-evm', async (req: Request, res: Response) => {
   try {
     console.log('Starting EVM data sync for all protocols...');
-    
-    // Get all EVM protocols and sync them individually
-    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm', 'padre_evm', 'gmgnai_evm', 'photon_evm', 'mevx_evm'];
+
+    // Get all EVM protocols dynamically from chain configuration (adds _evm suffix)
+    const evmProtocols = getEVMProtocols().map(protocol => `${protocol}_evm`);
+    console.log(`Syncing ${evmProtocols.length} EVM protocols:`, evmProtocols);
     const results = [];
     
     for (const protocol of evmProtocols) {

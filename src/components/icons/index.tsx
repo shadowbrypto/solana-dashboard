@@ -100,6 +100,10 @@ export const MevxEVMIcon = (props: any) => (
   <ProtocolLogo protocolId="mevx" protocolName="Mevx" fallbackIcon={Zap} {...props} />
 );
 
+export const AxiomEVMIcon = (props: any) => (
+  <ProtocolLogo protocolId="axiom" protocolName="Axiom" fallbackIcon={Aperture} {...props} />
+);
+
 export const RhythmIcon = (props: any) => (
   <ProtocolLogo protocolId="rhythm" protocolName="Rhythm" fallbackIcon={Terminal} {...props} />
 );

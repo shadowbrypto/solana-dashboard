@@ -8,7 +8,7 @@ export interface ProtocolChainConfig {
 
 export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   // Solana-only protocols
-  'axiom': { solana: true, evm: false },
+  'axiom': { solana: true, evm: true },
   'bonkbot': { solana: true, evm: false },
   'bullx': { solana: true, evm: false },
   'gmgnai': { solana: true, evm: true },

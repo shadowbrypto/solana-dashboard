@@ -269,6 +269,49 @@ Add the protocol logo image:
 
 ---
 
+---
+
+## Automatic EVM Protocol Discovery
+
+**IMPORTANT**: The system now automatically includes all EVM protocols in the `/api/protocols/sync-evm` endpoint.
+
+### How It Works
+
+The `/api/protocols/sync-evm` endpoint dynamically discovers all EVM protocols from the `chainProtocols.ts` configuration:
+
+**File**: `/server/src/routes/protocolRoutes.ts` (around line 575)
+
+```typescript
+// Get all EVM protocols dynamically from chain configuration (adds _evm suffix)
+const evmProtocols = getEVMProtocols().map(protocol => `${protocol}_evm`);
+```
+
+### What This Means
+
+- ✅ **Automatic inclusion**: Once you complete Step 3 (update `chainProtocols.ts`), your protocol is automatically included in bulk EVM syncs
+- ✅ **No hardcoding needed**: You don't need to manually add your protocol to any hardcoded lists in the sync routes
+- ✅ **Sync all protocols**: `POST /api/protocols/sync-evm` will sync ALL EVM protocols, including newly added ones
+
+### Syncing Methods
+
+**1. Sync All EVM Protocols:**
+```bash
+curl -X POST http://localhost:3001/api/protocols/sync-evm
+```
+This will automatically sync ALL protocols configured in `chainProtocols.ts` with `evm: true`.
+
+**2. Sync Specific Protocol:**
+```bash
+curl -X POST http://localhost:3001/api/protocols/sync-evm/your_protocol_evm
+```
+
+**3. Sync via Data Update Endpoint:**
+```bash
+curl -X POST http://localhost:3001/api/data-update/sync/your_protocol_evm?dataType=public
+```
+
+---
+
 ## Verification Steps
 
 After completing all steps above:

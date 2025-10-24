@@ -1046,10 +1046,31 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       .from('projected_stats')
       .select('protocol_name, volume_usd, fees_usd')
       .eq('formatted_day', dateStr);
-      
+
     // Don't throw error for projected data - it's optional
     if (projectedError) {
       console.warn('Failed to fetch projected data:', projectedError);
+    }
+
+    // Fetch previous day's projected volume data for growth calculation
+    const { data: previousProjectedData, error: previousProjectedError } = await supabase
+      .from('projected_stats')
+      .select('protocol_name, volume_usd')
+      .eq('formatted_day', previousDateStr);
+
+    if (previousProjectedError) {
+      console.warn('Failed to fetch previous projected data:', previousProjectedError);
+    }
+
+    // Fetch 7-day projected trend data
+    const { data: projectedTrendData, error: projectedTrendError } = await supabase
+      .from('projected_stats')
+      .select('protocol_name, formatted_day, volume_usd')
+      .gte('formatted_day', format(startDate, 'yyyy-MM-dd'))
+      .lte('formatted_day', dateStr);
+
+    if (projectedTrendError) {
+      console.warn('Failed to fetch projected trend data:', projectedTrendError);
     }
     
     // Process data for each protocol
@@ -1111,60 +1132,121 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       });
     }
     
-    // Calculate daily growth for each protocol
+    // Calculate daily growth for each protocol using projected volume
+    // Fall back to actual volume if projected volume is not available
+    if (previousProjectedData) {
+      previousProjectedData.forEach(record => {
+        const protocol = record.protocol_name;
+        const previousProjectedVolume = Number(record.volume_usd) || 0;
+
+        if (protocolData[protocol] && previousProjectedVolume > 0) {
+          const currentProjectedVolume = protocolData[protocol].projectedVolume;
+          if (currentProjectedVolume > 0) {
+            protocolData[protocol].dailyGrowth = (currentProjectedVolume - previousProjectedVolume) / previousProjectedVolume;
+          }
+        }
+      });
+    }
+
+    // For protocols without projected volume data, fall back to actual volume
     if (previousDayData) {
       previousDayData.forEach(record => {
         const protocol = record.protocol_name;
         const previousVolume = Number(record.volume_usd) || 0;
-        
-        if (protocolData[protocol] && previousVolume > 0) {
+
+        // Only calculate if no projected volume growth was calculated
+        if (protocolData[protocol] && protocolData[protocol].dailyGrowth === 0 && previousVolume > 0) {
           const currentVolume = protocolData[protocol].totalVolume;
           protocolData[protocol].dailyGrowth = (currentVolume - previousVolume) / previousVolume;
         }
       });
     }
     
-    // Process weekly trend data
-    if (trendData) {
+    // Process weekly trend data using projected volume
+    // Fall back to actual volume if projected data is not available
+    if (projectedTrendData) {
       // Group by protocol and date
       const trendByProtocolDate: Record<string, Record<string, number>> = {};
-      
-      trendData.forEach(record => {
+
+      projectedTrendData.forEach(record => {
         const protocol = record.protocol_name;
-        const date = record.date;
+        const date = record.formatted_day;
         const volume = Number(record.volume_usd) || 0;
-        
+
         if (!trendByProtocolDate[protocol]) {
           trendByProtocolDate[protocol] = {};
         }
         trendByProtocolDate[protocol][date] = volume;
       });
-      
+
       // Build weekly trend arrays
       Object.keys(protocolData).forEach(protocol => {
         const weeklyTrend: number[] = [];
+        let hasProjectedData = false;
+
         for (let i = 6; i >= 0; i--) {
           const trendDate = new Date(date);
           trendDate.setDate(trendDate.getDate() - i);
           const trendDateStr = format(trendDate, 'yyyy-MM-dd');
-          
-          weeklyTrend.push(trendByProtocolDate[protocol]?.[trendDateStr] || 0);
+
+          const projectedVolume = trendByProtocolDate[protocol]?.[trendDateStr] || 0;
+          weeklyTrend.push(projectedVolume);
+          if (projectedVolume > 0) hasProjectedData = true;
         }
-        protocolData[protocol].weeklyTrend = weeklyTrend;
+
+        // Only set if we have projected data
+        if (hasProjectedData) {
+          protocolData[protocol].weeklyTrend = weeklyTrend;
+        }
+      });
+    }
+
+    // Fall back to actual volume trend for protocols without projected data
+    if (trendData) {
+      // Group by protocol and date
+      const actualTrendByProtocolDate: Record<string, Record<string, number>> = {};
+
+      trendData.forEach(record => {
+        const protocol = record.protocol_name;
+        const date = record.date;
+        const volume = Number(record.volume_usd) || 0;
+
+        if (!actualTrendByProtocolDate[protocol]) {
+          actualTrendByProtocolDate[protocol] = {};
+        }
+        actualTrendByProtocolDate[protocol][date] = volume;
+      });
+
+      // Build weekly trend arrays for protocols without projected data
+      Object.keys(protocolData).forEach(protocol => {
+        // Check if weekly trend is still all zeros (no projected data)
+        const hasNoProjectedTrend = protocolData[protocol].weeklyTrend.every((v: number) => v === 0);
+
+        if (hasNoProjectedTrend) {
+          const weeklyTrend: number[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const trendDate = new Date(date);
+            trendDate.setDate(trendDate.getDate() - i);
+            const trendDateStr = format(trendDate, 'yyyy-MM-dd');
+
+            weeklyTrend.push(actualTrendByProtocolDate[protocol]?.[trendDateStr] || 0);
+          }
+          protocolData[protocol].weeklyTrend = weeklyTrend;
+        }
       });
     }
     
-    // Calculate totals
-    const totalVolume = Object.values(protocolData).reduce((sum, data: any) => sum + data.totalVolume, 0);
+    // Calculate totals using projected volume
+    const totalVolume = Object.values(protocolData).reduce((sum, data: any) => sum + data.projectedVolume, 0);
     const totalUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.dailyUsers, 0);
     const totalNewUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.newUsers, 0);
     const totalTrades = Object.values(protocolData).reduce((sum, data: any) => sum + data.trades, 0);
     const totalFees = Object.values(protocolData).reduce((sum, data: any) => sum + data.fees, 0);
-    
-    // Calculate total growth
+
+    // Calculate total growth using projected volume
     let totalGrowth = 0;
-    if (previousDayData) {
-      const previousTotalVolume = previousDayData.reduce((sum, record) => sum + (Number(record.volume_usd) || 0), 0);
+    if (previousProjectedData) {
+      const previousTotalVolume = previousProjectedData.reduce((sum, record) => sum + (Number(record.volume_usd) || 0), 0);
       if (previousTotalVolume > 0) {
         totalGrowth = (totalVolume - previousTotalVolume) / previousTotalVolume;
       }
@@ -1177,17 +1259,17 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
         totalWeeklyTrend[index] += value;
       });
     });
-    
-    // Determine top protocols by volume
+
+    // Determine top protocols by projected volume
     const topProtocols = Object.entries(protocolData)
-      .filter(([_, data]: [string, any]) => data.totalVolume > 0)
-      .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.totalVolume - a.totalVolume)
+      .filter(([_, data]: [string, any]) => data.projectedVolume > 0)
+      .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.projectedVolume - a.projectedVolume)
       .slice(0, 3)
       .map(([protocol, _]) => protocol);
-    
-    // Calculate market share for each protocol
+
+    // Calculate market share for each protocol using projected volume
     Object.keys(protocolData).forEach(protocol => {
-      protocolData[protocol].marketShare = totalVolume > 0 ? protocolData[protocol].totalVolume / totalVolume : 0;
+      protocolData[protocol].marketShare = totalVolume > 0 ? protocolData[protocol].projectedVolume / totalVolume : 0;
     });
 
     const result = {

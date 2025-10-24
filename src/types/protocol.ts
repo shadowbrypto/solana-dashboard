@@ -17,4 +17,6 @@ export interface ProtocolMetrics {
   numberOfNewUsers: number;
   daily_trades: number;
   total_fees_usd: number;
+  projected_volume?: number;
+  daily_growth?: number;
 }

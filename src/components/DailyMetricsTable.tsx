@@ -429,11 +429,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         );
       },
       getValue: (data) => {
-        const currentVolume = data?.total_volume_usd || 0;
-        const protocol = Object.keys(dailyData).find(key => dailyData[key] === data) as Protocol;
-        const previousVolume = protocol ? (previousDayData[protocol]?.total_volume_usd || 0) : 0;
-        if (previousVolume === 0) return 0;
-        return (currentVolume - previousVolume) / previousVolume;
+        // Use daily_growth from backend (already calculated with fallback logic)
+        return data?.daily_growth || 0;
       }
     },
   ];
@@ -562,19 +559,25 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             daily_users: data.dailyUsers,
             numberOfNewUsers: data.newUsers,
             daily_trades: data.trades,
-            total_fees_usd: data.fees
+            total_fees_usd: data.fees,
+            projected_volume: data.projectedVolume || 0,
+            daily_growth: data.dailyGrowth || 0
           };
-          
-          // Previous day data (calculate from current - growth)
-          const previousVolume = data.dailyGrowth !== 0 && data.totalVolume > 0 
-            ? data.totalVolume / (1 + data.dailyGrowth) 
+
+          // Previous day data (calculate from current volume and growth)
+          // Use actual volume if projected volume is not available
+          const currentVolume = (data.projectedVolume && data.projectedVolume > 0) ? data.projectedVolume : data.totalVolume;
+          const previousVolume = data.dailyGrowth !== 0 && currentVolume > 0
+            ? currentVolume / (1 + data.dailyGrowth)
             : 0;
           transformedPreviousData[protocol] = {
             total_volume_usd: previousVolume,
             daily_users: 0,
             numberOfNewUsers: 0,
             daily_trades: 0,
-            total_fees_usd: 0
+            total_fees_usd: 0,
+            projected_volume: (data.projectedVolume && data.projectedVolume > 0) ? previousVolume : 0,
+            daily_growth: 0
           };
           
           // Weekly volume data

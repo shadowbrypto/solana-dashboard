@@ -572,7 +572,7 @@ router.post('/sync-evm', async (req: Request, res: Response) => {
     console.log('Starting EVM data sync for all protocols...');
     
     // Get all EVM protocols and sync them individually
-    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm', 'padre_evm', 'gmgnai_evm', 'photon_evm'];
+    const evmProtocols = ['sigma_evm', 'maestro_evm', 'bloom_evm', 'banana_evm', 'padre_evm', 'gmgnai_evm', 'photon_evm', 'mevx_evm'];
     const results = [];
     
     for (const protocol of evmProtocols) {

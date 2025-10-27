@@ -1236,8 +1236,12 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       });
     }
     
-    // Calculate totals using projected volume
-    const totalVolume = Object.values(protocolData).reduce((sum, data: any) => sum + data.projectedVolume, 0);
+    // Calculate totals using adjusted volume (projected if available, otherwise actual)
+    // This ensures mobile apps and protocols without projected data are included in totals
+    const totalVolume = Object.values(protocolData).reduce((sum, data: any) => {
+      const adjustedVolume = Math.max(data.projectedVolume, data.totalVolume);
+      return sum + adjustedVolume;
+    }, 0);
     const totalUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.dailyUsers, 0);
     const totalNewUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.newUsers, 0);
     const totalTrades = Object.values(protocolData).reduce((sum, data: any) => sum + data.trades, 0);
@@ -1260,16 +1264,25 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       });
     });
 
-    // Determine top protocols by projected volume
+    // Determine top protocols by adjusted volume (use projected if available, otherwise actual volume)
+    // This ensures mobile apps and protocols without projected data are included in rankings
     const topProtocols = Object.entries(protocolData)
-      .filter(([_, data]: [string, any]) => data.projectedVolume > 0)
-      .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.projectedVolume - a.projectedVolume)
+      .filter(([_, data]: [string, any]) => {
+        const adjustedVolume = Math.max(data.projectedVolume, data.totalVolume);
+        return adjustedVolume > 0;
+      })
+      .sort(([_, a]: [string, any], [__, b]: [string, any]) => {
+        const adjustedVolumeA = Math.max(a.projectedVolume, a.totalVolume);
+        const adjustedVolumeB = Math.max(b.projectedVolume, b.totalVolume);
+        return adjustedVolumeB - adjustedVolumeA;
+      })
       .slice(0, 3)
       .map(([protocol, _]) => protocol);
 
-    // Calculate market share for each protocol using projected volume
+    // Calculate market share for each protocol using adjusted volume
     Object.keys(protocolData).forEach(protocol => {
-      protocolData[protocol].marketShare = totalVolume > 0 ? protocolData[protocol].projectedVolume / totalVolume : 0;
+      const adjustedVolume = Math.max(protocolData[protocol].projectedVolume, protocolData[protocol].totalVolume);
+      protocolData[protocol].marketShare = totalVolume > 0 ? adjustedVolume / totalVolume : 0;
     });
 
     const result = {

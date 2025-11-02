@@ -1088,7 +1088,8 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
         weeklyTrend: Array(7).fill(0),
         marketShare: 0,
         projectedVolume: 0,
-        projectedFees: 0
+        projectedFees: 0,
+        adjustedVolume: 0
       };
     });
     
@@ -1109,7 +1110,8 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
             weeklyTrend: Array(7).fill(0),
             marketShare: 0,
             projectedVolume: 0,
-            projectedFees: 0
+            projectedFees: 0,
+            adjustedVolume: 0
           };
         }
         
@@ -1279,9 +1281,10 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       .slice(0, 3)
       .map(([protocol, _]) => protocol);
 
-    // Calculate market share for each protocol using adjusted volume
+    // Calculate market share and store adjusted volume for each protocol
     Object.keys(protocolData).forEach(protocol => {
       const adjustedVolume = Math.max(protocolData[protocol].projectedVolume, protocolData[protocol].totalVolume);
+      protocolData[protocol].adjustedVolume = adjustedVolume;
       protocolData[protocol].marketShare = totalVolume > 0 ? adjustedVolume / totalVolume : 0;
     });
 

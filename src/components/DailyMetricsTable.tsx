@@ -87,11 +87,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   // Calculate total volume for market share (excluding hidden protocols)
   // Use backend totals if available and no protocols are hidden, otherwise calculate from visible protocols
-  const totalVolume = (backendTotals && hiddenProtocols.size === 0) 
+  // IMPORTANT: Use adjustedVolume to match backend calculation
+  const totalVolume = (backendTotals && hiddenProtocols.size === 0)
     ? backendTotals.totalVolume
     : protocols
         .filter(protocol => protocol !== 'all' && !hiddenProtocols.has(protocol))
-        .reduce((sum, protocol) => sum + (dailyData[protocol]?.total_volume_usd || 0), 0);
+        .reduce((sum, protocol) => sum + (dailyData[protocol]?.adjustedVolume || dailyData[protocol]?.total_volume_usd || 0), 0);
 
   // Weekly trend functions
   const getWeeklyVolumeChart = (protocolId: Protocol) => {
@@ -268,7 +269,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         return (
           <div className="flex items-center gap-2 justify-end">
             <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-300"
                 style={{ width: `${Math.max(percentage, 2)}%` }}
               />
@@ -277,7 +278,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           </div>
         );
       },
-      getValue: (data) => (data?.total_volume_usd || 0) / (totalVolume || 1)
+      // Use adjustedVolume to match backend calculation
+      getValue: (data) => (data?.adjustedVolume || data?.total_volume_usd || 0) / (totalVolume || 1)
     },
     {
       key: "daily_growth" as MetricKey,

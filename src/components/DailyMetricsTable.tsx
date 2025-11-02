@@ -563,6 +563,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             daily_trades: data.trades,
             total_fees_usd: data.fees,
             projected_volume: data.projectedVolume || 0,
+            adjustedVolume: data.adjustedVolume || data.totalVolume,
             daily_growth: data.dailyGrowth || 0
           };
 

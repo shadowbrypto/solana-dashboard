@@ -392,32 +392,53 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
               </div>
 
               {/* Chain Share Stats - Below Pie Chart - Sorted by Volume */}
-              <div className="mt-2 mb-6 flex gap-1.5 px-4 overflow-x-auto">
+              <div className="mt-2 mb-6 flex gap-2 px-4 overflow-x-auto">
                 {[
-                  { name: 'Solana', volume: solanaVolume, color: 'hsl(271, 91%, 65%)', textColorClass: 'text-purple-600 dark:text-purple-400' },
-                  { name: 'Ethereum', volume: ethereumVolume, color: 'hsl(217, 91%, 60%)', textColorClass: 'text-blue-600 dark:text-blue-400' },
-                  { name: 'Base', volume: baseVolume, color: 'hsl(220, 70%, 55%)', textColorClass: 'text-blue-500 dark:text-blue-300' },
-                  { name: 'BSC', volume: bscVolume, color: 'hsl(45, 93%, 47%)', textColorClass: 'text-yellow-600 dark:text-yellow-400' },
-                  { name: 'Avalanche', volume: avaxVolume, color: 'hsl(0, 84%, 60%)', textColorClass: 'text-red-600 dark:text-red-400' },
-                  { name: 'Arbitrum', volume: arbitrumVolume, color: 'hsl(211, 70%, 50%)', textColorClass: 'text-blue-700 dark:text-blue-300' },
+                  { name: 'Solana', volume: solanaVolume, color: 'hsl(271, 91%, 65%)', logo: 'solana.jpg' },
+                  { name: 'Ethereum', volume: ethereumVolume, color: 'hsl(217, 91%, 60%)', logo: 'ethereum.jpg' },
+                  { name: 'Base', volume: baseVolume, color: 'hsl(220, 70%, 55%)', logo: 'base.jpg' },
+                  { name: 'BSC', volume: bscVolume, color: 'hsl(45, 93%, 47%)', logo: 'bsc.jpg' },
+                  { name: 'Avalanche', volume: avaxVolume, color: 'hsl(0, 84%, 60%)', logo: 'avax.jpg' },
+                  { name: 'Arbitrum', volume: arbitrumVolume, color: 'hsl(211, 70%, 50%)', logo: 'arbitrum.jpg' },
                 ]
                   .filter(chain => chain.volume > 0)
                   .sort((a, b) => b.volume - a.volume)
                   .map(chain => (
                     <div
                       key={chain.name}
-                      className="relative overflow-hidden rounded-lg border px-2 py-1 shadow-sm flex items-center gap-1.5"
+                      className="relative overflow-hidden rounded-xl border px-3 py-2 flex items-center gap-2 min-w-fit"
                       style={{
-                        borderColor: `${chain.color}50`,
-                        background: `linear-gradient(to bottom right, ${chain.color}33, ${chain.color}1a, transparent)`,
-                        boxShadow: `0 1px 2px ${chain.color}1a`
+                        borderColor: `${chain.color}60`,
+                        background: `linear-gradient(135deg, ${chain.color}20, ${chain.color}10, transparent)`
                       }}
                     >
-                      <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: chain.color }}></span>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[9px] font-bold uppercase tracking-wide ${chain.textColorClass}`}>{chain.name}</span>
-                        <span className="text-sm font-bold font-mono text-foreground">{formatNumberWithSuffix(chain.volume)}</span>
-                        <span className="text-[9px] text-muted-foreground font-mono">
+                      {/* Chain Logo */}
+                      <div className="relative shrink-0">
+                        <img
+                          src={`/assets/logos/${chain.logo}`}
+                          alt={chain.name}
+                          className="w-6 h-6 rounded-full object-cover ring-2 ring-white/20"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div
+                          className="w-6 h-6 rounded-full hidden items-center justify-center text-[10px] font-bold text-white"
+                          style={{ backgroundColor: chain.color, display: 'none' }}
+                        >
+                          {chain.name.charAt(0)}
+                        </div>
+                      </div>
+
+                      {/* Volume and Percentage */}
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-bold font-mono text-foreground">
+                          {formatNumberWithSuffix(chain.volume)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
                           ({totalVolume > 0 ? ((chain.volume / totalVolume) * 100).toFixed(1) : '0'}%)
                         </span>
                       </div>

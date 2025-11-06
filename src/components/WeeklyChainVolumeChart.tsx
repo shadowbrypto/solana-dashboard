@@ -259,9 +259,9 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
   return (
     <div className="space-y-4">
       {/* Chart and Legend Side by Side */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
         {/* Stacked Bar Chart using existing component */}
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col">
           <StackedBarChart
             title="Weekly Chain Volume Distribution"
             subtitle={`${startDateStr} - ${endDateStr} • 7-day volume by chain`}
@@ -277,7 +277,7 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
         </div>
 
         {/* Protocol Legend */}
-        <Card className="bg-card border-border rounded-xl flex-shrink-0 w-full lg:w-80 h-full flex flex-col">
+        <Card className="bg-card border-border rounded-xl flex-shrink-0 w-full lg:w-80 flex flex-col">
           <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pr-2">
               <div className="space-y-2">
@@ -395,7 +395,7 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
                         {formatNumberWithSuffix(ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume)}
                       </span>
                     </div>
-                    {(isEVMExpanded ? evmProtocols : evmProtocols.slice(0, 7)).map((protocol) => {
+                    {(isEVMExpanded ? evmProtocols : evmProtocols.slice(0, 6)).map((protocol) => {
                       const isDisabled = disabledProtocols.has(protocol.protocolId);
                       const value = isDisabled ? 0 : protocol.volume;
                       const evmTotal = ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume;
@@ -465,7 +465,7 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
                         </div>
                       );
                     })}
-                    {evmProtocols.length > 7 && (
+                    {evmProtocols.length > 6 && (
                       <button
                         onClick={() => setIsEVMExpanded(!isEVMExpanded)}
                         className="w-full px-2 py-1.5 text-[10px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors flex items-center justify-center gap-1"
@@ -479,7 +479,7 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
                           </>
                         ) : (
                           <>
-                            <span>Show More ({evmProtocols.length - 7})</span>
+                            <span>Show More ({evmProtocols.length - 6})</span>
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>

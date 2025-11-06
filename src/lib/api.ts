@@ -279,12 +279,28 @@ export const protocolApi = {
       endDate: endDateStr,
       chain: chain
     });
-    
+
     if (dataType) {
       params.append('dataType', dataType);
     }
-    
+
     const endpoint = `/protocols/monthly-metrics?${params.toString()}`;
+    return apiRequest(endpoint);
+  },
+
+  // Get monthly metrics with daily breakdowns for chart visualization
+  async getMonthlyChartMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    const params = new URLSearchParams({
+      endDate: endDateStr,
+      chain: chain
+    });
+
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+
+    const endpoint = `/protocols/monthly-chart-metrics?${params.toString()}`;
     return apiRequest(endpoint);
   },
 

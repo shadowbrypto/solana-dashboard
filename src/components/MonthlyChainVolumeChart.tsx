@@ -73,8 +73,8 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
 
         // Fetch both Solana and EVM monthly data with daily breakdowns
         const [solanaResponse, evmResponse] = await Promise.all([
-          protocolApi.getMonthlyMetrics(endDate, 'solana', 'private'),
-          protocolApi.getMonthlyMetrics(endDate, 'evm', 'public'),
+          protocolApi.getMonthlyChartMetrics(endDate, 'solana', 'private'),
+          protocolApi.getMonthlyChartMetrics(endDate, 'evm', 'public'),
         ]);
 
         console.log('MonthlyChainVolumeChart - Solana response:', solanaResponse);

@@ -672,17 +672,69 @@ router.get('/monthly-metrics', async (req: Request, res: Response) => {
 
     let monthlyMetrics;
     if (chainFilter === 'evm') {
-      monthlyMetrics = await getEVMMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
+      monthlyMetrics = await getEVMMonthlyMetrics(endDateObj, dataTypeFilter);
     } else {
-      monthlyMetrics = await getSolanaMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
+      monthlyMetrics = await getSolanaMonthlyMetrics(endDateObj, dataTypeFilter);
     }
-    
+
     res.json({ success: true, data: monthlyMetrics });
   } catch (error) {
     console.error('Error fetching monthly metrics:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch monthly metrics',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/monthly-chart-metrics
+// Query params: endDate (required, format: YYYY-MM-DD), chain (optional, 'solana' or 'evm'), dataType (optional)
+// Returns monthly metrics with daily breakdowns for chart visualization
+router.get('/monthly-chart-metrics', async (req: Request, res: Response) => {
+  try {
+    const { endDate, chain, dataType } = req.query;
+
+    if (!endDate || typeof endDate !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'endDate parameter is required and must be in YYYY-MM-DD format'
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(endDate)) {
+      return res.status(400).json({
+        success: false,
+        error: 'endDate must be in YYYY-MM-DD format'
+      });
+    }
+
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid endDate provided'
+      });
+    }
+
+    const chainFilter = typeof chain === 'string' ? chain : 'solana';
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
+
+    let monthlyChartMetrics;
+    if (chainFilter === 'evm') {
+      monthlyChartMetrics = await getEVMMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
+    } else {
+      monthlyChartMetrics = await getSolanaMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
+    }
+
+    res.json({ success: true, data: monthlyChartMetrics });
+  } catch (error) {
+    console.error('Error fetching monthly chart metrics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch monthly chart metrics',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

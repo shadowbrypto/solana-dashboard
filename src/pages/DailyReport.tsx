@@ -7,6 +7,7 @@ import { EVMDailyMetricsTable } from "../components/EVMDailyMetricsTable";
 import { EVMDailyHighlights } from "../components/EVMDailyHighlights";
 import { MetricCard } from "../components/MetricCard";
 import { MetricCardSkeleton } from "../components/MetricCardSkeleton";
+import { ChainVolumeBreakdown } from "../components/ChainVolumeBreakdown";
 import { getAllProtocols } from "../lib/protocol-categories";
 import { getProtocolsByChain } from "../lib/protocol-config";
 import { Settings } from "../lib/settings";
@@ -397,8 +398,13 @@ export default function DailyReport() {
       {isLoading ? (
         <ContentSkeleton />
       ) : (
-        <div key={chainType} className="space-y-4 lg:space-y-6">
-          {chainType === 'solana' ? (
+        <div className="space-y-4 lg:space-y-6">
+          {/* Chain Volume Distribution - Combined view for all chains */}
+          <ChainVolumeBreakdown date={date} />
+
+          {/* Chain-specific tables */}
+          <div key={chainType}>
+            {chainType === 'solana' ? (
             <>
               {/* HIGHLIGHTS TEMPORARILY DISABLED */}
               {/* <DailyHighlights date={date} /> */}
@@ -435,13 +441,14 @@ export default function DailyReport() {
             <>
               {/* HIGHLIGHTS TEMPORARILY DISABLED */}
               {/* <EVMDailyHighlights date={date} /> */}
-              <EVMDailyMetricsTable 
+              <EVMDailyMetricsTable
                 protocols={protocols}
                 date={date}
                 onDateChange={setDate}
               />
             </>
           )}
+          </div>
         </div>
       )}
     </div>

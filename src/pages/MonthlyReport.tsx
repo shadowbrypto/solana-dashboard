@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { MonthlyHighlights } from "../components/MonthlyHighlights";
 import { MonthlyMetricsTable } from "../components/MonthlyMetricsTable";
 import { EVMMonthlyMetricsTable } from "../components/EVMMonthlyMetricsTable";
+import { MonthlyChainVolumeChart } from '../components/MonthlyChainVolumeChart';
 import { getAllProtocols, getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByChain } from "../lib/protocol-config";
 import { Protocol } from "../types/protocol";
 import { Skeleton } from '../components/ui/skeleton';
@@ -139,33 +140,31 @@ export default function MonthlyReport() {
         </div>
       </div>
 
-      {/* Content based on chain type */}
-      {chainType === 'solana' && (
-        <div className="mb-6">
-          {/* HIGHLIGHTS TEMPORARILY DISABLED */}
-          {/* <MonthlyHighlights date={date} loading={loading} /> */}
-        </div>
-      )}
-      
-      {isLoading ? (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      ) : chainType === 'solana' ? (
-        <MonthlyMetricsTable protocols={protocols} date={date} onDateChange={setDate} loading={loading} />
-      ) : (
-        // EVM Monthly Report
-        <EVMMonthlyMetricsTable 
-          protocols={protocols} 
-          endDate={date}
-          onDateChange={setDate}
-        />
-      )}
+      <div className="space-y-4 lg:space-y-6">
+        {/* Chain Volume Distribution - Combined view for all chains */}
+        <MonthlyChainVolumeChart endDate={date} />
+
+        {/* Chain-specific tables */}
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : chainType === 'solana' ? (
+          <MonthlyMetricsTable protocols={protocols} date={date} onDateChange={setDate} loading={loading} />
+        ) : (
+          // EVM Monthly Report
+          <EVMMonthlyMetricsTable
+            protocols={protocols}
+            endDate={date}
+            onDateChange={setDate}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -669,12 +669,12 @@ router.get('/monthly-metrics', async (req: Request, res: Response) => {
 
     const chainFilter = typeof chain === 'string' ? chain : 'solana';
     const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
-    
+
     let monthlyMetrics;
     if (chainFilter === 'evm') {
-      monthlyMetrics = await getEVMMonthlyMetrics(endDateObj, dataTypeFilter);
+      monthlyMetrics = await getEVMMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
     } else {
-      monthlyMetrics = await getSolanaMonthlyMetrics(endDateObj, dataTypeFilter);
+      monthlyMetrics = await getSolanaMonthlyMetricsWithDaily(endDateObj, dataTypeFilter);
     }
     
     res.json({ success: true, data: monthlyMetrics });

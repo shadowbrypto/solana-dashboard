@@ -2918,3 +2918,236 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
   }
 }
 
+/**
+ * Get Solana monthly metrics with daily breakdowns (similar to weekly but for entire month)
+ */
+export async function getSolanaMonthlyMetricsWithDaily(endDate: Date, dataType: string = 'private') {
+  try {
+    // Calculate month boundaries using UTC to avoid timezone issues
+    const monthStart = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth() + 1, 0));
+
+    console.log(`Fetching Solana monthly metrics with daily data:
+      Month: ${monthStart.toISOString().split('T')[0]} to ${monthEnd.toISOString().split('T')[0]}
+      Data type: ${dataType}`);
+
+    // Single query to get all daily data for the month
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, volume_usd, daily_users, new_users, trades, fees_usd')
+      .eq('chain', 'solana')
+      .eq('data_type', dataType)
+      .gte('date', monthStart.toISOString().split('T')[0])
+      .lte('date', monthEnd.toISOString().split('T')[0])
+      .order('protocol_name')
+      .order('date');
+
+    if (error) {
+      console.error('Supabase error in getSolanaMonthlyMetricsWithDaily:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No data found for the specified month');
+      return { weeklyData: {}, dateRange: { startDate: monthStart.toISOString().split('T')[0], endDate: monthEnd.toISOString().split('T')[0] } };
+    }
+
+    // Group data by protocol
+    const protocolData: Record<string, any> = {};
+    const solanaProtocols = getSolanaProtocols();
+
+    // Initialize all Solana protocols
+    solanaProtocols.forEach(protocol => {
+      protocolData[protocol] = {
+        dailyMetrics: {
+          volume: {},
+          users: {},
+          newUsers: {},
+          trades: {}
+        },
+        monthlyTotal: {
+          volume: 0,
+          users: 0,
+          newUsers: 0,
+          trades: 0
+        }
+      };
+    });
+
+    // Process each record
+    data.forEach(record => {
+      const protocol = record.protocol_name;
+      const date = record.date;
+      const volume = Number(record.volume_usd) || 0;
+      const users = Number(record.daily_users) || 0;
+      const newUsers = Number(record.new_users) || 0;
+      const trades = Number(record.trades) || 0;
+
+      // Skip if protocol not in our list
+      if (!protocolData[protocol]) {
+        return;
+      }
+
+      // Store daily metrics
+      protocolData[protocol].dailyMetrics.volume[date] = volume;
+      protocolData[protocol].dailyMetrics.users[date] = users;
+      protocolData[protocol].dailyMetrics.newUsers[date] = newUsers;
+      protocolData[protocol].dailyMetrics.trades[date] = trades;
+
+      // Add to monthly totals
+      protocolData[protocol].monthlyTotal.volume += volume;
+      protocolData[protocol].monthlyTotal.users += users;
+      protocolData[protocol].monthlyTotal.newUsers += newUsers;
+      protocolData[protocol].monthlyTotal.trades += trades;
+    });
+
+    // Prepare final response
+    const weeklyData: Record<string, any> = {};
+
+    Object.entries(protocolData).forEach(([protocol, data]) => {
+      // Only include protocols with data
+      if (data.monthlyTotal.volume > 0 || data.monthlyTotal.users > 0) {
+        weeklyData[protocol] = {
+          dailyMetrics: data.dailyMetrics,
+          monthlyTotals: data.monthlyTotal
+        };
+      }
+    });
+
+    const result = {
+      weeklyData, // Keep same key name for compatibility
+      dateRange: {
+        startDate: monthStart.toISOString().split('T')[0],
+        endDate: monthEnd.toISOString().split('T')[0]
+      }
+    };
+
+    console.log(`Successfully processed monthly data for ${Object.keys(weeklyData).length} Solana protocols`);
+    return result;
+
+  } catch (error) {
+    console.error('Error in getSolanaMonthlyMetricsWithDaily:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get EVM monthly metrics with daily breakdowns (similar to weekly but for entire month)
+ */
+export async function getEVMMonthlyMetricsWithDaily(endDate: Date, dataType: string = 'public') {
+  try {
+    // Calculate month boundaries using UTC to avoid timezone issues
+    const monthStart = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth() + 1, 0));
+
+    console.log(`Fetching EVM monthly metrics with daily data:
+      Month: ${monthStart.toISOString().split('T')[0]} to ${monthEnd.toISOString().split('T')[0]}
+      Data type: ${dataType}`);
+
+    // Single query to get all daily data for the month
+    const { data, error } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, chain, volume_usd, daily_users, new_users, trades')
+      .eq('data_type', dataType)
+      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'])
+      .gte('date', monthStart.toISOString().split('T')[0])
+      .lte('date', monthEnd.toISOString().split('T')[0])
+      .order('protocol_name')
+      .order('date');
+
+    if (error) {
+      console.error('Supabase error in getEVMMonthlyMetricsWithDaily:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No data found for the specified month');
+      return { weeklyData: {}, dateRange: { startDate: monthStart.toISOString().split('T')[0], endDate: monthEnd.toISOString().split('T')[0] } };
+    }
+
+    // Group data by protocol
+    const protocolData: Record<string, any> = {};
+    const evmProtocols = getEVMProtocols();
+
+    // Initialize all EVM protocols
+    evmProtocols.forEach(protocol => {
+      protocolData[protocol] = {
+        dailyVolumes: {},
+        chainVolumes: {
+          ethereum: 0,
+          base: 0,
+          bsc: 0,
+          avax: 0,
+          arbitrum: 0
+        },
+        monthlyTotal: {
+          volume: 0,
+          users: 0,
+          newUsers: 0
+        }
+      };
+    });
+
+    // Process each record
+    data.forEach(record => {
+      const protocol = record.protocol_name;
+      const date = record.date;
+      const chain = record.chain;
+      const volume = Number(record.volume_usd) || 0;
+      const users = Number(record.daily_users) || 0;
+      const newUsers = Number(record.new_users) || 0;
+
+      // Skip if protocol not in our list
+      if (!protocolData[protocol]) {
+        return;
+      }
+
+      // Accumulate daily volumes
+      if (!protocolData[protocol].dailyVolumes[date]) {
+        protocolData[protocol].dailyVolumes[date] = 0;
+      }
+      protocolData[protocol].dailyVolumes[date] += volume;
+
+      // Accumulate chain volumes
+      if (chain && protocolData[protocol].chainVolumes[chain] !== undefined) {
+        protocolData[protocol].chainVolumes[chain] += volume;
+      }
+
+      // Add to monthly totals
+      protocolData[protocol].monthlyTotal.volume += volume;
+      protocolData[protocol].monthlyTotal.users += users;
+      protocolData[protocol].monthlyTotal.newUsers += newUsers;
+    });
+
+    // Prepare final response
+    const weeklyData: Record<string, any> = {};
+
+    Object.entries(protocolData).forEach(([protocol, data]) => {
+      // Only include protocols with data
+      if (data.monthlyTotal.volume > 0) {
+        weeklyData[protocol] = {
+          dailyVolumes: data.dailyVolumes,
+          chainVolumes: data.chainVolumes,
+          totalVolume: data.monthlyTotal.volume,
+          monthlyTotals: data.monthlyTotal
+        };
+      }
+    });
+
+    const result = {
+      weeklyData, // Keep same key name for compatibility
+      dateRange: {
+        startDate: monthStart.toISOString().split('T')[0],
+        endDate: monthEnd.toISOString().split('T')[0]
+      }
+    };
+
+    console.log(`Successfully processed monthly data for ${Object.keys(weeklyData).length} EVM protocols`);
+    return result;
+
+  } catch (error) {
+    console.error('Error in getEVMMonthlyMetricsWithDaily:', error);
+    throw error;
+  }
+}
+

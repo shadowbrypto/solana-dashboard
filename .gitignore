@@ -63,3 +63,7 @@ temp/
 
 # OS generated files
 Thumbs.db
+
+# Claude Code files
+.claude/scripts/validate-bash.sh
+.claude/settings.json

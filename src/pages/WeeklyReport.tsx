@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { WeeklyMetricsTable } from '../components/WeeklyMetricsTable';
 import { EVMWeeklyMetricsTable } from '../components/EVMWeeklyMetricsTable';
+import { WeeklyChainVolumeChart } from '../components/WeeklyChainVolumeChart';
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByChain } from '../lib/protocol-config';
 import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
@@ -184,30 +185,35 @@ export default function WeeklyReport() {
         </div>
       </div>
 
-      {/* Content based on chain type */}
-      {isLoading ? (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      ) : chainType === 'solana' ? (
-        <WeeklyMetricsTable 
-          protocols={protocols} 
-          endDate={endDate}
-          onDateChange={handleDateChange}
-        />
-      ) : (
-        // EVM Weekly Report
-        <EVMWeeklyMetricsTable 
-          protocols={protocols} 
-          endDate={endDate}
-          onDateChange={handleDateChange}
-        />
-      )}
+      <div className="space-y-4 lg:space-y-6">
+        {/* Chain Volume Distribution - Combined view for all chains */}
+        <WeeklyChainVolumeChart endDate={endDate} />
+
+        {/* Chain-specific tables */}
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : chainType === 'solana' ? (
+          <WeeklyMetricsTable
+            protocols={protocols}
+            endDate={endDate}
+            onDateChange={handleDateChange}
+          />
+        ) : (
+          // EVM Weekly Report
+          <EVMWeeklyMetricsTable
+            protocols={protocols}
+            endDate={endDate}
+            onDateChange={handleDateChange}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -83,6 +83,17 @@ export interface PaginatedTraderResponse {
   cacheAge?: number;
 }
 
+export interface VolumeRangeData {
+  rangeLabel: string; // Descriptive label (e.g., "Volume Less than 50,000")
+  shortLabel: string; // Short label for file names (e.g., "sub-50k")
+  min: number;
+  max: number | null;
+  traderCount: number;
+  totalVolume: number;
+  volumeShare: number;
+  traderShare: number;
+}
+
 class TraderStatsApi {
   private baseUrl = `${API_BASE_URL}/trader-stats`;
   private cache = new Map<string, { data: any; timestamp: number }>();
@@ -229,12 +240,51 @@ class TraderStatsApi {
 
     const response = await fetch(`${this.baseUrl}/top-traders?${params}`);
     const result = await response.json();
-    
+
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch top traders');
     }
-    
+
     return result.data;
+  }
+
+  // Get volume ranges for a protocol
+  async getVolumeRanges(protocol: string): Promise<VolumeRangeData[]> {
+    const cacheKey = `volume_ranges_${protocol}`;
+    const cached = this.cache.get(cacheKey);
+
+    // Use 5-minute cache like other methods
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data;
+    }
+
+    const response = await fetch(`${this.baseUrl}/volume-ranges/${protocol}`);
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch volume ranges');
+    }
+
+    // Cache the results
+    this.cache.set(cacheKey, {
+      data: result.data,
+      timestamp: Date.now()
+    });
+
+    return result.data;
+  }
+
+  // Download CSV for a specific volume range
+  async downloadVolumeRangeCsv(protocol: string, rangeLabel: string): Promise<void> {
+    const url = `${this.baseUrl}/volume-range-export/${protocol}/${rangeLabel}`;
+
+    // Trigger download by creating a temporary anchor element
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${protocol}_${rangeLabel}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }
 

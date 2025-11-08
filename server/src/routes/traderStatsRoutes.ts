@@ -1004,7 +1004,7 @@ router.get('/progress/:protocol', async (req: Request, res: Response) => {
     const { protocol } = req.params;
     const progressKey = `loading_${protocol}`;
     const progress = progressCache.get(progressKey);
-    
+
     if (!progress) {
       return res.json({
         success: true,
@@ -1017,7 +1017,7 @@ router.get('/progress/:protocol', async (req: Request, res: Response) => {
         }
       });
     }
-    
+
     res.json({
       success: true,
       data: progress
@@ -1028,6 +1028,143 @@ router.get('/progress/:protocol', async (req: Request, res: Response) => {
       success: false,
       error: error.message || 'Failed to get loading progress'
     });
+  }
+});
+
+// Cache for volume ranges (4 hours like other trader stats)
+const volumeRangesCache = new Map<string, { data: any, timestamp: number }>();
+const VOLUME_RANGES_CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
+
+// Get volume ranges for a protocol
+router.get('/volume-ranges/:protocol', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    console.log(`Fetching volume ranges for ${protocol}`);
+
+    // Check cache first
+    const cacheKey = `volume_ranges_${protocol.toLowerCase()}`;
+    const cached = volumeRangesCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < VOLUME_RANGES_CACHE_DURATION) {
+      console.log(`✅ Cache hit for volume ranges: ${protocol}`);
+      return res.json({
+        success: true,
+        data: cached.data,
+        cached: true
+      });
+    }
+
+    // Calculate volume ranges
+    const volumeRanges = await TraderStatsService.getVolumeRanges(protocol);
+
+    // Cache the results
+    volumeRangesCache.set(cacheKey, {
+      data: volumeRanges,
+      timestamp: Date.now()
+    });
+
+    res.json({
+      success: true,
+      data: volumeRanges,
+      cached: false
+    });
+  } catch (error: any) {
+    console.error('Error fetching volume ranges:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch volume ranges'
+    });
+  }
+});
+
+// Export traders in volume range as CSV
+router.get('/volume-range-export/:protocol/:rangeLabel', async (req: Request, res: Response) => {
+  try {
+    const { protocol, rangeLabel } = req.params;
+    console.log(`Exporting CSV for ${protocol}, range: ${rangeLabel}`);
+
+    // Parse range label to get min/max values
+    const rangeMap: Record<string, { min: number, max: number | null }> = {
+      'sub-50k': { min: 0, max: 50000 },
+      '50k-100k': { min: 50000, max: 100000 },
+      '100k-250k': { min: 100000, max: 250000 },
+      '250k-500k': { min: 250000, max: 500000 },
+      '500k-1m': { min: 500000, max: 1000000 },
+      '1m-2m': { min: 1000000, max: 2000000 },
+      '2m-3m': { min: 2000000, max: 3000000 },
+      '3m-4m': { min: 3000000, max: 4000000 },
+      '4m-5m': { min: 4000000, max: 5000000 },
+      '5m+': { min: 5000000, max: null }
+    };
+
+    const range = rangeMap[rangeLabel];
+    if (!range) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid range label'
+      });
+    }
+
+    // Get traders in this range
+    const traders = await TraderStatsService.getTradersInVolumeRange(
+      protocol,
+      range.min,
+      range.max
+    );
+
+    // Set headers for file download
+    const filename = `${protocol}_${rangeLabel}_traders.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Pragma', 'no-cache');
+
+    // Format volume with commas
+    const formatVolume = (volume: number): string => {
+      return volume.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    };
+
+    // Stream CSV content for better performance with large datasets
+    console.log(`Starting CSV stream for ${traders.length} traders...`);
+
+    // Write CSV header
+    res.write('address,volume\n');
+
+    // Stream trader data in chunks for memory efficiency
+    const CHUNK_SIZE = 1000;
+    for (let i = 0; i < traders.length; i += CHUNK_SIZE) {
+      const chunk = traders.slice(i, Math.min(i + CHUNK_SIZE, traders.length));
+      const csvChunk = chunk
+        .map(trader => `${trader.user_address},${formatVolume(trader.volume_usd)}`)
+        .join('\n');
+      res.write(csvChunk);
+
+      // Add newline between chunks (except for last chunk)
+      if (i + CHUNK_SIZE < traders.length) {
+        res.write('\n');
+      }
+    }
+
+    // End the response
+    res.end('\n');
+
+    console.log(`✅ CSV exported: ${filename}, ${traders.length} traders`);
+  } catch (error: any) {
+    console.error('Error exporting volume range CSV:', error);
+
+    // Only send JSON error if headers haven't been sent yet
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to export CSV'
+      });
+    } else {
+      // If headers already sent, just end the response
+      res.end();
+    }
   }
 });
 

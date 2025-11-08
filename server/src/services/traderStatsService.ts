@@ -31,6 +31,17 @@ export interface TraderAnalytics {
   };
 }
 
+export interface VolumeRangeData {
+  rangeLabel: string; // Descriptive label (e.g., "Volume Less than 50,000")
+  shortLabel: string; // Short label for file names (e.g., "sub-50k")
+  min: number;
+  max: number | null; // null for the highest range (5M+)
+  traderCount: number;
+  totalVolume: number;
+  volumeShare: number; // percentage of total volume
+  traderShare: number; // percentage of total traders
+}
+
 export class TraderStatsService {
   // Get trader stats for a protocol with pagination
   static async getTraderStatsPaginated(
@@ -299,7 +310,7 @@ export class TraderStatsService {
   ): Promise<void> {
     // Optimized for large datasets with timeout resistance
     const BATCH_SIZE = 10000; // 10k rows for maximum reliability
-    const MAX_CONCURRENT = 8; // Reduced concurrency to prevent overloading DB
+    const MAX_CONCURRENT = 1; // Sequential processing to avoid database overload
     const MAX_RETRIES = 3; // Retry failed batches
     
     try {
@@ -313,27 +324,58 @@ export class TraderStatsService {
       console.log(`📦 Total batches: ${Math.ceil(data.length / BATCH_SIZE)}`);
       console.log(`${'='.repeat(60)}\n`);
 
-      // Step 1: Delete ALL existing data for this protocol
+      // Step 1: Delete ALL existing data for this protocol in batches
       console.log(`🗑️ Step 1: Clearing existing ${protocol} data...`);
-      
+
       const { count: existingCount } = await supabase
         .from('trader_stats')
         .select('*', { count: 'exact', head: true })
         .eq('protocol_name', protocol.toLowerCase());
-      
+
       console.log(`   - Found ${(existingCount || 0).toLocaleString()} existing records to delete`);
-      
-      const { error: deleteError, count: deletedCount } = await supabase
-        .from('trader_stats')
-        .delete({ count: 'exact' })
-        .eq('protocol_name', protocol.toLowerCase());
-      
-      if (deleteError) {
-        console.error('❌ Delete operation failed:', deleteError);
-        throw deleteError;
+
+      if (existingCount && existingCount > 0) {
+        // Batch delete to avoid timeout - delete 50k at a time using range pagination
+        const DELETE_BATCH_SIZE = 50000;
+        let totalDeleted = 0;
+        let currentOffset = 0;
+
+        while (totalDeleted < existingCount) {
+          // Fetch IDs of next batch using range pagination
+          const { data: batch, error: fetchError } = await supabase
+            .from('trader_stats')
+            .select('id')
+            .eq('protocol_name', protocol.toLowerCase())
+            .range(currentOffset, currentOffset + DELETE_BATCH_SIZE - 1);
+
+          if (fetchError) {
+            console.error('❌ Error fetching batch for deletion:', fetchError);
+            throw fetchError;
+          }
+
+          if (!batch || batch.length === 0) break;
+
+          // Delete this batch by IDs
+          const ids = batch.map(r => r.id);
+          const { error: deleteError, count: deletedCount } = await supabase
+            .from('trader_stats')
+            .delete({ count: 'exact' })
+            .in('id', ids);
+
+          if (deleteError) {
+            console.error('❌ Delete batch operation failed:', deleteError);
+            throw deleteError;
+          }
+
+          totalDeleted += deletedCount || 0;
+          currentOffset += batch.length;
+          console.log(`   🗑️  Deleted ${totalDeleted.toLocaleString()}/${existingCount.toLocaleString()} records (batch of ${batch.length.toLocaleString()})...`);
+        }
+
+        console.log(`   ✅ Deleted ${totalDeleted.toLocaleString()} records\n`);
+      } else {
+        console.log(`   ✅ No existing records to delete\n`);
       }
-      
-      console.log(`   ✅ Deleted ${(deletedCount || 0).toLocaleString()} records\n`);
 
       // Step 2: Prepare records
       console.log(`🔧 Step 2: Preparing records...`);
@@ -677,24 +719,24 @@ export class TraderStatsService {
         .select('protocol_name')
         .then(async ({ data, error }) => {
           if (error) throw error;
-          
+
           // Count records by protocol
           const counts: Record<string, number> = {};
           const protocols = ['photon', 'axiom', 'bloom', 'trojan'];
-          
+
           for (const protocol of protocols) {
             const { count, error: countError } = await supabase
               .from('trader_stats')
               .select('*', { count: 'exact', head: true })
               .eq('protocol_name', protocol);
-            
+
             if (!countError) {
               counts[protocol] = count || 0;
             } else {
               counts[protocol] = 0;
             }
           }
-          
+
           return { data: counts, error: null };
         });
 
@@ -703,6 +745,126 @@ export class TraderStatsService {
     } catch (error) {
       console.error('Error getting protocol row counts:', error);
       return {};
+    }
+  }
+
+  // Get volume range distribution for a protocol
+  static async getVolumeRanges(protocol: string): Promise<VolumeRangeData[]> {
+    try {
+      console.log(`Calculating volume ranges for ${protocol}...`);
+
+      // Helper function to format volume range labels
+      const formatRangeLabel = (min: number, max: number | null): string => {
+        const formatNumber = (num: number): string => {
+          return '$' + num.toLocaleString('en-US');
+        };
+
+        if (max === null) {
+          // Greater than case
+          return `Greater than ${formatNumber(min)}`;
+        } else if (min === 0) {
+          // Less than case
+          return `Less than ${formatNumber(max)}`;
+        } else {
+          // Between case
+          return `${formatNumber(min)} - ${formatNumber(max)}`;
+        }
+      };
+
+      // Define volume ranges with descriptive labels (highest to lowest)
+      const ranges = [
+        { label: formatRangeLabel(5000000, null), shortLabel: '5m+', min: 5000000, max: null },
+        { label: formatRangeLabel(4000000, 5000000), shortLabel: '4m-5m', min: 4000000, max: 5000000 },
+        { label: formatRangeLabel(3000000, 4000000), shortLabel: '3m-4m', min: 3000000, max: 4000000 },
+        { label: formatRangeLabel(2000000, 3000000), shortLabel: '2m-3m', min: 2000000, max: 3000000 },
+        { label: formatRangeLabel(1000000, 2000000), shortLabel: '1m-2m', min: 1000000, max: 2000000 },
+        { label: formatRangeLabel(500000, 1000000), shortLabel: '500k-1m', min: 500000, max: 1000000 },
+        { label: formatRangeLabel(250000, 500000), shortLabel: '250k-500k', min: 250000, max: 500000 },
+        { label: formatRangeLabel(100000, 250000), shortLabel: '100k-250k', min: 100000, max: 250000 },
+        { label: formatRangeLabel(50000, 100000), shortLabel: '50k-100k', min: 50000, max: 100000 },
+        { label: formatRangeLabel(0, 50000), shortLabel: 'sub-50k', min: 0, max: 50000 }
+      ];
+
+      // Get all traders for the protocol
+      const { data: allTraders, error } = await supabase
+        .from('trader_stats')
+        .select('user_address, volume_usd')
+        .eq('protocol_name', protocol.toLowerCase());
+
+      if (error) throw error;
+      if (!allTraders || allTraders.length === 0) {
+        return ranges.map(r => ({
+          rangeLabel: r.label,
+          shortLabel: r.shortLabel,
+          min: r.min,
+          max: r.max,
+          traderCount: 0,
+          totalVolume: 0,
+          volumeShare: 0,
+          traderShare: 0
+        }));
+      }
+
+      const totalTraders = allTraders.length;
+      const totalVolume = allTraders.reduce((sum, t) => sum + t.volume_usd, 0);
+
+      // Calculate stats for each range
+      const rangeData = ranges.map(range => {
+        const tradersInRange = allTraders.filter(t => {
+          const volume = t.volume_usd;
+          if (range.max === null) {
+            return volume >= range.min;
+          }
+          return volume >= range.min && volume < range.max;
+        });
+
+        const rangeVolume = tradersInRange.reduce((sum, t) => sum + t.volume_usd, 0);
+
+        return {
+          rangeLabel: range.label,
+          shortLabel: range.shortLabel,
+          min: range.min,
+          max: range.max,
+          traderCount: tradersInRange.length,
+          totalVolume: rangeVolume,
+          volumeShare: totalVolume > 0 ? (rangeVolume / totalVolume) * 100 : 0,
+          traderShare: totalTraders > 0 ? (tradersInRange.length / totalTraders) * 100 : 0
+        };
+      });
+
+      console.log(`Volume ranges calculated for ${protocol}: ${rangeData.length} ranges`);
+      return rangeData;
+    } catch (error) {
+      console.error('Error calculating volume ranges:', error);
+      throw error;
+    }
+  }
+
+  // Get traders in a specific volume range for CSV export
+  static async getTradersInVolumeRange(
+    protocol: string,
+    minVolume: number,
+    maxVolume: number | null
+  ): Promise<{ user_address: string; volume_usd: number }[]> {
+    try {
+      let query = supabase
+        .from('trader_stats')
+        .select('user_address, volume_usd')
+        .eq('protocol_name', protocol.toLowerCase())
+        .gte('volume_usd', minVolume)
+        .order('volume_usd', { ascending: false });
+
+      if (maxVolume !== null) {
+        query = query.lt('volume_usd', maxVolume);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching traders in volume range:', error);
+      throw error;
     }
   }
 }

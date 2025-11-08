@@ -211,8 +211,8 @@ export class DataManagementService {
 
       console.log(`Downloaded data for ${protocolName} successfully`);
 
-      // Step 2: Import CSV file to database (delete existing data for this protocol first)
-      const importResult = await this.importProtocolData(protocolName, true, dataType);
+      // Step 2: Import CSV file to database (upsert will update existing or insert new)
+      const importResult = await this.importProtocolData(protocolName, dataType);
       
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);
@@ -493,10 +493,10 @@ export class DataManagementService {
    * Import CSV data for a specific protocol into the database
    * @param deleteExisting - If true, deletes existing data for this protocol before importing
    */
-  private async importProtocolData(protocolName: string, deleteExisting: boolean = false, dataType: string = 'private'): Promise<ImportResult> {
+  private async importProtocolData(protocolName: string, dataType: string = 'private'): Promise<ImportResult> {
     try {
       const csvFilePath = path.join(DATA_DIR, `${protocolName}.csv`);
-      
+
       // Check if file exists
       try {
         await fs.access(csvFilePath);
@@ -505,26 +505,6 @@ export class DataManagementService {
       }
 
       console.log(`--- Importing ${csvFilePath} ---`);
-
-      // Delete existing data for this protocol if requested
-      if (deleteExisting) {
-        console.log(`\n=== DELETE DEBUG ===`);
-        console.log(`Deleting existing ${dataType} data for ${protocolName}...`);
-        
-        const { error: deleteError } = await supabase
-          .from(TABLE_NAME)
-          .delete()
-          .eq('protocol_name', protocolName)
-          .eq('chain', 'solana') // Only delete Solana data
-          .eq('data_type', dataType); // Only delete data for this specific data type
-
-        if (deleteError) {
-          console.error(`Delete error:`, deleteError);
-          throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
-        }
-        console.log(`Successfully deleted existing ${dataType} data for ${protocolName}`);
-        console.log(`====================\n`);
-      }
 
       // Read and parse CSV file
       const fileContent = await fs.readFile(csvFilePath, 'utf8');
@@ -617,7 +597,9 @@ export class DataManagementService {
         
         const { error } = await supabase
           .from(TABLE_NAME)
-          .insert(batch);
+          .upsert(batch, {
+            onConflict: 'protocol_name,date,chain,data_type'
+          });
 
         if (error) {
           throw new Error(`Supabase insert error (batch ${i / batchSize + 1}): ${JSON.stringify(error)}`);
@@ -653,30 +635,16 @@ export class DataManagementService {
    */
   private async importAllProtocolData(dataType: string = 'private'): Promise<ImportResult[]> {
     try {
-      // First, delete only existing SOLANA data for this data type (preserve EVM data)
-      console.log(`--- Deleting existing SOLANA ${dataType} data from protocol_stats (preserving EVM data) ---`);
-      const { error: deleteError } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq('chain', 'solana') // Only delete Solana data, preserve EVM
-        .eq('data_type', dataType); // Only delete data for this data type
-
-      if (deleteError) {
-        throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
-      }
-
-      console.log(`Successfully deleted existing Solana ${dataType} data (EVM data preserved)`);
-
       // Get list of CSV files
       const files = await fs.readdir(DATA_DIR);
       const csvFiles = files.filter(file => file.endsWith('.csv'));
-      
+
       console.log(`Found ${csvFiles.length} CSV files:`, csvFiles);
 
-      // Import each CSV file
+      // Import each CSV file (upsert will update existing or insert new)
       const importPromises = csvFiles.map(file => {
         const protocolName = path.basename(file, '.csv');
-        return this.importProtocolData(protocolName, false, dataType);
+        return this.importProtocolData(protocolName, dataType);
       });
 
       return Promise.all(importPromises);

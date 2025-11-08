@@ -92,25 +92,12 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
  */
 export async function saveProjectedStats(data: ProjectedStatsData[]): Promise<void> {
   try {
-    // Extract unique protocol names from the data
-    const protocolNames = [...new Set(data.map(item => item.protocol_name))];
-    
-    // Delete existing records for these protocols
-    if (protocolNames.length > 0) {
-      const { error: deleteError } = await supabase
-        .from('projected_stats')
-        .delete()
-        .in('protocol_name', protocolNames);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-    }
-
-    // Insert new data
+    // Upsert data - insert new records or update existing ones based on unique constraint
     const { error } = await supabase
       .from('projected_stats')
-      .insert(data);
+      .upsert(data, {
+        onConflict: 'protocol_name,formatted_day'
+      });
 
     if (error) {
       throw error;

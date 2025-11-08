@@ -120,18 +120,8 @@ export class SimpleEVMDataMigrationService {
     try {
       // Clean protocol name (remove _evm suffix)
       const cleanProtocolName = protocolName.replace('_evm', '');
-      
-      // Delete existing data
-      console.log(`Deleting existing data for ${cleanProtocolName}...`);
-      const { error: deleteError } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq('protocol_name', cleanProtocolName)
-        .neq('chain', 'solana'); // Only delete EVM data, not Solana data
 
-      if (deleteError) {
-        throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
-      }
+      console.log(`Importing EVM data for ${cleanProtocolName} (upsert will update existing or insert new)...`);
 
       // Chain volume column mapping
       const chainVolumeMapping = {

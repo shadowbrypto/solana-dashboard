@@ -137,75 +137,31 @@ export function useDataSync() {
 
     let currentStep = 'initialization';
     try {
-      let totalSynced = 0;
+      let totalProtocolsSynced = 0;
       let totalRowsImported = 0;
-      
-      // Step 1: Sync Solana data
-      currentStep = 'Solana sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Solana data...', 20);
-      const solanaResult = await dataSyncApi.syncData();
-      console.log('Solana sync raw result:', solanaResult);
-      
-      if (!solanaResult || typeof solanaResult.csvFilesFetched === 'undefined') {
-        throw new Error('Invalid Solana sync response - missing csvFilesFetched');
+
+      // Step 1: Sync Rolling Refresh Protocols (21 protocols)
+      currentStep = 'Rolling Refresh sync';
+      if (onStepUpdate) onStepUpdate('Refreshing protocol data...', 50);
+      const rollingResult = await dataSyncApi.syncRollingRefreshData();
+      console.log('Rolling refresh sync raw result:', rollingResult);
+
+      if (!rollingResult || typeof rollingResult.protocolsSynced === 'undefined') {
+        throw new Error('Invalid rolling refresh sync response - missing protocolsSynced');
       }
-      
-      totalSynced += solanaResult.csvFilesFetched || 0;
-      totalRowsImported += solanaResult.rowsImported || 0;
-      console.log('Solana sync completed:', solanaResult);
-      if (onStepComplete) onStepComplete('Solana', { csvFilesFetched: solanaResult.csvFilesFetched || 0, rowsImported: solanaResult.rowsImported || 0 });
-      
-      // Wait 3 seconds before EVM sync
-      currentStep = 'EVM preparation';
-      if (onStepUpdate) onStepUpdate('Preparing EVM sync...', 35);
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Step 2: Sync EVM data (this can take longer)
-      currentStep = 'EVM sync';
-      if (onStepUpdate) onStepUpdate('Refreshing EVM data...', 50);
-      const evmResult = await dataSyncApi.syncEVMData();
-      console.log('EVM sync raw result:', evmResult);
-      
-      if (!evmResult || typeof evmResult.csvFilesFetched === 'undefined') {
-        throw new Error(`Invalid EVM sync response - missing csvFilesFetched. Got: ${JSON.stringify(evmResult)}`);
-      }
-      
-      totalSynced += evmResult.csvFilesFetched || 0;
-      totalRowsImported += evmResult.rowsImported || 0;
-      console.log('EVM sync completed:', evmResult);
-      if (onStepComplete) onStepComplete('EVM', { csvFilesFetched: evmResult.csvFilesFetched || 0, rowsImported: evmResult.rowsImported || 0 });
-      
-      // Wait 5 seconds after EVM sync (it's more intensive)
-      currentStep = 'Launchpad preparation';
-      if (onStepUpdate) onStepUpdate('Preparing Launchpad sync...', 75);
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      // Step 3: Sync Launchpad data
-      currentStep = 'Launchpad sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Launchpad data...', 85);
-      const launchpadResult = await dataSyncApi.syncAllLaunchpadData();
-      console.log('Launchpad sync raw result:', launchpadResult);
-      
-      if (!launchpadResult || typeof launchpadResult.csvFilesFetched === 'undefined') {
-        throw new Error('Invalid Launchpad sync response - missing csvFilesFetched');
-      }
-      
-      totalSynced += launchpadResult.csvFilesFetched || 0;
-      totalRowsImported += launchpadResult.rowsImported || 0;
-      console.log('Launchpad sync completed:', launchpadResult);
-      if (onStepComplete) onStepComplete('Launchpad', { csvFilesFetched: launchpadResult.csvFilesFetched || 0, rowsImported: launchpadResult.rowsImported || 0 });
-      
-      // Step 4: Sync Projected Stats data from Dune
+
+      totalProtocolsSynced += rollingResult.protocolsSynced || 0;
+      totalRowsImported += rollingResult.totalRowsImported || 0;
+      console.log('Rolling refresh sync completed:', rollingResult);
+      if (onStepComplete) onStepComplete('Rolling Refresh', { csvFilesFetched: rollingResult.protocolsSynced || 0, rowsImported: rollingResult.totalRowsImported || 0 });
+
+      // Step 2: Sync Projected Stats data from Dune
       currentStep = 'Projected Stats sync';
       if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 95);
-      try {
-        await ProjectedStatsApi.updateProjectedData();
-        console.log('Projected Stats sync completed');
-        if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 }); // Placeholder values
-      } catch (projectedStatsError) {
-        console.warn('Projected Stats sync failed (non-critical):', projectedStatsError);
-        // Don't fail the entire sync if projected stats fail
-      }
+      console.log('Starting Projected Stats sync...');
+      await ProjectedStatsApi.updateProjectedData();
+      console.log('Projected Stats sync completed successfully');
+      if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 }); // Placeholder values
       
       // Complete
       currentStep = 'completion';
@@ -228,8 +184,8 @@ export function useDataSync() {
 
       // Call the optional success callback with combined results
       if (onSyncSuccess) {
-        onSyncSuccess({ 
-          csvFilesFetched: totalSynced,
+        onSyncSuccess({
+          csvFilesFetched: totalProtocolsSynced,
           rowsImported: totalRowsImported,
           timestamp: now.toISOString()
         });

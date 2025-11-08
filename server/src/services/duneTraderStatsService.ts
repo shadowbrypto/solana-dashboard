@@ -24,7 +24,7 @@ export class DuneTraderStatsService {
     
     try {
       const response = await fetch(
-        `${this.DUNE_API_URL}/query/${queryId}/results?limit=1`,
+        `${this.DUNE_API_URL}/query/${queryId}/results?limit=1&ignore_max_datapoints_per_request=true`,
         {
           headers: {
             'X-DUNE-API-KEY': this.API_KEY
@@ -61,7 +61,7 @@ export class DuneTraderStatsService {
     
     try {
       const response = await fetch(
-        `${this.DUNE_API_URL}/query/${queryId}/results/csv?offset=${offset}&limit=${limit}`,
+        `${this.DUNE_API_URL}/query/${queryId}/results/csv?offset=${offset}&limit=${limit}&ignore_max_datapoints_per_request=true`,
         {
           headers: {
             'X-DUNE-API-KEY': this.API_KEY,

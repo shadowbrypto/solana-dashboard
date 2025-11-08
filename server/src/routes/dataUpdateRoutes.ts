@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { syncData, getSyncStatus } from '../services/dataUpdateService.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 import { launchpadDataService } from '../services/launchpadDataService.js';
+import { getProtocolsWithRollingRefresh } from '../config/rolling-refresh-config.js';
 
 const router = Router();
 
@@ -136,6 +137,89 @@ router.post('/sync/launchpad/:launchpadName', async (req: Request, res: Response
     res.status(500).json({
       success: false,
       error: 'Unexpected error during launchpad sync',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// POST /api/data-update/sync-rolling
+// Sync data for all protocols with rolling refresh configuration
+router.post('/sync-rolling', async (req: Request, res: Response) => {
+  try {
+    console.log('Starting rolling refresh sync for all configured protocols...');
+
+    // Get all protocols with rolling refresh config
+    const rollingProtocols = getProtocolsWithRollingRefresh();
+
+    if (rollingProtocols.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No protocols configured for rolling refresh',
+        data: {
+          protocolsSynced: 0,
+          results: [],
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    console.log(`Found ${rollingProtocols.length} protocols with rolling refresh config:`, rollingProtocols);
+
+    // Sync each protocol
+    const results = [];
+    let successCount = 0;
+    let totalRowsImported = 0;
+
+    for (const protocol of rollingProtocols) {
+      try {
+        console.log(`Syncing rolling refresh data for ${protocol}...`);
+        const result = await dataManagementService.syncProtocolData(protocol, 'private');
+
+        if (result.success) {
+          successCount++;
+          totalRowsImported += result.rowsImported;
+          results.push({
+            protocol,
+            success: true,
+            rowsImported: result.rowsImported
+          });
+          console.log(`✓ Successfully synced ${protocol}: ${result.rowsImported} rows`);
+        } else {
+          results.push({
+            protocol,
+            success: false,
+            error: result.error
+          });
+          console.error(`✗ Failed to sync ${protocol}:`, result.error);
+        }
+      } catch (error) {
+        results.push({
+          protocol,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        console.error(`✗ Error syncing ${protocol}:`, error);
+      }
+    }
+
+    console.log(`Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`);
+
+    res.json({
+      success: true,
+      message: `Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`,
+      data: {
+        protocolsSynced: successCount,
+        totalProtocols: rollingProtocols.length,
+        totalRowsImported,
+        results,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Unexpected error in rolling refresh sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Unexpected error during rolling refresh sync',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -97,11 +97,11 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               size="icon"
               onClick={() => syncData(
                 () => {
-                  setSyncStep('Starting comprehensive data refresh...');
+                  setSyncStep('Starting data refresh...');
                   setSyncProgress(0);
                   toast({
                     title: "Starting Data Refresh",
-                    description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
+                    description: "Refreshing rolling-refresh protocols (21 protocols) and projected stats...",
                   });
                 },
                 (result) => {
@@ -109,8 +109,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                   setSyncProgress(0);
                   toast({
                     variant: "success",
-                    title: "All Data Synced Successfully",
-                    description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
+                    title: "Refresh Completed Successfully",
+                    description: `Synced ${result.csvFilesFetched} protocols + projected stats`,
                   });
                 },
                 (step, progress) => {
@@ -118,10 +118,13 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                   setSyncProgress(progress);
                 },
                 (stepName, result) => {
+                  const description = stepName === 'Rolling Refresh'
+                    ? `${result.csvFilesFetched} protocols synced with latest 7-day data`
+                    : `${stepName} updated successfully`;
                   toast({
                     variant: "success",
-                    title: `${stepName} Data Synced`,
-                    description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
+                    title: `${stepName} Completed`,
+                    description,
                   });
                 }
               )}
@@ -231,11 +234,11 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
             size="sm"
             onClick={() => syncData(
               () => {
-                setSyncStep('Starting comprehensive data refresh...');
+                setSyncStep('Starting data refresh...');
                 setSyncProgress(0);
                 toast({
                   title: "Starting Data Refresh",
-                  description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
+                  description: "Refreshing rolling-refresh protocols (21 protocols) and projected stats...",
                 });
               },
               (result) => {
@@ -243,8 +246,8 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 setSyncProgress(0);
                 toast({
                   variant: "success",
-                  title: "All Data Synced Successfully",
-                  description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
+                  title: "Refresh Completed Successfully",
+                  description: `Synced ${result.csvFilesFetched} protocols + projected stats`,
                 });
               },
               (step, progress) => {
@@ -252,10 +255,13 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
                 setSyncProgress(progress);
               },
               (stepName, result) => {
+                const description = stepName === 'Rolling Refresh'
+                  ? `${result.csvFilesFetched} protocols synced with latest 7-day data`
+                  : `${stepName} updated successfully`;
                 toast({
                   variant: "success",
-                  title: `${stepName} Data Synced`,
-                  description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
+                  title: `${stepName} Completed`,
+                  description,
                 });
               }
             )}

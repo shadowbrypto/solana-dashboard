@@ -360,6 +360,25 @@ export const dataSyncApi = {
     });
   },
 
+  // Sync rolling refresh data for all configured protocols
+  async syncRollingRefreshData(): Promise<{
+    protocolsSynced: number;
+    totalProtocols: number;
+    totalRowsImported: number;
+    results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+    timestamp: string
+  }> {
+    return apiRequest<{
+      protocolsSynced: number;
+      totalProtocols: number;
+      totalRowsImported: number;
+      results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+      timestamp: string
+    }>('/data-update/sync-rolling', {
+      method: 'POST'
+    });
+  },
+
   // Sync both Solana and EVM data sequentially to avoid overwhelming the server
   async syncAllData(): Promise<{ solana: { csvFilesFetched: number; timestamp: string }, evm: { csvFilesFetched: number; rowsImported: number; timestamp: string } }> {
     console.log('Starting sequential data sync...');

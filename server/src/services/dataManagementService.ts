@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase.js';
 import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
 import { isSolanaProtocol } from '../config/chainProtocols.js';
+import { getRollingRefreshSource, hasRollingRefreshSource } from '../config/rolling-refresh-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -152,30 +153,50 @@ export class DataManagementService {
    */
   public async syncProtocolData(protocolName: string, dataType: string = 'private'): Promise<SyncResult> {
     const startTime = new Date();
-    
+
     try {
       console.log(`\n=== SYNC DEBUG ===`);
       console.log(`Protocol: ${protocolName}`);
       console.log(`Data Type: ${dataType}`);
       console.log(`==================\n`);
-      
-      const protocolSources = getProtocolSources(dataType);
-      
-      // Validate protocol exists
-      if (!protocolSources[protocolName]) {
-        throw new Error(`Protocol '${protocolName}' not found in protocol sources for data type '${dataType}'`);
+
+      // Check for rolling refresh config first
+      let protocolConfig;
+      let effectiveDataType = dataType;
+
+      if (hasRollingRefreshSource(protocolName)) {
+        // Use rolling refresh config (always private data)
+        protocolConfig = getRollingRefreshSource(protocolName);
+        effectiveDataType = 'private';
+        console.log(`✓ Using rolling refresh config (7-day data) for ${protocolName}`);
+        console.log(`  Query IDs: ${protocolConfig?.queryIds.join(', ')}`);
+        console.log(`  Data Type: ${effectiveDataType} (forced)`);
+      } else {
+        // Use standard config
+        const protocolSources = getProtocolSources(dataType);
+
+        // Validate protocol exists
+        if (!protocolSources[protocolName]) {
+          throw new Error(`Protocol '${protocolName}' not found in protocol sources for data type '${dataType}'`);
+        }
+
+        protocolConfig = protocolSources[protocolName];
+        console.log(`Using standard config for ${protocolName}`);
+        console.log(`  Query IDs: ${protocolConfig.queryIds.join(', ')}`);
+        console.log(`  Data Type: ${effectiveDataType}`);
       }
 
-      const protocolConfig = protocolSources[protocolName];
-      console.log(`Using query IDs: ${protocolConfig.queryIds.join(', ')} for ${dataType} data`);
+      if (!protocolConfig) {
+        throw new Error(`No configuration found for protocol '${protocolName}'`);
+      }
       
       // Check if this is an EVM protocol
       if (protocolConfig.chain === 'evm') {
         // Delegate to simple EVM migration service (no multiple files)
         console.log(`Detected EVM protocol ${protocolName}, delegating to simple EVM service...`);
-        
+
         const { simpleEVMDataMigrationService } = await import('./evmDataMigrationServiceSimple.js');
-        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName, dataType);
+        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName, effectiveDataType);
         
         // Convert simple EVM result format to standard SyncResult format
         return {
@@ -212,7 +233,7 @@ export class DataManagementService {
       console.log(`Downloaded data for ${protocolName} successfully`);
 
       // Step 2: Import CSV file to database (upsert will update existing or insert new)
-      const importResult = await this.importProtocolData(protocolName, dataType);
+      const importResult = await this.importProtocolData(protocolName, effectiveDataType);
       
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);

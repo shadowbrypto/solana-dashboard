@@ -136,8 +136,13 @@ export class ProjectedStatsApi {
    */
   static async updateProjectedData(): Promise<{ successCount: number; totalCount: number; protocols: string[] }> {
     try {
+      const url = `${API_BASE_URL}/projected-stats/update`;
+      console.log('[ProjectedStatsApi] Calling updateProjectedData...');
+      console.log('[ProjectedStatsApi] URL:', url);
+      console.log('[ProjectedStatsApi] API_BASE_URL:', API_BASE_URL);
+
       const response = await fetch(
-        `${API_BASE_URL}/projected-stats/update`,
+        url,
         {
           method: 'POST',
           headers: {
@@ -145,6 +150,8 @@ export class ProjectedStatsApi {
           },
         }
       );
+
+      console.log('[ProjectedStatsApi] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         let errorMessage = `Failed to update projected data: ${response.statusText}`;
@@ -159,7 +166,9 @@ export class ProjectedStatsApi {
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('[ProjectedStatsApi] Update successful:', result);
+      return result;
     } catch (error) {
       console.error('Error updating projected data:', error);
       // Log more details about the error

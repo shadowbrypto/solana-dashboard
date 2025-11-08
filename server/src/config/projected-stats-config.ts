@@ -31,13 +31,13 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   
   // Trading Terminals  
   'photon': '4899788',
-  'bullx': '4899816',
+  'bullx': '6168578',
   'axiom': '4899853',
   'gmgnai': '4899849',
   'padre': '5622891',
   'nova terminal': '4899891',
   'telemetry': '5666888',
-  'mevx': '5666923',
+  'mevx': '6169736',
   'rhythm': '5698770',
   'vyper': '5699029',
   

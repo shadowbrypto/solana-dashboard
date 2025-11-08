@@ -44,6 +44,9 @@ server/node_modules/
 server/public/data/*.csv
 server/public/data/**/*.csv
 
+# Export files
+server/exports/
+
 # Log files
 *.log
 server/*.log

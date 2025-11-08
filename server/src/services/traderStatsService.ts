@@ -785,14 +785,15 @@ export class TraderStatsService {
         { label: formatRangeLabel(0, 50000), shortLabel: 'sub-50k', min: 0, max: 50000 }
       ];
 
-      // Get all traders for the protocol
-      const { data: allTraders, error } = await supabase
+      // Get total trader count for the protocol (using COUNT for efficiency)
+      const { count: totalTraders, error: countError } = await supabase
         .from('trader_stats')
-        .select('user_address, volume_usd')
+        .select('*', { count: 'exact', head: true })
         .eq('protocol_name', protocol.toLowerCase());
 
-      if (error) throw error;
-      if (!allTraders || allTraders.length === 0) {
+      if (countError) throw countError;
+
+      if (!totalTraders || totalTraders === 0) {
         return ranges.map(r => ({
           rangeLabel: r.label,
           shortLabel: r.shortLabel,
@@ -805,32 +806,67 @@ export class TraderStatsService {
         }));
       }
 
-      const totalTraders = allTraders.length;
-      const totalVolume = allTraders.reduce((sum, t) => sum + t.volume_usd, 0);
+      console.log(`Total traders for ${protocol}: ${totalTraders.toLocaleString()}`);
 
-      // Calculate stats for each range
-      const rangeData = ranges.map(range => {
-        const tradersInRange = allTraders.filter(t => {
-          const volume = t.volume_usd;
-          if (range.max === null) {
-            return volume >= range.min;
-          }
-          return volume >= range.min && volume < range.max;
-        });
+      // Calculate stats for each range using database queries
+      const rangeResults = await Promise.all(ranges.map(async (range) => {
+        // Build query for this range
+        let countQuery = supabase
+          .from('trader_stats')
+          .select('*', { count: 'exact', head: true })
+          .eq('protocol_name', protocol.toLowerCase())
+          .gte('volume_usd', range.min);
 
-        const rangeVolume = tradersInRange.reduce((sum, t) => sum + t.volume_usd, 0);
+        let volumeQuery = supabase
+          .from('trader_stats')
+          .select('volume_usd')
+          .eq('protocol_name', protocol.toLowerCase())
+          .gte('volume_usd', range.min)
+          .limit(1000000); // Set high limit to avoid default 1000 row limit
+
+        // Add upper bound if not the highest range
+        if (range.max !== null) {
+          countQuery = countQuery.lt('volume_usd', range.max);
+          volumeQuery = volumeQuery.lt('volume_usd', range.max);
+        }
+
+        // Execute both queries
+        const [countResult, volumeResult] = await Promise.all([
+          countQuery,
+          volumeQuery
+        ]);
+
+        if (countResult.error) throw countResult.error;
+        if (volumeResult.error) throw volumeResult.error;
+
+        const traderCount = countResult.count || 0;
+        const rangeVolume = volumeResult.data?.reduce((sum, t) => sum + t.volume_usd, 0) || 0;
 
         return {
-          rangeLabel: range.label,
+          label: range.label,
           shortLabel: range.shortLabel,
           min: range.min,
           max: range.max,
-          traderCount: tradersInRange.length,
-          totalVolume: rangeVolume,
-          volumeShare: totalVolume > 0 ? (rangeVolume / totalVolume) * 100 : 0,
-          traderShare: totalTraders > 0 ? (tradersInRange.length / totalTraders) * 100 : 0
+          traderCount,
+          rangeVolume
         };
-      });
+      }));
+
+      // Calculate total volume from sum of all ranges (avoids fetching all records)
+      const totalVolume = rangeResults.reduce((sum, r) => sum + r.rangeVolume, 0);
+      console.log(`Total volume for ${protocol}: $${totalVolume.toLocaleString()}`);
+
+      // Build final range data with percentages
+      const rangeData = rangeResults.map(r => ({
+        rangeLabel: r.label,
+        shortLabel: r.shortLabel,
+        min: r.min,
+        max: r.max,
+        traderCount: r.traderCount,
+        totalVolume: r.rangeVolume,
+        volumeShare: totalVolume > 0 ? (r.rangeVolume / totalVolume) * 100 : 0,
+        traderShare: totalTraders > 0 ? (r.traderCount / totalTraders) * 100 : 0
+      }));
 
       console.log(`Volume ranges calculated for ${protocol}: ${rangeData.length} ranges`);
       return rangeData;
@@ -852,7 +888,8 @@ export class TraderStatsService {
         .select('user_address, volume_usd')
         .eq('protocol_name', protocol.toLowerCase())
         .gte('volume_usd', minVolume)
-        .order('volume_usd', { ascending: false });
+        .order('volume_usd', { ascending: false })
+        .limit(1000000); // Set high limit to avoid default 1000 row limit
 
       if (maxVolume !== null) {
         query = query.lt('volume_usd', maxVolume);

@@ -1085,7 +1085,10 @@ router.get('/volume-range-export/:protocol/:rangeLabel', async (req: Request, re
 
     // Parse range label to get min/max values
     const rangeMap: Record<string, { min: number, max: number | null }> = {
-      'sub-50k': { min: 0, max: 50000 },
+      'sub-10k': { min: 0, max: 10000 },
+      '10k-20k': { min: 10000, max: 20000 },
+      '20k-30k': { min: 20000, max: 30000 },
+      '30k-50k': { min: 30000, max: 50000 },
       '50k-100k': { min: 50000, max: 100000 },
       '100k-250k': { min: 100000, max: 250000 },
       '250k-500k': { min: 250000, max: 500000 },

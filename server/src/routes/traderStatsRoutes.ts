@@ -1084,20 +1084,25 @@ router.get('/volume-range-export/:protocol/:rangeLabel', async (req: Request, re
     console.log(`Exporting CSV for ${protocol}, range: ${rangeLabel}`);
 
     // Parse range label to get min/max values
+    // Updated to include cumulative "Greater than" ranges and exclude traders < $10k
     const rangeMap: Record<string, { min: number, max: number | null }> = {
-      'sub-10k': { min: 0, max: 10000 },
-      '10k-20k': { min: 10000, max: 20000 },
-      '20k-30k': { min: 20000, max: 30000 },
-      '30k-50k': { min: 30000, max: 50000 },
-      '50k-100k': { min: 50000, max: 100000 },
-      '100k-250k': { min: 100000, max: 250000 },
-      '250k-500k': { min: 250000, max: 500000 },
-      '500k-1m': { min: 500000, max: 1000000 },
-      '1m-2m': { min: 1000000, max: 2000000 },
-      '2m-3m': { min: 2000000, max: 3000000 },
-      '3m-4m': { min: 3000000, max: 4000000 },
+      // Cumulative "Greater than" ranges
+      '5m+': { min: 5000000, max: null },
+      '4m+': { min: 4000000, max: null },
+      '3m+': { min: 3000000, max: null },
+      '2m+': { min: 2000000, max: null },
+      '1m+': { min: 1000000, max: null },
+      '500k+': { min: 500000, max: null },
+      // Bounded ranges
       '4m-5m': { min: 4000000, max: 5000000 },
-      '5m+': { min: 5000000, max: null }
+      '3m-4m': { min: 3000000, max: 4000000 },
+      '2m-3m': { min: 2000000, max: 3000000 },
+      '1m-2m': { min: 1000000, max: 2000000 },
+      '500k-1m': { min: 500000, max: 1000000 },
+      '250k-500k': { min: 250000, max: 500000 },
+      '100k-250k': { min: 100000, max: 250000 },
+      '50k-100k': { min: 50000, max: 100000 },
+      '10k-50k': { min: 10000, max: 50000 }
     };
 
     const range = rangeMap[rangeLabel];

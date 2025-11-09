@@ -772,8 +772,15 @@ export class TraderStatsService {
       };
 
       // Define volume ranges with descriptive labels (highest to lowest)
+      // Cumulative "Greater than" ranges first, then bounded ranges
+      // All ranges exclude traders with volume < $10k
       const ranges = [
         { label: formatRangeLabel(5000000, null), shortLabel: '5m+', min: 5000000, max: null },
+        { label: formatRangeLabel(4000000, null), shortLabel: '4m+', min: 4000000, max: null },
+        { label: formatRangeLabel(3000000, null), shortLabel: '3m+', min: 3000000, max: null },
+        { label: formatRangeLabel(2000000, null), shortLabel: '2m+', min: 2000000, max: null },
+        { label: formatRangeLabel(1000000, null), shortLabel: '1m+', min: 1000000, max: null },
+        { label: formatRangeLabel(500000, null), shortLabel: '500k+', min: 500000, max: null },
         { label: formatRangeLabel(4000000, 5000000), shortLabel: '4m-5m', min: 4000000, max: 5000000 },
         { label: formatRangeLabel(3000000, 4000000), shortLabel: '3m-4m', min: 3000000, max: 4000000 },
         { label: formatRangeLabel(2000000, 3000000), shortLabel: '2m-3m', min: 2000000, max: 3000000 },
@@ -782,17 +789,16 @@ export class TraderStatsService {
         { label: formatRangeLabel(250000, 500000), shortLabel: '250k-500k', min: 250000, max: 500000 },
         { label: formatRangeLabel(100000, 250000), shortLabel: '100k-250k', min: 100000, max: 250000 },
         { label: formatRangeLabel(50000, 100000), shortLabel: '50k-100k', min: 50000, max: 100000 },
-        { label: formatRangeLabel(30000, 50000), shortLabel: '30k-50k', min: 30000, max: 50000 },
-        { label: formatRangeLabel(20000, 30000), shortLabel: '20k-30k', min: 20000, max: 30000 },
-        { label: formatRangeLabel(10000, 20000), shortLabel: '10k-20k', min: 10000, max: 20000 },
-        { label: formatRangeLabel(0, 10000), shortLabel: 'sub-10k', min: 0, max: 10000 }
+        { label: formatRangeLabel(10000, 50000), shortLabel: '10k-50k', min: 10000, max: 50000 }
       ];
 
       // Get total trader count for the protocol (using COUNT for efficiency)
+      // Exclude traders with volume < $10k
       const { count: totalTraders, error: countError } = await supabase
         .from('trader_stats')
         .select('*', { count: 'exact', head: true })
-        .eq('protocol_name', protocol.toLowerCase());
+        .eq('protocol_name', protocol.toLowerCase())
+        .gte('volume_usd', 10000);
 
       if (countError) throw countError;
 
@@ -813,8 +819,10 @@ export class TraderStatsService {
 
       // Calculate stats for each range using COUNT queries only (fast)
       // Volume data is not displayed in UI, so we skip expensive volume sum queries
+      // All queries exclude traders with volume < $10k
       const rangeData = await Promise.all(ranges.map(async (range) => {
         // Build COUNT query for this range
+        // Note: range.min is always >= 10000, so the .gte filter is redundant but kept for clarity
         let countQuery = supabase
           .from('trader_stats')
           .select('*', { count: 'exact', head: true })
@@ -860,11 +868,14 @@ export class TraderStatsService {
     maxVolume: number | null
   ): Promise<{ user_address: string; volume_usd: number }[]> {
     try {
+      // Ensure we never export traders with volume < $10k
+      const effectiveMinVolume = Math.max(minVolume, 10000);
+
       let query = supabase
         .from('trader_stats')
         .select('user_address, volume_usd')
         .eq('protocol_name', protocol.toLowerCase())
-        .gte('volume_usd', minVolume)
+        .gte('volume_usd', effectiveMinVolume)
         .order('volume_usd', { ascending: false })
         .limit(1000000); // Set high limit to avoid default 1000 row limit
 

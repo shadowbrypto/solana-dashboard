@@ -35,4 +35,24 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Create Supabase client with extended timeout for bulk operations
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false
+  },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'x-client-info': 'supabase-js-node'
+    }
+  },
+  // Increase timeout for large batch operations (5 minutes)
+  // This helps with bulk inserts that may take longer
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+});

@@ -924,7 +924,7 @@ export class TraderStatsService {
     }
   }
 
-  // Get traders in a specific volume range for CSV export
+  // Get traders in a specific volume range for CSV export with proper pagination
   static async getTradersInVolumeRange(
     protocol: string,
     minVolume: number,
@@ -934,22 +934,65 @@ export class TraderStatsService {
       // Ensure we never export traders with volume < $10k
       const effectiveMinVolume = Math.max(minVolume, 10000);
 
-      let query = supabase
+      console.log(`Fetching traders in volume range for ${protocol}...`);
+      console.log(`  Min: ${effectiveMinVolume.toLocaleString()}, Max: ${maxVolume ? maxVolume.toLocaleString() : 'unlimited'}`);
+
+      // Step 1: Get total count of traders in this range
+      let countQuery = supabase
         .from('trader_stats')
-        .select('user_address, volume_usd')
+        .select('*', { count: 'exact', head: true })
         .eq('protocol_name', protocol.toLowerCase())
-        .gte('volume_usd', effectiveMinVolume)
-        .order('volume_usd', { ascending: false })
-        .limit(1000000); // Set high limit to avoid default 1000 row limit
+        .gte('volume_usd', effectiveMinVolume);
 
       if (maxVolume !== null) {
-        query = query.lt('volume_usd', maxVolume);
+        countQuery = countQuery.lt('volume_usd', maxVolume);
       }
 
-      const { data, error } = await query;
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
 
-      if (error) throw error;
-      return data || [];
+      const totalTraders = count || 0;
+      console.log(`  Total traders in range: ${totalTraders.toLocaleString()}`);
+
+      if (totalTraders === 0) {
+        return [];
+      }
+
+      // Step 2: Fetch all traders in batches (Supabase pagination limit is 1000)
+      const BATCH_SIZE = 1000;
+      const allTraders: { user_address: string; volume_usd: number }[] = [];
+      let offset = 0;
+
+      console.log(`  Fetching in batches of ${BATCH_SIZE}...`);
+
+      while (offset < totalTraders) {
+        let batchQuery = supabase
+          .from('trader_stats')
+          .select('user_address, volume_usd')
+          .eq('protocol_name', protocol.toLowerCase())
+          .gte('volume_usd', effectiveMinVolume)
+          .order('volume_usd', { ascending: false })
+          .range(offset, offset + BATCH_SIZE - 1);
+
+        if (maxVolume !== null) {
+          batchQuery = batchQuery.lt('volume_usd', maxVolume);
+        }
+
+        const { data, error } = await batchQuery;
+
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allTraders.push(...data);
+        offset += BATCH_SIZE;
+
+        const batchNumber = Math.ceil(offset / BATCH_SIZE);
+        const totalBatches = Math.ceil(totalTraders / BATCH_SIZE);
+        console.log(`    ✓ Batch ${batchNumber}/${totalBatches}: ${data.length} records (Total: ${allTraders.length}/${totalTraders})`);
+      }
+
+      console.log(`  ✅ Retrieved all ${allTraders.length.toLocaleString()} traders for CSV export\n`);
+      return allTraders;
     } catch (error) {
       console.error('Error fetching traders in volume range:', error);
       throw error;

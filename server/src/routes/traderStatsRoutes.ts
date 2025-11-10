@@ -105,8 +105,9 @@ const percentileCache = new Map<string, { data: any[], timestamp: number }>();
 const CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
 
 // Comprehensive cache for all trader stats data
-const comprehensiveCache = new Map<string, { data: any, timestamp: number }>();
-const COMPREHENSIVE_CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
+// Cache includes row count to detect data changes
+const comprehensiveCache = new Map<string, { data: any, timestamp: number, rowCount: number }>();
+// Cache invalidates only when row count changes (not time-based anymore)
 
 // Progress tracking for loading states
 const progressCache = new Map<string, any>();
@@ -196,19 +197,26 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
     }
     
     let metrics: any, percentileBrackets: any[], totalVolume: number;
-    
-    // Check if we have cached metrics (expensive calculations)
-    if (cached && (now - cached.timestamp < COMPREHENSIVE_CACHE_DURATION)) {
+
+    // Check if we have cached metrics AND row count hasn't changed
+    // Cache is only invalidated when data changes (row count differs)
+    const rowCountChanged = !cached || cached.rowCount !== total;
+
+    if (cached && !rowCountChanged) {
       const cacheAge = Math.round((now - cached.timestamp) / 1000 / 60);
-      console.log(`✅ Using cached metrics for ${protocol} (${cacheAge} minutes old)`);
+      console.log(`✅ Using cached metrics for ${protocol} (row count unchanged: ${total} traders, ${cacheAge} minutes old)`);
       metrics = cached.data.metrics;
       percentileBrackets = cached.data.percentileBrackets;
       totalVolume = cached.data.totalVolume;
-      
+
       // Clear progress since we're using cached data
       progressCache.delete(progressKey);
     } else {
-      console.log(`🔄 Calculating comprehensive metrics for ${protocol}...`);
+      if (cached && rowCountChanged) {
+        console.log(`🔄 Row count changed for ${protocol}: ${cached.rowCount} → ${total} traders. Recalculating...`);
+      } else {
+        console.log(`🔄 No cache found for ${protocol}. Calculating comprehensive metrics...`);
+      }
       
       // Update progress for calculation phase
       const processedAt30 = Math.floor(total * 0.3); // Show 30% processed
@@ -388,13 +396,15 @@ router.get('/comprehensive/:protocol', async (req: Request, res: Response) => {
         throw error;
       }
       
-      // Cache the expensive metrics calculations
+      // Cache the expensive metrics calculations with row count
+      // Cache persists until row count changes (smart invalidation)
       comprehensiveCache.set(cacheKey, {
         data: { metrics, percentileBrackets, totalVolume },
-        timestamp: now
+        timestamp: now,
+        rowCount: total
       });
-      
-      console.log(`💾 Cached comprehensive metrics for ${protocol} (4 hour expiry)`);
+
+      console.log(`💾 Cached comprehensive metrics for ${protocol} with row count: ${total} traders`);
     }
     
     // Fetch only the requested page of rank data (true lazy loading)
@@ -868,11 +878,11 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
     // Step 4: Clear all caches for this protocol
     console.log(`Clearing caches for ${protocol}...`);
     
-    // Clear comprehensive cache
-    const comprehensiveCacheKey = `comprehensive_${protocol.toLowerCase()}`;
+    // Clear comprehensive cache (use correct cache key format)
+    const comprehensiveCacheKey = `comprehensive_metrics_${protocol}`;
     if (comprehensiveCache.has(comprehensiveCacheKey)) {
       comprehensiveCache.delete(comprehensiveCacheKey);
-      console.log(`✅ Cleared comprehensive cache for ${protocol}`);
+      console.log(`✅ Cleared comprehensive cache for ${protocol} (row count-based cache will rebuild on next request)`);
     }
     
     // Clear percentile cache
@@ -924,11 +934,11 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
           
         if (countError) throw countError;
         
-        // Clear caches for this protocol
-        const comprehensiveCacheKey = `comprehensive_${protocol}`;
+        // Clear caches for this protocol (use correct cache key format)
+        const comprehensiveCacheKey = `comprehensive_metrics_${protocol}`;
         if (comprehensiveCache.has(comprehensiveCacheKey)) {
           comprehensiveCache.delete(comprehensiveCacheKey);
-          console.log(`✅ Cleared comprehensive cache for ${protocol}`);
+          console.log(`✅ Cleared comprehensive cache for ${protocol} (row count-based cache will rebuild on next request)`);
         }
         
         const percentileCacheKey = `percentiles_${protocol}`;

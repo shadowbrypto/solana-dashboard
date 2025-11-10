@@ -309,11 +309,11 @@ export class TraderStatsService {
     data: Array<{ user: string; volume_usd: number }>
   ): Promise<void> {
     // Optimized for large datasets with timeout resistance
-    const BATCH_SIZE = 10000; // 10k rows for maximum reliability
-    const MAX_CONCURRENT = 1; // Sequential processing to avoid database overload
-
-    // Axiom-specific settings: More retries with longer delays due to large dataset
     const isAxiom = protocol.toLowerCase() === 'axiom';
+
+    // Axiom-specific settings: Smaller batches, more retries, longer delays
+    const BATCH_SIZE = isAxiom ? 5000 : 10000; // 5k for Axiom, 10k for others
+    const MAX_CONCURRENT = 1; // Sequential processing to avoid database overload
     const MAX_RETRIES = isAxiom ? 10 : 3; // 10 retries for Axiom, 3 for others
     const RETRY_DELAY = isAxiom ? 30000 : 1000; // 30s delay for Axiom, 1s for others
     
@@ -427,9 +427,24 @@ export class TraderStatsService {
             .insert(batch);
 
           if (error) {
-            // Check if it's a timeout error that we can retry
-            if (error.code === '57014' && retryCount < MAX_RETRIES) {
-              console.log(`⚠️  Batch ${batchIndex + 1} timeout, retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
+            // Log the error details for debugging
+            console.error(`⚠️  Batch ${batchIndex + 1} error:`, {
+              code: error.code,
+              message: error.message,
+              hint: error.hint,
+              details: error.details
+            });
+
+            // Retry on timeout or other recoverable database errors
+            const isRetryableError =
+              error.code === '57014' || // Query timeout
+              error.code === 'PGRST301' || // Connection timeout
+              error.message?.includes('timeout') ||
+              error.message?.includes('connection') ||
+              error.message?.includes('temporarily unavailable');
+
+            if (isRetryableError && retryCount < MAX_RETRIES) {
+              console.log(`⚠️  Batch ${batchIndex + 1} failed (${error.code || 'unknown'}), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
               await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
               return processBatch(batch, batchIndex, retryCount + 1);
             }
@@ -441,13 +456,35 @@ export class TraderStatsService {
           const batchTime = (Date.now() - batchStart) / 1000;
           const batchSpeed = Math.round(batch.length / batchTime);
           successCount += batch.length;
-          
+
           const retryText = retryCount > 0 ? ` (retry ${retryCount})` : '';
           console.log(`✅ Batch ${batchIndex + 1}/${batches.length}: ${batch.length.toLocaleString()} records in ${batchTime.toFixed(1)}s (${batchSpeed.toLocaleString()}/s)${retryText} - Total: ${successCount.toLocaleString()}/${records.length.toLocaleString()}`);
+
+          // Add small delay between successful batches for Axiom to prevent overload
+          if (isAxiom && batchIndex < batches.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 2s between batches
+          }
         } catch (error: any) {
-          // Handle any other errors
-          if (error.code === '57014' && retryCount < MAX_RETRIES) {
-            console.log(`⚠️  Batch ${batchIndex + 1} timeout (catch), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
+          // Log the error details for debugging
+          console.error(`⚠️  Batch ${batchIndex + 1} exception:`, {
+            code: error.code,
+            message: error.message,
+            name: error.name,
+            stack: error.stack?.split('\n')[0]
+          });
+
+          // Retry on timeout or other recoverable errors
+          const isRetryableError =
+            error.code === '57014' || // Query timeout
+            error.code === 'PGRST301' || // Connection timeout
+            error.message?.includes('timeout') ||
+            error.message?.includes('connection') ||
+            error.message?.includes('temporarily unavailable') ||
+            error.message?.includes('ECONNRESET') ||
+            error.message?.includes('ETIMEDOUT');
+
+          if (isRetryableError && retryCount < MAX_RETRIES) {
+            console.log(`⚠️  Batch ${batchIndex + 1} exception (${error.code || error.name}), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             return processBatch(batch, batchIndex, retryCount + 1);
           }

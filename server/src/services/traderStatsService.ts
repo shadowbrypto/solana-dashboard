@@ -311,7 +311,11 @@ export class TraderStatsService {
     // Optimized for large datasets with timeout resistance
     const BATCH_SIZE = 10000; // 10k rows for maximum reliability
     const MAX_CONCURRENT = 1; // Sequential processing to avoid database overload
-    const MAX_RETRIES = 3; // Retry failed batches
+
+    // Axiom-specific settings: More retries with longer delays due to large dataset
+    const isAxiom = protocol.toLowerCase() === 'axiom';
+    const MAX_RETRIES = isAxiom ? 10 : 3; // 10 retries for Axiom, 3 for others
+    const RETRY_DELAY = isAxiom ? 30000 : 1000; // 30s delay for Axiom, 1s for others
     
     try {
       console.log(`\n${'='.repeat(60)}`);
@@ -320,8 +324,13 @@ export class TraderStatsService {
       console.log(`📅 Date: ${format(date, 'yyyy-MM-dd')}`);
       console.log(`📊 Records to import: ${data.length.toLocaleString()}`);
       console.log(`🔧 Batch size: ${BATCH_SIZE.toLocaleString()}`);
-      console.log(`🚀 Concurrent batches: ${MAX_CONCURRENT}`);
+      console.log(`🚀 Concurrent batches: ${MAX_CONCURRENT} (sequential)`);
       console.log(`📦 Total batches: ${Math.ceil(data.length / BATCH_SIZE)}`);
+      console.log(`🔄 Max retries: ${MAX_RETRIES}`);
+      console.log(`⏱️  Retry delay: ${RETRY_DELAY / 1000}s`);
+      if (isAxiom) {
+        console.log(`⚠️  Axiom mode: Using conservative retry settings for large dataset`);
+      }
       console.log(`${'='.repeat(60)}\n`);
 
       // Step 1: Delete ALL existing data for this protocol in batches
@@ -396,8 +405,8 @@ export class TraderStatsService {
       
       console.log(`   ✅ Prepared ${records.length.toLocaleString()} records\n`);
 
-      // Step 3: Parallel batch insertion
-      console.log(`💾 Step 3: Parallel batch insertion...`);
+      // Step 3: Sequential batch insertion with retry logic
+      console.log(`💾 Step 3: Sequential batch insertion...`);
       const startTime = Date.now();
       let successCount = 0;
       
@@ -420,11 +429,11 @@ export class TraderStatsService {
           if (error) {
             // Check if it's a timeout error that we can retry
             if (error.code === '57014' && retryCount < MAX_RETRIES) {
-              console.log(`⚠️  Batch ${batchIndex + 1} timeout, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
-              await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+              console.log(`⚠️  Batch ${batchIndex + 1} timeout, retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
               return processBatch(batch, batchIndex, retryCount + 1);
             }
-            
+
             console.error(`❌ Batch ${batchIndex + 1} failed after ${retryCount} retries:`, error.message);
             throw error;
           }
@@ -438,35 +447,35 @@ export class TraderStatsService {
         } catch (error: any) {
           // Handle any other errors
           if (error.code === '57014' && retryCount < MAX_RETRIES) {
-            console.log(`⚠️  Batch ${batchIndex + 1} timeout (catch), retrying... (${retryCount + 1}/${MAX_RETRIES})`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+            console.log(`⚠️  Batch ${batchIndex + 1} timeout (catch), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             return processBatch(batch, batchIndex, retryCount + 1);
           }
           throw error;
         }
       };
 
-      // Ultra-optimized batch processing with rolling window
+      // Sequential batch processing (MAX_CONCURRENT = 1 ensures one batch at a time)
       let completedBatches = 0;
       let activeBatches = new Set<Promise<void>>();
-      
+
       for (let i = 0; i < batches.length; i++) {
         // Create batch promise
         const batchPromise = processBatch(batches[i], i).then(() => {
           completedBatches++;
           activeBatches.delete(batchPromise);
         });
-        
+
         activeBatches.add(batchPromise);
-        
-        // Control concurrency with rolling window approach
+
+        // Control concurrency - with MAX_CONCURRENT=1, this ensures sequential processing
         if (activeBatches.size >= MAX_CONCURRENT) {
-          // Wait for at least one batch to complete
+          // Wait for current batch to complete before starting next one
           await Promise.race(Array.from(activeBatches));
         }
       }
-      
-      // Wait for all remaining batches to complete
+
+      // Wait for any remaining batches to complete
       await Promise.all(Array.from(activeBatches));
       
       const duration = (Date.now() - startTime) / 1000;

@@ -279,8 +279,10 @@ export class DuneTraderStatsService {
       console.log(`${'='.repeat(80)}\n`);
 
       // Step 2: Ultra-fast database import with timeout resistance
+      // Set resumeMode=true to skip deletion and continue from existing records
+      const resumeMode = process.env.RESUME_MODE === 'true' || false;
       const startImport = Date.now();
-      await TraderStatsService.importTraderData(protocol, date, results);
+      await TraderStatsService.importTraderData(protocol, date, results, resumeMode);
       const importTime = (Date.now() - startImport) / 1000;
       
       const totalTime = (Date.now() - startDownload) / 1000;

@@ -302,11 +302,12 @@ export class TraderStatsService {
     }
   }
 
-  // Import trader data - TIMEOUT RESISTANT VERSION
+  // Import trader data - TIMEOUT RESISTANT VERSION with RESUME support
   static async importTraderData(
     protocol: string,
     date: Date,
-    data: Array<{ user: string; volume_usd: number }>
+    data: Array<{ user: string; volume_usd: number }>,
+    resumeMode: boolean = false // Set to true to resume from existing records
   ): Promise<void> {
     // Optimized for large datasets with timeout resistance
     const isAxiom = protocol.toLowerCase() === 'axiom';
@@ -333,15 +334,22 @@ export class TraderStatsService {
       }
       console.log(`${'='.repeat(60)}\n`);
 
-      // Step 1: Delete ALL existing data for this protocol in batches
-      console.log(`🗑️ Step 1: Clearing existing ${protocol} data...`);
-
+      // Step 1: Check existing data and decide whether to delete or resume
       const { count: existingCount } = await supabase
         .from('trader_stats')
         .select('*', { count: 'exact', head: true })
         .eq('protocol_name', protocol.toLowerCase());
 
-      console.log(`   - Found ${(existingCount || 0).toLocaleString()} existing records to delete`);
+      console.log(`   - Found ${(existingCount || 0).toLocaleString()} existing records in database`);
+
+      let recordsToSkip = 0;
+
+      if (resumeMode && existingCount && existingCount > 0) {
+        console.log(`🔄 RESUME MODE: Skipping deletion and resuming from record ${existingCount + 1}`);
+        recordsToSkip = existingCount;
+      } else {
+        // Step 1: Delete ALL existing data for this protocol in batches
+        console.log(`🗑️ Step 1: Clearing existing ${protocol} data...`);
 
       if (existingCount && existingCount > 0) {
         // Batch delete to avoid timeout - delete 50k at a time using range pagination
@@ -385,25 +393,34 @@ export class TraderStatsService {
       } else {
         console.log(`   ✅ No existing records to delete\n`);
       }
+      } // End of delete/resume check
 
-      // Step 2: Prepare records
+      // Step 2: Prepare records (skip already inserted if resuming)
       console.log(`🔧 Step 2: Preparing records...`);
       const chain = traderStatsQueries.find(q => q.protocol === protocol)?.chain || 'solana';
       const dateStr = format(date, 'yyyy-MM-dd');
       const protocolLower = protocol.toLowerCase();
-      
-      const records = new Array(data.length);
-      for (let i = 0; i < data.length; i++) {
+
+      // Skip records that are already inserted when resuming
+      const dataToInsert = recordsToSkip > 0 ? data.slice(recordsToSkip) : data;
+      console.log(`   - Total records in source: ${data.length.toLocaleString()}`);
+      if (recordsToSkip > 0) {
+        console.log(`   - Skipping first ${recordsToSkip.toLocaleString()} records (already in DB)`);
+        console.log(`   - Remaining to insert: ${dataToInsert.length.toLocaleString()}`);
+      }
+
+      const records = new Array(dataToInsert.length);
+      for (let i = 0; i < dataToInsert.length; i++) {
         records[i] = {
           protocol_name: protocolLower,
-          user_address: data[i].user,
-          volume_usd: data[i].volume_usd,
+          user_address: dataToInsert[i].user,
+          volume_usd: dataToInsert[i].volume_usd,
           date: dateStr,
           chain: chain
         };
       }
-      
-      console.log(`   ✅ Prepared ${records.length.toLocaleString()} records\n`);
+
+      console.log(`   ✅ Prepared ${records.length.toLocaleString()} records for insertion\n`);
 
       // Step 3: Sequential batch insertion with retry logic
       console.log(`💾 Step 3: Sequential batch insertion...`);

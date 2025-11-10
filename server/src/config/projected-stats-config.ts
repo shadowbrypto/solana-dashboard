@@ -35,7 +35,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'axiom': '4899853',
   'gmgnai': '4899849',
   'padre': '5622891',
-  'nova terminal': '4899891',
+  'nova terminal': '6175267',
   'telemetry': '5666888',
   'mevx': '6169736',
   'rhythm': '5698770',

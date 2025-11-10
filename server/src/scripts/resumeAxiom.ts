@@ -31,7 +31,7 @@ async function resumeAxiomImport() {
 
     console.log(`Starting resume import for ${protocol}...\n`);
 
-    await DuneTraderStatsService.fetchAndSyncTraderStats(protocol, date);
+    await DuneTraderStatsService.fetchAndImportTraderStats(protocol, date);
 
     console.log('\n✅ Resume import completed successfully!');
   } catch (error) {

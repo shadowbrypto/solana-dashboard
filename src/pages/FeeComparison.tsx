@@ -3,12 +3,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { PROTOCOL_FEES, getProtocolFee } from '@/lib/fee-config';
 import { protocolConfigs, getProtocolById, getProtocolLogoFilename } from '@/lib/protocol-config';
+import { ComponentActions } from '@/components/ComponentActions';
 
 export default function FeeComparison() {
-  // Get all protocols that have fees configured
-  const protocolsWithFees = protocolConfigs
-    .filter(protocol => PROTOCOL_FEES[protocol.id])
+  // Get all protocols that have fees configured, with Trojan at the top
+  const allProtocolsWithFees = protocolConfigs
+    .filter(protocol => PROTOCOL_FEES[protocol.id]);
+
+  const trojanProtocol = allProtocolsWithFees.find(p => p.id === 'trojan');
+  const otherProtocols = allProtocolsWithFees
+    .filter(p => p.id !== 'trojan')
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const protocolsWithFees = trojanProtocol
+    ? [trojanProtocol, ...otherProtocols]
+    : otherProtocols;
 
   return (
     <div className="container mx-auto p-6">
@@ -19,7 +28,11 @@ export default function FeeComparison() {
         </p>
       </div>
 
-      <Card className="rounded-xl border">
+      <ComponentActions
+        componentName="Fee Comparison"
+        filename="fee-comparison"
+      >
+        <Card className="rounded-xl border">
         <CardHeader>
           <CardTitle>Protocol Fees</CardTitle>
         </CardHeader>
@@ -42,9 +55,13 @@ export default function FeeComparison() {
                 protocolsWithFees.map((protocol) => {
                   const fee = getProtocolFee(protocol.id);
                   const logoFilename = getProtocolLogoFilename(protocol.id);
+                  const isTrojan = protocol.id === 'trojan';
 
                   return (
-                    <TableRow key={protocol.id} className="hover:bg-muted/50">
+                    <TableRow
+                      key={protocol.id}
+                      className={isTrojan ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/50"}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <img
@@ -78,22 +95,9 @@ export default function FeeComparison() {
               )}
             </TableBody>
           </Table>
-
-          {protocolsWithFees.length > 0 && (
-            <div className="mt-6 pt-6 border-t">
-              <div className="text-sm text-muted-foreground">
-                <p>
-                  <strong>Total Protocols:</strong> {protocolsWithFees.length}
-                </p>
-                <p className="mt-2">
-                  Fee percentages are applied to the trade volume. Fees may vary based on trade size,
-                  user tier, or other factors. Check each protocol's documentation for complete fee details.
-                </p>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
+      </ComponentActions>
     </div>
   );
 }

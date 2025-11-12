@@ -34,7 +34,7 @@ export default function FeeComparison() {
       >
         <Card className="rounded-xl border">
         <CardHeader>
-          <CardTitle>Protocol Fees</CardTitle>
+          <CardTitle>Trading Fees</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>

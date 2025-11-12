@@ -36,18 +36,18 @@ export default function FeeComparison() {
         <CardHeader>
           <CardTitle>Protocol Fees</CardTitle>
         </CardHeader>
-        <CardContent className="px-6 pb-6">
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60%]">Protocol</TableHead>
-                <TableHead className="text-right">Fee</TableHead>
+                <TableHead className="w-[60%] h-10 px-4">Protocol</TableHead>
+                <TableHead className="text-right h-10 px-4">Fee</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {protocolsWithFees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={2} className="text-center text-muted-foreground py-8 px-4">
                     No fee data configured
                   </TableCell>
                 </TableRow>
@@ -60,9 +60,11 @@ export default function FeeComparison() {
                   return (
                     <TableRow
                       key={protocol.id}
-                      className={isTrojan ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/50"}
+                      className={isTrojan
+                        ? "relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border-l-4 border-l-primary"
+                        : "hover:bg-muted/50"}
                     >
-                      <TableCell>
+                      <TableCell className="py-2 px-4">
                         <div className="flex items-center gap-3">
                           <img
                             src={`/assets/logos/${logoFilename}`}
@@ -81,7 +83,7 @@ export default function FeeComparison() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right py-2 px-4">
                         <Badge
                           variant="outline"
                           className="font-semibold"

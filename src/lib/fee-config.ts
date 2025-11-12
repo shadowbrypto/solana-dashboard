@@ -10,32 +10,44 @@ export interface ProtocolFeeConfig {
 }
 
 export const PROTOCOL_FEES: ProtocolFeeConfig = {
-  // Telegram Bots
+  // Telegram Bots (Solana)
   'trojan': '1.0%',
   'bonkbot': '1.0%',
-  'sol trading bot': '1.0%',
-  'banana gun': '0.5%',
+  'bloom': '0.85%',
+  'nova': '1.0%',
+  'soltradingbot': '1.0%',
+  'banana': '0.5%',
   'maestro': '1.0%',
 
-  // Web Bots
+  // Trading Terminals (Solana)
   'photon': '0.25%',
   'bullx': '1.0%',
-  'bloom': '0.85%',
-  'pepeboost': '1.0%',
-  'pumpportal': '1.5%',
-
-  // Terminal Apps
   'axiom': '0.5%',
-  'gmgn.ai': '0%',
+  'gmgnai': '0%',
   'padre': '0%',
   'nova terminal': '0%',
   'telemetry': '0%',
   'mevx': '0%',
   'rhythm': '0%',
-  'cielo': '0%',
-  'moonshot': '1.0%',
+  'vyper': '0%',
+  'opensea': '0%',
 
-  // Add more protocols as needed
+  // Mobile Apps (Solana)
+  'moonshot': '1.0%',
+  'vector': '0%',
+  'slingshot': '0%',
+  'fomo': '0%',
+
+  // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
+  'sigma_evm': '0%',
+  'maestro_evm': '1.0%',
+  'bloom_evm': '0.85%',
+  'banana_evm': '0.5%',
+  'padre_evm': '0%',
+  'gmgnai_evm': '0%',
+  'photon_evm': '0.25%',
+  'mevx_evm': '0%',
+  'axiom_evm': '0.5%',
 };
 
 /**

@@ -165,8 +165,8 @@ export default function FeeComparison() {
             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[5%] h-10 px-2"></TableHead>
-                <TableHead className="w-[55%] h-10 px-2">Protocol</TableHead>
+                <TableHead className="w-[40px] h-10 pl-2 pr-1"></TableHead>
+                <TableHead className="h-10 pl-1 pr-2">Protocol</TableHead>
                 <TableHead className="text-right h-10 px-4">Fee</TableHead>
               </TableRow>
             </TableHeader>
@@ -202,7 +202,7 @@ export default function FeeComparison() {
                         ? "relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border-l-4 border-l-primary"
                         : "hover:bg-muted/50"}`}
                     >
-                      <TableCell className="py-2 px-2">
+                      <TableCell className="py-2 pl-2 pr-1">
                         <button
                           onClick={() => toggleProtocolVisibility(protocol.id)}
                           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
@@ -211,7 +211,7 @@ export default function FeeComparison() {
                           <EyeOff className="h-4 w-4" />
                         </button>
                       </TableCell>
-                      <TableCell className="py-2 px-2">
+                      <TableCell className="py-2 pl-1 pr-2">
                         <div className="flex items-center gap-3">
                           <img
                             src={`/assets/logos/${logoFilename}`}

@@ -28,16 +28,16 @@ export default function FeeComparison() {
         </p>
       </div>
 
-      <ComponentActions
-        componentName="Fee Comparison"
-        filename="fee-comparison"
-      >
-        <Card className="rounded-xl border">
+      <Card className="rounded-xl border">
         <CardHeader className="p-4 pb-0">
           <CardTitle>Trading Fees</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <ComponentActions
+            componentName="Fee Comparison"
+            filename="fee-comparison"
+          >
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60%] h-10 px-4">Protocol</TableHead>
@@ -97,9 +97,9 @@ export default function FeeComparison() {
               )}
             </TableBody>
           </Table>
+          </ComponentActions>
         </CardContent>
       </Card>
-      </ComponentActions>
     </div>
   );
 }

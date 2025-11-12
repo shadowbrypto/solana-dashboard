@@ -37,17 +37,6 @@ export const PROTOCOL_FEES: ProtocolFeeConfig = {
   'vector': '0%',
   'slingshot': '0%',
   'fomo': '0%',
-
-  // EVM Protocols (Multi-Chain: Ethereum, Base, Arbitrum, BSC, Avalanche)
-  'sigma_evm': '0%',
-  'maestro_evm': '1.0%',
-  'bloom_evm': '0.85%',
-  'banana_evm': '0.5%',
-  'padre_evm': '0%',
-  'gmgnai_evm': '0%',
-  'photon_evm': '0.25%',
-  'mevx_evm': '0%',
-  'axiom_evm': '0.5%',
 };
 
 /**

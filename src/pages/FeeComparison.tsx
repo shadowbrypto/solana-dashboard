@@ -246,6 +246,7 @@ export default function FeeComparison() {
           </Table>
         </CardContent>
       </Card>
+      </div>
 
       {/* Download and Copy Buttons */}
       <div className="flex justify-end gap-2 mt-4">
@@ -263,7 +264,6 @@ export default function FeeComparison() {
           <Copy className="h-4 w-4" />
           Copy
         </button>
-      </div>
       </div>
     </div>
   );

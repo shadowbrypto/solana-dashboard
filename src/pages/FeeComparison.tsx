@@ -198,14 +198,14 @@ export default function FeeComparison() {
                   return (
                     <TableRow
                       key={protocol.id}
-                      className={isTrojan
+                      className={`group ${isTrojan
                         ? "relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border-l-4 border-l-primary"
-                        : "hover:bg-muted/50"}
+                        : "hover:bg-muted/50"}`}
                     >
                       <TableCell className="py-2 px-4">
                         <button
                           onClick={() => toggleProtocolVisibility(protocol.id)}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
                           title="Hide protocol"
                         >
                           <EyeOff className="h-4 w-4" />

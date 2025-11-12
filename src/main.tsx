@@ -16,6 +16,7 @@ import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import CustomReports from "./pages/CustomReports";
 import TraderStats from "./pages/TraderStats";
+import FeeComparison from "./pages/FeeComparison";
 import { HomePage } from "./pages/HomePage";
 import { ThemeProvider } from "./lib/theme";
 import { useLocation } from "react-router-dom";
@@ -159,6 +160,20 @@ const router = createBrowserRouter([
                 }
               >
                 <TraderStats />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "fee-comparison",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <FeeComparison />
               </React.Suspense>
             ),
           },

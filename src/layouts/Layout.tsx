@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home, Users } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home, Users, DollarSign } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -31,7 +31,8 @@ const reports = [
   { id: 'weekly', name: 'Weekly Report', icon: Calendar, path: '/reports/weekly' },
   { id: 'monthly', name: 'Monthly Report', icon: CalendarRange, path: '/reports/monthly' },
   { id: 'custom', name: 'Custom Reports', icon: Brain, path: '/reports/custom' },
-  { id: 'trader-stats', name: 'Trader Stats', icon: Users, path: '/reports/trader-stats' }
+  { id: 'trader-stats', name: 'Trader Stats', icon: Users, path: '/reports/trader-stats' },
+  { id: 'fee-comparison', name: 'Fee Comparison', icon: DollarSign, path: '/reports/fee-comparison' }
 ];
 
 const adminPages = [

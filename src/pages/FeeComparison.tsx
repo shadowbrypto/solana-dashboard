@@ -1,14 +1,42 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PROTOCOL_FEES, getProtocolFee } from '@/lib/fee-config';
-import { protocolConfigs, getProtocolById, getProtocolLogoFilename } from '@/lib/protocol-config';
-import { ComponentActions } from '@/components/ComponentActions';
+import { Download, Copy, Eye, EyeOff } from 'lucide-react';
+// @ts-ignore
+import domtoimage from 'dom-to-image';
+import { fetchFeeConfig, getProtocolFee, ProtocolFeeConfig } from '@/lib/fee-config-api';
+import { protocolConfigs, getProtocolLogoFilename } from '@/lib/protocol-config';
 
 export default function FeeComparison() {
+  const [feeConfig, setFeeConfig] = useState<ProtocolFeeConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
+
+  // Fetch fee config from API
+  useEffect(() => {
+    async function loadFeeConfig() {
+      try {
+        setLoading(true);
+        const config = await fetchFeeConfig();
+        setFeeConfig(config);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading fee config:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load fee configuration');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadFeeConfig();
+  }, []);
+
   // Get all protocols that have fees configured, with Trojan at the top
-  const allProtocolsWithFees = protocolConfigs
-    .filter(protocol => PROTOCOL_FEES[protocol.id]);
+  const allProtocolsWithFees = feeConfig
+    ? protocolConfigs.filter(protocol => feeConfig[protocol.id] && !hiddenProtocols.has(protocol.id))
+    : [];
 
   const trojanProtocol = allProtocolsWithFees.find(p => p.id === 'trojan');
   const otherProtocols = allProtocolsWithFees
@@ -19,6 +47,106 @@ export default function FeeComparison() {
     ? [trojanProtocol, ...otherProtocols]
     : otherProtocols;
 
+  // Toggle protocol visibility
+  const toggleProtocolVisibility = (protocolId: string) => {
+    setHiddenProtocols(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(protocolId)) {
+        newSet.delete(protocolId);
+      } else {
+        newSet.add(protocolId);
+      }
+      return newSet;
+    });
+  };
+
+  // Download table as image
+  const downloadReport = async () => {
+    const tableElement = document.querySelector('[data-table="fee-comparison"]') as HTMLElement;
+
+    if (tableElement) {
+      const rect = tableElement.getBoundingClientRect();
+
+      if (rect.width === 0 || rect.height === 0) {
+        return;
+      }
+
+      try {
+        const scale = 2;
+        const dataUrl = await Promise.race([
+          domtoimage.toPng(tableElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
+            style: {
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              overflow: 'visible',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('timeout after 10 seconds')), 10000)
+          )
+        ]) as string;
+
+        const link = document.createElement('a');
+        link.download = `Fee Comparison.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Download error:', error);
+      }
+    }
+  };
+
+  // Copy table to clipboard
+  const copyToClipboard = async () => {
+    const tableElement = document.querySelector('[data-table="fee-comparison"]') as HTMLElement;
+
+    if (tableElement) {
+      const rect = tableElement.getBoundingClientRect();
+
+      if (rect.width === 0 || rect.height === 0) {
+        return;
+      }
+
+      try {
+        const scale = 2;
+        const blob = await Promise.race([
+          domtoimage.toBlob(tableElement, {
+            quality: 1,
+            bgcolor: '#ffffff',
+            width: (tableElement.scrollWidth + 40) * scale,
+            height: (tableElement.scrollHeight + 40) * scale,
+            style: {
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+              overflow: 'visible',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('timeout after 10 seconds')), 10000)
+          )
+        ]) as Blob;
+
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      } catch (error) {
+        console.error('Copy error:', error);
+      }
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -28,32 +156,42 @@ export default function FeeComparison() {
         </p>
       </div>
 
+      <div data-table="fee-comparison">
       <Card className="rounded-xl border">
         <CardHeader className="p-4 pb-0">
           <CardTitle>Trading Fees</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ComponentActions
-            componentName="Fee Comparison"
-            filename="fee-comparison"
-          >
             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60%] h-10 px-4">Protocol</TableHead>
+                <TableHead className="w-[5%] h-10 px-4"></TableHead>
+                <TableHead className="w-[55%] h-10 px-4">Protocol</TableHead>
                 <TableHead className="text-right h-10 px-4">Fee</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {protocolsWithFees.length === 0 ? (
+              {loading ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-muted-foreground py-8 px-4">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8 px-4">
+                    Loading fee data...
+                  </TableCell>
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-red-500 py-8 px-4">
+                    {error}
+                  </TableCell>
+                </TableRow>
+              ) : protocolsWithFees.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8 px-4">
                     No fee data configured
                   </TableCell>
                 </TableRow>
               ) : (
                 protocolsWithFees.map((protocol) => {
-                  const fee = getProtocolFee(protocol.id);
+                  const fee = feeConfig ? getProtocolFee(feeConfig, protocol.id) : 'N/A';
                   const logoFilename = getProtocolLogoFilename(protocol.id);
                   const isTrojan = protocol.id === 'trojan';
 
@@ -64,6 +202,15 @@ export default function FeeComparison() {
                         ? "relative bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 hover:from-primary/10 hover:via-primary/15 hover:to-primary/10 border-l-4 border-l-primary"
                         : "hover:bg-muted/50"}
                     >
+                      <TableCell className="py-2 px-4">
+                        <button
+                          onClick={() => toggleProtocolVisibility(protocol.id)}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          title="Hide protocol"
+                        >
+                          <EyeOff className="h-4 w-4" />
+                        </button>
+                      </TableCell>
                       <TableCell className="py-2 px-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -97,9 +244,27 @@ export default function FeeComparison() {
               )}
             </TableBody>
           </Table>
-          </ComponentActions>
         </CardContent>
+
+        {/* Download and Copy Buttons */}
+        <div className="flex justify-end gap-2 p-4 pt-0">
+          <button
+            onClick={downloadReport}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download
+          </button>
+          <button
+            onClick={copyToClipboard}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+          >
+            <Copy className="h-4 w-4" />
+            Copy
+          </button>
+        </div>
       </Card>
+      </div>
     </div>
   );
 }

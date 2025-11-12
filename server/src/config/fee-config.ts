@@ -1,5 +1,5 @@
 /**
- * Protocol Fee Configuration
+ * Protocol Fee Configuration (Server-side)
  *
  * Manually configure fees for each protocol.
  * Update the fee values here to reflect changes.
@@ -13,30 +13,30 @@ export const PROTOCOL_FEES: ProtocolFeeConfig = {
   // Telegram Bots (Solana)
   'trojan': '1.0%',
   'bonkbot': '1.0%',
-  'bloom': '0.85%',
+  'bloom': '1.0%',
   'nova': '1.0%',
   'soltradingbot': '1.0%',
-  'banana': '0.5%',
+  'banana': '1.0%',
   'maestro': '1.0%',
 
   // Trading Terminals (Solana)
-  'photon': '0.25%',
+  'photon': '1.0%',
   'bullx': '1.0%',
-  'axiom': '0.5%',
-  'gmgnai': '0%',
-  'padre': '0%',
-  'nova terminal': '0%',
-  'telemetry': '0%',
-  'mevx': '0%',
-  'rhythm': '0%',
-  'vyper': '0%',
-  'opensea': '0%',
+  'axiom': '1.0%',
+  'gmgnai': '1.0%',
+  'padre': '1.0%',
+  'nova terminal': '1.0%',
+  'telemetry': '1.0%',
+  'mevx': '1.0%',
+  'rhythm': '1.0%',
+  'vyper': '1.0%',
+  'opensea': '1.0%',
 
   // Mobile Apps (Solana)
   'moonshot': '1.0%',
-  'vector': '0%',
-  'slingshot': '0%',
-  'fomo': '0%',
+  'vector': '1.0%',
+  'slingshot': '1.0%',
+  'fomo': '1.0%',
 };
 
 /**

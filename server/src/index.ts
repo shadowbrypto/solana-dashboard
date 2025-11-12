@@ -10,6 +10,7 @@ import projectedStatsRoutes from './routes/projectedStatsRoutes.js';
 import { launchpadRoutes } from './routes/launchpads.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import traderStatsRoutes from './routes/traderStatsRoutes.js';
+import feeConfigRoutes from './routes/feeConfigRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -40,6 +41,7 @@ app.use('/api', projectedStatsRoutes); // Projected stats routes
 app.use('/api/launchpads', launchpadRoutes); // Launchpad routes
 app.use('/api/dashboard', dashboardRoutes); // Dashboard routes
 app.use('/api/trader-stats', traderStatsRoutes); // Trader stats routes
+app.use('/api/fee-config', feeConfigRoutes); // Fee config routes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -81,4 +83,5 @@ app.listen(PORT, () => {
   console.log(`   - Projected Stats: http://localhost:${PORT}/api/projected-stats`);
   console.log(`   - Launchpads: http://localhost:${PORT}/api/launchpads`);
   console.log(`   - Trader Stats: http://localhost:${PORT}/api/trader-stats`);
+  console.log(`   - Fee Config: http://localhost:${PORT}/api/fee-config`);
 });

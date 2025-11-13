@@ -2,16 +2,21 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Download, Copy, Eye, EyeOff } from 'lucide-react';
 // @ts-ignore
 import domtoimage from 'dom-to-image';
-import { fetchFeeConfig, getProtocolFee, ProtocolFeeConfig } from '@/lib/fee-config-api';
+import { fetchFeeConfig, getProtocolFee, ProtocolFeeConfig, fetchNetFees, getProtocolNetFee, NetFeesData, NetFeesDetailsData } from '@/lib/fee-config-api';
 import { protocolConfigs, getProtocolLogoFilename } from '@/lib/protocol-config';
 
 export default function FeeComparison() {
   const [feeConfig, setFeeConfig] = useState<ProtocolFeeConfig | null>(null);
+  const [netFees, setNetFees] = useState<NetFeesData | null>(null);
+  const [netFeesDetails, setNetFeesDetails] = useState<NetFeesDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingNetFees, setLoadingNetFees] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [netFeesError, setNetFeesError] = useState<string | null>(null);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(new Set());
 
   // Fetch fee config from API
@@ -31,6 +36,26 @@ export default function FeeComparison() {
     }
 
     loadFeeConfig();
+  }, []);
+
+  // Fetch net fees from API
+  useEffect(() => {
+    async function loadNetFees() {
+      try {
+        setLoadingNetFees(true);
+        const result = await fetchNetFees();
+        setNetFees(result.data);
+        setNetFeesDetails(result.details);
+        setNetFeesError(null);
+      } catch (err) {
+        console.error('Error loading net fees:', err);
+        setNetFeesError(err instanceof Error ? err.message : 'Failed to load net fees');
+      } finally {
+        setLoadingNetFees(false);
+      }
+    }
+
+    loadNetFees();
   }, []);
 
   // Get all protocols that have fees configured, with Trojan at the top
@@ -167,33 +192,36 @@ export default function FeeComparison() {
               <TableRow>
                 <TableHead className="w-[40px] h-10 pl-2 pr-1"></TableHead>
                 <TableHead className="h-10 pl-1 pr-2">Protocol</TableHead>
-                <TableHead className="text-right h-10 px-4">Fee</TableHead>
+                <TableHead className="text-right h-10 px-4">Base Fee</TableHead>
+                <TableHead className="text-right h-10 px-4">Net Fee (10d)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8 px-4">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8 px-4">
                     Loading fee data...
                   </TableCell>
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-red-500 py-8 px-4">
+                  <TableCell colSpan={4} className="text-center text-red-500 py-8 px-4">
                     {error}
                   </TableCell>
                 </TableRow>
               ) : protocolsWithFees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8 px-4">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8 px-4">
                     No fee data configured
                   </TableCell>
                 </TableRow>
               ) : (
                 protocolsWithFees.map((protocol) => {
                   const fee = feeConfig ? getProtocolFee(feeConfig, protocol.id) : 'N/A';
+                  const netFee = netFees ? getProtocolNetFee(netFees, protocol.id) : (loadingNetFees ? 'Loading...' : 'N/A');
                   const logoFilename = getProtocolLogoFilename(protocol.id);
                   const isTrojan = protocol.id === 'trojan';
+                  const details = netFeesDetails?.[protocol.id.toLowerCase()];
 
                   return (
                     <TableRow
@@ -237,6 +265,90 @@ export default function FeeComparison() {
                         >
                           {fee}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right py-2 px-4">
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="inline-block cursor-help">
+                                <Badge
+                                  variant="outline"
+                                  className="font-semibold"
+                                >
+                                  {netFee}
+                                </Badge>
+                              </div>
+                            </TooltipTrigger>
+                            {details && (
+                              <TooltipContent className="max-w-md">
+                                <div className="space-y-3 text-sm">
+                                  <div className="font-semibold border-b pb-1">Net Fee Calculation</div>
+
+                                  {/* Summary */}
+                                  <div className="space-y-1">
+                                    <div className="flex justify-between gap-4">
+                                      <span className="text-muted-foreground">Date Range:</span>
+                                      <span className="font-medium">{details.dateRange.start} to {details.dateRange.end}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                      <span className="text-muted-foreground">Total Fees:</span>
+                                      <span className="font-medium">${details.totalFees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                      <span className="text-muted-foreground">Total Volume:</span>
+                                      <span className="font-medium">${details.totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4 pt-1 border-t">
+                                      <span className="text-muted-foreground">Net Fee %:</span>
+                                      <span className="font-semibold text-primary">{details.netFeePercentage.toFixed(2)}%</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Daily Breakdown */}
+                                  {details.dailyBreakdown && details.dailyBreakdown.length > 0 && (
+                                    <div className="pt-2 border-t">
+                                      <div className="font-semibold mb-2">Daily Breakdown</div>
+                                      <div className="max-h-48 overflow-y-auto">
+                                        <table className="w-full text-xs">
+                                          <thead className="sticky top-0 bg-popover">
+                                            <tr className="border-b">
+                                              <th className="text-left py-1 pr-2">Date</th>
+                                              <th className="text-right py-1 px-2">Fees</th>
+                                              <th className="text-right py-1 px-2">Volume</th>
+                                              <th className="text-right py-1 pl-2">Fee %</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {details.dailyBreakdown.map((day, idx) => (
+                                              <tr key={idx} className="border-b border-border/50">
+                                                <td className="py-1 pr-2 font-mono">{day.date}</td>
+                                                <td className="text-right py-1 px-2">${day.fees.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+                                                <td className="text-right py-1 px-2">${day.volume.toLocaleString('en-US', { maximumFractionDigits: 0 })}</td>
+                                                <td className="text-right py-1 pl-2 font-medium">{day.feePercentage.toFixed(2)}%</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Data Sources */}
+                                  <div className="pt-2 border-t text-xs space-y-0.5">
+                                    <div className="flex justify-between gap-4">
+                                      <span className="text-muted-foreground">Fees from:</span>
+                                      <span className="font-mono">{details.feesSource}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                      <span className="text-muted-foreground">Volume from:</span>
+                                      <span className="font-mono">{details.volumeSource}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   );

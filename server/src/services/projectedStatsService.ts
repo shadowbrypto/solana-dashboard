@@ -92,15 +92,127 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
  */
 export async function saveProjectedStats(data: ProjectedStatsData[]): Promise<void> {
   try {
-    // Upsert data - insert new records or update existing ones based on unique constraint
-    const { error } = await supabase
-      .from('projected_stats')
-      .upsert(data, {
-        onConflict: 'protocol_name,formatted_day'
+    // TEMPORARY LOGGING - START
+    if (data && data.length > 0) {
+      const protocolName = data[0].protocol_name;
+
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] PRE-REFRESH DATABASE SNAPSHOT        │`);
+      console.log(`│ Protocol: ${protocolName.padEnd(43)} │`);
+      console.log(`│ Table: projected_stats                                  │`);
+      console.log(`└─────────────────────────────────────────────────────────┘`);
+
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
+
+      const { data: preRefreshData, error: preRefreshError } = await supabase
+        .from('projected_stats')
+        .select('formatted_day, volume_usd, fees_usd')
+        .eq('protocol_name', protocolName)
+        .gte('formatted_day', fifteenDaysAgoStr)
+        .order('formatted_day', { ascending: true });
+
+      if (!preRefreshError && preRefreshData) {
+        console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} rows before refresh\n`);
+        console.log(`Date       │ Volume USD          │ Fees USD`);
+        console.log(`───────────┼─────────────────────┼─────────────────────`);
+        preRefreshData.forEach(row => {
+          console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
+        });
+      }
+
+      // Show source data from Dune (last 15 days only)
+      const dataLast15Days = data.filter(row => row.formatted_day >= fifteenDaysAgoStr);
+      console.log(`\n[REFRESH-MONITOR] SOURCE DATA FROM DUNE (last 15 days)`);
+      console.log(`Date       │ Volume USD          │ Fees USD`);
+      console.log(`───────────┼─────────────────────┼─────────────────────`);
+      dataLast15Days.forEach(row => {
+        console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
       });
 
-    if (error) {
-      throw error;
+      // Upsert data - insert new records or update existing ones based on unique constraint
+      const { error } = await supabase
+        .from('projected_stats')
+        .upsert(data, {
+          onConflict: 'protocol_name,formatted_day'
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Post-refresh snapshot
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] POST-REFRESH DATABASE SNAPSHOT       │`);
+      console.log(`└─────────────────────────────────────────────────────────┘`);
+
+      const { data: postRefreshData, error: postRefreshError } = await supabase
+        .from('projected_stats')
+        .select('formatted_day, volume_usd, fees_usd')
+        .eq('protocol_name', protocolName)
+        .gte('formatted_day', fifteenDaysAgoStr)
+        .order('formatted_day', { ascending: true });
+
+      if (!postRefreshError && postRefreshData) {
+        console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);
+        console.log(`Date       │ Volume USD          │ Fees USD`);
+        console.log(`───────────┼─────────────────────┼─────────────────────`);
+        postRefreshData.forEach(row => {
+          console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
+        });
+      }
+
+      // Comparison Report
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] COMPARISON REPORT                    │`);
+      console.log(`└─────────────────────────────────────────────────────────┘\n`);
+
+      const preMap = new Map(preRefreshData?.map(r => [r.formatted_day, r]) || []);
+      const postMap = new Map(postRefreshData?.map(r => [r.formatted_day, r]) || []);
+      const dataMap = new Map(dataLast15Days.map(r => [r.formatted_day, r]));
+
+      let updated = 0, inserted = 0, unchanged = 0;
+
+      dataMap.forEach((dataRow, date) => {
+        const preRow = preMap.get(date);
+        const postRow = postMap.get(date);
+
+        if (!preRow && postRow) {
+          inserted++;
+          console.log(`✨ INSERTED  ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+        } else if (preRow && postRow) {
+          if (preRow.volume_usd !== postRow.volume_usd || preRow.fees_usd !== postRow.fees_usd) {
+            updated++;
+            console.log(`🔄 UPDATED   ${date}:`);
+            console.log(`   Before: Vol=${preRow.volume_usd}, Fees=${preRow.fees_usd}`);
+            console.log(`   After:  Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+            console.log(`   Source: Vol=${dataRow.volume_usd}, Fees=${dataRow.fees_usd}`);
+          } else {
+            unchanged++;
+            console.log(`✓ UNCHANGED ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+          }
+        }
+      });
+
+      console.log(`\n[REFRESH-MONITOR] Summary:`);
+      console.log(`  ✨ Inserted: ${inserted}`);
+      console.log(`  🔄 Updated:  ${updated}`);
+      console.log(`  ✓ Unchanged: ${unchanged}`);
+      console.log(`  📊 Total:    ${inserted + updated + unchanged}`);
+      console.log(`\n[REFRESH-MONITOR] ============================================\n`);
+      // TEMPORARY LOGGING - END
+    } else {
+      // No data to log, just do the upsert
+      const { error } = await supabase
+        .from('projected_stats')
+        .upsert(data, {
+          onConflict: 'protocol_name,formatted_day'
+        });
+
+      if (error) {
+        throw error;
+      }
     }
   } catch (error) {
     console.error('Error saving projected stats:', error);

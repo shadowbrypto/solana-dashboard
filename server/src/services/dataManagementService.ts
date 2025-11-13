@@ -605,6 +605,52 @@ export class DataManagementService {
       console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
       console.log(`====================\n`);
 
+      // TEMPORARY LOGGING - START
+      // Extract chain value for logging
+      const chain = protocolConfig?.chain || 'solana';
+
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] PRE-REFRESH DATABASE SNAPSHOT        │`);
+      console.log(`│ Protocol: ${protocolName.padEnd(20)} Chain: ${chain.padEnd(10)} │`);
+      console.log(`└─────────────────────────────────────────────────────────┘`);
+
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
+
+      const { data: preRefreshData, error: preRefreshError } = await supabase
+        .from(TABLE_NAME)
+        .select('date, volume_usd, fees_usd, data_type')
+        .eq('protocol_name', protocolName)
+        .eq('chain', chain)
+        .eq('data_type', dataType)
+        .gte('date', fifteenDaysAgoStr)
+        .order('date', { ascending: true });
+
+      if (!preRefreshError && preRefreshData) {
+        console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} existing rows in last 15 days\n`);
+        console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
+        console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
+        preRefreshData.forEach(row => {
+          console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
+        });
+      } else {
+        console.log(`[REFRESH-MONITOR] No existing data found in last 15 days`);
+      }
+
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] DUNE/CSV SOURCE DATA                 │`);
+      console.log(`└─────────────────────────────────────────────────────────┘`);
+      console.log(`[REFRESH-MONITOR] Showing data from CSV for last 15 days\n`);
+
+      const csvLast15Days = mappedData.filter(row => row.date >= fifteenDaysAgoStr);
+      console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
+      console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
+      csvLast15Days.forEach(row => {
+        console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
+      });
+      // TEMPORARY LOGGING - END
+
       for (let i = 0; i < mappedData.length; i += batchSize) {
         const batch = mappedData.slice(i, i + batchSize);
         
@@ -632,6 +678,69 @@ export class DataManagementService {
 
       console.log(`All data from ${protocolName}.csv inserted successfully!`);
       console.log(`Total rows actually inserted for ${protocolName}.csv: ${insertedCount}`);
+
+      // TEMPORARY LOGGING - START
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] POST-REFRESH DATABASE SNAPSHOT       │`);
+      console.log(`└─────────────────────────────────────────────────────────┘`);
+
+      const { data: postRefreshData, error: postRefreshError } = await supabase
+        .from(TABLE_NAME)
+        .select('date, volume_usd, fees_usd, data_type')
+        .eq('protocol_name', protocolName)
+        .eq('chain', chain)
+        .eq('data_type', dataType)
+        .gte('date', fifteenDaysAgoStr)
+        .order('date', { ascending: true });
+
+      if (!postRefreshError && postRefreshData) {
+        console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);
+        console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
+        console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
+        postRefreshData.forEach(row => {
+          console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
+        });
+      }
+
+      // Comparison Report
+      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
+      console.log(`│ [REFRESH-MONITOR] COMPARISON REPORT                    │`);
+      console.log(`└─────────────────────────────────────────────────────────┘\n`);
+
+      const preMap = new Map(preRefreshData?.map(r => [r.date, r]) || []);
+      const postMap = new Map(postRefreshData?.map(r => [r.date, r]) || []);
+      const csvMap = new Map(csvLast15Days.map(r => [r.date, r]));
+
+      let updated = 0, inserted = 0, unchanged = 0;
+
+      csvMap.forEach((csvRow, date) => {
+        const preRow = preMap.get(date);
+        const postRow = postMap.get(date);
+
+        if (!preRow && postRow) {
+          inserted++;
+          console.log(`✨ INSERTED  ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+        } else if (preRow && postRow) {
+          if (preRow.volume_usd !== postRow.volume_usd || preRow.fees_usd !== postRow.fees_usd) {
+            updated++;
+            console.log(`🔄 UPDATED   ${date}:`);
+            console.log(`   Before: Vol=${preRow.volume_usd}, Fees=${preRow.fees_usd}`);
+            console.log(`   After:  Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+            console.log(`   Source: Vol=${csvRow.volume_usd}, Fees=${csvRow.fees_usd}`);
+          } else {
+            unchanged++;
+            console.log(`✓ UNCHANGED ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
+          }
+        }
+      });
+
+      console.log(`\n[REFRESH-MONITOR] Summary:`);
+      console.log(`  ✨ Inserted: ${inserted}`);
+      console.log(`  🔄 Updated:  ${updated}`);
+      console.log(`  ✓ Unchanged: ${unchanged}`);
+      console.log(`  📊 Total:    ${inserted + updated + unchanged}`);
+      console.log(`\n═══════════════════════════════════════════════════════════\n`);
+      // TEMPORARY LOGGING - END
 
       return {
         success: true,

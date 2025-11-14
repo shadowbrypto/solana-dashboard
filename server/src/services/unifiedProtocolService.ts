@@ -286,7 +286,8 @@ export class UnifiedProtocolService {
           daily_trades: 0,
           total_fees_usd: 0,
           chains: [],
-          chainVolumes: {}
+          chainVolumes: {},
+          projectedVolume: null
         };
       }
       
@@ -304,7 +305,30 @@ export class UnifiedProtocolService {
       
       return acc;
     }, {});
-    
+
+    // Query projected_stats for projectedVolume
+    const { data: projectedData, error: projectedError } = await supabase
+      .from('projected_stats')
+      .select('protocol_name, volume_usd')
+      .eq('formatted_day', params.date);
+
+    if (projectedData) {
+      projectedData.forEach((row: any) => {
+        const protocol = row.protocol_name;
+        if (aggregated[protocol]) {
+          aggregated[protocol].projectedVolume = Number(row.volume_usd) || 0;
+        }
+      });
+    }
+
+    // Mobile apps should always use actual volume as projected volume
+    const mobileAppProtocols = ['moonshot', 'vector', 'slingshot', 'fomo'];
+    mobileAppProtocols.forEach(protocol => {
+      if (aggregated[protocol]) {
+        aggregated[protocol].projectedVolume = aggregated[protocol].total_volume_usd;
+      }
+    });
+
     // If single protocol requested, return legacy format
     const protocolFilter = UnifiedProtocolService.normalizeProtocolFilter(params.protocol);
     if (protocolFilter && protocolFilter.length === 1) {

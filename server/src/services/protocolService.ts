@@ -1123,6 +1123,9 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
       });
     }
     
+    // Mobile apps should always use actual volume, not projected volume
+    const mobileAppProtocols = ['moonshot', 'vector', 'slingshot', 'fomo'];
+
     // Process projected volume data
     if (projectedData) {
       projectedData.forEach(record => {
@@ -1133,6 +1136,13 @@ export async function getSolanaDailyMetrics(date: Date, dataType: string = 'priv
         }
       });
     }
+
+    // For mobile apps, override projected volume with actual volume
+    mobileAppProtocols.forEach(protocol => {
+      if (protocolData[protocol]) {
+        protocolData[protocol].projectedVolume = protocolData[protocol].totalVolume;
+      }
+    });
     
     // Calculate daily growth for each protocol using projected volume
     // Fall back to actual volume if projected volume is not available

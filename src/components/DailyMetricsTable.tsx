@@ -240,19 +240,19 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       },
       getValue: (data, protocol) => {
         if (!protocol) return 0;
-        
+
         // Check if this protocol has projected volume data
         const projectedVolume = projectedVolumeData[protocol];
         if (projectedVolume && projectedVolume > 0) {
           return projectedVolume;
         }
-        
+
         // For Mobile Apps protocols, use actual volume as projected volume
         const protocolConfig = getProtocolById(protocol);
         if (protocolConfig?.category === 'Mobile Apps') {
           return dailyData[protocol]?.total_volume_usd || 0;
         }
-        
+
         // For other protocols without projected data, return 0
         return 0;
       }

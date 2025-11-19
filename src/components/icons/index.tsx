@@ -116,5 +116,9 @@ export const OpenSeaIcon = (props: any) => (
   <ProtocolLogo protocolId="opensea" protocolName="OpenSea" fallbackIcon={ArrowUpRight} {...props} />
 );
 
+export const PhantomIcon = (props: any) => (
+  <ProtocolLogo protocolId="phantom" protocolName="Phantom" fallbackIcon={Terminal} {...props} />
+);
+
 // Export chain logos
 export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

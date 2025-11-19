@@ -31,6 +31,7 @@ export const PROTOCOL_FEES: ProtocolFeeConfig = {
   'rhythm': '1.0%',
   'vyper': '1.0%',
   'opensea': '1.0%',
+  'phantom': '1.0%',
 
   // Mobile Apps (Solana)
   'moonshot': '1.0%',

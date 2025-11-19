@@ -47,6 +47,7 @@ export const ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource> = {
   'rhythm': { queryIds: [6169816], chain: 'solana' },
   'vyper': { queryIds: [6169767], chain: 'solana' },
   "opensea": { queryIds: [6171165], chain: 'solana' },
+  'phantom': { queryIds: [6229269], chain: 'solana' },
 
   // Solana Protocols - Mobile Apps
   'moonshot': { queryIds: [6171127], chain: 'solana' },

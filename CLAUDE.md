@@ -69,6 +69,50 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
 - **Primary**: Supabase database via backend API
 - **CSV Import**: Scripts for importing CSV data to database
 - **Caching**: Two-tier caching (backend 1hr, frontend 5min)
+- **Dune Analytics**: External data source for protocol metrics and projected stats
+
+### Projected Stats System (Dual Configuration)
+
+**⚠️ IMPORTANT**: Projected volume data requires configuration in TWO separate files:
+
+1. **Backend Config**: `server/src/config/projected-stats-config.ts`
+   - Defines Dune query IDs for fetching projected volume data
+   - Used by backend services to fetch data from Dune Analytics
+
+2. **Frontend Config**: `src/lib/projected-stats-config.ts`
+   - Same Dune query IDs as backend config
+   - Used for validation and display logic in UI components
+   - Missing this will prevent "Adj. Volume" column from showing data
+
+**Data Flow**:
+1. Backend fetches data from Dune Analytics using backend config
+2. Data stored in Supabase `projected_stats` table
+3. Frontend requests data via `/api/protocols/daily-metrics` endpoint
+4. Frontend validates using frontend config before displaying
+5. Displayed as "Adj. Volume" column in DailyMetricsTable
+
+**API Endpoints**:
+- `POST /api/projected-stats/update` - Fetch latest data from Dune
+- `GET /api/protocols/daily-metrics` - Get protocol metrics with projected volume
+
+**Environment Variables**:
+- `DUNE_API_KEY` - Required in `server/.env` for Dune Analytics API access
+
+**Configuration Synchronization (CRITICAL)**:
+⚠️ The frontend and backend projected stats configs MUST be kept in sync:
+- When adding a protocol: Update BOTH files with same query ID
+- When updating a query ID: Update BOTH files
+- Use empty string `''` for protocols without projected stats
+- Mismatched configs cause:
+  - Settings page to show incomplete protocol list
+  - "Adj. Volume" column to not display data
+  - UI validation failures
+
+**How to Verify Sync**:
+1. Open both `server/src/config/projected-stats-config.ts` and `src/lib/projected-stats-config.ts`
+2. Compare query IDs for each protocol - they must match exactly
+3. Check that all protocols with backend query IDs also have frontend query IDs
+4. Empty strings (`''`) are acceptable for protocols without projected stats
 
 ### Report Types
 - **Daily Report**: Single day metrics with protocol breakdown
@@ -125,11 +169,28 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
 
 ## Adding New Protocols
 
-### Solana Protocols
-1. Add to `protocolConfigs` array in `src/lib/protocol-config.ts`
-2. Add icon component to `src/components/icons/`
-3. Add logo image to `public/assets/logos/`
-4. Protocol automatically appears in navigation and reports
+**⚠️ CRITICAL**: New protocols require configuration in MULTIPLE files. See `NEW_PROTOCOL_INTEGRATION_GUIDE.md` for complete instructions.
+
+### Required Frontend Files (4 files)
+1. `src/types/protocol.ts` - Add to Protocol union type
+2. `src/components/icons/index.tsx` - Create icon component
+3. `src/lib/protocol-config.ts` - Add to protocolConfigs array
+4. `public/assets/logos/{protocol}.jpg` - Add logo image (optional)
+
+### Required Backend Config Files (6 files)
+1. `server/src/services/dataManagementService.ts` - Add to PUBLIC_PROTOCOL_SOURCES
+2. `server/src/services/dataManagementService.ts` - Add to PRIVATE_PROTOCOL_SOURCES
+3. `server/src/config/rolling-refresh-config.ts` - **CRITICAL** for data refresh
+4. `server/src/config/chainProtocols.ts` - **CRITICAL** for chain routing
+5. `server/src/config/fee-config.ts` - For fee calculations (recommended)
+6. `server/src/config/projected-stats-config.ts` - For projected volume (optional)
+
+### Optional: Projected Stats (3 files required if using)
+1. `server/src/config/projected-stats-config.ts` - Backend Dune query ID
+2. `src/lib/projected-stats-config.ts` - Frontend Dune query ID (MUST match backend)
+3. `src/components/ProtocolManagement.tsx` - Add to category's hardcoded array for Settings page
+
+**Missing critical files will cause "Protocol not found in protocol sources" errors!**
 
 ### EVM Protocols
 1. Follow same steps as Solana protocols

@@ -1,14 +1,20 @@
 /**
- * Projected Stats Configuration
- * 
+ * Projected Stats Configuration (Frontend)
+ *
+ * ⚠️ IMPORTANT: This file MUST be kept in sync with server/src/config/projected-stats-config.ts
+ *
  * This file manages the mapping between protocol IDs and their corresponding
- * Dune query IDs for fetching projected volume data.
- * 
+ * Dune query IDs for display and validation in the UI.
+ *
  * To add a new protocol's Dune query:
- * 1. Add the protocol ID and its corresponding Dune query ID to the DUNE_QUERY_IDS object
+ * 1. Add the SAME query ID to BOTH this file AND server/src/config/projected-stats-config.ts
  * 2. The protocol ID should match the ID used in protocol-config.ts
- * 
+ * 3. Use empty string '' if protocol doesn't have projected stats (e.g., 'nova': '')
+ *
  * Note: If a protocol doesn't have a Dune query ID, projected volume will show '-'
+ *
+ * Synchronization: The query IDs in this file should match exactly with the backend config
+ * to ensure projected stats display correctly in the UI and settings page.
  */
 
 interface DuneQueryConfig {
@@ -21,29 +27,32 @@ interface DuneQueryConfig {
  */
 export const DUNE_QUERY_IDS: DuneQueryConfig = {
   // Telegram Bots
-  'trojan': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'bonkbot': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID', 
-  'bloom': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'nova': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'soltradingbot': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'banana': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'maestro': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  
-  // Trading Terminals  
-  'photon': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'bullx': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'axiom': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'gmgnai': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'padre': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'nova terminal': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'telemetry': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'mevx': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  
+  'trojan': '4899624',
+  'bonkbot': '4899822',
+  'bloom': '4899851',
+  'nova': '',
+  'soltradingbot': '4954880',
+  'banana': '4899926',
+  'maestro': '4899904',
+
+  // Trading Terminals
+  'photon': '4899788',
+  'bullx': '6168578',
+  'axiom': '4899853',
+  'gmgnai': '4899849',
+  'padre': '5622891',
+  'nova terminal': '4899891',
+  'telemetry': '5666888',
+  'mevx': '6169736',
+  'rhythm': '5698770',
+  'vyper': '5699029',
+  'phantom': '6229270',
+
   // Mobile Apps
-  'moonshot': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'vector': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID', 
-  'slingshot': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
-  'fomo': 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID',
+  'moonshot': '',
+  'vector': '',
+  'slingshot': '',
+  'fomo': '',
 };
 
 /**

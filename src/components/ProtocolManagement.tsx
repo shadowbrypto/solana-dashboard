@@ -1160,7 +1160,7 @@ export function ProtocolManagement() {
               <div className="space-y-2 sm:space-y-3">
                 <h4 className="text-sm font-semibold text-muted-foreground">Trading Terminals</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-                  {['photon', 'bullx', 'axiom', 'gmgnai', 'padre', 'nova terminal', 'telemetry', 'mevx', 'rhythm', 'vyper'].map(protocolId => {
+                  {['photon', 'bullx', 'axiom', 'gmgnai', 'padre', 'nova terminal', 'telemetry', 'mevx', 'rhythm', 'vyper', 'phantom'].map(protocolId => {
                     const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
                     if (!protocol) return null;
                     

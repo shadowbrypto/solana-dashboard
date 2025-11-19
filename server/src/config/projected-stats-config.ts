@@ -40,7 +40,8 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'mevx': '6169736',
   'rhythm': '5698770',
   'vyper': '5699029',
-  
+  'phantom': '6229270',
+
   // Mobile Apps
   'moonshot': '',
   'vector': '', 

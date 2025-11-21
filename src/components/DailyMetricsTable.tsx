@@ -858,11 +858,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 const categoryProtocols = getMutableProtocolsByCategory(categoryName);
                 const availableProtocols = categoryProtocols.map(p => p.id).filter(p => protocols.includes(p as Protocol));
                 
-                // Sort protocols by volume (highest to lowest)
+                // Sort protocols by adjusted volume (projected volume, highest to lowest)
                 const orderedProtocols = availableProtocols.sort((a, b) => {
-                  const volumeA = dailyData[a as Protocol]?.total_volume_usd || 0;
-                  const volumeB = dailyData[b as Protocol]?.total_volume_usd || 0;
-                  return volumeB - volumeA; // Sort descending (highest first)
+                  const projectedA = projectedVolumeData[a] || dailyData[a as Protocol]?.total_volume_usd || 0;
+                  const projectedB = projectedVolumeData[b] || dailyData[b as Protocol]?.total_volume_usd || 0;
+                  return projectedB - projectedA; // Sort descending (highest first)
                 });
                 
                 if (orderedProtocols.length === 0) return null;

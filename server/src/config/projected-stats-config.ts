@@ -41,6 +41,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'rhythm': '5698770',
   'vyper': '5699029',
   'phantom': '6229270',
+  'opensea': '6230767',
 
   // Mobile Apps
   'moonshot': '',

@@ -3,7 +3,8 @@ import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregated
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
-import { getEVMProtocols } from '../config/chainProtocols.js';
+import { getEVMProtocols, getMonadProtocols } from '../config/chainProtocols.js';
+import { dataManagementService } from '../services/dataManagementService.js';
 
 const router = Router();
 
@@ -627,9 +628,8 @@ router.post('/sync-monad', async (req: Request, res: Response) => {
 
     for (const protocol of monadProtocols) {
       try {
-        // Use rolling refresh to sync Monad data (same as Solana protocols)
-        const { syncProtocolRollingData } = await import('../services/dataUpdateService');
-        const result = await syncProtocolRollingData(protocol);
+        // Use dataManagementService to sync Monad data (same as Solana protocols)
+        const result = await dataManagementService.syncProtocolData(protocol, 'private');
         results.push({
           protocol,
           success: true,

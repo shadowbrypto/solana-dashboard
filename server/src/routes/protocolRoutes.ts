@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getMonadDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
 import { supabase } from '../lib/supabase.js';
@@ -90,14 +90,16 @@ router.get('/daily-metrics', async (req: Request, res: Response) => {
     const chainFilter = typeof chain === 'string' ? chain : 'solana';
     const dataTypeFilter = typeof dataType === 'string' ? dataType : (chainFilter === 'evm' ? 'public' : 'private');
 
-    // Use the new optimized functions for both chains
+    // Use the optimized functions for each chain
     let dailyMetrics;
     if (chainFilter === 'evm') {
       dailyMetrics = await getEVMDailyMetrics(dateObj, dataTypeFilter);
+    } else if (chainFilter === 'monad') {
+      dailyMetrics = await getMonadDailyMetrics(dateObj, dataTypeFilter);
     } else {
       dailyMetrics = await getSolanaDailyMetrics(dateObj, dataTypeFilter);
     }
-    
+
     res.json({ success: true, data: dailyMetrics });
   } catch (error) {
     console.error('Error fetching daily metrics:', error);
@@ -607,6 +609,59 @@ router.post('/sync-evm', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'EVM data sync failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// POST /api/protocols/sync-monad
+// Sync all Monad protocol data
+router.post('/sync-monad', async (req: Request, res: Response) => {
+  try {
+    console.log('Starting Monad data sync for all protocols...');
+
+    // Get all Monad protocols from chain configuration
+    const monadProtocols = getMonadProtocols();
+    console.log(`Syncing ${monadProtocols.length} Monad protocols:`, monadProtocols);
+    const results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }> = [];
+
+    for (const protocol of monadProtocols) {
+      try {
+        // Use rolling refresh to sync Monad data (same as Solana protocols)
+        const { syncProtocolRollingData } = await import('../services/dataUpdateService');
+        const result = await syncProtocolRollingData(protocol);
+        results.push({
+          protocol,
+          success: true,
+          rowsImported: result.rowsImported
+        });
+      } catch (error) {
+        results.push({
+          protocol,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    const totalRowsImported = results.reduce((sum, r) => sum + (r.rowsImported || 0), 0);
+    const successfulSyncs = results.filter(r => r.success).length;
+
+    res.json({
+      success: successfulSyncs > 0,
+      data: {
+        protocolsSynced: successfulSyncs,
+        totalProtocols: monadProtocols.length,
+        totalRowsImported,
+        results,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error in Monad data sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Monad data sync failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

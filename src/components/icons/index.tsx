@@ -120,5 +120,18 @@ export const PhantomIcon = (props: any) => (
   <ProtocolLogo protocolId="phantom" protocolName="Phantom" fallbackIcon={Terminal} {...props} />
 );
 
+// Monad Protocol Icons
+export const GMGNAIMonadIcon = (props: any) => (
+  <ProtocolLogo protocolId="gmgnai" protocolName="GmGnAi" fallbackIcon={CalendarClock} {...props} />
+);
+
+export const BloomMonadIcon = (props: any) => (
+  <ProtocolLogo protocolId="bloom" protocolName="Bloom" fallbackIcon={Wand2} {...props} />
+);
+
+export const NadFunMonadIcon = (props: any) => (
+  <ProtocolLogo protocolId="nadfun" protocolName="NadFun" fallbackIcon={Rocket} {...props} />
+);
+
 // Export chain logos
 export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

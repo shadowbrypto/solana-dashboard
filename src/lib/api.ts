@@ -252,8 +252,8 @@ export const protocolApi = {
   },
 
 
-  // Get weekly metrics (unified endpoint for both Solana and EVM)
-  async getWeeklyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public', metric?: string): Promise<any> {
+  // Get weekly metrics (unified endpoint for Solana, EVM, and Monad)
+  async getWeeklyMetrics(endDate: Date, chain: 'solana' | 'evm' | 'monad' = 'solana', dataType?: 'private' | 'public', metric?: string): Promise<any> {
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const params = new URLSearchParams({
       endDate: endDateStr,
@@ -272,8 +272,8 @@ export const protocolApi = {
     return apiRequest(endpoint);
   },
 
-  // Get monthly metrics (unified endpoint for both Solana and EVM)
-  async getMonthlyMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+  // Get monthly metrics (unified endpoint for Solana, EVM, and Monad)
+  async getMonthlyMetrics(endDate: Date, chain: 'solana' | 'evm' | 'monad' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const params = new URLSearchParams({
       endDate: endDateStr,
@@ -289,7 +289,7 @@ export const protocolApi = {
   },
 
   // Get monthly metrics with daily breakdowns for chart visualization
-  async getMonthlyChartMetrics(endDate: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+  async getMonthlyChartMetrics(endDate: Date, chain: 'solana' | 'evm' | 'monad' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
     const endDateStr = format(endDate, 'yyyy-MM-dd');
     const params = new URLSearchParams({
       endDate: endDateStr,
@@ -319,8 +319,8 @@ export const protocolApi = {
     return apiRequest(endpoint);
   },
 
-  // Get daily metrics (unified endpoint for both Solana and EVM)
-  async getDailyMetricsOptimized(date: Date, chain: 'solana' | 'evm' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
+  // Get daily metrics (unified endpoint for Solana, EVM, and Monad)
+  async getDailyMetricsOptimized(date: Date, chain: 'solana' | 'evm' | 'monad' = 'solana', dataType?: 'private' | 'public'): Promise<any> {
     const dateStr = format(date, 'yyyy-MM-dd');
     const params = new URLSearchParams({
       date: dateStr,
@@ -452,22 +452,41 @@ export const dataSyncApi = {
   },
 
   // Sync specific EVM protocol data
-  async syncEVMProtocolData(protocolName: string): Promise<{ 
-    message: string; 
-    data: { 
-      csvFilesFetched: number; 
-      rowsImported: number; 
-      timestamp: string 
-    } 
+  async syncEVMProtocolData(protocolName: string): Promise<{
+    message: string;
+    data: {
+      csvFilesFetched: number;
+      rowsImported: number;
+      timestamp: string
+    }
   }> {
-    return apiRequest<{ 
-      message: string; 
-      data: { 
-        csvFilesFetched: number; 
-        rowsImported: number; 
-        timestamp: string 
-      } 
+    return apiRequest<{
+      message: string;
+      data: {
+        csvFilesFetched: number;
+        rowsImported: number;
+        timestamp: string
+      }
     }>(`/protocols/sync-evm/${protocolName}`, {
+      method: 'POST'
+    });
+  },
+
+  // Sync all Monad protocol data
+  async syncMonadData(): Promise<{
+    protocolsSynced: number;
+    totalProtocols: number;
+    totalRowsImported: number;
+    results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+    timestamp: string
+  }> {
+    return apiRequest<{
+      protocolsSynced: number;
+      totalProtocols: number;
+      totalRowsImported: number;
+      results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+      timestamp: string
+    }>('/protocols/sync-monad', {
       method: 'POST'
     });
   },

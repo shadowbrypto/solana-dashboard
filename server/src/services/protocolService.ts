@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase.js';
 import { ProtocolStats, ProtocolMetrics, Protocol, ProtocolStatsWithDay } from '../types/protocol.js';
 import { format } from 'date-fns';
-import { getSolanaProtocols, isEVMProtocol, getEVMProtocols } from '../config/chainProtocols.js';
+import { getSolanaProtocols, isEVMProtocol, getEVMProtocols, isMonadProtocol, getMonadProtocols } from '../config/chainProtocols.js';
 
 interface CacheEntry<T> {
   data: T;
@@ -1822,6 +1822,217 @@ export async function getEVMDailyMetrics(date: Date, dataType: string = 'public'
     
   } catch (error) {
     console.error('Error fetching optimized EVM daily data:', error);
+    throw error;
+  }
+}
+
+// Get optimized daily metrics for Monad chain
+export async function getMonadDailyMetrics(date: Date, dataType: string = 'private') {
+  const cacheKey = `monad_daily_metrics_${format(date, 'yyyy-MM-dd')}_${dataType}`;
+
+  const cachedEntry = insightsCache.get(cacheKey);
+  if (cachedEntry && isCacheValid(cachedEntry)) {
+    return cachedEntry.data;
+  }
+
+  try {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const previousDate = new Date(date);
+    previousDate.setDate(previousDate.getDate() - 1);
+    const previousDateStr = format(previousDate, 'yyyy-MM-dd');
+
+    // Get all Monad protocols
+    const monadProtocols = getMonadProtocols();
+
+    // Fetch current day data for all Monad protocols
+    const { data: currentDayData, error: currentError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, volume_usd, daily_users, new_users, trades, fees_usd')
+      .eq('date', dateStr)
+      .eq('data_type', dataType)
+      .eq('chain', 'monad');
+
+    if (currentError) throw currentError;
+
+    // Fetch previous day data for growth calculation
+    const { data: previousDayData, error: previousError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, volume_usd')
+      .eq('date', previousDateStr)
+      .eq('data_type', dataType)
+      .eq('chain', 'monad');
+
+    if (previousError) throw previousError;
+
+    // Fetch 7-day trend data
+    const startDate = new Date(date);
+    startDate.setDate(startDate.getDate() - 6);
+    const { data: trendData, error: trendError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, date, volume_usd')
+      .gte('date', format(startDate, 'yyyy-MM-dd'))
+      .lte('date', dateStr)
+      .eq('data_type', dataType)
+      .eq('chain', 'monad')
+      .order('date', { ascending: true });
+
+    if (trendError) throw trendError;
+
+    // Process data for each protocol
+    const protocolData: Record<string, any> = {};
+
+    // Initialize all Monad protocols with empty data
+    monadProtocols.forEach(protocol => {
+      protocolData[protocol] = {
+        totalVolume: 0,
+        dailyUsers: 0,
+        newUsers: 0,
+        trades: 0,
+        fees: 0,
+        dailyGrowth: 0,
+        weeklyTrend: Array(7).fill(0),
+        marketShare: 0
+      };
+    });
+
+    // Process current day data
+    if (currentDayData) {
+      currentDayData.forEach(record => {
+        const protocol = record.protocol_name;
+
+        if (!protocolData[protocol]) {
+          protocolData[protocol] = {
+            totalVolume: 0,
+            dailyUsers: 0,
+            newUsers: 0,
+            trades: 0,
+            fees: 0,
+            dailyGrowth: 0,
+            weeklyTrend: Array(7).fill(0),
+            marketShare: 0
+          };
+        }
+
+        protocolData[protocol].totalVolume = Number(record.volume_usd) || 0;
+        protocolData[protocol].dailyUsers = Number(record.daily_users) || 0;
+        protocolData[protocol].newUsers = Number(record.new_users) || 0;
+        protocolData[protocol].trades = Number(record.trades) || 0;
+        protocolData[protocol].fees = Number(record.fees_usd) || 0;
+      });
+    }
+
+    // Calculate daily growth for each protocol
+    if (previousDayData) {
+      previousDayData.forEach(record => {
+        const protocol = record.protocol_name;
+        const previousVolume = Number(record.volume_usd) || 0;
+
+        if (protocolData[protocol] && previousVolume > 0) {
+          const currentVolume = protocolData[protocol].totalVolume;
+          protocolData[protocol].dailyGrowth = (currentVolume - previousVolume) / previousVolume;
+        }
+      });
+    }
+
+    // Process weekly trend data
+    if (trendData) {
+      const trendByProtocolDate: Record<string, Record<string, number>> = {};
+
+      trendData.forEach(record => {
+        const protocol = record.protocol_name;
+        const recordDate = record.date;
+        const volume = Number(record.volume_usd) || 0;
+
+        if (!trendByProtocolDate[protocol]) {
+          trendByProtocolDate[protocol] = {};
+        }
+        trendByProtocolDate[protocol][recordDate] = volume;
+      });
+
+      // Build weekly trend arrays
+      Object.keys(protocolData).forEach(protocol => {
+        const weeklyTrend: number[] = [];
+
+        for (let i = 6; i >= 0; i--) {
+          const trendDate = new Date(date);
+          trendDate.setDate(trendDate.getDate() - i);
+          const trendDateStr = format(trendDate, 'yyyy-MM-dd');
+
+          weeklyTrend.push(trendByProtocolDate[protocol]?.[trendDateStr] || 0);
+        }
+
+        protocolData[protocol].weeklyTrend = weeklyTrend;
+      });
+    }
+
+    // Calculate totals
+    const totalVolume = Object.values(protocolData).reduce((sum, data: any) => sum + data.totalVolume, 0);
+    const totalUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.dailyUsers, 0);
+    const totalNewUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.newUsers, 0);
+    const totalTrades = Object.values(protocolData).reduce((sum, data: any) => sum + data.trades, 0);
+    const totalFees = Object.values(protocolData).reduce((sum, data: any) => sum + data.fees, 0);
+
+    // Calculate total growth
+    let totalGrowth = 0;
+    if (previousDayData) {
+      const previousTotalVolume = previousDayData.reduce((sum, record) => sum + (Number(record.volume_usd) || 0), 0);
+      if (previousTotalVolume > 0) {
+        totalGrowth = (totalVolume - previousTotalVolume) / previousTotalVolume;
+      }
+    }
+
+    // Calculate total weekly trend
+    const totalWeeklyTrend = Array(7).fill(0);
+    Object.values(protocolData).forEach((data: any) => {
+      data.weeklyTrend.forEach((value: number, index: number) => {
+        totalWeeklyTrend[index] += value;
+      });
+    });
+
+    // Determine top protocols by volume
+    const topProtocols = Object.entries(protocolData)
+      .filter(([_, data]: [string, any]) => data.totalVolume > 0)
+      .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.totalVolume - a.totalVolume)
+      .slice(0, 3)
+      .map(([protocol, _]) => protocol);
+
+    // Calculate market share for each protocol
+    Object.keys(protocolData).forEach(protocol => {
+      protocolData[protocol].marketShare = totalVolume > 0 ? protocolData[protocol].totalVolume / totalVolume : 0;
+    });
+
+    const result = {
+      date: dateStr,
+      protocols: protocolData,
+      topProtocols,
+      totals: {
+        totalVolume,
+        totalUsers,
+        totalNewUsers,
+        totalTrades,
+        totalFees,
+        totalGrowth,
+        totalWeeklyTrend
+      }
+    };
+
+    console.log('Monad Daily Metrics Result:', {
+      date: dateStr,
+      protocolsCount: Object.keys(protocolData).length,
+      protocolNames: Object.keys(protocolData),
+      totalVolume
+    });
+
+    // Cache the result
+    insightsCache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now()
+    });
+
+    return result;
+
+  } catch (error) {
+    console.error('Error fetching Monad daily metrics:', error);
     throw error;
   }
 }

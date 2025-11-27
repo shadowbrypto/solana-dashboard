@@ -24,7 +24,7 @@ if (!API_KEY) {
 // Protocol configuration with chain support
 interface ProtocolSource {
   queryIds: number[];
-  chain: 'solana' | 'evm';
+  chain: 'solana' | 'evm' | 'monad';
 }
 
 // Protocol sources mapping - now supports multiple query IDs and chains
@@ -65,7 +65,12 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
   "photon_evm": { queryIds: [5929750], chain: 'evm' },
   "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6031024], chain: 'evm' }
+  "axiom_evm": { queryIds: [6031024], chain: 'evm' },
+
+  // Monad protocols
+  "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
+  "bloom_monad": { queryIds: [6257400], chain: 'monad' },
+  "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
 };
 
 // Private data sources (when dataType is 'private' or default)
@@ -105,7 +110,12 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
   "photon_evm": { queryIds: [5929750], chain: 'evm' },
   "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6031024], chain: 'evm' }
+  "axiom_evm": { queryIds: [6031024], chain: 'evm' },
+
+  // Monad protocols
+  "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
+  "bloom_monad": { queryIds: [6257400], chain: 'monad' },
+  "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
 };
 
 // Get protocol sources based on data type
@@ -223,9 +233,9 @@ export class DataManagementService {
         };
       }
 
-      console.log(`Starting Solana data sync for protocol: ${protocolName}...`);
+      console.log(`Starting ${protocolConfig.chain} data sync for protocol: ${protocolName}...`);
 
-      // Step 1: Download CSV file for the specific protocol (Solana)
+      // Step 1: Download CSV file for the specific protocol
       const downloadResult = await this.downloadProtocolData(protocolName, protocolConfig.queryIds);
       
       if (!downloadResult.success) {

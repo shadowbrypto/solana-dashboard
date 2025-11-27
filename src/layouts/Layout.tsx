@@ -351,6 +351,13 @@ export function Layout() {
                         if (!protocol) return null;
                         const Icon = protocol.icon;
                         const isEVM = protocol.id.endsWith('_evm');
+                        const isMonad = protocol.id.endsWith('_monad');
+                        const chainBadge = isEVM ? "EVM" : isMonad ? "MON" : "SOL";
+                        const chainBadgeClass = isEVM
+                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                          : isMonad
+                            ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                            : "bg-purple-500/10 text-purple-600 dark:text-purple-400";
                         return (
                           <Button
                             key={protocol.id}
@@ -362,9 +369,9 @@ export function Layout() {
                             onClick={() => handleProtocolChange(protocol.id)}
                           >
                             <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                              <img 
+                              <img
                                 src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                alt={protocol.name} 
+                                alt={protocol.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
@@ -382,11 +389,9 @@ export function Layout() {
                             <span className="flex-1 text-left">{protocol.name}</span>
                             <span className={cn(
                               "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                              isEVM 
-                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                                : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                              chainBadgeClass
                             )}>
-                              {isEVM ? "EVM" : "SOL"}
+                              {chainBadge}
                             </span>
                           </Button>
                         );
@@ -405,6 +410,13 @@ export function Layout() {
             {reports.map((report) => {
               const Icon = report.icon;
               const isEVM = report.chain === 'evm';
+              const isMonad = report.chain === 'monad';
+              const chainBadge = isEVM ? "EVM" : isMonad ? "MON" : "SOL";
+              const chainBadgeClass = isEVM
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                : isMonad
+                  ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                  : "bg-purple-500/10 text-purple-600 dark:text-purple-400";
               return (
                 <Button
                   key={report.id}
@@ -422,11 +434,9 @@ export function Layout() {
                   {report.chain && (
                     <span className={cn(
                       "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                      isEVM 
-                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" 
-                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                      chainBadgeClass
                     )}>
-                      {isEVM ? "EVM" : "SOL"}
+                      {chainBadge}
                     </span>
                   )}
                 </Button>

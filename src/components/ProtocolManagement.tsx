@@ -191,6 +191,7 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
 export function ProtocolManagement() {
   const [isRefreshingSolana, setIsRefreshingSolana] = useState(false);
   const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
+  const [isRefreshingMonad, setIsRefreshingMonad] = useState(false);
   const [isRefreshingLaunchpads, setIsRefreshingLaunchpads] = useState(false);
   const [isRefreshingProjectedStats, setIsRefreshingProjectedStats] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -502,6 +503,32 @@ export function ProtocolManagement() {
       });
     } finally {
       setIsRefreshingEVM(false);
+    }
+  };
+
+  const handleRefreshMonad = async () => {
+    if (isRefreshingMonad) return;
+
+    setIsRefreshingMonad(true);
+    try {
+      const result = await dataSyncApi.syncMonadData();
+
+      toast({
+        variant: "success",
+        title: "Monad Data Refresh Complete",
+        description: `Successfully refreshed ${result.protocolsSynced} Monad protocols`,
+      });
+
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Monad Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh Monad data",
+      });
+    } finally {
+      setIsRefreshingMonad(false);
     }
   };
 
@@ -1632,6 +1659,77 @@ export function ProtocolManagement() {
                         <>
                           <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">Refresh EVM</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-violet-50/30 dark:to-violet-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-300 hover:border-violet-500/20 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Monad</span>
+                        <div className="flex -space-x-1">
+                          {getMutableProtocolConfigs()
+                            .filter(p => p.chain === 'monad')
+                            .slice(0, 4)
+                            .map((protocol, index) => (
+                            <div
+                              key={protocol.id}
+                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden"
+                              style={{ zIndex: 4 - index }}
+                              title={protocol.name}
+                            >
+                              <img
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                                alt={protocol.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const container = target.parentElement;
+                                  if (container) {
+                                    container.innerHTML = '';
+                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
+                                    const iconEl = document.createElement('div');
+                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                    container.appendChild(iconEl);
+                                  }
+                                }}
+                              />
+                            </div>
+                          ))}
+                          {getMutableProtocolConfigs().filter(p => p.chain === 'monad').length > 4 && (
+                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                              +{getMutableProtocolConfigs().filter(p => p.chain === 'monad').length - 4}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        Refresh all Monad trading apps data
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleRefreshMonad}
+                      disabled={isRefreshingMonad || isRefreshingAll}
+                      variant="outline"
+                      size="sm"
+                      className="ml-4 shrink-0"
+                    >
+                      {isRefreshingMonad ? (
+                        <>
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                          <span className="hidden sm:inline">Refreshing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Refresh Monad</span>
                         </>
                       )}
                     </Button>

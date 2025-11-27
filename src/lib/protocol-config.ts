@@ -24,15 +24,16 @@ import {
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon,
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
   SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon, AxiomEVMIcon,
-  RhythmIcon, VyperIcon, OpenSeaIcon, PhantomIcon
+  RhythmIcon, VyperIcon, OpenSeaIcon, PhantomIcon,
+  GMGNAIMonadIcon, BloomMonadIcon, NadFunMonadIcon
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
   id: string;
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
-  category: 'Telegram Bot' | 'Trading Terminal' | 'Mobile App' | 'EVM';
-  chain?: 'solana' | 'ethereum' | 'evm'; // Optional for backward compatibility
+  category: 'Telegram Bot' | 'Trading Terminal' | 'Mobile App' | 'EVM' | 'Monad';
+  chain?: 'solana' | 'ethereum' | 'evm' | 'monad'; // Optional for backward compatibility
 }
 
 export interface ProtocolConfigMutable {
@@ -40,7 +41,7 @@ export interface ProtocolConfigMutable {
   name: string;
   icon: LucideIcon | React.ComponentType<any>;
   category: string;
-  chain?: 'solana' | 'ethereum' | 'evm'; // Optional for backward compatibility
+  chain?: 'solana' | 'ethereum' | 'evm' | 'monad'; // Optional for backward compatibility
 }
 
 // Centralized protocol configuration
@@ -87,6 +88,11 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'photon_evm', name: 'Photon', icon: PhotonIcon, category: 'EVM', chain: 'evm' },
   { id: 'mevx_evm', name: 'Mevx', icon: MevxEVMIcon, category: 'EVM', chain: 'evm' },
   { id: 'axiom_evm', name: 'Axiom', icon: AxiomEVMIcon, category: 'EVM', chain: 'evm' },
+
+  // Monad Protocols
+  { id: 'gmgnai_monad', name: 'GmGnAi', icon: GMGNAIMonadIcon, category: 'Monad', chain: 'monad' },
+  { id: 'bloom_monad', name: 'Bloom', icon: BloomMonadIcon, category: 'Monad', chain: 'monad' },
+  { id: 'nadfun_monad', name: 'NadFun', icon: NadFunMonadIcon, category: 'Monad', chain: 'monad' },
 ];
 
 // Helper functions
@@ -94,12 +100,12 @@ export const getProtocolById = (id: string): ProtocolConfig | undefined => {
   return protocolConfigs.find(p => p.id === id);
 };
 
-export const getProtocolsByChain = (chain: 'solana' | 'ethereum' | 'evm'): ProtocolConfig[] => {
+export const getProtocolsByChain = (chain: 'solana' | 'ethereum' | 'evm' | 'monad'): ProtocolConfig[] => {
   return protocolConfigs.filter(p => p.chain === chain);
 };
 
-export const getAllChains = (): Array<'solana' | 'ethereum' | 'evm'> => {
-  const chains = new Set(protocolConfigs.map(p => p.chain).filter(Boolean) as Array<'solana' | 'ethereum' | 'evm'>);
+export const getAllChains = (): Array<'solana' | 'ethereum' | 'evm' | 'monad'> => {
+  const chains = new Set(protocolConfigs.map(p => p.chain).filter(Boolean) as Array<'solana' | 'ethereum' | 'evm' | 'monad'>);
   return Array.from(chains);
 };
 
@@ -156,6 +162,13 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'mevx.jpg';
     case 'axiom_evm':
       return 'axiom.jpg';
+    // Monad protocols - map to base protocol logos
+    case 'gmgnai_monad':
+      return 'gmgnai.jpg';
+    case 'bloom_monad':
+      return 'bloom.jpg';
+    case 'nadfun_monad':
+      return 'nadfun.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

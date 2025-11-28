@@ -25,13 +25,13 @@ export const getProtocolCategory = (protocolName: string): string => {
 
 export const getAllProtocols = (): string[] => {
   return getMutableProtocolConfigs()
-    .filter(p => p.chain !== 'evm') // Exclude EVM protocols from reports
+    .filter(p => p.chain !== 'evm' && p.chain !== 'monad') // Exclude EVM and Monad protocols from Solana reports
     .map(p => p.id);
 };
 
 export const getCategoryProtocols = (categoryName: string): string[] => {
   return getMutableProtocolConfigs()
-    .filter(p => p.category === categoryName && p.chain !== 'evm') // Exclude EVM protocols from reports
+    .filter(p => p.category === categoryName && p.chain !== 'evm' && p.chain !== 'monad') // Exclude EVM and Monad protocols from reports
     .map(p => p.id);
 };
 

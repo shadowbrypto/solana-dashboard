@@ -488,24 +488,24 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
             </TableBody>
           </Table>
         </div>
+      </div>
 
-        {/* Action buttons */}
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted/50 transition-colors"
-          >
-            <Copy className="h-3.5 w-3.5" />
-            Copy
-          </button>
-          <button
-            onClick={downloadReport}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted/50 transition-colors"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Download
-          </button>
-        </div>
+      {/* Action buttons - outside data-table to exclude from screenshot */}
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={copyToClipboard}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted/50 transition-colors"
+        >
+          <Copy className="h-3.5 w-3.5" />
+          Copy
+        </button>
+        <button
+          onClick={downloadReport}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted/50 transition-colors"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Download
+        </button>
       </div>
     </div>
   );

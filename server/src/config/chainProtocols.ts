@@ -42,6 +42,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'gmgnai_monad': { solana: false, evm: false, monad: true },
   'bloom_monad': { solana: false, evm: false, monad: true },
   'nadfun_monad': { solana: false, evm: false, monad: true },
+  'basedbot_monad': { solana: false, evm: false, monad: true },
 };
 
 // Helper functions

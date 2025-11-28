@@ -22,6 +22,7 @@ export const MONAD_DUNE_QUERY_IDS: MonadQueryConfig = {
   'gmgnai_monad': '6252295',
   'bloom_monad': '6257400',
   'nadfun_monad': '6252536',
+  'basedbot_monad': '6271223',
 };
 
 /**

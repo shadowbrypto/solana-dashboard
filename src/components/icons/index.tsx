@@ -133,5 +133,9 @@ export const NadFunMonadIcon = (props: any) => (
   <ProtocolLogo protocolId="nadfun" protocolName="NadFun" fallbackIcon={Rocket} {...props} />
 );
 
+export const BasedBotMonadIcon = (props: any) => (
+  <ProtocolLogo protocolId="basedbot" protocolName="Based Bot" fallbackIcon={Bot} {...props} />
+);
+
 // Export chain logos
 export { SolanaLogo, EthereumLogo, getChainLogo } from './ChainLogos';

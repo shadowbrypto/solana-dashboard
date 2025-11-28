@@ -25,7 +25,7 @@ import {
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
   SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon, AxiomEVMIcon,
   RhythmIcon, VyperIcon, OpenSeaIcon, PhantomIcon,
-  GMGNAIMonadIcon, BloomMonadIcon, NadFunMonadIcon
+  GMGNAIMonadIcon, BloomMonadIcon, NadFunMonadIcon, BasedBotMonadIcon
 } from '../components/icons/index';
 
 export interface ProtocolConfig {
@@ -93,6 +93,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'gmgnai_monad', name: 'GmGnAi', icon: GMGNAIMonadIcon, category: 'Monad', chain: 'monad' },
   { id: 'bloom_monad', name: 'Bloom', icon: BloomMonadIcon, category: 'Monad', chain: 'monad' },
   { id: 'nadfun_monad', name: 'NadFun', icon: NadFunMonadIcon, category: 'Monad', chain: 'monad' },
+  { id: 'basedbot_monad', name: 'Based Bot', icon: BasedBotMonadIcon, category: 'Monad', chain: 'monad' },
 ];
 
 // Helper functions
@@ -169,6 +170,8 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
       return 'bloom.jpg';
     case 'nadfun_monad':
       return 'nadfun.jpg';
+    case 'basedbot_monad':
+      return 'basedbot.jpg';
     default:
       return `${protocolId.toLowerCase()}.jpg`;
   }

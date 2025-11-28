@@ -29,6 +29,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'vyper': { solana: true, evm: false, monad: false },
   'opensea': { solana: true, evm: false, monad: false },
   'phantom': { solana: true, evm: false, monad: false },
+  'basedbot': { solana: true, evm: false, monad: false },
 
   // Multi-chain protocols (both Solana and EVM)
   'bloom': { solana: true, evm: true, monad: false },

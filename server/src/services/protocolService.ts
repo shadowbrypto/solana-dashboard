@@ -2704,10 +2704,10 @@ export async function getLatestDataDates(dataType?: string): Promise<{
       }
       
       // For proper data type handling when no specific filter is applied:
-      // - Solana protocols should use 'private' data type
+      // - Solana and Monad protocols should use 'private' data type
       // - EVM protocols should use 'public' data type
       if (!dataType) {
-        const expectedDataType = chain === 'solana' ? 'private' : 'public';
+        const expectedDataType = (chain === 'solana' || chain === 'monad') ? 'private' : 'public';
         if (recordDataType !== expectedDataType) {
           return;
         }

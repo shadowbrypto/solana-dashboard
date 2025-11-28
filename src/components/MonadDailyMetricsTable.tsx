@@ -366,7 +366,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
               <TableRow>
                 <TableHead className="w-[200px]">Protocol</TableHead>
                 <TableHead className="text-right">Volume</TableHead>
-                <TableHead className="text-right">Lifetime Vol.</TableHead>
+                <TableHead className="text-right">Lifetime Volume</TableHead>
                 <TableHead className="text-right">Fees</TableHead>
                 <TableHead className="text-center w-[140px]">Growth</TableHead>
               </TableRow>
@@ -453,8 +453,10 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                               {formatVolume(data.totalVolume)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right text-muted-foreground">
-                            {formatVolume(data.lifetimeVolume)}
+                          <TableCell className="text-right">
+                            <Badge variant="outline" className="font-medium text-muted-foreground">
+                              {formatVolume(data.lifetimeVolume)}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-right">{formatVolume(data.fees)}</TableCell>
                           <TableCell className="text-center">
@@ -475,8 +477,10 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                         {formatVolume(totals.totalVolume)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {formatVolume(totals.totalLifetimeVolume)}
+                    <TableCell className="text-right">
+                      <Badge variant="outline" className="font-semibold text-muted-foreground">
+                        {formatVolume(totals.totalLifetimeVolume)}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">{formatVolume(totals.totalFees)}</TableCell>
                     <TableCell className="text-center">

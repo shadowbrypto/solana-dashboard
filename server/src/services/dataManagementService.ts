@@ -71,6 +71,7 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
   "bloom_monad": { queryIds: [6257400], chain: 'monad' },
   "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
+  "basedbot_monad": { queryIds: [6271223], chain: 'monad' },
 };
 
 // Private data sources (when dataType is 'private' or default)
@@ -116,6 +117,7 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
   "bloom_monad": { queryIds: [6257400], chain: 'monad' },
   "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
+  "basedbot_monad": { queryIds: [6271223], chain: 'monad' },
 };
 
 // Get protocol sources based on data type

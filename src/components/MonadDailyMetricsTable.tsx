@@ -448,10 +448,8 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant="outline" className="font-medium">
-                              {formatVolume(data.totalVolume)}
-                            </Badge>
+                          <TableCell className="text-right font-medium">
+                            {formatVolume(data.totalVolume)}
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge variant="outline" className="font-semibold">
@@ -472,10 +470,8 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                         <span>Total</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant="outline" className="font-semibold">
-                        {formatVolume(totals.totalVolume)}
-                      </Badge>
+                    <TableCell className="text-right font-semibold">
+                      {formatVolume(totals.totalVolume)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant="outline" className="font-semibold">

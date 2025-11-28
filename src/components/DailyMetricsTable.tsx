@@ -190,9 +190,13 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         // Get actual volume for comparison
         const actualVolume = protocol ? dailyData[protocol]?.total_volume_usd || 0 : 0;
 
-        // When actual volume is 0 but projected volume exists, show value without tag
+        // When actual volume is 0 but projected volume exists, show with green styling
         if (actualVolume === 0 && value > 0) {
-          return <span>{formatCurrency(value)}</span>;
+          return (
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+              <span>{formatCurrency(value)}</span>
+            </div>
+          );
         }
 
         // If both are 0, show dash

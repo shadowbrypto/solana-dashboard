@@ -3,6 +3,7 @@ import { syncData, getSyncStatus } from '../services/dataUpdateService.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 import { launchpadDataService } from '../services/launchpadDataService.js';
 import { getProtocolsWithRollingRefresh } from '../config/rolling-refresh-config.js';
+import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 
 const router = Router();
 
@@ -242,9 +243,17 @@ router.post('/sync/:protocol', async (req: Request, res: Response) => {
     }
 
     console.log(`Starting data sync for protocol: ${protocol} with ${dataTypeFilter} data...`);
-    
+
     const result = await dataManagementService.syncProtocolData(protocol, dataTypeFilter);
-    
+
+    // Update sync status
+    await protocolSyncStatusService.updateProtocolSyncStatus(
+      protocol,
+      result.success,
+      result.rowsImported,
+      result.error
+    );
+
     if (result.success) {
       res.json({
         success: true,

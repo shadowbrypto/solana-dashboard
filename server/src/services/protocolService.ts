@@ -1878,6 +1878,25 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
 
     if (trendError) throw trendError;
 
+    // Fetch lifetime volume for all Monad protocols
+    const { data: lifetimeData, error: lifetimeError } = await supabase
+      .from('protocol_stats')
+      .select('protocol_name, volume_usd')
+      .eq('data_type', dataType)
+      .eq('chain', 'monad');
+
+    if (lifetimeError) throw lifetimeError;
+
+    // Calculate lifetime volume per protocol
+    const lifetimeVolumeByProtocol: Record<string, number> = {};
+    if (lifetimeData) {
+      lifetimeData.forEach(record => {
+        const protocol = record.protocol_name;
+        const volume = Number(record.volume_usd) || 0;
+        lifetimeVolumeByProtocol[protocol] = (lifetimeVolumeByProtocol[protocol] || 0) + volume;
+      });
+    }
+
     // Process data for each protocol
     const protocolData: Record<string, any> = {};
 
@@ -1891,7 +1910,8 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
         fees: 0,
         dailyGrowth: 0,
         weeklyTrend: Array(7).fill(0),
-        marketShare: 0
+        marketShare: 0,
+        lifetimeVolume: lifetimeVolumeByProtocol[protocol] || 0
       };
     });
 
@@ -1909,7 +1929,8 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
             fees: 0,
             dailyGrowth: 0,
             weeklyTrend: Array(7).fill(0),
-            marketShare: 0
+            marketShare: 0,
+            lifetimeVolume: lifetimeVolumeByProtocol[protocol] || 0
           };
         }
 
@@ -1971,6 +1992,7 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
     const totalNewUsers = Object.values(protocolData).reduce((sum, data: any) => sum + data.newUsers, 0);
     const totalTrades = Object.values(protocolData).reduce((sum, data: any) => sum + data.trades, 0);
     const totalFees = Object.values(protocolData).reduce((sum, data: any) => sum + data.fees, 0);
+    const totalLifetimeVolume = Object.values(protocolData).reduce((sum, data: any) => sum + data.lifetimeVolume, 0);
 
     // Calculate total growth
     let totalGrowth = 0;
@@ -2012,7 +2034,8 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
         totalTrades,
         totalFees,
         totalGrowth,
-        totalWeeklyTrend
+        totalWeeklyTrend,
+        totalLifetimeVolume
       }
     };
 

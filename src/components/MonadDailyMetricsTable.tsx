@@ -34,6 +34,7 @@ interface MonadProtocolData {
   dailyUsers: number;
   trades: number;
   fees: number;
+  lifetimeVolume: number;
 }
 
 const formatVolume = (volume: number): string => {
@@ -111,6 +112,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
     totalFees: number;
     totalGrowth: number;
     totalWeeklyTrend: number[];
+    totalLifetimeVolume: number;
   } | null>(null);
   const { toast } = useToast();
 
@@ -133,7 +135,8 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
           weeklyTrend: data.weeklyTrend || [],
           dailyUsers: data.dailyUsers || 0,
           trades: data.trades || 0,
-          fees: data.fees || 0
+          fees: data.fees || 0,
+          lifetimeVolume: data.lifetimeVolume || 0
         }));
 
         console.log('Backend protocols received:', Object.keys(optimizedData.protocols));
@@ -167,6 +170,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
     const totalUsers = visibleData.reduce((sum, data) => sum + data.dailyUsers, 0);
     const totalTrades = visibleData.reduce((sum, data) => sum + data.trades, 0);
     const totalFees = visibleData.reduce((sum, data) => sum + data.fees, 0);
+    const totalLifetimeVolume = visibleData.reduce((sum, data) => sum + data.lifetimeVolume, 0);
 
     let totalGrowth = 0;
     if (hiddenProtocols.size > 0 && visibleData.length > 0) {
@@ -188,7 +192,8 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
       totalTrades,
       totalFees,
       totalGrowth,
-      totalWeeklyTrend
+      totalWeeklyTrend,
+      totalLifetimeVolume
     };
   }, [monadData, hiddenProtocols, backendTotals]);
 
@@ -361,6 +366,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
               <TableRow>
                 <TableHead className="w-[200px]">Protocol</TableHead>
                 <TableHead className="text-right">Volume</TableHead>
+                <TableHead className="text-right">Lifetime Vol.</TableHead>
                 <TableHead className="text-right">Fees</TableHead>
                 <TableHead className="text-center w-[140px]">Growth</TableHead>
               </TableRow>
@@ -368,7 +374,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
                       <span className="text-muted-foreground">Loading Monad protocol data...</span>
@@ -377,7 +383,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <div className="text-muted-foreground">
                       <p>{error}</p>
                     </div>
@@ -385,7 +391,7 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                 </TableRow>
               ) : monadData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <div className="text-muted-foreground">
                       <p>No Monad protocol data available for this date</p>
                     </div>
@@ -447,6 +453,9 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                               {formatVolume(data.totalVolume)}
                             </Badge>
                           </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {formatVolume(data.lifetimeVolume)}
+                          </TableCell>
                           <TableCell className="text-right">{formatVolume(data.fees)}</TableCell>
                           <TableCell className="text-center">
                             <WeeklyTrendChart data={data.weeklyTrend} growth={data.dailyGrowth} />
@@ -465,6 +474,9 @@ export function MonadDailyMetricsTable({ protocols, date, onDateChange }: MonadD
                       <Badge variant="outline" className="font-semibold">
                         {formatVolume(totals.totalVolume)}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {formatVolume(totals.totalLifetimeVolume)}
                     </TableCell>
                     <TableCell className="text-right">{formatVolume(totals.totalFees)}</TableCell>
                     <TableCell className="text-center">

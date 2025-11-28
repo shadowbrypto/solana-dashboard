@@ -62,12 +62,20 @@ export class ProtocolSyncStatusService {
     daysBehind?: number;
   }> {
     try {
+      // Determine chain based on protocol name
+      let chain = 'solana';
+      if (protocolName.endsWith('_monad')) {
+        chain = 'monad';
+      } else if (protocolName.endsWith('_evm')) {
+        chain = 'evm';
+      }
+
       // Get the latest date for this protocol
       const { data, error } = await supabase
         .from('protocol_stats')
         .select('date')
         .eq('protocol_name', protocolName)
-        .eq('chain', 'solana') // Filter for Solana data only
+        .eq('chain', chain)
         .eq('data_type', 'private') // Default to private data for sync status
         .order('date', { ascending: false })
         .limit(1);

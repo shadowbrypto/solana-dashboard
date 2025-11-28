@@ -24,7 +24,7 @@ import {
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon,
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, PadreIcon,
   SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon, AxiomEVMIcon,
-  RhythmIcon, VyperIcon, OpenSeaIcon, PhantomIcon,
+  RhythmIcon, VyperIcon, OpenSeaIcon, PhantomIcon, BasedBotIcon,
   GMGNAIMonadIcon, BloomMonadIcon, NadFunMonadIcon, BasedBotMonadIcon
 } from '../components/icons/index';
 
@@ -57,7 +57,8 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'soltradingbot', name: 'SolTradingBot', icon: SolTradingBotIcon, category: 'Telegram Bot', chain: 'solana' },
   { id: 'banana', name: 'Banana', icon: BananaIcon, category: 'Telegram Bot', chain: 'solana' },
   { id: 'maestro', name: 'Maestro', icon: MaestroIcon, category: 'Telegram Bot', chain: 'solana' },
-  
+  { id: 'basedbot', name: 'Based Bot', icon: BasedBotIcon, category: 'Telegram Bot', chain: 'solana' },
+
   // Solana - Trading Terminals
   { id: 'photon', name: 'Photon', icon: PhotonIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'bullx', name: 'Bull X', icon: BullXIcon, category: 'Trading Terminal', chain: 'solana' },

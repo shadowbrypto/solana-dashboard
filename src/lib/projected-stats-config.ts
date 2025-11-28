@@ -34,6 +34,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'soltradingbot': '4954880',
   'banana': '4899926',
   'maestro': '4899904',
+  'basedbot': '6271560',
 
   // Trading Terminals
   'photon': '4899788',

@@ -120,6 +120,10 @@ export const PhantomIcon = (props: any) => (
   <ProtocolLogo protocolId="phantom" protocolName="Phantom" fallbackIcon={Terminal} {...props} />
 );
 
+export const BasedBotIcon = (props: any) => (
+  <ProtocolLogo protocolId="basedbot" protocolName="Based Bot" fallbackIcon={Bot} {...props} />
+);
+
 // Monad Protocol Icons
 export const GMGNAIMonadIcon = (props: any) => (
   <ProtocolLogo protocolId="gmgnai" protocolName="GmGnAi" fallbackIcon={CalendarClock} {...props} />

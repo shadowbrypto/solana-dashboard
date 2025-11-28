@@ -22,12 +22,13 @@ interface DuneQueryConfig {
 export const DUNE_QUERY_IDS: DuneQueryConfig = {
   // Telegram Bots
   'trojan': '4899624',
-  'bonkbot': '4899822', 
+  'bonkbot': '4899822',
   'bloom': '4899851',
   'nova': '',
   'soltradingbot': '4954880',
   'banana': '4899926',
   'maestro': '4899904',
+  'basedbot': '6271560',
   
   // Trading Terminals  
   'photon': '4899788',

@@ -1,10 +1,10 @@
-import { supabase } from '../lib/supabase';
-import { 
-  getDuneQueryId, 
-  hasValidDuneQueryId, 
+import { db } from '../lib/db.js';
+import {
+  getDuneQueryId,
+  hasValidDuneQueryId,
   getAllConfiguredProtocolIds,
-  getValidDuneQueryMappings 
-} from '../config/projected-stats-config';
+  getValidDuneQueryMappings
+} from '../config/projected-stats-config.js';
 
 export interface ProjectedStatsData {
   id?: number;
@@ -31,14 +31,12 @@ export interface DuneQueryResult {
  */
 export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<DuneQueryResult[]> {
   try {
-    // Check if Dune API key is configured
     const duneApiKey = process.env.DUNE_API_KEY;
     if (!duneApiKey) {
       console.warn('DUNE_API_KEY environment variable is not set. Skipping Dune data fetch.');
       return [];
     }
 
-    // First, get the execution result
     const response = await fetch(`https://api.dune.com/api/v1/query/${duneQueryId}/results`, {
       headers: {
         'X-Dune-API-Key': duneApiKey,
@@ -46,29 +44,25 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
     });
 
     if (!response.ok) {
-      const errorDetails = response.status === 401 
-        ? 'Unauthorized - Please check your DUNE_API_KEY' 
+      const errorDetails = response.status === 401
+        ? 'Unauthorized - Please check your DUNE_API_KEY'
         : `${response.status} - ${response.statusText}`;
       throw new Error(`Failed to fetch data from Dune Analytics: ${errorDetails}`);
     }
 
     const data = await response.json();
-    
-    // Transform Dune response to our expected format
-    // Dune returns data in result.rows format
+
     return data.result.rows.map((row: any) => {
-      // Convert date to proper YYYY-MM-DD format
       let formattedDate = row.formattedDay;
-      
+
       // Convert DD-MM-YYYY to YYYY-MM-DD format
       if (formattedDate && typeof formattedDate === 'string') {
-        // Check for DD-MM-YYYY format (like 31-07-2025)
         if (formattedDate.match(/^\d{2}-\d{2}-\d{4}$/)) {
           const parts = formattedDate.split('-');
-          formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert to YYYY-MM-DD
+          formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
       }
-      
+
       return {
         formattedDay: formattedDate,
         fees_sol: parseFloat(row.fees_sol) || 0,
@@ -88,132 +82,51 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
 }
 
 /**
- * Save projected stats data to database
+ * Save projected stats data to database (batch upsert - optimized)
  */
 export async function saveProjectedStats(data: ProjectedStatsData[]): Promise<void> {
+  if (!data || data.length === 0) return;
+
   try {
-    // TEMPORARY LOGGING - START
-    if (data && data.length > 0) {
-      const protocolName = data[0].protocol_name;
+    const protocolName = data[0].protocol_name;
+    const fifteenDaysAgo = new Date();
+    fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+    const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
 
-      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
-      console.log(`│ [REFRESH-MONITOR] PRE-REFRESH DATABASE SNAPSHOT        │`);
-      console.log(`│ Protocol: ${protocolName.padEnd(43)} │`);
-      console.log(`│ Table: projected_stats                                  │`);
-      console.log(`└─────────────────────────────────────────────────────────┘`);
+    // Pre-refresh snapshot for logging
+    console.log(`\n[REFRESH] Updating projected_stats for ${protocolName}`);
 
-      const fifteenDaysAgo = new Date();
-      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
-      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
+    const preRefreshData = await db.query<{ formatted_day: string; volume_usd: number; fees_usd: number }>(
+      `SELECT formatted_day, volume_usd, fees_usd
+       FROM projected_stats
+       WHERE protocol_name = ? AND formatted_day >= ?
+       ORDER BY formatted_day ASC`,
+      [protocolName, fifteenDaysAgoStr]
+    );
 
-      const { data: preRefreshData, error: preRefreshError } = await supabase
-        .from('projected_stats')
-        .select('formatted_day, volume_usd, fees_usd')
-        .eq('protocol_name', protocolName)
-        .gte('formatted_day', fifteenDaysAgoStr)
-        .order('formatted_day', { ascending: true });
+    console.log(`[REFRESH] Found ${preRefreshData.length} existing rows`);
 
-      if (!preRefreshError && preRefreshData) {
-        console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} rows before refresh\n`);
-        console.log(`Date       │ Volume USD          │ Fees USD`);
-        console.log(`───────────┼─────────────────────┼─────────────────────`);
-        preRefreshData.forEach(row => {
-          console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
-        });
-      }
+    // Prepare data for batch upsert
+    const records = data.map(row => ({
+      protocol_name: row.protocol_name,
+      formatted_day: row.formatted_day,
+      fees_sol: row.fees_sol,
+      volume_sol: row.volume_sol,
+      fees_usd: row.fees_usd,
+      volume_usd: row.volume_usd
+    }));
 
-      // Show source data from Dune (last 15 days only)
-      const dataLast15Days = data.filter(row => row.formatted_day >= fifteenDaysAgoStr);
-      console.log(`\n[REFRESH-MONITOR] SOURCE DATA FROM DUNE (last 15 days)`);
-      console.log(`Date       │ Volume USD          │ Fees USD`);
-      console.log(`───────────┼─────────────────────┼─────────────────────`);
-      dataLast15Days.forEach(row => {
-        console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
-      });
+    // Batch upsert - much more efficient than individual inserts
+    await db.batchUpsert('projected_stats', records, ['protocol_name', 'formatted_day']);
 
-      // Upsert data - insert new records or update existing ones based on unique constraint
-      const { error } = await supabase
-        .from('projected_stats')
-        .upsert(data, {
-          onConflict: 'protocol_name,formatted_day'
-        });
+    // Post-refresh count
+    const [{ count }] = await db.query<{ count: number }>(
+      `SELECT COUNT(*) as count FROM projected_stats
+       WHERE protocol_name = ? AND formatted_day >= ?`,
+      [protocolName, fifteenDaysAgoStr]
+    );
 
-      if (error) {
-        throw error;
-      }
-
-      // Post-refresh snapshot
-      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
-      console.log(`│ [REFRESH-MONITOR] POST-REFRESH DATABASE SNAPSHOT       │`);
-      console.log(`└─────────────────────────────────────────────────────────┘`);
-
-      const { data: postRefreshData, error: postRefreshError } = await supabase
-        .from('projected_stats')
-        .select('formatted_day, volume_usd, fees_usd')
-        .eq('protocol_name', protocolName)
-        .gte('formatted_day', fifteenDaysAgoStr)
-        .order('formatted_day', { ascending: true });
-
-      if (!postRefreshError && postRefreshData) {
-        console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);
-        console.log(`Date       │ Volume USD          │ Fees USD`);
-        console.log(`───────────┼─────────────────────┼─────────────────────`);
-        postRefreshData.forEach(row => {
-          console.log(`${row.formatted_day} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)}`);
-        });
-      }
-
-      // Comparison Report
-      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
-      console.log(`│ [REFRESH-MONITOR] COMPARISON REPORT                    │`);
-      console.log(`└─────────────────────────────────────────────────────────┘\n`);
-
-      const preMap = new Map(preRefreshData?.map(r => [r.formatted_day, r]) || []);
-      const postMap = new Map(postRefreshData?.map(r => [r.formatted_day, r]) || []);
-      const dataMap = new Map(dataLast15Days.map(r => [r.formatted_day, r]));
-
-      let updated = 0, inserted = 0, unchanged = 0;
-
-      dataMap.forEach((dataRow, date) => {
-        const preRow = preMap.get(date);
-        const postRow = postMap.get(date);
-
-        if (!preRow && postRow) {
-          inserted++;
-          console.log(`✨ INSERTED  ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
-        } else if (preRow && postRow) {
-          if (preRow.volume_usd !== postRow.volume_usd || preRow.fees_usd !== postRow.fees_usd) {
-            updated++;
-            console.log(`🔄 UPDATED   ${date}:`);
-            console.log(`   Before: Vol=${preRow.volume_usd}, Fees=${preRow.fees_usd}`);
-            console.log(`   After:  Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
-            console.log(`   Source: Vol=${dataRow.volume_usd}, Fees=${dataRow.fees_usd}`);
-          } else {
-            unchanged++;
-            console.log(`✓ UNCHANGED ${date}: Vol=${postRow.volume_usd}, Fees=${postRow.fees_usd}`);
-          }
-        }
-      });
-
-      console.log(`\n[REFRESH-MONITOR] Summary:`);
-      console.log(`  ✨ Inserted: ${inserted}`);
-      console.log(`  🔄 Updated:  ${updated}`);
-      console.log(`  ✓ Unchanged: ${unchanged}`);
-      console.log(`  📊 Total:    ${inserted + updated + unchanged}`);
-      console.log(`\n[REFRESH-MONITOR] ============================================\n`);
-      // TEMPORARY LOGGING - END
-    } else {
-      // No data to log, just do the upsert
-      const { error } = await supabase
-        .from('projected_stats')
-        .upsert(data, {
-          onConflict: 'protocol_name,formatted_day'
-        });
-
-      if (error) {
-        throw error;
-      }
-    }
+    console.log(`[REFRESH] After upsert: ${count} rows for ${protocolName}`);
   } catch (error) {
     console.error('Error saving projected stats:', error);
     throw error;
@@ -221,39 +134,36 @@ export async function saveProjectedStats(data: ProjectedStatsData[]): Promise<vo
 }
 
 /**
- * Get projected stats for specific protocols and date range
+ * Get projected stats for specific protocols and date range (optimized)
  */
 export async function getProjectedStats(
-  protocolNames?: string[], 
-  startDate?: string, 
+  protocolNames?: string[],
+  startDate?: string,
   endDate?: string
 ): Promise<ProjectedStatsData[]> {
   try {
-    let query = supabase
-      .from('projected_stats')
-      .select('*');
+    let sql = 'SELECT * FROM projected_stats WHERE 1=1';
+    const params: any[] = [];
 
     if (protocolNames && protocolNames.length > 0) {
-      query = query.in('protocol_name', protocolNames);
+      const placeholders = protocolNames.map(() => '?').join(', ');
+      sql += ` AND protocol_name IN (${placeholders})`;
+      params.push(...protocolNames);
     }
 
     if (startDate) {
-      query = query.gte('formatted_day', startDate);
+      sql += ' AND formatted_day >= ?';
+      params.push(startDate);
     }
 
     if (endDate) {
-      query = query.lte('formatted_day', endDate);
+      sql += ' AND formatted_day <= ?';
+      params.push(endDate);
     }
 
-    const { data, error } = await query
-      .order('formatted_day', { ascending: true })
-      .order('protocol_name', { ascending: true });
+    sql += ' ORDER BY formatted_day ASC, protocol_name ASC';
 
-    if (error) {
-      throw error;
-    }
-
-    return data || [];
+    return await db.query<ProjectedStatsData>(sql, params);
   } catch (error) {
     console.error('Error fetching projected stats:', error);
     throw error;
@@ -261,21 +171,16 @@ export async function getProjectedStats(
 }
 
 /**
- * Get projected stats for a specific date
+ * Get projected stats for a specific date (optimized)
  */
 export async function getProjectedStatsForDate(date: string): Promise<ProjectedStatsData[]> {
   try {
-    const { data, error } = await supabase
-      .from('projected_stats')
-      .select('*')
-      .eq('formatted_day', date)
-      .order('protocol_name', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    return data || [];
+    return await db.query<ProjectedStatsData>(
+      `SELECT * FROM projected_stats
+       WHERE formatted_day = ?
+       ORDER BY protocol_name ASC`,
+      [date]
+    );
   } catch (error) {
     console.error('Error fetching projected stats for date:', error);
     throw error;
@@ -284,19 +189,16 @@ export async function getProjectedStatsForDate(date: string): Promise<ProjectedS
 
 /**
  * Update projected data for all protocols with Dune query IDs
- * @returns Object with update statistics
  */
 export async function updateAllProjectedData(): Promise<{ successCount: number; totalCount: number; protocols: string[] }> {
   try {
     console.log('Starting projected data update for all protocols...');
-    
-    // Check if Dune API key is configured
+
     if (!process.env.DUNE_API_KEY) {
       console.warn('DUNE_API_KEY is not configured. Projected stats update skipped.');
       return { successCount: 0, totalCount: 0, protocols: [] };
     }
-    
-    // Get all protocols with valid Dune query IDs
+
     const validMappings = getValidDuneQueryMappings();
     let successCount = 0;
     const successfulProtocols: string[] = [];
@@ -304,9 +206,9 @@ export async function updateAllProjectedData(): Promise<{ successCount: number; 
     for (const { protocolId, duneQueryId } of validMappings) {
       try {
         console.log(`Fetching projected data for ${protocolId}...`);
-        
+
         const duneData = await fetchProjectedDataFromDune(duneQueryId);
-        
+
         if (duneData.length > 0) {
           const projectedData: ProjectedStatsData[] = duneData.map(row => ({
             protocol_name: protocolId,
@@ -318,23 +220,17 @@ export async function updateAllProjectedData(): Promise<{ successCount: number; 
           }));
 
           await saveProjectedStats(projectedData);
-          console.log(`✓ Updated ${projectedData.length} records for ${protocolId}`);
+          console.log(`Updated ${projectedData.length} records for ${protocolId}`);
           successCount++;
           successfulProtocols.push(protocolId);
         } else {
           console.log(`No data returned for ${protocolId}`);
         }
       } catch (error) {
-        console.error(`Error updating projected data for ${protocolId}:`, {
-          protocolId,
-          duneQueryId,
-          error: error instanceof Error ? error.message : error,
-          stack: error instanceof Error ? error.stack : undefined
-        });
+        console.error(`Error updating projected data for ${protocolId}:`, error);
       }
     }
 
-    // Log protocols without valid Dune query IDs
     const allProtocolIds = getAllConfiguredProtocolIds();
     const protocolsWithoutValidIds = allProtocolIds.filter(id => !hasValidDuneQueryId(id));
     if (protocolsWithoutValidIds.length > 0) {
@@ -342,7 +238,7 @@ export async function updateAllProjectedData(): Promise<{ successCount: number; 
     }
 
     console.log(`Projected data update completed: ${successCount}/${validMappings.length} protocols updated`);
-    
+
     return {
       successCount,
       totalCount: validMappings.length,
@@ -355,36 +251,28 @@ export async function updateAllProjectedData(): Promise<{ successCount: number; 
 }
 
 /**
- * Get latest projected volume for all protocols
+ * Get latest projected volume for all protocols (OPTIMIZED - single query with MAX)
  */
 export async function getLatestProjectedVolumes(): Promise<Record<string, number>> {
   try {
-    // Get the most recent date
-    const { data: latestDate, error: dateError } = await supabase
-      .from('projected_stats')
-      .select('formatted_day')
-      .order('formatted_day', { ascending: false })
-      .limit(1);
+    // Use subquery to get latest date, then fetch volumes for that date
+    const latestDate = await db.queryOne<{ formatted_day: string }>(
+      'SELECT MAX(formatted_day) as formatted_day FROM projected_stats'
+    );
 
-    if (dateError || !latestDate || latestDate.length === 0) {
+    if (!latestDate?.formatted_day) {
       return {};
     }
 
-    const latest = latestDate[0].formatted_day;
+    const data = await db.query<{ protocol_name: string; volume_usd: number }>(
+      `SELECT protocol_name, volume_usd
+       FROM projected_stats
+       WHERE formatted_day = ?`,
+      [latestDate.formatted_day]
+    );
 
-    // Get all projected volumes for the latest date
-    const { data, error } = await supabase
-      .from('projected_stats')
-      .select('protocol_name, volume_usd')
-      .eq('formatted_day', latest);
-
-    if (error) {
-      throw error;
-    }
-
-    // Convert to record format
     const result: Record<string, number> = {};
-    data?.forEach(item => {
+    data.forEach(item => {
       result[item.protocol_name] = item.volume_usd;
     });
 
@@ -396,43 +284,32 @@ export async function getLatestProjectedVolumes(): Promise<Record<string, number
 }
 
 /**
- * Get monthly adjusted volumes for all protocols
+ * Get monthly adjusted volumes for all protocols (OPTIMIZED - aggregation in SQL)
  */
 export async function getMonthlyAdjustedVolumes(year: number, month: number): Promise<Record<string, number>> {
   try {
-    // Create start and end dates for the month
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endOfMonth = new Date(year, month, 0); // Last day of the month
+    const endOfMonth = new Date(year, month, 0);
     const endDate = endOfMonth.toISOString().split('T')[0];
 
-    console.log(`Fetching monthly adjusted volumes for ${year}-${month.toString().padStart(2, '0')} (${startDate} to ${endDate})`);
+    console.log(`Fetching monthly adjusted volumes for ${year}-${month.toString().padStart(2, '0')}`);
 
-    // Get all projected stats for the month
-    const { data, error } = await supabase
-      .from('projected_stats')
-      .select('protocol_name, volume_usd')
-      .gte('formatted_day', startDate)
-      .lte('formatted_day', endDate);
+    // OPTIMIZED: Aggregate at DB level instead of fetching all rows
+    const data = await db.query<{ protocol_name: string; total_volume: number }>(
+      `SELECT protocol_name, SUM(volume_usd) as total_volume
+       FROM projected_stats
+       WHERE formatted_day >= ? AND formatted_day <= ?
+       GROUP BY protocol_name`,
+      [startDate, endDate]
+    );
 
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
+    console.log(`Found ${data.length} protocols with projected stats for the month`);
 
-    console.log(`Found ${data?.length || 0} projected stats records for the month`);
-
-    // Aggregate by protocol
     const monthlyVolumes: Record<string, number> = {};
-    
-    data?.forEach(item => {
-      if (!monthlyVolumes[item.protocol_name]) {
-        monthlyVolumes[item.protocol_name] = 0;
-      }
-      monthlyVolumes[item.protocol_name] += item.volume_usd || 0;
+    data.forEach(item => {
+      monthlyVolumes[item.protocol_name] = item.total_volume || 0;
     });
 
-    console.log('Aggregated monthly volumes:', Object.keys(monthlyVolumes).length, 'protocols');
-    
     return monthlyVolumes;
   } catch (error) {
     console.error('Error fetching monthly adjusted volumes:', error);
@@ -441,36 +318,31 @@ export async function getMonthlyAdjustedVolumes(year: number, month: number): Pr
 }
 
 /**
- * Get latest projected data dates for all protocols
+ * Get latest projected data dates for all protocols (OPTIMIZED - GROUP BY with MAX)
  */
 export async function getLatestProjectedDates(): Promise<Record<string, { latest_date: string; is_current: boolean; days_behind: number }>> {
   try {
-    // Get latest date for each protocol
-    const { data, error } = await supabase
-      .from('projected_stats')
-      .select('protocol_name, formatted_day')
-      .order('formatted_day', { ascending: false });
+    // OPTIMIZED: Single query with GROUP BY instead of fetching all records
+    const data = await db.query<{ protocol_name: string; latest_date: string }>(
+      `SELECT protocol_name, MAX(formatted_day) as latest_date
+       FROM projected_stats
+       GROUP BY protocol_name`
+    );
 
-    if (error) {
-      throw error;
-    }
-
-    // Group by protocol and get the latest date for each
-    const latestDates: Record<string, { latest_date: string; is_current: boolean; days_behind: number }> = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    data?.forEach(item => {
-      if (!latestDates[item.protocol_name]) {
-        const latestDate = new Date(item.formatted_day);
-        const daysDiff = Math.floor((today.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        latestDates[item.protocol_name] = {
-          latest_date: item.formatted_day,
-          is_current: daysDiff <= 1, // Consider current if within 1 day
-          days_behind: daysDiff
-        };
-      }
+    const latestDates: Record<string, { latest_date: string; is_current: boolean; days_behind: number }> = {};
+
+    data.forEach(item => {
+      const latestDate = new Date(item.latest_date);
+      const daysDiff = Math.floor((today.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      latestDates[item.protocol_name] = {
+        latest_date: item.latest_date,
+        is_current: daysDiff <= 1,
+        days_behind: daysDiff
+      };
     });
 
     return latestDates;
@@ -483,44 +355,42 @@ export async function getLatestProjectedDates(): Promise<Record<string, { latest
 /**
  * Update projected data for a specific protocol
  */
-export async function updateProjectedDataForProtocol(protocolId: string): Promise<{ 
-  success: boolean; 
-  error?: string; 
-  recordsUpdated?: number; 
-  latestDate?: string 
+export async function updateProjectedDataForProtocol(protocolId: string): Promise<{
+  success: boolean;
+  error?: string;
+  recordsUpdated?: number;
+  latestDate?: string
 }> {
   try {
     console.log(`Starting projected data update for protocol: ${protocolId}`);
-    
-    // Check if Dune API key is configured
+
     if (!process.env.DUNE_API_KEY) {
       console.warn('DUNE_API_KEY is not configured. Projected stats update skipped.');
-      return { 
-        success: false, 
-        error: 'Dune API key not configured' 
+      return {
+        success: false,
+        error: 'Dune API key not configured'
       };
     }
-    
-    // Check if protocol has a valid Dune query ID
+
     const duneQueryId = getDuneQueryId(protocolId);
     if (!duneQueryId) {
-      return { 
-        success: false, 
-        error: `No Dune query ID configured for protocol: ${protocolId}` 
+      return {
+        success: false,
+        error: `No Dune query ID configured for protocol: ${protocolId}`
       };
     }
-    
+
     console.log(`Fetching projected data for ${protocolId} with query ID ${duneQueryId}...`);
-    
+
     const duneData = await fetchProjectedDataFromDune(duneQueryId);
-    
+
     if (duneData.length === 0) {
-      return { 
-        success: false, 
-        error: `No data returned from Dune for protocol: ${protocolId}` 
+      return {
+        success: false,
+        error: `No data returned from Dune for protocol: ${protocolId}`
       };
     }
-    
+
     const projectedData: ProjectedStatsData[] = duneData.map(row => ({
       protocol_name: protocolId,
       formatted_day: row.formattedDay,
@@ -529,16 +399,16 @@ export async function updateProjectedDataForProtocol(protocolId: string): Promis
       fees_usd: row.fees_usd,
       volume_usd: row.volume_usd,
     }));
-    
+
     await saveProjectedStats(projectedData);
-    
+
     // Get the latest date from the updated data
-    const latestDate = projectedData.length > 0 
+    const latestDate = projectedData.length > 0
       ? projectedData.sort((a, b) => b.formatted_day.localeCompare(a.formatted_day))[0].formatted_day
       : undefined;
-    
-    console.log(`✓ Updated ${projectedData.length} records for ${protocolId}`);
-    
+
+    console.log(`Updated ${projectedData.length} records for ${protocolId}`);
+
     return {
       success: true,
       recordsUpdated: projectedData.length,

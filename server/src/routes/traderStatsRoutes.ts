@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import TraderStatsService from '../services/traderStatsService.js';
 import DuneTraderStatsService from '../services/duneTraderStatsService.js';
-import { supabase } from '../lib/supabase.js';
 import { format, parseISO, isValid } from 'date-fns';
 
 const router = express.Router();

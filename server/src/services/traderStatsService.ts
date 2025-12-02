@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db.js';
 import { format } from 'date-fns';
-import { traderStatsQueries, getTraderStatsQueryId } from '../config/traderStatsQueries';
+import { traderStatsQueries, getTraderStatsQueryId } from '../config/traderStatsQueries.js';
 
 export interface TraderStats {
   protocol_name: string;
@@ -43,141 +43,60 @@ export interface VolumeRangeData {
 }
 
 export class TraderStatsService {
-  // Get trader stats for a protocol with pagination
+  // Get trader stats for a protocol with pagination - OPTIMIZED with LIMIT/OFFSET
   static async getTraderStatsPaginated(
     protocol: string,
     offset: number,
     limit: number
   ): Promise<TraderStats[]> {
     try {
-      let query = supabase
-        .from('trader_stats')
-        .select('*')
-        .eq('protocol_name', protocol.toLowerCase())
-        .order('volume_usd', { ascending: false });
+      // MySQL: Direct LIMIT/OFFSET query - no pagination loops needed
+      const data = await db.query<TraderStats>(
+        `SELECT protocol_name, user_address, volume_usd, date, chain
+         FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT ? OFFSET ?`,
+        [protocol.toLowerCase(), limit, offset]
+      );
 
-      // Always use batching for consistency
-      if (limit > 1000) {
-        // For very large requests, fetch in batches
-        const allData: TraderStats[] = [];
-        const batchSize = 1000;
-        let currentOffset = offset;
-        let remaining = limit;
-        
-        while (remaining > 0) {
-          const currentBatch = Math.min(batchSize, remaining);
-          const { data, error } = await supabase
-            .from('trader_stats')
-            .select('*')
-            .eq('protocol_name', protocol.toLowerCase())
-            .order('volume_usd', { ascending: false })
-            .range(currentOffset, currentOffset + currentBatch - 1);
-            
-          if (error) throw error;
-          if (!data || data.length === 0) break;
-          
-          allData.push(...data);
-          currentOffset += currentBatch;
-          remaining -= currentBatch;
-          
-          // Log progress for large datasets
-          if (allData.length % 5000 === 0) {
-            console.log(`Fetched ${allData.length} records so far...`);
-          }
-        }
-        
-        return allData;
-      } else {
-        // Standard pagination for smaller requests
-        const { data, error } = await query.range(offset, offset + limit - 1);
-        if (error) throw error;
-        return data || [];
-      }
+      return data;
     } catch (error) {
       console.error('Error fetching paginated trader stats:', error);
       throw error;
     }
   }
 
-  // Get total count of traders for a protocol (optimized SQL function)
+  // Get total count of traders for a protocol - OPTIMIZED with direct COUNT
   static async getTraderStatsCount(protocol: string): Promise<number> {
     try {
-      // Try using the optimized SQL function first
-      const { data: sqlResult, error: sqlError } = await supabase
-        .rpc('get_protocol_trader_count', { 
-          protocol_name: protocol.toLowerCase() 
-        });
+      // MySQL: Direct COUNT query - no RPC needed
+      const result = await db.queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM trader_stats WHERE protocol_name = ?`,
+        [protocol.toLowerCase()]
+      );
 
-      if (!sqlError && sqlResult !== null) {
-        console.log(`Total trader count for ${protocol} (SQL function): ${sqlResult.toLocaleString()}`);
-        return parseInt(sqlResult);
-      }
-
-      console.log('SQL function not available, falling back to count query');
-      
-      // Fallback to regular count
-      const { count, error } = await supabase
-        .from('trader_stats')
-        .select('*', { count: 'exact', head: true })
-        .eq('protocol_name', protocol.toLowerCase());
-
-      if (error) throw error;
-      return count || 0;
+      const count = result?.count || 0;
+      console.log(`Total trader count for ${protocol}: ${count.toLocaleString()}`);
+      return count;
     } catch (error) {
       console.error('Error counting trader stats:', error);
       throw error;
     }
   }
 
-  // Get total volume for a protocol (calculated at database level)
+  // Get total volume for a protocol - OPTIMIZED with direct SUM
   static async getTotalVolumeForProtocol(protocol: string): Promise<number> {
     try {
-      // Try using the SQL function first
-      const { data: sqlResult, error: sqlError } = await supabase
-        .rpc('calculate_protocol_total_volume', { 
-          protocol_name: protocol.toLowerCase() 
-        });
+      // MySQL: Direct SUM query - no pagination or RPC needed
+      const result = await db.queryOne<{ total: number }>(
+        `SELECT SUM(volume_usd) as total FROM trader_stats WHERE protocol_name = ?`,
+        [protocol.toLowerCase()]
+      );
 
-      if (!sqlError && sqlResult !== null) {
-        console.log(`Total volume for ${protocol} (SQL function): ${parseFloat(sqlResult).toLocaleString()}`);
-        return parseFloat(sqlResult);
-      }
-
-      console.log('SQL function not available, falling back to client calculation');
-      
-      // Fallback to client-side calculation with proper pagination
-      let totalVolume = 0;
-      let offset = 0;
-      const batchSize = 1000;
-      
-      // Fetch all records in batches to avoid the 1000 row limit
-      while (true) {
-        const { data, error } = await supabase
-          .from('trader_stats')
-          .select('volume_usd')
-          .eq('protocol_name', protocol.toLowerCase())
-          .range(offset, offset + batchSize - 1);
-
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-        
-        // Add this batch's volume to total
-        const batchVolume = data.reduce((sum, trader) => {
-          const volume = parseFloat(trader.volume_usd?.toString() || '0');
-          return sum + (isNaN(volume) ? 0 : volume);
-        }, 0);
-        
-        totalVolume += batchVolume;
-        offset += batchSize;
-        
-        // Log progress for large datasets
-        if (offset % 10000 === 0) {
-          console.log(`Volume calculation progress: processed ${offset} records...`);
-        }
-      }
-
-      console.log(`Total volume for ${protocol} (client calculation): ${totalVolume.toLocaleString()}`);
-      return totalVolume;
+      const total = result?.total || 0;
+      console.log(`Total volume for ${protocol}: ${total.toLocaleString()}`);
+      return total;
     } catch (error) {
       console.error('Error calculating total volume:', error);
       throw error;
@@ -192,45 +111,53 @@ export class TraderStatsService {
     limit?: number
   ): Promise<TraderStats[]> {
     try {
-      let query = supabase
-        .from('trader_stats')
-        .select('*')
-        .eq('protocol_name', protocol.toLowerCase())
-        .gte('date', format(startDate, 'yyyy-MM-dd'))
-        .lte('date', format(endDate, 'yyyy-MM-dd'))
-        .order('volume_usd', { ascending: false });
+      let sql = `
+        SELECT protocol_name, user_address, volume_usd, date, chain
+        FROM trader_stats
+        WHERE protocol_name = ?
+          AND date >= ?
+          AND date <= ?
+        ORDER BY volume_usd DESC
+      `;
+      const params: any[] = [
+        protocol.toLowerCase(),
+        format(startDate, 'yyyy-MM-dd'),
+        format(endDate, 'yyyy-MM-dd')
+      ];
 
-      // Only apply limit if it's provided
       if (limit !== undefined && limit > 0) {
-        query = query.limit(limit);
+        sql += ` LIMIT ?`;
+        params.push(limit);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data || [];
+      return await db.query<TraderStats>(sql, params);
     } catch (error) {
       console.error('Error fetching trader stats:', error);
       throw error;
     }
   }
 
-  // Get aggregated trader analytics
+  // Get aggregated trader analytics - OPTIMIZED with SQL aggregation
   static async getTraderAnalytics(
     protocol: string,
     startDate: Date,
     endDate: Date
   ): Promise<TraderAnalytics> {
     try {
-      // Get all trader data for the period
-      const { data: traderData, error } = await supabase
-        .from('trader_stats')
-        .select('user_address, volume_usd')
-        .eq('protocol_name', protocol.toLowerCase())
-        .gte('date', format(startDate, 'yyyy-MM-dd'))
-        .lte('date', format(endDate, 'yyyy-MM-dd'));
+      // Get aggregated trader data with volume sums per address
+      const traderData = await db.query<{ user_address: string; volume: number; trade_count: number }>(
+        `SELECT user_address,
+                SUM(volume_usd) as volume,
+                COUNT(*) as trade_count
+         FROM trader_stats
+         WHERE protocol_name = ?
+           AND date >= ?
+           AND date <= ?
+         GROUP BY user_address
+         ORDER BY volume DESC`,
+        [protocol.toLowerCase(), format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')]
+      );
 
-      if (error) throw error;
       if (!traderData || traderData.length === 0) {
         return {
           topTraders: [],
@@ -249,40 +176,28 @@ export class TraderStatsService {
         };
       }
 
-      // Aggregate by trader
-      const traderMap = new Map<string, { volume: number; tradeCount: number }>();
-      let totalVolume = 0;
+      const totalVolume = traderData.reduce((sum, t) => sum + Number(t.volume), 0);
+      const totalTraders = traderData.length;
 
-      traderData.forEach(trade => {
-        const existing = traderMap.get(trade.user_address) || { volume: 0, tradeCount: 0 };
-        existing.volume += trade.volume_usd;
-        existing.tradeCount += 1;
-        traderMap.set(trade.user_address, existing);
-        totalVolume += trade.volume_usd;
-      });
-
-      // Sort traders by volume
-      const sortedTraders = Array.from(traderMap.entries())
-        .map(([address, data]) => ({
-          address,
-          volume: data.volume,
-          tradeCount: data.tradeCount,
-          percentageOfTotal: (data.volume / totalVolume) * 100
-        }))
-        .sort((a, b) => b.volume - a.volume);
+      // Calculate top traders with percentages
+      const topTraders = traderData.slice(0, 20).map(t => ({
+        address: t.user_address,
+        volume: Number(t.volume),
+        tradeCount: Number(t.trade_count),
+        percentageOfTotal: (Number(t.volume) / totalVolume) * 100
+      }));
 
       // Calculate volume distribution
-      const top10Volume = sortedTraders.slice(0, 10).reduce((sum, t) => sum + t.volume, 0);
-      const top50Volume = sortedTraders.slice(0, 50).reduce((sum, t) => sum + t.volume, 0);
-      const top100Volume = sortedTraders.slice(0, 100).reduce((sum, t) => sum + t.volume, 0);
+      const top10Volume = traderData.slice(0, 10).reduce((sum, t) => sum + Number(t.volume), 0);
+      const top50Volume = traderData.slice(0, 50).reduce((sum, t) => sum + Number(t.volume), 0);
+      const top100Volume = traderData.slice(0, 100).reduce((sum, t) => sum + Number(t.volume), 0);
 
       // Categorize traders
-      const totalTraders = sortedTraders.length;
       const whaleThreshold = Math.ceil(totalTraders * 0.01);
       const sharkThreshold = Math.ceil(totalTraders * 0.1);
 
       return {
-        topTraders: sortedTraders.slice(0, 20), // Return top 20
+        topTraders,
         totalUniqueTraders: totalTraders,
         totalVolume,
         volumeDistribution: {
@@ -302,22 +217,18 @@ export class TraderStatsService {
     }
   }
 
-  // Import trader data - TIMEOUT RESISTANT VERSION with RESUME support
+  // Import trader data - OPTIMIZED with batch operations
   static async importTraderData(
     protocol: string,
     date: Date,
     data: Array<{ user: string; volume_usd: number }>,
-    resumeMode: boolean = false // Set to true to resume from existing records
+    resumeMode: boolean = false
   ): Promise<void> {
-    // Optimized for large datasets with timeout resistance
     const isAxiom = protocol.toLowerCase() === 'axiom';
+    const BATCH_SIZE = isAxiom ? 5000 : 10000;
+    const MAX_RETRIES = isAxiom ? 10 : 3;
+    const RETRY_DELAY = isAxiom ? 30000 : 1000;
 
-    // Axiom-specific settings: Smaller batches, more retries, longer delays
-    const BATCH_SIZE = isAxiom ? 5000 : 10000; // 5k for Axiom, 10k for others
-    const MAX_CONCURRENT = 1; // Sequential processing to avoid database overload
-    const MAX_RETRIES = isAxiom ? 10 : 3; // 10 retries for Axiom, 3 for others
-    const RETRY_DELAY = isAxiom ? 30000 : 1000; // 30s delay for Axiom, 1s for others
-    
     try {
       console.log(`\n${'='.repeat(60)}`);
       console.log(`🚀 TRADER STATS IMPORT - ${protocol.toUpperCase()}`);
@@ -325,83 +236,37 @@ export class TraderStatsService {
       console.log(`📅 Date: ${format(date, 'yyyy-MM-dd')}`);
       console.log(`📊 Records to import: ${data.length.toLocaleString()}`);
       console.log(`🔧 Batch size: ${BATCH_SIZE.toLocaleString()}`);
-      console.log(`🚀 Concurrent batches: ${MAX_CONCURRENT} (sequential)`);
       console.log(`📦 Total batches: ${Math.ceil(data.length / BATCH_SIZE)}`);
-      console.log(`🔄 Max retries: ${MAX_RETRIES}`);
-      console.log(`⏱️  Retry delay: ${RETRY_DELAY / 1000}s`);
-      if (isAxiom) {
-        console.log(`⚠️  Axiom mode: Using conservative retry settings for large dataset`);
-      }
       console.log(`${'='.repeat(60)}\n`);
 
-      // Step 1: Check existing data and decide whether to delete or resume
-      const { count: existingCount } = await supabase
-        .from('trader_stats')
-        .select('*', { count: 'exact', head: true })
-        .eq('protocol_name', protocol.toLowerCase());
-
-      console.log(`   - Found ${(existingCount || 0).toLocaleString()} existing records in database`);
+      // Get existing count
+      const existingCount = await this.getTraderStatsCount(protocol);
+      console.log(`   - Found ${existingCount.toLocaleString()} existing records in database`);
 
       let recordsToSkip = 0;
 
-      if (resumeMode && existingCount && existingCount > 0) {
+      if (resumeMode && existingCount > 0) {
         console.log(`🔄 RESUME MODE: Skipping deletion and resuming from record ${existingCount + 1}`);
         recordsToSkip = existingCount;
       } else {
-        // Step 1: Delete ALL existing data for this protocol in batches
+        // Delete existing data for this protocol
         console.log(`🗑️ Step 1: Clearing existing ${protocol} data...`);
 
-      if (existingCount && existingCount > 0) {
-        // Batch delete to avoid timeout - delete 50k at a time using range pagination
-        const DELETE_BATCH_SIZE = 50000;
-        let totalDeleted = 0;
-        let currentOffset = 0;
-
-        while (totalDeleted < existingCount) {
-          // Fetch IDs of next batch using range pagination
-          const { data: batch, error: fetchError } = await supabase
-            .from('trader_stats')
-            .select('id')
-            .eq('protocol_name', protocol.toLowerCase())
-            .range(currentOffset, currentOffset + DELETE_BATCH_SIZE - 1);
-
-          if (fetchError) {
-            console.error('❌ Error fetching batch for deletion:', fetchError);
-            throw fetchError;
-          }
-
-          if (!batch || batch.length === 0) break;
-
-          // Delete this batch by IDs
-          const ids = batch.map(r => r.id);
-          const { error: deleteError, count: deletedCount } = await supabase
-            .from('trader_stats')
-            .delete({ count: 'exact' })
-            .in('id', ids);
-
-          if (deleteError) {
-            console.error('❌ Delete batch operation failed:', deleteError);
-            throw deleteError;
-          }
-
-          totalDeleted += deletedCount || 0;
-          currentOffset += batch.length;
-          console.log(`   🗑️  Deleted ${totalDeleted.toLocaleString()}/${existingCount.toLocaleString()} records (batch of ${batch.length.toLocaleString()})...`);
+        if (existingCount > 0) {
+          // MySQL: Delete all records for this protocol
+          const deleteResult = await db.delete('trader_stats', 'protocol_name = ?', [protocol.toLowerCase()]);
+          console.log(`   ✅ Deleted ${deleteResult.affectedRows.toLocaleString()} records\n`);
+        } else {
+          console.log(`   ✅ No existing records to delete\n`);
         }
-
-        console.log(`   ✅ Deleted ${totalDeleted.toLocaleString()} records\n`);
-      } else {
-        console.log(`   ✅ No existing records to delete\n`);
       }
-      } // End of delete/resume check
 
-      // Step 2: Prepare records (skip already inserted if resuming)
+      // Prepare records
       console.log(`🔧 Step 2: Preparing records...`);
       const chain = traderStatsQueries.find(q => q.protocol === protocol)?.chain || 'solana';
       const dateStr = format(date, 'yyyy-MM-dd');
       const protocolLower = protocol.toLowerCase();
 
-      // Skip records that are already inserted when resuming
       const dataToInsert = recordsToSkip > 0 ? data.slice(recordsToSkip) : data;
       console.log(`   - Total records in source: ${data.length.toLocaleString()}`);
       if (recordsToSkip > 0) {
@@ -409,129 +274,58 @@ export class TraderStatsService {
         console.log(`   - Remaining to insert: ${dataToInsert.length.toLocaleString()}`);
       }
 
-      const records = new Array(dataToInsert.length);
-      for (let i = 0; i < dataToInsert.length; i++) {
-        records[i] = {
-          protocol_name: protocolLower,
-          user_address: dataToInsert[i].user,
-          volume_usd: dataToInsert[i].volume_usd,
-          date: dateStr,
-          chain: chain
-        };
-      }
+      const records = dataToInsert.map(item => ({
+        protocol_name: protocolLower,
+        user_address: item.user,
+        volume_usd: item.volume_usd,
+        date: dateStr,
+        chain: chain
+      }));
 
       console.log(`   ✅ Prepared ${records.length.toLocaleString()} records for insertion\n`);
 
-      // Step 3: Sequential batch insertion with retry logic
-      console.log(`💾 Step 3: Sequential batch insertion...`);
+      // Batch insertion
+      console.log(`💾 Step 3: Batch insertion...`);
       const startTime = Date.now();
       let successCount = 0;
-      
-      // Create batches
-      const batches: any[][] = [];
+
       for (let i = 0; i < records.length; i += BATCH_SIZE) {
-        batches.push(records.slice(i, Math.min(i + BATCH_SIZE, records.length)));
-      }
-      
-      // Timeout-resistant batch processing with retry logic
-      const processBatch = async (batch: any[], batchIndex: number, retryCount: number = 0): Promise<void> => {
-        const batchStart = Date.now();
-        
-        try {
-          // Use minimal options for speed with timeout handling
-          const { error } = await supabase
-            .from('trader_stats')
-            .insert(batch);
+        const batch = records.slice(i, Math.min(i + BATCH_SIZE, records.length));
+        const batchIndex = Math.floor(i / BATCH_SIZE);
+        const totalBatches = Math.ceil(records.length / BATCH_SIZE);
+        let retries = 0;
 
-          if (error) {
-            // Log the error details for debugging
-            console.error(`⚠️  Batch ${batchIndex + 1} error:`, {
-              code: error.code,
-              message: error.message,
-              hint: error.hint,
-              details: error.details
-            });
+        while (retries <= MAX_RETRIES) {
+          try {
+            const batchStart = Date.now();
 
-            // Retry on timeout or other recoverable database errors
-            const isRetryableError =
-              error.code === '57014' || // Query timeout
-              error.code === 'PGRST301' || // Connection timeout
-              error.message?.includes('timeout') ||
-              error.message?.includes('connection') ||
-              error.message?.includes('temporarily unavailable');
+            // MySQL: Batch insert
+            const result = await db.batchInsert('trader_stats', batch);
 
-            if (isRetryableError && retryCount < MAX_RETRIES) {
-              console.log(`⚠️  Batch ${batchIndex + 1} failed (${error.code || 'unknown'}), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
-              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-              return processBatch(batch, batchIndex, retryCount + 1);
+            const batchTime = (Date.now() - batchStart) / 1000;
+            const batchSpeed = Math.round(batch.length / batchTime);
+            successCount += batch.length;
+
+            const retryText = retries > 0 ? ` (retry ${retries})` : '';
+            console.log(`✅ Batch ${batchIndex + 1}/${totalBatches}: ${batch.length.toLocaleString()} records in ${batchTime.toFixed(1)}s (${batchSpeed.toLocaleString()}/s)${retryText} - Total: ${successCount.toLocaleString()}/${records.length.toLocaleString()}`);
+
+            // Add delay between batches for Axiom
+            if (isAxiom && i + BATCH_SIZE < records.length) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
             }
-
-            console.error(`❌ Batch ${batchIndex + 1} failed after ${retryCount} retries:`, error.message);
-            throw error;
+            break;
+          } catch (error: any) {
+            retries++;
+            if (retries <= MAX_RETRIES) {
+              console.log(`⚠️  Batch ${batchIndex + 1} failed, retrying in ${RETRY_DELAY / 1000}s... (${retries}/${MAX_RETRIES})`);
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            } else {
+              throw error;
+            }
           }
-
-          const batchTime = (Date.now() - batchStart) / 1000;
-          const batchSpeed = Math.round(batch.length / batchTime);
-          successCount += batch.length;
-
-          const retryText = retryCount > 0 ? ` (retry ${retryCount})` : '';
-          console.log(`✅ Batch ${batchIndex + 1}/${batches.length}: ${batch.length.toLocaleString()} records in ${batchTime.toFixed(1)}s (${batchSpeed.toLocaleString()}/s)${retryText} - Total: ${successCount.toLocaleString()}/${records.length.toLocaleString()}`);
-
-          // Add small delay between successful batches for Axiom to prevent overload
-          if (isAxiom && batchIndex < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 2s between batches
-          }
-        } catch (error: any) {
-          // Log the error details for debugging
-          console.error(`⚠️  Batch ${batchIndex + 1} exception:`, {
-            code: error.code,
-            message: error.message,
-            name: error.name,
-            stack: error.stack?.split('\n')[0]
-          });
-
-          // Retry on timeout or other recoverable errors
-          const isRetryableError =
-            error.code === '57014' || // Query timeout
-            error.code === 'PGRST301' || // Connection timeout
-            error.message?.includes('timeout') ||
-            error.message?.includes('connection') ||
-            error.message?.includes('temporarily unavailable') ||
-            error.message?.includes('ECONNRESET') ||
-            error.message?.includes('ETIMEDOUT');
-
-          if (isRetryableError && retryCount < MAX_RETRIES) {
-            console.log(`⚠️  Batch ${batchIndex + 1} exception (${error.code || error.name}), retrying in ${RETRY_DELAY / 1000}s... (${retryCount + 1}/${MAX_RETRIES})`);
-            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-            return processBatch(batch, batchIndex, retryCount + 1);
-          }
-          throw error;
-        }
-      };
-
-      // Sequential batch processing (MAX_CONCURRENT = 1 ensures one batch at a time)
-      let completedBatches = 0;
-      let activeBatches = new Set<Promise<void>>();
-
-      for (let i = 0; i < batches.length; i++) {
-        // Create batch promise
-        const batchPromise = processBatch(batches[i], i).then(() => {
-          completedBatches++;
-          activeBatches.delete(batchPromise);
-        });
-
-        activeBatches.add(batchPromise);
-
-        // Control concurrency - with MAX_CONCURRENT=1, this ensures sequential processing
-        if (activeBatches.size >= MAX_CONCURRENT) {
-          // Wait for current batch to complete before starting next one
-          await Promise.race(Array.from(activeBatches));
         }
       }
 
-      // Wait for any remaining batches to complete
-      await Promise.all(Array.from(activeBatches));
-      
       const duration = (Date.now() - startTime) / 1000;
       const speed = Math.round(successCount / duration);
 
@@ -539,7 +333,6 @@ export class TraderStatsService {
       console.log(`   ✅ Successfully imported: ${successCount.toLocaleString()} records`);
       console.log(`   ⌚ Total time: ${duration.toFixed(1)} seconds`);
       console.log(`   🚀 Speed: ${speed.toLocaleString()} records/second`);
-      
       console.log(`\n✅ Import completed for ${protocol}\n${'='.repeat(60)}\n`);
     } catch (error) {
       console.error('Error importing trader data:', error);
@@ -547,21 +340,27 @@ export class TraderStatsService {
     }
   }
 
-  // Get top traders across all protocols
+  // Get top traders across all protocols - requires stored procedure or complex query
   static async getTopTradersAcrossProtocols(
     startDate: Date,
     endDate: Date,
     limit: number = 50
   ): Promise<any[]> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_top_traders_across_protocols', {
-          start_date: format(startDate, 'yyyy-MM-dd'),
-          end_date: format(endDate, 'yyyy-MM-dd'),
-          limit_count: limit
-        });
+      // MySQL: Aggregate across protocols and get top traders
+      const data = await db.query<any>(
+        `SELECT user_address,
+                SUM(volume_usd) as total_volume,
+                COUNT(DISTINCT protocol_name) as protocol_count,
+                GROUP_CONCAT(DISTINCT protocol_name) as protocols
+         FROM trader_stats
+         WHERE date >= ? AND date <= ?
+         GROUP BY user_address
+         ORDER BY total_volume DESC
+         LIMIT ?`,
+        [format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd'), limit]
+      );
 
-      if (error) throw error;
       return data || [];
     } catch (error) {
       console.error('Error fetching top traders across protocols:', error);
@@ -569,99 +368,35 @@ export class TraderStatsService {
     }
   }
 
-  // Get pre-calculated percentiles from database
-  static async getProtocolPercentiles(protocol: string): Promise<any[]> {
-    try {
-      const { data, error } = await supabase
-        .from('protocol_percentiles')
-        .select('*')
-        .eq('protocol_name', protocol.toLowerCase())
-        .order('percentile', { ascending: true });
-
-      if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        console.log(`No pre-calculated percentiles found for ${protocol}, triggering refresh...`);
-        await this.refreshProtocolPercentiles(protocol);
-        
-        // Try again after refresh
-        const { data: refreshedData, error: refreshError } = await supabase
-          .from('protocol_percentiles')
-          .select('*')
-          .eq('protocol_name', protocol.toLowerCase())
-          .order('percentile', { ascending: true });
-        
-        if (refreshError) throw refreshError;
-        return refreshedData || [];
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching protocol percentiles:', error);
-      throw error;
-    }
-  }
-
-  // Refresh percentiles for a protocol using SQL function
-  static async refreshProtocolPercentiles(protocol: string): Promise<void> {
-    try {
-      console.log(`Refreshing percentiles for ${protocol}...`);
-      
-      const { error } = await supabase.rpc('refresh_protocol_percentiles', {
-        protocol_name_param: protocol.toLowerCase()
-      });
-      
-      if (error) throw error;
-      console.log(`Successfully refreshed percentiles for ${protocol}`);
-    } catch (error) {
-      console.error('Error refreshing protocol percentiles:', error);
-      throw error;
-    }
-  }
-
-  // Check if percentiles need refresh (older than 1 hour)
-  static async shouldRefreshPercentiles(protocol: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase
-        .from('protocol_percentiles')
-        .select('calculated_at')
-        .eq('protocol_name', protocol.toLowerCase())
-        .order('calculated_at', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        return true; // No data exists, need refresh
-      }
-      
-      const lastCalculated = new Date(data[0].calculated_at);
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      
-      return lastCalculated < oneHourAgo;
-    } catch (error) {
-      console.error('Error checking percentile refresh status:', error);
-      return true; // Err on the side of refreshing
-    }
-  }
-
-  // Get comprehensive stats using optimized SQL function
+  // Get comprehensive stats using optimized SQL - REPLACES RPC function
   static async getComprehensiveProtocolStats(protocol: string): Promise<any> {
     try {
       console.log(`🚀 Getting comprehensive stats for ${protocol} using optimized SQL...`);
-      
-      // Use the optimized SQL function that calculates everything in one query
-      const { data: statsResult, error: statsError } = await supabase
-        .rpc('get_comprehensive_protocol_stats', { 
-          protocol_name_param: protocol.toLowerCase() 
-        });
 
-      if (statsError) {
-        console.log('SQL function not available, falling back to calculation method');
-        throw statsError;
-      }
+      // MySQL: Single optimized query with window functions
+      const result = await db.queryOne<any>(
+        `SELECT
+           COUNT(*) as total_traders,
+           SUM(volume_usd) as total_volume,
+           AVG(volume_usd) as avg_volume_per_trader,
+           (SELECT SUM(volume_usd) FROM (
+             SELECT volume_usd FROM trader_stats
+             WHERE protocol_name = ?
+             ORDER BY volume_usd DESC
+             LIMIT CEIL(COUNT(*) * 0.01)
+           ) top1) as top_1_percent_volume,
+           (SELECT SUM(volume_usd) FROM (
+             SELECT volume_usd FROM trader_stats
+             WHERE protocol_name = ?
+             ORDER BY volume_usd DESC
+             LIMIT CEIL(COUNT(*) * 0.05)
+           ) top5) as top_5_percent_volume
+         FROM trader_stats
+         WHERE protocol_name = ?`,
+        [protocol.toLowerCase(), protocol.toLowerCase(), protocol.toLowerCase()]
+      );
 
-      if (!statsResult || statsResult.length === 0) {
+      if (!result || result.total_traders === 0) {
         console.log(`No data found for ${protocol}`);
         return {
           totalTraders: 0,
@@ -676,19 +411,66 @@ export class TraderStatsService {
         };
       }
 
-      const stats = statsResult[0];
-      console.log(`✅ Comprehensive stats calculated for ${protocol}: ${stats.total_traders} traders, $${parseFloat(stats.total_volume).toLocaleString()} total volume`);
+      // Get percentile values using separate queries
+      const totalTraders = parseInt(result.total_traders);
+      const totalVolume = parseFloat(result.total_volume);
+      const top1Count = Math.ceil(totalTraders * 0.01);
+      const top5Count = Math.ceil(totalTraders * 0.05);
+
+      // Get top 1% volume
+      const top1Data = await db.query<{ volume_usd: number }>(
+        `SELECT volume_usd FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT ?`,
+        [protocol.toLowerCase(), top1Count]
+      );
+      const top1Volume = top1Data.reduce((sum, r) => sum + Number(r.volume_usd), 0);
+
+      // Get top 5% volume
+      const top5Data = await db.query<{ volume_usd: number }>(
+        `SELECT volume_usd FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT ?`,
+        [protocol.toLowerCase(), top5Count]
+      );
+      const top5Volume = top5Data.reduce((sum, r) => sum + Number(r.volume_usd), 0);
+
+      // Get percentile values
+      const p99Index = Math.floor(totalTraders * 0.01);
+      const p95Index = Math.floor(totalTraders * 0.05);
+
+      const percentileData = await db.query<{ volume_usd: number }>(
+        `SELECT volume_usd FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT 1 OFFSET ?`,
+        [protocol.toLowerCase(), p99Index]
+      );
+      const percentile99Volume = percentileData[0]?.volume_usd || 0;
+
+      const percentile95Data = await db.query<{ volume_usd: number }>(
+        `SELECT volume_usd FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT 1 OFFSET ?`,
+        [protocol.toLowerCase(), p95Index]
+      );
+      const percentile95Volume = percentile95Data[0]?.volume_usd || 0;
+
+      console.log(`✅ Comprehensive stats calculated for ${protocol}: ${totalTraders} traders, $${totalVolume.toLocaleString()} total volume`);
 
       return {
-        totalTraders: parseInt(stats.total_traders),
-        totalVolume: parseFloat(stats.total_volume),
-        avgVolumePerTrader: parseFloat(stats.avg_volume_per_trader),
-        top1PercentVolume: parseFloat(stats.top_1_percent_volume),
-        top5PercentVolume: parseFloat(stats.top_5_percent_volume),
-        percentile99Volume: parseFloat(stats.percentile_99_volume),
-        percentile95Volume: parseFloat(stats.percentile_95_volume),
-        top1PercentShare: parseFloat(stats.top_1_percent_share),
-        top5PercentShare: parseFloat(stats.top_5_percent_share)
+        totalTraders,
+        totalVolume,
+        avgVolumePerTrader: parseFloat(result.avg_volume_per_trader) || 0,
+        top1PercentVolume: top1Volume,
+        top5PercentVolume: top5Volume,
+        percentile99Volume: parseFloat(String(percentile99Volume)),
+        percentile95Volume: parseFloat(String(percentile95Volume)),
+        top1PercentShare: totalVolume > 0 ? (top1Volume / totalVolume) * 100 : 0,
+        top5PercentShare: totalVolume > 0 ? (top5Volume / totalVolume) * 100 : 0
       };
     } catch (error) {
       console.error('Error getting comprehensive protocol stats:', error);
@@ -696,32 +478,64 @@ export class TraderStatsService {
     }
   }
 
-  // Get percentile brackets using optimized SQL function
+  // Get percentile brackets using optimized SQL
   static async getOptimizedPercentileBrackets(protocol: string): Promise<any[]> {
     try {
       console.log(`🚀 Getting percentile brackets for ${protocol} using optimized SQL...`);
-      
-      const { data: bracketsResult, error: bracketsError } = await supabase
-        .rpc('get_protocol_percentile_brackets', { 
-          protocol_name_param: protocol.toLowerCase() 
-        });
 
-      if (bracketsError) {
-        console.log('SQL function not available, falling back to calculation method');
-        throw bracketsError;
-      }
+      // Get total count first
+      const totalResult = await db.queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM trader_stats WHERE protocol_name = ?`,
+        [protocol.toLowerCase()]
+      );
+      const totalTraders = totalResult?.count || 0;
 
-      if (!bracketsResult || bracketsResult.length === 0) {
+      if (totalTraders === 0) {
         console.log(`No percentile data found for ${protocol}`);
         return [];
       }
 
-      console.log(`✅ Percentile brackets calculated for ${protocol}: ${bracketsResult.length} brackets`);
+      // MySQL: Calculate percentile brackets using CASE
+      const brackets = await db.query<any>(
+        `WITH ranked AS (
+           SELECT volume_usd,
+                  ROW_NUMBER() OVER (ORDER BY volume_usd DESC) as rn,
+                  COUNT(*) OVER () as total
+           FROM trader_stats
+           WHERE protocol_name = ?
+         )
+         SELECT
+           CASE
+             WHEN rn <= total * 0.01 THEN 99
+             WHEN rn <= total * 0.05 THEN 95
+             WHEN rn <= total * 0.10 THEN 90
+             WHEN rn <= total * 0.25 THEN 75
+             WHEN rn <= total * 0.50 THEN 50
+             ELSE 0
+           END as percentile,
+           COUNT(*) as trader_count,
+           SUM(volume_usd) as volume,
+           SUM(volume_usd) / (SELECT SUM(volume_usd) FROM trader_stats WHERE protocol_name = ?) * 100 as volume_share
+         FROM ranked
+         GROUP BY
+           CASE
+             WHEN rn <= total * 0.01 THEN 99
+             WHEN rn <= total * 0.05 THEN 95
+             WHEN rn <= total * 0.10 THEN 90
+             WHEN rn <= total * 0.25 THEN 75
+             WHEN rn <= total * 0.50 THEN 50
+             ELSE 0
+           END
+         ORDER BY percentile DESC`,
+        [protocol.toLowerCase(), protocol.toLowerCase()]
+      );
 
-      return bracketsResult.map((bracket: any) => ({
+      console.log(`✅ Percentile brackets calculated for ${protocol}: ${brackets.length} brackets`);
+
+      return brackets.map((bracket: any) => ({
         percentile: parseInt(bracket.percentile),
         traderCount: parseInt(bracket.trader_count),
-        rankRange: bracket.rank_range,
+        rankRange: `Top ${100 - bracket.percentile}%`,
         volume: parseFloat(bracket.volume),
         volumeShare: parseFloat(bracket.volume_share)
       }));
@@ -731,7 +545,7 @@ export class TraderStatsService {
     }
   }
 
-  // Get paginated traders with pre-calculated stats using optimized SQL
+  // Get paginated traders with pre-calculated stats - OPTIMIZED with window functions
   static async getOptimizedTradersPaginated(
     protocol: string,
     page: number,
@@ -739,27 +553,29 @@ export class TraderStatsService {
   ): Promise<any[]> {
     try {
       console.log(`🚀 Getting paginated traders for ${protocol} (page ${page}, limit ${limit}) using optimized SQL...`);
-      
-      const { data: tradersResult, error: tradersError } = await supabase
-        .rpc('get_top_traders_with_stats', { 
-          protocol_name_param: protocol.toLowerCase(),
-          page_num: page,
-          page_size: limit
-        });
 
-      if (tradersError) {
-        console.log('SQL function not available, falling back to regular pagination');
-        throw tradersError;
-      }
+      const offset = (page - 1) * limit;
 
-      if (!tradersResult) {
-        console.log(`No trader data found for ${protocol}`);
-        return [];
-      }
+      // MySQL: Use window functions for rank and volume share
+      const data = await db.query<any>(
+        `SELECT
+           protocol_name,
+           user_address,
+           volume_usd,
+           date,
+           chain,
+           ROW_NUMBER() OVER (ORDER BY volume_usd DESC) as \`rank\`,
+           volume_usd / (SELECT SUM(volume_usd) FROM trader_stats WHERE protocol_name = ?) * 100 as volume_share
+         FROM trader_stats
+         WHERE protocol_name = ?
+         ORDER BY volume_usd DESC
+         LIMIT ? OFFSET ?`,
+        [protocol.toLowerCase(), protocol.toLowerCase(), limit, offset]
+      );
 
-      console.log(`✅ Retrieved ${tradersResult.length} traders for ${protocol} page ${page}`);
+      console.log(`✅ Retrieved ${data.length} traders for ${protocol} page ${page}`);
 
-      return tradersResult.map((trader: any) => ({
+      return data.map((trader: any) => ({
         protocol_name: trader.protocol_name,
         user_address: trader.user_address,
         volume_usd: parseFloat(trader.volume_usd),
@@ -777,41 +593,26 @@ export class TraderStatsService {
   // Get row counts for all protocols
   static async getAllProtocolRowCounts(): Promise<Record<string, number>> {
     try {
-      const { data, error } = await supabase
-        .from('trader_stats')
-        .select('protocol_name')
-        .then(async ({ data, error }) => {
-          if (error) throw error;
+      // MySQL: Group by protocol_name for counts
+      const data = await db.query<{ protocol_name: string; count: number }>(
+        `SELECT protocol_name, COUNT(*) as count
+         FROM trader_stats
+         GROUP BY protocol_name`
+      );
 
-          // Count records by protocol
-          const counts: Record<string, number> = {};
-          const protocols = ['photon', 'axiom', 'bloom', 'trojan'];
+      const counts: Record<string, number> = {};
+      data.forEach(row => {
+        counts[row.protocol_name] = row.count;
+      });
 
-          for (const protocol of protocols) {
-            const { count, error: countError } = await supabase
-              .from('trader_stats')
-              .select('*', { count: 'exact', head: true })
-              .eq('protocol_name', protocol);
-
-            if (!countError) {
-              counts[protocol] = count || 0;
-            } else {
-              counts[protocol] = 0;
-            }
-          }
-
-          return { data: counts, error: null };
-        });
-
-      if (error) throw error;
-      return data || {};
+      return counts;
     } catch (error) {
       console.error('Error getting protocol row counts:', error);
       return {};
     }
   }
 
-  // Get volume range distribution for a protocol
+  // Get volume range distribution - OPTIMIZED with CASE statement
   static async getVolumeRanges(protocol: string): Promise<VolumeRangeData[]> {
     try {
       console.log(`Calculating volume ranges for ${protocol}...`);
@@ -823,20 +624,15 @@ export class TraderStatsService {
         };
 
         if (max === null) {
-          // Greater than case
           return `Greater than ${formatNumber(min)}`;
         } else if (min === 0) {
-          // Less than case
           return `Less than ${formatNumber(max)}`;
         } else {
-          // Between case
           return `${formatNumber(min)} - ${formatNumber(max)}`;
         }
       };
 
-      // Define volume ranges with descriptive labels (highest to lowest)
-      // Cumulative "Greater than" ranges first, then bounded ranges
-      // All ranges exclude traders with volume < $10k
+      // Define volume ranges
       const ranges = [
         { label: formatRangeLabel(5000000, null), shortLabel: '5m+', min: 5000000, max: null },
         { label: formatRangeLabel(4000000, null), shortLabel: '4m+', min: 4000000, max: null },
@@ -855,17 +651,15 @@ export class TraderStatsService {
         { label: formatRangeLabel(10000, 50000), shortLabel: '10k-50k', min: 10000, max: 50000 }
       ];
 
-      // Get total trader count for the protocol (using COUNT for efficiency)
-      // Exclude traders with volume < $10k
-      const { count: totalTraders, error: countError } = await supabase
-        .from('trader_stats')
-        .select('*', { count: 'exact', head: true })
-        .eq('protocol_name', protocol.toLowerCase())
-        .gte('volume_usd', 10000);
+      // MySQL: Get total traders (excluding < $10k)
+      const totalResult = await db.queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM trader_stats
+         WHERE protocol_name = ? AND volume_usd >= 10000`,
+        [protocol.toLowerCase()]
+      );
+      const totalTraders = totalResult?.count || 0;
 
-      if (countError) throw countError;
-
-      if (!totalTraders || totalTraders === 0) {
+      if (totalTraders === 0) {
         return ranges.map(r => ({
           rangeLabel: r.label,
           shortLabel: r.shortLabel,
@@ -880,29 +674,19 @@ export class TraderStatsService {
 
       console.log(`Total traders for ${protocol}: ${totalTraders.toLocaleString()}`);
 
-      // Calculate stats for each range using COUNT queries only (fast)
-      // Volume data is not displayed in UI, so we skip expensive volume sum queries
-      // All queries exclude traders with volume < $10k
-      const rangeData = await Promise.all(ranges.map(async (range) => {
-        // Build COUNT query for this range
-        // Note: range.min is always >= 10000, so the .gte filter is redundant but kept for clarity
-        let countQuery = supabase
-          .from('trader_stats')
-          .select('*', { count: 'exact', head: true })
-          .eq('protocol_name', protocol.toLowerCase())
-          .gte('volume_usd', range.min);
+      // MySQL: Calculate counts for each range in parallel
+      const rangePromises = ranges.map(async (range) => {
+        let sql = `SELECT COUNT(*) as count FROM trader_stats
+                   WHERE protocol_name = ? AND volume_usd >= ?`;
+        const params: any[] = [protocol.toLowerCase(), range.min];
 
-        // Add upper bound if not the highest range
         if (range.max !== null) {
-          countQuery = countQuery.lt('volume_usd', range.max);
+          sql += ` AND volume_usd < ?`;
+          params.push(range.max);
         }
 
-        // Execute COUNT query only
-        const { count, error } = await countQuery;
-
-        if (error) throw error;
-
-        const traderCount = count || 0;
+        const result = await db.queryOne<{ count: number }>(sql, params);
+        const traderCount = result?.count || 0;
 
         return {
           rangeLabel: range.label,
@@ -914,7 +698,9 @@ export class TraderStatsService {
           volumeShare: 0, // Not displayed in UI
           traderShare: 0  // Not displayed in UI
         };
-      }));
+      });
+
+      const rangeData = await Promise.all(rangePromises);
 
       console.log(`Volume ranges calculated for ${protocol}: ${rangeData.length} ranges`);
       return rangeData;
@@ -924,7 +710,7 @@ export class TraderStatsService {
     }
   }
 
-  // Get traders in a specific volume range for CSV export with proper pagination
+  // Get traders in a specific volume range for CSV export
   static async getTradersInVolumeRange(
     protocol: string,
     minVolume: number,
@@ -937,62 +723,23 @@ export class TraderStatsService {
       console.log(`Fetching traders in volume range for ${protocol}...`);
       console.log(`  Min: ${effectiveMinVolume.toLocaleString()}, Max: ${maxVolume ? maxVolume.toLocaleString() : 'unlimited'}`);
 
-      // Step 1: Get total count of traders in this range
-      let countQuery = supabase
-        .from('trader_stats')
-        .select('*', { count: 'exact', head: true })
-        .eq('protocol_name', protocol.toLowerCase())
-        .gte('volume_usd', effectiveMinVolume);
+      // MySQL: Direct query - no pagination needed for export
+      let sql = `SELECT user_address, volume_usd
+                 FROM trader_stats
+                 WHERE protocol_name = ? AND volume_usd >= ?`;
+      const params: any[] = [protocol.toLowerCase(), effectiveMinVolume];
 
       if (maxVolume !== null) {
-        countQuery = countQuery.lt('volume_usd', maxVolume);
+        sql += ` AND volume_usd < ?`;
+        params.push(maxVolume);
       }
 
-      const { count, error: countError } = await countQuery;
-      if (countError) throw countError;
+      sql += ` ORDER BY volume_usd DESC`;
 
-      const totalTraders = count || 0;
-      console.log(`  Total traders in range: ${totalTraders.toLocaleString()}`);
+      const data = await db.query<{ user_address: string; volume_usd: number }>(sql, params);
 
-      if (totalTraders === 0) {
-        return [];
-      }
-
-      // Step 2: Fetch all traders in batches (Supabase pagination limit is 1000)
-      const BATCH_SIZE = 1000;
-      const allTraders: { user_address: string; volume_usd: number }[] = [];
-      let offset = 0;
-
-      console.log(`  Fetching in batches of ${BATCH_SIZE}...`);
-
-      while (offset < totalTraders) {
-        let batchQuery = supabase
-          .from('trader_stats')
-          .select('user_address, volume_usd')
-          .eq('protocol_name', protocol.toLowerCase())
-          .gte('volume_usd', effectiveMinVolume)
-          .order('volume_usd', { ascending: false })
-          .range(offset, offset + BATCH_SIZE - 1);
-
-        if (maxVolume !== null) {
-          batchQuery = batchQuery.lt('volume_usd', maxVolume);
-        }
-
-        const { data, error } = await batchQuery;
-
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-
-        allTraders.push(...data);
-        offset += BATCH_SIZE;
-
-        const batchNumber = Math.ceil(offset / BATCH_SIZE);
-        const totalBatches = Math.ceil(totalTraders / BATCH_SIZE);
-        console.log(`    ✓ Batch ${batchNumber}/${totalBatches}: ${data.length} records (Total: ${allTraders.length}/${totalTraders})`);
-      }
-
-      console.log(`  ✅ Retrieved all ${allTraders.length.toLocaleString()} traders for CSV export\n`);
-      return allTraders;
+      console.log(`  ✅ Retrieved ${data.length.toLocaleString()} traders for CSV export\n`);
+      return data;
     } catch (error) {
       console.error('Error fetching traders in volume range:', error);
       throw error;

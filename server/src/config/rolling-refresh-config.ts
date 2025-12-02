@@ -58,7 +58,7 @@ export const ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource> = {
   // EVM Protocols - Telegram Bots
   'sigma_evm': { queryIds: [6169799], chain: 'evm' },
   // 'maestro_evm': { queryIds: [], chain: 'evm' },
-  // 'bloom_evm': { queryIds: [], chain: 'evm' },
+  'bloom_evm': { queryIds: [6169647], chain: 'evm' },
   'banana_evm': { queryIds: [6169564], chain: 'evm' },
 
   // EVM Protocols - Trading Terminals

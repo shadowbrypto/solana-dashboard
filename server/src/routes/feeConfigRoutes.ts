@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PROTOCOL_FEES, getProtocolFee, getProtocolsWithFees } from '../config/fee-config.js';
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 
 const router = Router();
 
@@ -41,31 +41,32 @@ router.get('/net-fees', async (req: Request, res: Response) => {
     console.log(`All other protocols use both fees_usd and volume_usd from protocol_stats (private data)`);
 
     // Query projected_stats for fees_usd (only for bonkbot, telemetry, and banana)
-    const { data: projectedStatsData, error: projectedStatsError } = await supabase
-      .from('projected_stats')
-      .select('protocol_name, fees_usd, formatted_day')
-      .gte('formatted_day', startDate)
-      .lte('formatted_day', endDate)
-      .order('protocol_name');
-
-    if (projectedStatsError) {
-      throw projectedStatsError;
-    }
+    const projectedStatsData = await db.query<{
+      protocol_name: string;
+      fees_usd: number;
+      formatted_day: string;
+    }>(`
+      SELECT protocol_name, fees_usd, formatted_day
+      FROM projected_stats
+      WHERE formatted_day >= ? AND formatted_day <= ?
+      ORDER BY protocol_name
+    `, [startDate, endDate]);
 
     // Query protocol_stats for volume_usd (all protocols) and fees_usd (all except bonkbot/telemetry/banana)
-    const { data: protocolStatsData, error: protocolStatsError } = await supabase
-      .from('protocol_stats')
-      .select('protocol_name, volume_usd, fees_usd, date')
-      .eq('data_type', 'private') // Use private data from rolling refresh
-      .eq('chain', 'solana') // Solana chain only
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .gt('volume_usd', 0) // Exclude zero-volume days
-      .order('protocol_name');
-
-    if (protocolStatsError) {
-      throw protocolStatsError;
-    }
+    const protocolStatsData = await db.query<{
+      protocol_name: string;
+      volume_usd: number;
+      fees_usd: number;
+      date: string;
+    }>(`
+      SELECT protocol_name, volume_usd, fees_usd, date
+      FROM protocol_stats
+      WHERE data_type = 'private'
+        AND chain = 'solana'
+        AND date >= ? AND date <= ?
+        AND volume_usd > 0
+      ORDER BY protocol_name
+    `, [startDate, endDate]);
 
     console.log(`Found ${projectedStatsData?.length || 0} records from projected_stats (fees for bonkbot/telemetry/banana)`);
     console.log(`Found ${protocolStatsData?.length || 0} records from protocol_stats (volume + fees)`);

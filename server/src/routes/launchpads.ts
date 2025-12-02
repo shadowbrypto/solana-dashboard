@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 
 const router = express.Router();
@@ -34,14 +34,14 @@ router.get('/metrics', async (req, res) => {
       });
     }
 
-    let query = supabase
-      .from('launchpad_stats')
-      .select('*')
-      .order('date', { ascending: true });
+    // Build query conditions
+    const conditions: string[] = [];
+    const params: any[] = [];
 
     // Apply launchpad filter
     if (launchpad && launchpad !== 'all') {
-      query = query.eq('launchpad_name', launchpad);
+      conditions.push('launchpad_name = ?');
+      params.push(launchpad);
     }
 
     // Apply date range - fetch all data if all=true, otherwise apply timeframe/date filters
@@ -49,11 +49,12 @@ router.get('/metrics', async (req, res) => {
       // Fetch all data without date restrictions for lifetime metrics
       console.log('Fetching all launchpad data for lifetime metrics');
     } else if (startDate && endDate) {
-      query = query.gte('date', startDate).lte('date', endDate);
+      conditions.push('date >= ? AND date <= ?');
+      params.push(startDate, endDate);
     } else if (timeframe) {
       const endDateCalc = new Date();
       const startDateCalc = new Date();
-      
+
       switch (timeframe) {
         case '7d':
           startDateCalc.setDate(startDateCalc.getDate() - 7);
@@ -81,33 +82,21 @@ router.get('/metrics', async (req, res) => {
       }
 
       if (timeframe !== 'all') {
-        query = query.gte('date', format(startDateCalc, 'yyyy-MM-dd'))
-                    .lte('date', format(endDateCalc, 'yyyy-MM-dd'));
+        conditions.push('date >= ? AND date <= ?');
+        params.push(format(startDateCalc, 'yyyy-MM-dd'), format(endDateCalc, 'yyyy-MM-dd'));
       }
     }
 
-    // Use pagination to fetch all data if needed
-    let allData: any[] = [];
-    let from = 0;
-    const limit = 1000; // Supabase limit per request
-    let hasMore = true;
+    // Build and execute query
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const sql = `SELECT * FROM launchpad_stats ${whereClause} ORDER BY date ASC`;
 
-    while (hasMore) {
-      const paginatedQuery = query.range(from, from + limit - 1);
-      const { data, error } = await paginatedQuery;
-
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        allData = allData.concat(data);
-        hasMore = data.length === limit;
-        from += limit;
-      } else {
-        hasMore = false;
-      }
-    }
+    const allData = await db.query<{
+      date: string;
+      launchpad_name: string;
+      launches: number;
+      graduations: number;
+    }>(sql, params);
 
     console.log(`Fetched ${allData.length} launchpad records for ${launchpad || 'all'} with timeframe ${timeframe || 'default'}`);
 
@@ -185,23 +174,24 @@ router.get('/daily/:launchpad', async (req, res) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from('launchpad_stats')
-      .select('*')
-      .eq('launchpad_name', launchpad)
-      .eq('date', dateStr)
-      .single();
+    const data = await db.query<{
+      date: string;
+      launchpad_name: string;
+      launches: number;
+      graduations: number;
+    }>(`
+      SELECT * FROM launchpad_stats
+      WHERE launchpad_name = ? AND date = ?
+      LIMIT 1
+    `, [launchpad, dateStr]);
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-      throw error;
-    }
-
-    const result = data ? {
-      date: data.date,
-      launchpad_name: data.launchpad_name,
-      launches: parseInt(data.launches) || 0,
-      graduations: parseInt(data.graduations) || 0,
-      total: (parseInt(data.launches) || 0) + (parseInt(data.graduations) || 0)
+    const row = data[0];
+    const result = row ? {
+      date: row.date,
+      launchpad_name: row.launchpad_name,
+      launches: Number(row.launches) || 0,
+      graduations: Number(row.graduations) || 0,
+      total: (Number(row.launches) || 0) + (Number(row.graduations) || 0)
     } : {
       date: dateStr,
       launchpad_name: launchpad,
@@ -245,15 +235,11 @@ router.get('/list', async (req, res) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from('launchpad_stats')
-      .select('launchpad_name');
+    const data = await db.query<{ launchpad_name: string }>(`
+      SELECT DISTINCT launchpad_name FROM launchpad_stats
+    `);
 
-    if (error) {
-      throw error;
-    }
-
-    const launchpads = [...new Set(data?.map((row: { launchpad_name: string }) => row.launchpad_name) || [])];
+    const launchpads = data.map(row => row.launchpad_name);
 
     // Cache the result
     launchpadCache.set(cacheKey, {
@@ -290,40 +276,35 @@ router.get('/latest-dates', async (req, res) => {
       });
     }
 
-    // Get the latest date for each launchpad
-    const { data, error } = await supabase
-      .from('launchpad_stats')
-      .select('launchpad_name, date')
-      .order('date', { ascending: false });
+    // Get the latest date for each launchpad using SQL GROUP BY
+    const data = await db.query<{
+      launchpad_name: string;
+      latest_date: string;
+    }>(`
+      SELECT launchpad_name, MAX(date) as latest_date
+      FROM launchpad_stats
+      GROUP BY launchpad_name
+    `);
 
-    if (error) {
-      throw error;
-    }
-
-    // Group by launchpad and get the latest date for each
-    const latestDatesMap = new Map();
+    // Calculate days behind for each launchpad
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
-    data?.forEach((row: { launchpad_name: string; date: string }) => {
-      if (!latestDatesMap.has(row.launchpad_name)) {
-        const latestDate = new Date(row.date);
-        latestDate.setHours(0, 0, 0, 0);
-        
-        // Calculate days behind
-        const timeDiff = currentDate.getTime() - latestDate.getTime();
-        const daysBehind = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-        
-        latestDatesMap.set(row.launchpad_name, {
-          launchpad_name: row.launchpad_name,
-          latest_date: row.date,
-          is_current: daysBehind <= 1, // Consider current if within 1 day
-          days_behind: Math.max(0, daysBehind)
-        });
-      }
-    });
+    const result = data.map(row => {
+      const latestDate = new Date(row.latest_date);
+      latestDate.setHours(0, 0, 0, 0);
 
-    const result = Array.from(latestDatesMap.values());
+      // Calculate days behind
+      const timeDiff = currentDate.getTime() - latestDate.getTime();
+      const daysBehind = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+      return {
+        launchpad_name: row.launchpad_name,
+        latest_date: row.latest_date,
+        is_current: daysBehind <= 1, // Consider current if within 1 day
+        days_behind: Math.max(0, daysBehind)
+      };
+    });
 
     // Cache the result
     launchpadCache.set(cacheKey, {

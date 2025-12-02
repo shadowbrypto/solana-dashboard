@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
 import { isSolanaProtocol } from '../config/chainProtocols.js';
@@ -54,9 +54,8 @@ const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "vyper": { queryIds: [5284061], chain: 'solana' },
   "opensea": { queryIds: [5910228], chain: 'solana' },
   "phantom": { queryIds: [6229269], chain: 'solana' },
-  
-  // Ethereum protocols - add your protocols here
-  // Example:
+
+  // Ethereum protocols
   "sigma_evm": { queryIds: [5430634], chain: 'evm' },
   "maestro_evm": { queryIds: [3832557], chain: 'evm' },
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
@@ -100,9 +99,8 @@ const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "vyper": { queryIds: [5284061], chain: 'solana' },
   "opensea": { queryIds: [5910228], chain: 'solana' },
   "phantom": { queryIds: [6229269], chain: 'solana' },
-  
-  // Ethereum protocols - add your protocols here
-  // Example:
+
+  // Ethereum protocols
   "sigma_evm": { queryIds: [5430634], chain: 'evm' },
   "maestro_evm": { queryIds: [3832557], chain: 'evm' },
   "bloom_evm": { queryIds: [4824799], chain: 'evm' },
@@ -161,7 +159,7 @@ interface SyncResult {
 }
 
 export class DataManagementService {
-  
+
   /**
    * Sync data for a specific protocol
    */
@@ -203,7 +201,7 @@ export class DataManagementService {
       if (!protocolConfig) {
         throw new Error(`No configuration found for protocol '${protocolName}'`);
       }
-      
+
       // Check if this is an EVM protocol
       if (protocolConfig.chain === 'evm') {
         // Delegate to simple EVM migration service (no multiple files)
@@ -211,7 +209,7 @@ export class DataManagementService {
 
         const { simpleEVMDataMigrationService } = await import('./evmDataMigrationServiceSimple.js');
         const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName, effectiveDataType);
-        
+
         // Convert simple EVM result format to standard SyncResult format
         return {
           success: evmResult.success,
@@ -239,7 +237,7 @@ export class DataManagementService {
 
       // Step 1: Download CSV file for the specific protocol
       const downloadResult = await this.downloadProtocolData(protocolName, protocolConfig.queryIds);
-      
+
       if (!downloadResult.success) {
         throw new Error(`Failed to download data for ${protocolName}: ${downloadResult.error}`);
       }
@@ -248,7 +246,7 @@ export class DataManagementService {
 
       // Step 2: Import CSV file to database (upsert will update existing or insert new)
       const importResult = await this.importProtocolData(protocolName, effectiveDataType);
-      
+
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);
       }
@@ -277,7 +275,7 @@ export class DataManagementService {
 
     } catch (error) {
       console.error(`Error syncing data for protocol ${protocolName}:`, error);
-      
+
       // Update sync status for failed sync
       await protocolSyncStatusService.updateProtocolSyncStatus(
         protocolName,
@@ -285,7 +283,7 @@ export class DataManagementService {
         0,
         error instanceof Error ? error.message : 'Unknown error'
       );
-      
+
       return {
         success: false,
         csvFilesFetched: 0,
@@ -297,7 +295,7 @@ export class DataManagementService {
       };
     }
   }
-  
+
   /**
    * Download CSV data from Dune API for a single query
    */
@@ -315,19 +313,19 @@ export class DataManagementService {
       console.log(`Fetching data for ${protocolName} query ${queryIndex + 1} (ID: ${queryId})...`);
 
       const response = await fetch(url);
-      
+
       console.log(`Response status: ${response.status} ${response.statusText}`);
-      
+
       if (!response.ok) {
         console.error(`HTTP Error: ${response.status}: ${response.statusText}`);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const csvData = await response.text();
-      
+
       console.log(`CSV data length: ${csvData.length} characters`);
       console.log(`CSV data preview (first 200 chars): ${csvData.substring(0, 200)}`);
-      
+
       if (!csvData.trim()) {
         console.error('Downloaded CSV data is empty');
         throw new Error('Downloaded data is empty');
@@ -340,7 +338,7 @@ export class DataManagementService {
       });
 
       console.log(`Parse result: ${parsed.data.length} rows, ${parsed.errors.length} errors`);
-      
+
       if (parsed.errors.length) {
         console.error(`CSV parse errors:`, parsed.errors);
         throw new Error(`CSV parse errors: ${JSON.stringify(parsed.errors)}`);
@@ -353,7 +351,7 @@ export class DataManagementService {
 
       console.log(`Successfully fetched ${parsed.data.length} rows for ${protocolName} query ${queryIndex + 1}`);
       console.log(`Sample row:`, parsed.data[0]);
-      
+
       return {
         success: true,
         data: parsed.data
@@ -361,7 +359,7 @@ export class DataManagementService {
 
     } catch (error) {
       console.error(`Error downloading query ${queryId} for ${protocolName}:`, error);
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -391,14 +389,14 @@ export class DataManagementService {
             // Handle <nil> values before parsing
             let existingVal = existingRow[field];
             let newVal = row[field];
-            
+
             if (existingVal === '<nil>' || existingVal === null || existingVal === undefined || existingVal === '') {
               existingVal = '0';
             }
             if (newVal === '<nil>' || newVal === null || newVal === undefined || newVal === '') {
               newVal = '0';
             }
-            
+
             // Convert scientific notation if present
             if (typeof existingVal === 'string' && existingVal.toLowerCase().includes('e+')) {
               try {
@@ -414,7 +412,7 @@ export class DataManagementService {
                 newVal = '0';
               }
             }
-            
+
             const existingValue = parseFloat(existingVal) || 0;
             const newValue = parseFloat(newVal) || 0;
             mergedRow[field] = (existingValue + newValue).toString();
@@ -460,12 +458,12 @@ export class DataManagementService {
       console.log(`Processing ${queryIds.length} queries for ${protocolName}...`);
 
       // Download all queries in parallel
-      const downloadPromises = queryIds.map((queryId, index) => 
+      const downloadPromises = queryIds.map((queryId, index) =>
         this.downloadSingleQuery(protocolName, queryId, index)
       );
 
       const results = await Promise.all(downloadPromises);
-      
+
       // Separate successful and failed downloads
       const successfulResults = results.filter(r => r.success && r.data);
       const failedCount = results.length - successfulResults.length;
@@ -486,12 +484,12 @@ export class DataManagementService {
 
       // Ensure data directory exists
       await fs.mkdir(DATA_DIR, { recursive: true });
-      
+
       // Write merged CSV data to file
       await fs.writeFile(outputFile, csvContent, 'utf8');
 
       console.log(`Successfully created merged file for ${protocolName}: ${outputFile}`);
-      
+
       return {
         success: true,
         protocol: protocolName,
@@ -501,7 +499,7 @@ export class DataManagementService {
 
     } catch (error) {
       console.error(`Error processing protocol ${protocolName}:`, error);
-      
+
       return {
         success: false,
         protocol: protocolName,
@@ -526,7 +524,6 @@ export class DataManagementService {
 
   /**
    * Import CSV data for a specific protocol into the database
-   * @param deleteExisting - If true, deletes existing data for this protocol before importing
    */
   private async importProtocolData(protocolName: string, dataType: string = 'private'): Promise<ImportResult> {
     try {
@@ -557,26 +554,28 @@ export class DataManagementService {
       // Map CSV columns to database columns and add protocol name and chain
       const protocolSources = getProtocolSources(dataType);
       const protocolConfig = protocolSources[protocolName];
+      const chain = protocolConfig?.chain || 'solana';
+
       const mappedData = data.map((row: any) => {
         const mappedRow: any = {};
-        
+
         for (const csvCol in COLUMN_MAP) {
           let value = row[csvCol];
-          
+
           // Convert date from DD/MM/YYYY to YYYY-MM-DD
           if (COLUMN_MAP[csvCol] === "date" && value) {
             const [day, month, year] = value.split("/");
             value = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
           }
-          
+
           // Handle <nil> values by replacing with 0 for numeric fields
           if (value === '<nil>' || value === null || value === undefined || value === '') {
             const numericFields = ['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'];
             if (numericFields.includes(COLUMN_MAP[csvCol])) {
-              value = '0';
+              value = 0;
             }
           }
-          
+
           // Convert scientific notation to decimal for numeric fields
           if (value && typeof value === 'string' && value.toLowerCase().includes('e+')) {
             const numericFields = ['volume_usd', 'fees_usd'];
@@ -584,150 +583,105 @@ export class DataManagementService {
               try {
                 const numValue = parseFloat(value);
                 if (!isNaN(numValue)) {
-                  value = numValue.toFixed(2);
+                  value = numValue;
                 }
               } catch (error) {
                 console.warn(`Failed to convert scientific notation for ${csvCol}: ${value}`);
               }
             }
           }
-          
+
+          // Convert string numbers to proper numbers for numeric fields
+          if (['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'].includes(COLUMN_MAP[csvCol])) {
+            value = parseFloat(value) || 0;
+          }
+
           mappedRow[COLUMN_MAP[csvCol]] = value;
         }
-        
+
         mappedRow.protocol_name = protocolName;
-        mappedRow.chain = protocolConfig?.chain || 'solana'; // Default to solana for backward compatibility
-        mappedRow.data_type = dataType; // Set the data type
-        
-        // Debug logging for first row
-        if (data.indexOf(row) === 0) {
-          console.log(`Debug: First row data_type set to: ${dataType}`);
-          console.log(`Debug: First row mapped data:`, { protocol_name: mappedRow.protocol_name, chain: mappedRow.chain, data_type: mappedRow.data_type });
-        }
-        
+        mappedRow.chain = chain;
+        mappedRow.data_type = dataType;
+
         return mappedRow;
       });
 
-      // Insert data in batches
-      const batchSize = 500;
-      let insertedCount = 0;
+      // Calculate 15 days ago for monitoring
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
 
-      console.log(`\n=== INSERT DEBUG ===`);
-      console.log(`Total rows to insert: ${mappedData.length}`);
-      console.log(`Data type for all rows: ${dataType}`);
-      console.log(`First row data_type: ${mappedData[0]?.data_type}`);
-      console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
-      console.log(`====================\n`);
-
-      // TEMPORARY LOGGING - START
-      // Extract chain value for logging
-      const chain = protocolConfig?.chain || 'solana';
-
+      // TEMPORARY LOGGING - PRE-REFRESH SNAPSHOT
       console.log(`\n┌─────────────────────────────────────────────────────────┐`);
       console.log(`│ [REFRESH-MONITOR] PRE-REFRESH DATABASE SNAPSHOT        │`);
       console.log(`│ Protocol: ${protocolName.padEnd(20)} Chain: ${chain.padEnd(10)} │`);
       console.log(`└─────────────────────────────────────────────────────────┘`);
 
-      const fifteenDaysAgo = new Date();
-      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
-      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
+      // MySQL: Get pre-refresh data
+      const preRefreshData = await db.query<{ date: string; volume_usd: number; fees_usd: number; data_type: string }>(
+        `SELECT date, volume_usd, fees_usd, data_type
+         FROM ${TABLE_NAME}
+         WHERE protocol_name = ? AND chain = ? AND data_type = ? AND date >= ?
+         ORDER BY date ASC`,
+        [protocolName, chain, dataType, fifteenDaysAgoStr]
+      );
 
-      const { data: preRefreshData, error: preRefreshError } = await supabase
-        .from(TABLE_NAME)
-        .select('date, volume_usd, fees_usd, data_type')
-        .eq('protocol_name', protocolName)
-        .eq('chain', chain)
-        .eq('data_type', dataType)
-        .gte('date', fifteenDaysAgoStr)
-        .order('date', { ascending: true });
-
-      if (!preRefreshError && preRefreshData) {
-        console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} existing rows in last 15 days\n`);
-        console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
-        console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
-        preRefreshData.forEach(row => {
-          console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
-        });
-      } else {
-        console.log(`[REFRESH-MONITOR] No existing data found in last 15 days`);
-      }
-
-      console.log(`\n┌─────────────────────────────────────────────────────────┐`);
-      console.log(`│ [REFRESH-MONITOR] DUNE/CSV SOURCE DATA                 │`);
-      console.log(`└─────────────────────────────────────────────────────────┘`);
-      console.log(`[REFRESH-MONITOR] Showing data from CSV for last 15 days\n`);
-
-      const csvLast15Days = mappedData.filter(row => row.date >= fifteenDaysAgoStr);
+      console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} existing rows in last 15 days\n`);
       console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
       console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
-      csvLast15Days.forEach(row => {
+      preRefreshData.forEach(row => {
         console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
       });
-      // TEMPORARY LOGGING - END
 
-      for (let i = 0; i < mappedData.length; i += batchSize) {
-        const batch = mappedData.slice(i, i + batchSize);
-        
-        console.log(`Inserting batch ${Math.floor(i/batchSize) + 1}, rows ${i + 1}-${Math.min(i + batchSize, mappedData.length)}`);
-        console.log(`Sample row from batch:`, { 
-          protocol_name: batch[0]?.protocol_name, 
-          chain: batch[0]?.chain, 
-          data_type: batch[0]?.data_type,
-          date: batch[0]?.date 
-        });
-        
-        const { error } = await supabase
-          .from(TABLE_NAME)
-          .upsert(batch, {
-            onConflict: 'protocol_name,date,chain,data_type'
-          });
-
-        if (error) {
-          throw new Error(`Supabase insert error (batch ${i / batchSize + 1}): ${JSON.stringify(error)}`);
-        }
-
-        insertedCount += batch.length;
-        console.log(`Batch ${i / batchSize + 1} inserted successfully! Rows inserted in this batch: ${batch.length}`);
+      // Debug logging
+      console.log(`\n=== INSERT DEBUG ===`);
+      console.log(`Total rows to insert: ${mappedData.length}`);
+      console.log(`Data type for all rows: ${dataType}`);
+      if (mappedData.length > 0) {
+        console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
       }
+      console.log(`====================\n`);
+
+      // MySQL: Batch upsert with INSERT...ON DUPLICATE KEY UPDATE
+      const result = await db.batchUpsert(TABLE_NAME, mappedData, ['protocol_name', 'date', 'chain', 'data_type']);
 
       console.log(`All data from ${protocolName}.csv inserted successfully!`);
-      console.log(`Total rows actually inserted for ${protocolName}.csv: ${insertedCount}`);
+      console.log(`Total rows affected: ${result.affectedRows}`);
 
-      // TEMPORARY LOGGING - START
+      // TEMPORARY LOGGING - POST-REFRESH SNAPSHOT
       console.log(`\n┌─────────────────────────────────────────────────────────┐`);
       console.log(`│ [REFRESH-MONITOR] POST-REFRESH DATABASE SNAPSHOT       │`);
       console.log(`└─────────────────────────────────────────────────────────┘`);
 
-      const { data: postRefreshData, error: postRefreshError } = await supabase
-        .from(TABLE_NAME)
-        .select('date, volume_usd, fees_usd, data_type')
-        .eq('protocol_name', protocolName)
-        .eq('chain', chain)
-        .eq('data_type', dataType)
-        .gte('date', fifteenDaysAgoStr)
-        .order('date', { ascending: true });
+      // MySQL: Get post-refresh data
+      const postRefreshData = await db.query<{ date: string; volume_usd: number; fees_usd: number; data_type: string }>(
+        `SELECT date, volume_usd, fees_usd, data_type
+         FROM ${TABLE_NAME}
+         WHERE protocol_name = ? AND chain = ? AND data_type = ? AND date >= ?
+         ORDER BY date ASC`,
+        [protocolName, chain, dataType, fifteenDaysAgoStr]
+      );
 
-      if (!postRefreshError && postRefreshData) {
-        console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);
-        console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
-        console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
-        postRefreshData.forEach(row => {
-          console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
-        });
-      }
+      console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);
+      console.log(`Date       │ Volume USD          │ Fees USD            │ Type`);
+      console.log(`───────────┼─────────────────────┼─────────────────────┼─────────`);
+      postRefreshData.forEach(row => {
+        console.log(`${row.date} │ ${String(row.volume_usd || 0).padStart(19)} │ ${String(row.fees_usd || 0).padStart(19)} │ ${row.data_type}`);
+      });
 
       // Comparison Report
       console.log(`\n┌─────────────────────────────────────────────────────────┐`);
       console.log(`│ [REFRESH-MONITOR] COMPARISON REPORT                    │`);
       console.log(`└─────────────────────────────────────────────────────────┘\n`);
 
-      const preMap = new Map(preRefreshData?.map(r => [r.date, r]) || []);
-      const postMap = new Map(postRefreshData?.map(r => [r.date, r]) || []);
+      const preMap = new Map(preRefreshData.map(r => [r.date, r]));
+      const postMap = new Map(postRefreshData.map(r => [r.date, r]));
+      const csvLast15Days = mappedData.filter(row => row.date >= fifteenDaysAgoStr);
       const csvMap = new Map(csvLast15Days.map(r => [r.date, r]));
 
       let updated = 0, inserted = 0, unchanged = 0;
 
-      csvMap.forEach((csvRow, date) => {
+      csvMap.forEach((csvRow: any, date: string) => {
         const preRow = preMap.get(date);
         const postRow = postMap.get(date);
 
@@ -754,17 +708,16 @@ export class DataManagementService {
       console.log(`  ✓ Unchanged: ${unchanged}`);
       console.log(`  📊 Total:    ${inserted + updated + unchanged}`);
       console.log(`\n═══════════════════════════════════════════════════════════\n`);
-      // TEMPORARY LOGGING - END
 
       return {
         success: true,
         protocol: protocolName,
-        rowsInserted: insertedCount
+        rowsInserted: mappedData.length
       };
 
     } catch (error) {
       console.error(`Error importing data for ${protocolName}:`, error);
-      
+
       return {
         success: false,
         protocol: protocolName,
@@ -795,7 +748,7 @@ export class DataManagementService {
 
     } catch (error) {
       console.error('Error in importAllProtocolData:', error);
-      
+
       // Return error result for all protocols
       const protocolSources = getProtocolSources('private');
       return Object.keys(protocolSources).map(protocol => ({
@@ -812,14 +765,14 @@ export class DataManagementService {
    */
   public async syncData(dataType: string = 'private'): Promise<SyncResult> {
     const startTime = new Date();
-    
+
     try {
       console.log(`Starting complete data sync process for ${dataType} data...`);
 
       // Step 1: Download CSV files
       console.log('--- Downloading CSV files from Dune API ---');
       const downloadResults = await this.downloadAllProtocolData(dataType);
-      
+
       const successfulDownloads = downloadResults.filter(result => result.success);
       console.log(`Downloaded ${successfulDownloads.length}/${downloadResults.length} CSV files successfully`);
 
@@ -830,7 +783,7 @@ export class DataManagementService {
       // Step 2: Import CSV files to database
       console.log('--- Importing CSV files to database ---');
       const importResults = await this.importAllProtocolData(dataType);
-      
+
       const successfulImports = importResults.filter(result => result.success);
       const totalRowsImported = importResults.reduce((sum, result) => sum + result.rowsInserted, 0);
 
@@ -862,7 +815,7 @@ export class DataManagementService {
 
     } catch (error) {
       console.error('Error in complete sync process:', error);
-      
+
       return {
         success: false,
         csvFilesFetched: 0,

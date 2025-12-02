@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 
 export interface ProtocolConfiguration {
   id: string;
@@ -12,36 +12,20 @@ export interface ProtocolConfiguration {
 export async function verifyProtocolConfigTable(): Promise<void> {
   try {
     // Simple check to ensure table exists and is accessible
-    const { error } = await supabase
-      .from('protocol_configurations')
-      .select('id')
-      .limit(1);
-
-    if (error) {
-      console.error('Error accessing protocol_configurations table:', error);
-      throw new Error(`Database table not accessible: ${error.message}`);
-    }
-    
+    await db.query<{ id: string }>('SELECT id FROM protocol_configurations LIMIT 1');
     console.log('protocol_configurations table verified successfully');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error verifying protocol_configurations table:', error);
-    throw error;
+    throw new Error(`Database table not accessible: ${error.message}`);
   }
 }
 
 // Get all protocol configurations
 export async function getProtocolConfigurations(): Promise<ProtocolConfiguration[]> {
   try {
-    const { data, error } = await supabase
-      .from('protocol_configurations')
-      .select('*')
-      .order('protocol_id');
-
-    if (error) {
-      console.error('Error fetching protocol configurations:', error);
-      throw error;
-    }
-
+    const data = await db.query<ProtocolConfiguration>(
+      'SELECT * FROM protocol_configurations ORDER BY protocol_id'
+    );
     return data || [];
   } catch (error) {
     console.error('Error in getProtocolConfigurations:', error);
@@ -52,27 +36,31 @@ export async function getProtocolConfigurations(): Promise<ProtocolConfiguration
 // Save a single protocol configuration
 export async function saveProtocolConfiguration(protocolId: string, category: string): Promise<ProtocolConfiguration> {
   try {
-    const { data, error } = await supabase
-      .from('protocol_configurations')
-      .upsert(
-        {
-          protocol_id: protocolId,
-          category: category,
-          updated_at: new Date().toISOString()
-        },
-        {
-          onConflict: 'protocol_id'
-        }
-      )
-      .select()
-      .single();
+    const id = db.generateUuid();
+    const now = new Date().toISOString();
 
-    if (error) {
-      console.error('Error saving protocol configuration:', error);
-      throw error;
+    await db.upsert(
+      'protocol_configurations',
+      {
+        id,
+        protocol_id: protocolId,
+        category: category,
+        updated_at: now
+      },
+      ['protocol_id']
+    );
+
+    // Fetch the upserted record
+    const result = await db.queryOne<ProtocolConfiguration>(
+      'SELECT * FROM protocol_configurations WHERE protocol_id = ?',
+      [protocolId]
+    );
+
+    if (!result) {
+      throw new Error('Failed to retrieve saved configuration');
     }
 
-    return data;
+    return result;
   } catch (error) {
     console.error('Error in saveProtocolConfiguration:', error);
     throw error;
@@ -82,22 +70,23 @@ export async function saveProtocolConfiguration(protocolId: string, category: st
 // Save multiple protocol configurations
 export async function saveProtocolConfigurations(configurations: { protocol_id: string; category: string }[]): Promise<ProtocolConfiguration[]> {
   try {
-    const configsWithTimestamp = configurations.map(config => ({
-      ...config,
-      updated_at: new Date().toISOString()
+    const now = new Date().toISOString();
+    const configsWithData = configurations.map(config => ({
+      id: db.generateUuid(),
+      protocol_id: config.protocol_id,
+      category: config.category,
+      updated_at: now
     }));
 
-    const { data, error } = await supabase
-      .from('protocol_configurations')
-      .upsert(configsWithTimestamp, {
-        onConflict: 'protocol_id'
-      })
-      .select();
+    await db.batchUpsert('protocol_configurations', configsWithData, ['protocol_id']);
 
-    if (error) {
-      console.error('Error saving protocol configurations:', error);
-      throw error;
-    }
+    // Fetch all saved records
+    const protocolIds = configurations.map(c => c.protocol_id);
+    const placeholders = protocolIds.map(() => '?').join(', ');
+    const data = await db.query<ProtocolConfiguration>(
+      `SELECT * FROM protocol_configurations WHERE protocol_id IN (${placeholders})`,
+      protocolIds
+    );
 
     return data || [];
   } catch (error) {
@@ -109,15 +98,7 @@ export async function saveProtocolConfigurations(configurations: { protocol_id: 
 // Delete a protocol configuration (reset to default)
 export async function deleteProtocolConfiguration(protocolId: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('protocol_configurations')
-      .delete()
-      .eq('protocol_id', protocolId);
-
-    if (error) {
-      console.error('Error deleting protocol configuration:', error);
-      throw error;
-    }
+    await db.delete('protocol_configurations', 'protocol_id = ?', [protocolId]);
   } catch (error) {
     console.error('Error in deleteProtocolConfiguration:', error);
     throw error;
@@ -127,15 +108,7 @@ export async function deleteProtocolConfiguration(protocolId: string): Promise<v
 // Reset all configurations (delete all records)
 export async function resetAllProtocolConfigurations(): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('protocol_configurations')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
-
-    if (error) {
-      console.error('Error resetting protocol configurations:', error);
-      throw error;
-    }
+    await db.execute('DELETE FROM protocol_configurations');
   } catch (error) {
     console.error('Error in resetAllProtocolConfigurations:', error);
     throw error;

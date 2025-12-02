@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 import { clearAllCaches } from './protocolService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,7 +25,7 @@ interface LaunchpadSource {
 
 // Launchpad sources mapping - only Solana chain
 const LAUNCHPAD_SOURCES: Record<string, LaunchpadSource> = {
-  "pumpfun": { queryIds: [4894656] }, 
+  "pumpfun": { queryIds: [4894656] },
   "launchlab": {queryIds: [5552096]},
   "letsbonk": {queryIds: [4992859]},
   "moonshot": {queryIds: [5360634]},
@@ -65,18 +65,18 @@ interface SyncResult {
 }
 
 export class LaunchpadDataService {
-  
+
   /**
    * Sync data for a specific launchpad
    */
   public async syncLaunchpadData(launchpadName: string): Promise<SyncResult> {
     const startTime = new Date();
-    
+
     try {
       console.log(`\n=== LAUNCHPAD SYNC DEBUG ===`);
       console.log(`Launchpad: ${launchpadName}`);
       console.log(`============================\n`);
-      
+
       // Validate launchpad exists
       if (!LAUNCHPAD_SOURCES[launchpadName]) {
         throw new Error(`Launchpad '${launchpadName}' not found in launchpad sources`);
@@ -84,7 +84,7 @@ export class LaunchpadDataService {
 
       const launchpadConfig = LAUNCHPAD_SOURCES[launchpadName];
       console.log(`Using query IDs: ${launchpadConfig.queryIds.join(', ')}`);
-      
+
       // Check if query IDs are configured
       if (launchpadConfig.queryIds.length === 0) {
         throw new Error(`No query IDs configured for launchpad '${launchpadName}'. Please add query IDs to the configuration.`);
@@ -94,7 +94,7 @@ export class LaunchpadDataService {
 
       // Step 1: Download CSV file for the specific launchpad
       const downloadResult = await this.downloadLaunchpadData(launchpadName, launchpadConfig.queryIds);
-      
+
       if (!downloadResult.success) {
         throw new Error(`Failed to download data for ${launchpadName}: ${downloadResult.error}`);
       }
@@ -103,7 +103,7 @@ export class LaunchpadDataService {
 
       // Step 2: Import CSV file to database (delete existing data for this launchpad first)
       const importResult = await this.importLaunchpadData(launchpadName, true);
-      
+
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${launchpadName}: ${importResult.error}`);
       }
@@ -121,7 +121,7 @@ export class LaunchpadDataService {
 
     } catch (error) {
       console.error(`Error syncing data for launchpad ${launchpadName}:`, error);
-      
+
       return {
         success: false,
         csvFilesFetched: 0,
@@ -133,7 +133,7 @@ export class LaunchpadDataService {
       };
     }
   }
-  
+
   /**
    * Download CSV data from Dune API for a single query
    */
@@ -151,19 +151,19 @@ export class LaunchpadDataService {
       console.log(`Fetching data for ${launchpadName} query ${queryIndex + 1} (ID: ${queryId})...`);
 
       const response = await fetch(url);
-      
+
       console.log(`Response status: ${response.status} ${response.statusText}`);
-      
+
       if (!response.ok) {
         console.error(`HTTP Error: ${response.status}: ${response.statusText}`);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const csvData = await response.text();
-      
+
       console.log(`CSV data length: ${csvData.length} characters`);
       console.log(`CSV data preview (first 200 chars): ${csvData.substring(0, 200)}`);
-      
+
       if (!csvData.trim()) {
         console.error('Downloaded CSV data is empty');
         throw new Error('Downloaded data is empty');
@@ -176,7 +176,7 @@ export class LaunchpadDataService {
       });
 
       console.log(`Parse result: ${parsed.data.length} rows, ${parsed.errors.length} errors`);
-      
+
       if (parsed.errors.length) {
         console.error(`CSV parse errors:`, parsed.errors);
         throw new Error(`CSV parse errors: ${JSON.stringify(parsed.errors)}`);
@@ -189,7 +189,7 @@ export class LaunchpadDataService {
 
       console.log(`Successfully fetched ${parsed.data.length} rows for ${launchpadName} query ${queryIndex + 1}`);
       console.log(`Sample row:`, parsed.data[0]);
-      
+
       return {
         success: true,
         data: parsed.data
@@ -197,7 +197,7 @@ export class LaunchpadDataService {
 
     } catch (error) {
       console.error(`Error downloading query ${queryId} for ${launchpadName}:`, error);
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -227,14 +227,14 @@ export class LaunchpadDataService {
             // Handle <nil> values before parsing
             let existingVal = existingRow[field];
             let newVal = row[field];
-            
+
             if (existingVal === '<nil>' || existingVal === null || existingVal === undefined || existingVal === '') {
               existingVal = '0';
             }
             if (newVal === '<nil>' || newVal === null || newVal === undefined || newVal === '') {
               newVal = '0';
             }
-            
+
             // Convert scientific notation if present
             if (typeof existingVal === 'string' && existingVal.toLowerCase().includes('e+')) {
               try {
@@ -250,7 +250,7 @@ export class LaunchpadDataService {
                 newVal = '0';
               }
             }
-            
+
             const existingValue = parseFloat(existingVal) || 0;
             const newValue = parseFloat(newVal) || 0;
             mergedRow[field] = (existingValue + newValue).toString();
@@ -296,12 +296,12 @@ export class LaunchpadDataService {
       console.log(`Processing ${queryIds.length} queries for ${launchpadName}...`);
 
       // Download all queries in parallel
-      const downloadPromises = queryIds.map((queryId, index) => 
+      const downloadPromises = queryIds.map((queryId, index) =>
         this.downloadSingleQuery(launchpadName, queryId, index)
       );
 
       const results = await Promise.all(downloadPromises);
-      
+
       // Separate successful and failed downloads
       const successfulResults = results.filter(r => r.success && r.data);
       const failedCount = results.length - successfulResults.length;
@@ -322,12 +322,12 @@ export class LaunchpadDataService {
 
       // Ensure data directory exists
       await fs.mkdir(DATA_DIR, { recursive: true });
-      
+
       // Write merged CSV data to file
       await fs.writeFile(outputFile, csvContent, 'utf8');
 
       console.log(`Successfully created merged file for ${launchpadName}: ${outputFile}`);
-      
+
       return {
         success: true,
         launchpad: launchpadName,
@@ -337,7 +337,7 @@ export class LaunchpadDataService {
 
     } catch (error) {
       console.error(`Error processing launchpad ${launchpadName}:`, error);
-      
+
       return {
         success: false,
         launchpad: launchpadName,
@@ -366,7 +366,7 @@ export class LaunchpadDataService {
   private async importLaunchpadData(launchpadName: string, deleteExisting: boolean = false): Promise<ImportResult> {
     try {
       const csvFilePath = path.join(DATA_DIR, `${launchpadName}.csv`);
-      
+
       // Check if file exists
       try {
         await fs.access(csvFilePath);
@@ -380,17 +380,10 @@ export class LaunchpadDataService {
       if (deleteExisting) {
         console.log(`\n=== LAUNCHPAD DELETE DEBUG ===`);
         console.log(`Deleting existing data for ${launchpadName}...`);
-        
-        const { error: deleteError } = await supabase
-          .from(TABLE_NAME)
-          .delete()
-          .eq('launchpad_name', launchpadName);
 
-        if (deleteError) {
-          console.error(`Delete error:`, deleteError);
-          throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
-        }
-        console.log(`Successfully deleted existing data for ${launchpadName}`);
+        // MySQL: Delete by launchpad name
+        const deleteResult = await db.delete(TABLE_NAME, 'launchpad_name = ?', [launchpadName]);
+        console.log(`Successfully deleted ${deleteResult.affectedRows} existing records for ${launchpadName}`);
         console.log(`===============================\n`);
       }
 
@@ -410,10 +403,10 @@ export class LaunchpadDataService {
       // Map CSV columns to database columns and add launchpad name
       const mappedData = data.map((row: any) => {
         const mappedRow: any = {};
-        
+
         for (const csvCol in COLUMN_MAP) {
           let value = row[csvCol];
-          
+
           // Convert date from various formats to YYYY-MM-DD
           if (COLUMN_MAP[csvCol] === "date" && value) {
             if (value.includes("/")) {
@@ -426,15 +419,15 @@ export class LaunchpadDataService {
               value = dateOnly;
             }
           }
-          
+
           // Handle <nil> values by replacing with 0 for numeric fields
           if (value === '<nil>' || value === null || value === undefined || value === '') {
             const numericFields = ['launches', 'graduations'];
             if (numericFields.includes(COLUMN_MAP[csvCol])) {
-              value = '0';
+              value = 0;
             }
           }
-          
+
           // Convert scientific notation to decimal for numeric fields
           if (value && typeof value === 'string' && value.toLowerCase().includes('e+')) {
             const numericFields = ['launches', 'graduations'];
@@ -442,69 +435,50 @@ export class LaunchpadDataService {
               try {
                 const numValue = parseFloat(value);
                 if (!isNaN(numValue)) {
-                  value = numValue.toFixed(0); // No decimals for launches/graduations
+                  value = Math.round(numValue); // No decimals for launches/graduations
                 }
               } catch (error) {
                 console.warn(`Failed to convert scientific notation for ${csvCol}: ${value}`);
               }
             }
           }
-          
+
+          // Convert string numbers to integers for launches/graduations
+          if (COLUMN_MAP[csvCol] === 'launches' || COLUMN_MAP[csvCol] === 'graduations') {
+            value = parseInt(value) || 0;
+          }
+
           mappedRow[COLUMN_MAP[csvCol]] = value;
         }
-        
+
         mappedRow.launchpad_name = launchpadName;
-        
-        // Debug logging for first row
-        if (data.indexOf(row) === 0) {
-          console.log(`Debug: First row mapped data:`, { launchpad_name: mappedRow.launchpad_name });
-        }
-        
+
         return mappedRow;
       });
 
-      // Insert data in batches
-      const batchSize = 500;
-      let insertedCount = 0;
-
+      // Debug logging
       console.log(`\n=== LAUNCHPAD INSERT DEBUG ===`);
       console.log(`Total rows to insert: ${mappedData.length}`);
-      console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
+      if (mappedData.length > 0) {
+        console.log(`First row sample:`, JSON.stringify(mappedData[0], null, 2));
+      }
       console.log(`===============================\n`);
 
-      for (let i = 0; i < mappedData.length; i += batchSize) {
-        const batch = mappedData.slice(i, i + batchSize);
-        
-        console.log(`Inserting batch ${Math.floor(i/batchSize) + 1}, rows ${i + 1}-${Math.min(i + batchSize, mappedData.length)}`);
-        console.log(`Sample row from batch:`, { 
-          launchpad_name: batch[0]?.launchpad_name, 
-          date: batch[0]?.date 
-        });
-        
-        const { error } = await supabase
-          .from(TABLE_NAME)
-          .insert(batch);
-
-        if (error) {
-          throw new Error(`Supabase insert error (batch ${i / batchSize + 1}): ${JSON.stringify(error)}`);
-        }
-
-        insertedCount += batch.length;
-        console.log(`Batch ${i / batchSize + 1} inserted successfully! Rows inserted in this batch: ${batch.length}`);
-      }
+      // MySQL: Batch upsert with INSERT...ON DUPLICATE KEY UPDATE
+      const result = await db.batchUpsert(TABLE_NAME, mappedData, ['launchpad_name', 'date']);
 
       console.log(`All data from ${launchpadName}.csv inserted successfully!`);
-      console.log(`Total rows actually inserted for ${launchpadName}.csv: ${insertedCount}`);
+      console.log(`Total rows affected: ${result.affectedRows}`);
 
       return {
         success: true,
         launchpad: launchpadName,
-        rowsInserted: insertedCount
+        rowsInserted: mappedData.length
       };
 
     } catch (error) {
       console.error(`Error importing data for ${launchpadName}:`, error);
-      
+
       return {
         success: false,
         launchpad: launchpadName,
@@ -519,23 +493,17 @@ export class LaunchpadDataService {
    */
   private async importAllLaunchpadData(): Promise<ImportResult[]> {
     try {
-      // First, delete existing launchpad data
+      // First, delete all existing launchpad data
       console.log(`--- Deleting existing launchpad data from launchpad_stats ---`);
-      const { error: deleteError } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .neq('launchpad_name', ''); // Delete all records
 
-      if (deleteError) {
-        throw new Error(`Failed to delete existing data: ${JSON.stringify(deleteError)}`);
-      }
-
-      console.log(`Successfully deleted existing launchpad data`);
+      // MySQL: Delete all records
+      const deleteResult = await db.execute(`DELETE FROM ${TABLE_NAME}`);
+      console.log(`Successfully deleted ${deleteResult.affectedRows} existing launchpad records`);
 
       // Get list of CSV files
       const files = await fs.readdir(DATA_DIR);
       const csvFiles = files.filter(file => file.endsWith('.csv'));
-      
+
       console.log(`Found ${csvFiles.length} CSV files:`, csvFiles);
 
       // Import each CSV file
@@ -548,7 +516,7 @@ export class LaunchpadDataService {
 
     } catch (error) {
       console.error('Error in importAllLaunchpadData:', error);
-      
+
       // Return error result for all launchpads
       return Object.keys(LAUNCHPAD_SOURCES).map(launchpad => ({
         success: false,
@@ -564,14 +532,14 @@ export class LaunchpadDataService {
    */
   public async syncData(): Promise<SyncResult> {
     const startTime = new Date();
-    
+
     try {
       console.log(`Starting complete launchpad data sync process...`);
 
       // Step 1: Download CSV files
       console.log('--- Downloading CSV files from Dune API ---');
       const downloadResults = await this.downloadAllLaunchpadData();
-      
+
       const successfulDownloads = downloadResults.filter(result => result.success);
       console.log(`Downloaded ${successfulDownloads.length}/${downloadResults.length} CSV files successfully`);
 
@@ -582,7 +550,7 @@ export class LaunchpadDataService {
       // Step 2: Import CSV files to database
       console.log('--- Importing CSV files to database ---');
       const importResults = await this.importAllLaunchpadData();
-      
+
       const successfulImports = importResults.filter(result => result.success);
       const totalRowsImported = importResults.reduce((sum, result) => sum + result.rowsInserted, 0);
 
@@ -604,7 +572,7 @@ export class LaunchpadDataService {
 
     } catch (error) {
       console.error('Error in complete launchpad sync process:', error);
-      
+
       return {
         success: false,
         csvFilesFetched: 0,

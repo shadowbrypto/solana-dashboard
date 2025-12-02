@@ -12,6 +12,13 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import traderStatsRoutes from './routes/traderStatsRoutes.js';
 import feeConfigRoutes from './routes/feeConfigRoutes.js';
 
+// Verify MySQL is configured (required for production)
+if (!process.env.MYSQL_HOST || !process.env.MYSQL_DATABASE) {
+  console.error('ERROR: MySQL environment variables not configured');
+  console.error('Required: MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 

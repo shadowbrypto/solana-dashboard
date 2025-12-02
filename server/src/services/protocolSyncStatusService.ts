@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 
 export interface ProtocolSyncStatus {
   protocol_name: string;
@@ -18,8 +18,8 @@ export class ProtocolSyncStatusService {
    * Update sync status for a protocol
    */
   async updateProtocolSyncStatus(
-    protocolName: string, 
-    success: boolean, 
+    protocolName: string,
+    success: boolean,
     rowsImported: number,
     errorMessage?: string
   ): Promise<void> {
@@ -27,27 +27,19 @@ export class ProtocolSyncStatusService {
       // Check if protocol has recent data (within last 3 days)
       const { hasRecentData, latestDate, daysBehind } = await this.checkRecentData(protocolName);
 
-      const syncStatus: ProtocolSyncStatus = {
+      const syncStatus = {
         protocol_name: protocolName,
         last_sync_at: new Date().toISOString(),
         sync_success: success,
         rows_imported: rowsImported,
-        error_message: errorMessage,
+        error_message: errorMessage || null,
         has_recent_data: hasRecentData,
-        latest_data_date: latestDate,
-        days_behind: daysBehind
+        latest_data_date: latestDate || null,
+        days_behind: daysBehind ?? null
       };
 
       // Upsert the sync status
-      const { error } = await supabase
-        .from(ProtocolSyncStatusService.TABLE_NAME)
-        .upsert(syncStatus, {
-          onConflict: 'protocol_name'
-        });
-
-      if (error) {
-        console.error(`Failed to update sync status for ${protocolName}:`, error);
-      }
+      await db.upsert(ProtocolSyncStatusService.TABLE_NAME, syncStatus, ['protocol_name']);
     } catch (error) {
       console.error(`Error updating sync status for ${protocolName}:`, error);
     }
@@ -71,16 +63,14 @@ export class ProtocolSyncStatusService {
       }
 
       // Get the latest date for this protocol
-      const { data, error } = await supabase
-        .from('protocol_stats')
-        .select('date')
-        .eq('protocol_name', protocolName)
-        .eq('chain', chain)
-        .eq('data_type', 'private') // Default to private data for sync status
-        .order('date', { ascending: false })
-        .limit(1);
+      const data = await db.query<{ date: string }>(
+        `SELECT date FROM protocol_stats
+         WHERE protocol_name = ? AND chain = ? AND data_type = 'private'
+         ORDER BY date DESC LIMIT 1`,
+        [protocolName, chain]
+      );
 
-      if (error || !data || data.length === 0) {
+      if (!data || data.length === 0) {
         return { hasRecentData: false };
       }
 
@@ -88,10 +78,10 @@ export class ProtocolSyncStatusService {
       const latestDataDate = new Date(latestDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Calculate days behind
       const daysDiff = Math.floor((today.getTime() - latestDataDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       // Consider data recent if within 3 days
       const hasRecentData = daysDiff <= 3;
 
@@ -111,16 +101,9 @@ export class ProtocolSyncStatusService {
    */
   async getAllProtocolSyncStatus(): Promise<ProtocolSyncStatus[]> {
     try {
-      const { data, error } = await supabase
-        .from(ProtocolSyncStatusService.TABLE_NAME)
-        .select('*')
-        .order('protocol_name');
-
-      if (error) {
-        console.error('Failed to fetch protocol sync status:', error);
-        return [];
-      }
-
+      const data = await db.query<ProtocolSyncStatus>(
+        `SELECT * FROM ${ProtocolSyncStatusService.TABLE_NAME} ORDER BY protocol_name`
+      );
       return data || [];
     } catch (error) {
       console.error('Error fetching protocol sync status:', error);
@@ -133,17 +116,10 @@ export class ProtocolSyncStatusService {
    */
   async getProtocolSyncStatus(protocolName: string): Promise<ProtocolSyncStatus | null> {
     try {
-      const { data, error } = await supabase
-        .from(ProtocolSyncStatusService.TABLE_NAME)
-        .select('*')
-        .eq('protocol_name', protocolName)
-        .single();
-
-      if (error) {
-        console.error(`Failed to fetch sync status for ${protocolName}:`, error);
-        return null;
-      }
-
+      const data = await db.queryOne<ProtocolSyncStatus>(
+        `SELECT * FROM ${ProtocolSyncStatusService.TABLE_NAME} WHERE protocol_name = ?`,
+        [protocolName]
+      );
       return data;
     } catch (error) {
       console.error(`Error fetching sync status for ${protocolName}:`, error);

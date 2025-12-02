@@ -30,7 +30,7 @@ export const generateMockProtocolStats = (protocol: string, days: number = 30) =
 };
 
 export const generateMockAggregatedData = (days: number = 90) => {
-  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+  const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector"];
   const data = [];
   const baseDate = new Date('2025-06-19');
   
@@ -123,7 +123,7 @@ export const mockApiResponse = (data: any, delay: number = 0) => {
 };
 
 // Protocol constants for testing
-export const ALL_PROTOCOLS = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+export const ALL_PROTOCOLS = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector"];
 
 export const TIMEFRAMES = ["7d", "30d", "3m", "6m", "1y", "all"];
 

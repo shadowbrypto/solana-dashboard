@@ -580,7 +580,7 @@ export async function generateWeeklyInsights() {
   const last7Days = sortedData.slice(0, 7);
   const previous7Days = sortedData.slice(7, 14);
 
-  const protocols = ["axiom", "banana", "bloom", "bonkbot", "bullx", "gmgnai", "maestro", "moonshot", "nova", "padre", "photon", "soltradingbot", "trojan", "vector"];
+  const protocols = ["axiom", "banana", "bloom", "bonkbot", "bullx", "gmgnai", "maestro", "moonshot", "nova", "terminal", "photon", "soltradingbot", "trojan", "vector"];
 
   const weeklyStats = protocols.map(protocol => {
     const protocolKey = protocol.replace(/\s+/g, '_').toLowerCase();

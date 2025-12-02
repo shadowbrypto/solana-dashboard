@@ -24,7 +24,7 @@ export const PROTOCOL_FEES: ProtocolFeeConfig = {
   'bullx': '1.0%',
   'axiom': '1.0%',
   'gmgnai': '1.0%',
-  'padre': '1.0%',
+  'terminal': '1.0%',
   'nova terminal': '1.0%',
   'telemetry': '1.0%',
   'mevx': '1.0%',

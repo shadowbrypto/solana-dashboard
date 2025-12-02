@@ -73,7 +73,7 @@ const WeeklyInsights: React.FC = () => {
       const last7Days = sortedData.slice(0, 7);
       const previous7Days = sortedData.slice(7, 14);
 
-      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "padre", "moonshot", "vector"];
+      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector"];
       
       // Calculate weekly stats for each protocol
       const weeklyStatsData: WeeklyStats[] = protocols.map(protocol => {

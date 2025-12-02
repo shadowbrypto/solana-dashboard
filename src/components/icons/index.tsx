@@ -68,8 +68,8 @@ export const FomoIcon = (props: any) => (
   <ProtocolLogo protocolId="fomo" protocolName="Fomo" fallbackIcon={BotMessageSquare} {...props} />
 );
 
-export const PadreIcon = (props: any) => (
-  <ProtocolLogo protocolId="padre" protocolName="Padre" fallbackIcon={Cross} {...props} />
+export const TerminalProtocolIcon = (props: any) => (
+  <ProtocolLogo protocolId="terminal" protocolName="Terminal" fallbackIcon={Cross} {...props} />
 );
 
 export const SigmaIcon = (props: any) => (
@@ -122,6 +122,10 @@ export const PhantomIcon = (props: any) => (
 
 export const BasedBotIcon = (props: any) => (
   <ProtocolLogo protocolId="basedbot" protocolName="Based Bot" fallbackIcon={Bot} {...props} />
+);
+
+export const OKXIcon = (props: any) => (
+  <ProtocolLogo protocolId="okx" protocolName="OKX" fallbackIcon={Terminal} {...props} />
 );
 
 // Monad Protocol Icons

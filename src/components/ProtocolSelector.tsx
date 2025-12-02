@@ -19,7 +19,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
     { id: 'soltradingbot', name: 'SolTradingBot' },
     { id: 'maestro', name: 'Maestro' },
     { id: 'banana', name: 'Banana' },
-    { id: 'padre', name: 'Padre' },
+    { id: 'terminal', name: 'Terminal' },
     { id: 'moonshot', name: 'Moonshot' },
     { id: 'vector', name: 'Vector' },
     { id: 'all', name: 'All Trading Apps' }

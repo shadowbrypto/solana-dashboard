@@ -34,7 +34,7 @@ const PROTOCOL_CATEGORIES = {
   'ai_platforms': ['gmgnai', 'axiom'],
   'dex_tools': ['bloom', 'vector'],
   'social_bots': ['bonkbot', 'soltradingbot', 'maestro'],
-  'portfolio_tools': ['nova', 'banana', 'padre'],
+  'portfolio_tools': ['nova', 'banana', 'terminal'],
   'launch_platforms': ['moonshot']
 };
 

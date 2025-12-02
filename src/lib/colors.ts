@@ -10,7 +10,7 @@ export const protocolColors: { [key: string]: string } = {
   soltradingbot: "hsl(142 76% 36%)", // Emerald
   maestro: "hsl(262 83% 58%)",  // Purple
   banana: "hsl(221 83% 53%)",   // Blue
-  padre: "hsl(346 84% 61%)",    // Rose
+  terminal: "hsl(346 84% 61%)",    // Rose
   moonshot: "hsl(15 72% 50%)",  // Orange
   vector: "hsl(172 66% 50%)",   // Teal
   "nova terminal": "hsl(190 85% 50%)",     // Sky Blue

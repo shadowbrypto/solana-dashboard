@@ -31,7 +31,7 @@ export type Protocol =
   | 'soltradingbot'
   | 'maestro'
   | 'banana'
-  | 'padre'
+  | 'terminal'
   | 'moonshot'
   | 'vector';
 

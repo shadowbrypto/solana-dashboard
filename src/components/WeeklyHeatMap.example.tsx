@@ -26,7 +26,7 @@ export function WeeklyHeatMapExample() {
     "soltradingbot",
     "maestro",
     "banana",
-    "padre",
+    "terminal",
     "moonshot",
     "vector"
   ];

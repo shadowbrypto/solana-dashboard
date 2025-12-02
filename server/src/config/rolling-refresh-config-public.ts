@@ -40,7 +40,7 @@ export const PUBLIC_ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource
   'bullx': { queryIds: [6289162], chain: 'solana' },
   'axiom': { queryIds: [6289150], chain: 'solana' },
   'gmgnai': { queryIds: [6289185], chain: 'solana' },
-  'padre': { queryIds: [6289144], chain: 'solana' },
+  'terminal': { queryIds: [6289144], chain: 'solana' },
   'nova terminal': { queryIds: [6171190], chain: 'solana' },
   'telemetry': { queryIds: [6289169], chain: 'solana' },
   'mevx': { queryIds: [6289243], chain: 'solana' },
@@ -48,6 +48,7 @@ export const PUBLIC_ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource
   'vyper': { queryIds: [6289255], chain: 'solana' },
   "opensea": { queryIds: [6289269], chain: 'solana' },
   'phantom': { queryIds: [6289138], chain: 'solana' },
+    'okx': { queryIds: [6289758], chain: 'solana' },
 
   // Solana Protocols - Mobile Apps
   'moonshot': { queryIds: [6289258], chain: 'solana' },
@@ -62,7 +63,7 @@ export const PUBLIC_ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource
   'banana_evm': { queryIds: [], chain: 'evm' },
 
   // EVM Protocols - Trading Terminals
-  // 'padre_evm': { queryIds: [], chain: 'evm' },
+  // 'terminal_evm': { queryIds: [], chain: 'evm' },
   // 'gmgnai_evm': { queryIds: [], chain: 'evm' },
   // 'photon_evm': { queryIds: [], chain: 'evm' },
   // 'mevx_evm': { queryIds: [], chain: 'evm' },

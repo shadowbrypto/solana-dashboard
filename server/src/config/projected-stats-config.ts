@@ -35,7 +35,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'bullx': '6168578',
   'axiom': '4899853',
   'gmgnai': '4899849',
-  'padre': '5622891',
+  'terminal': '5622891',
   'nova terminal': '4899891',
   'telemetry': '5666888',
   'mevx': '6169736',
@@ -43,6 +43,7 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'vyper': '5699029',
   'phantom': '6229270',
   'opensea': '6230767',
+  'okx': '6289768',
 
   // Mobile Apps
   'moonshot': '',

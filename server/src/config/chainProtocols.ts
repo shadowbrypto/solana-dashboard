@@ -15,7 +15,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'gmgnai': { solana: true, evm: true, monad: false },
   'moonshot': { solana: true, evm: false, monad: false },
   'nova': { solana: true, evm: false, monad: false },
-  'padre': { solana: true, evm: true, monad: false },
+  'terminal': { solana: true, evm: true, monad: false },
   'photon': { solana: true, evm: true, monad: false },
   'soltradingbot': { solana: true, evm: false, monad: false },
   'trojan': { solana: true, evm: false, monad: false },
@@ -30,6 +30,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'opensea': { solana: true, evm: false, monad: false },
   'phantom': { solana: true, evm: false, monad: false },
   'basedbot': { solana: true, evm: false, monad: false },
+  'okx': { solana: true, evm: false, monad: false },
 
   // Multi-chain protocols (both Solana and EVM)
   'bloom': { solana: true, evm: true, monad: false },

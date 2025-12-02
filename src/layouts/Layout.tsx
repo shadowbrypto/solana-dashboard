@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
-import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home, Users, DollarSign } from 'lucide-react';
+import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home, Users, DollarSign, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -11,6 +11,7 @@ import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-con
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import { Toaster } from '../components/ui/toaster';
 import { Settings as AppSettings } from '../lib/settings';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 // import { SettingsManager } from '../components/SettingsManager';
 
 // Generate protocols array from centralized config
@@ -44,11 +45,19 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => AppSettings.getSidebarCollapsed());
   const [dataType, setDataType] = useState<'public' | 'private'>(AppSettings.getDataTypePreference());
   // Initialize all categories as expanded for better navigation
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
     protocolCategories.reduce((acc, category) => ({ ...acc, [category.name]: true }), {})
   );
+
+  // Toggle sidebar collapse
+  const toggleSidebar = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    AppSettings.setSidebarCollapsed(newState);
+  };
   
   // Check if we're on a protocol page (root)
   const isProtocolPage = location.pathname === '/';
@@ -94,6 +103,7 @@ export function Layout() {
   };
 
   return (
+    <TooltipProvider delayDuration={0}>
     <div className="h-screen bg-background flex">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border h-16 flex items-center justify-between px-4">
@@ -113,23 +123,37 @@ export function Layout() {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 z-40 bg-black/50" 
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "w-64 border-r flex flex-col transition-transform duration-300 ease-in-out",
+        "border-r flex flex-col transition-all duration-300 ease-in-out",
         "lg:bg-muted/10 lg:translate-x-0 lg:static lg:z-auto",
         "fixed inset-y-0 left-0 z-50 bg-background shadow-lg",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        isCollapsed ? "lg:w-[68px]" : "w-64"
       )}>
         {/* Logo - Hidden on mobile since it's in the mobile header */}
-        <div className="p-4 flex items-center justify-between lg:flex hidden">
-          <span className="font-bold text-xl text-foreground">Trading Apps</span>
-          <ThemeSwitcher />
+        <div className={cn(
+          "p-4 flex items-center lg:flex hidden",
+          isCollapsed ? "justify-center" : "justify-between"
+        )}>
+          {!isCollapsed && <span className="font-bold text-xl text-foreground">Trading Apps</span>}
+          <div className="flex items-center gap-1">
+            {!isCollapsed && <ThemeSwitcher />}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="h-8 w-8 p-0 hover:bg-muted"
+            >
+              {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         <Separator className="bg-border lg:block hidden" />
@@ -139,77 +163,97 @@ export function Layout() {
 
           {/* Home Section - Above Overview */}
           <div className="space-y-2">
-            <Button
-              key="home"
-              variant="ghost"
-              className={cn(
-                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                location.pathname === '/home' && "bg-muted text-foreground font-medium"
-              )}
-              onClick={() => handleReportChange('/home')}
-            >
-              <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
-                <Home className="h-4 w-4" />
-              </div>
-              Home
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  key="home"
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
+                    isCollapsed ? "justify-center px-0" : "justify-start px-2 gap-3",
+                    location.pathname === '/home' && "bg-muted text-foreground font-medium"
+                  )}
+                  onClick={() => handleReportChange('/home')}
+                >
+                  <div className={cn("w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center", isCollapsed && "w-8 h-8")}>
+                    <Home className="h-4 w-4" />
+                  </div>
+                  {!isCollapsed && "Home"}
+                </Button>
+              </TooltipTrigger>
+              {isCollapsed && <TooltipContent side="right" className="z-[100]">Home</TooltipContent>}
+            </Tooltip>
           </div>
 
           {/* Overview Section */}
           <div className="space-y-2">
-            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>
-            <Button
-              key="all"
-              variant="ghost"
-              className={cn(
-                "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                currentProtocol === 'all' && isProtocolPage && "bg-muted text-foreground font-medium"
-              )}
-              onClick={() => handleProtocolChange('all')}
-            >
-              <div className="w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center">
-                <LayoutGrid className="h-4 w-4 text-primary" />
-              </div>
-              All Trading Apps
-            </Button>
-            
+            {!isCollapsed && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Overview</h3>}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  key="all"
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
+                    isCollapsed ? "justify-center px-0" : "justify-start px-2 gap-3",
+                    currentProtocol === 'all' && isProtocolPage && "bg-muted text-foreground font-medium"
+                  )}
+                  onClick={() => handleProtocolChange('all')}
+                >
+                  <div className={cn("w-6 h-6 bg-primary/10 rounded-md flex items-center justify-center", isCollapsed && "w-8 h-8")}>
+                    <LayoutGrid className="h-4 w-4 text-primary" />
+                  </div>
+                  {!isCollapsed && "All Trading Apps"}
+                </Button>
+              </TooltipTrigger>
+              {isCollapsed && <TooltipContent side="right" className="z-[100]">All Trading Apps</TooltipContent>}
+            </Tooltip>
+
             {overviewPages.filter(page => page.id !== 'home').map((page) => {
               const Icon = page.icon;
               return (
-                <Button
-                  key={page.id}
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                    location.pathname === page.path && "bg-muted text-foreground font-medium"
-                  )}
-                  onClick={() => handleReportChange(page.path)}
-                >
-                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="flex items-center gap-2">
-                    {page.name}
-                    {page.beta && (
-                      <span className="px-1.5 py-0 text-[8px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                        BETA
-                      </span>
-                    )}
-                    {page.new && (
-                      <span className="text-[8px] px-1 py-0 rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
-                        NEW
-                      </span>
-                    )}
-                  </span>
-                </Button>
+                <Tooltip key={page.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
+                        isCollapsed ? "justify-center px-0" : "justify-start px-2 gap-3",
+                        location.pathname === page.path && "bg-muted text-foreground font-medium"
+                      )}
+                      onClick={() => handleReportChange(page.path)}
+                    >
+                      <div className={cn("w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center", isCollapsed && "w-8 h-8")}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {!isCollapsed && (
+                        <span className="flex items-center gap-2">
+                          {page.name}
+                          {page.beta && (
+                            <span className="px-1.5 py-0 text-[8px] font-medium bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
+                              BETA
+                            </span>
+                          )}
+                          {page.new && (
+                            <span className="text-[8px] px-1 py-0 rounded font-medium bg-emerald-500 text-white shadow-sm border border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500">
+                              NEW
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  {isCollapsed && <TooltipContent side="right" className="z-[100]">{page.name}</TooltipContent>}
+                </Tooltip>
               );
             })}
           </div>
 
-          {/* Protocol Categories */}
+          {/* Protocol Categories - Hidden when collapsed */}
+          {!isCollapsed && (
           <div className="space-y-2">
             <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Categories</h3>
-            
+
             {/* Launchpads Category */}
             <div className="space-y-1">
               <Button
@@ -403,107 +447,110 @@ export function Layout() {
             })}
 
           </div>
+          )}
 
           {/* Reports Section */}
           <div className="space-y-2">
-            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>
+            {!isCollapsed && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Reports</h3>}
             {reports.map((report) => {
               const Icon = report.icon;
-              const isEVM = report.chain === 'evm';
-              const isMonad = report.chain === 'monad';
-              const chainBadge = isEVM ? "EVM" : isMonad ? "MON" : "SOL";
-              const chainBadgeClass = isEVM
-                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : isMonad
-                  ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
-                  : "bg-purple-500/10 text-purple-600 dark:text-purple-400";
               return (
-                <Button
-                  key={report.id}
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                    location.pathname === report.path && "bg-muted text-foreground font-medium"
-                  )}
-                  onClick={() => handleReportChange(report.path)}
-                >
-                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="flex-1 text-left">{report.name}</span>
-                  {report.chain && (
-                    <span className={cn(
-                      "text-xs px-1.5 py-0.5 rounded-md font-medium",
-                      chainBadgeClass
-                    )}>
-                      {chainBadge}
-                    </span>
-                  )}
-                </Button>
+                <Tooltip key={report.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
+                        isCollapsed ? "justify-center px-0" : "justify-start px-2 gap-3",
+                        location.pathname === report.path && "bg-muted text-foreground font-medium"
+                      )}
+                      onClick={() => handleReportChange(report.path)}
+                    >
+                      <div className={cn("w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center", isCollapsed && "w-8 h-8")}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {!isCollapsed && <span className="flex-1 text-left">{report.name}</span>}
+                    </Button>
+                  </TooltipTrigger>
+                  {isCollapsed && <TooltipContent side="right" className="z-[100]">{report.name}</TooltipContent>}
+                </Tooltip>
               );
             })}
           </div>
 
           {/* Admin Section */}
           <div className="space-y-2">
-            <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Admin</h3>
+            {!isCollapsed && <h3 className="text-xs uppercase text-muted-foreground font-medium mb-2 px-2">Admin</h3>}
             {adminPages.map((page) => {
               const Icon = page.icon;
               return (
-                <Button
-                  key={page.id}
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10 justify-start px-2 gap-3",
-                    location.pathname === page.path && "bg-muted text-foreground font-medium"
-                  )}
-                  onClick={() => handleReportChange(page.path)}
-                >
-                  <div className="w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  {page.name}
-                </Button>
+                <Tooltip key={page.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl flex items-center h-10",
+                        isCollapsed ? "justify-center px-0" : "justify-start px-2 gap-3",
+                        location.pathname === page.path && "bg-muted text-foreground font-medium"
+                      )}
+                      onClick={() => handleReportChange(page.path)}
+                    >
+                      <div className={cn("w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center", isCollapsed && "w-8 h-8")}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {!isCollapsed && page.name}
+                    </Button>
+                  </TooltipTrigger>
+                  {isCollapsed && <TooltipContent side="right" className="z-[100]">{page.name}</TooltipContent>}
+                </Tooltip>
               );
             })}
             
-            {/* Data Type Indicator - Full Width */}
-            <div className="px-2 pt-2">
-              <div className={cn(
-                "flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors w-full",
-                dataType === 'private' 
-                  ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50" 
-                  : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800/50"
-              )}>
-                {dataType === 'private' ? (
-                  <>
-                    <Shield className="w-3 h-3 shrink-0" />
-                    <span>Private Data</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-3 h-3 shrink-0" />
-                    <span>Public Data</span>
-                  </>
+            {/* Data Type Indicator */}
+            <div className={cn("pt-2", isCollapsed ? "px-0 flex justify-center" : "px-2")}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors cursor-default",
+                    isCollapsed ? "w-10 h-10 p-0" : "px-2 py-1 w-full",
+                    dataType === 'private'
+                      ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800/50"
+                      : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800/50"
+                  )}>
+                    {dataType === 'private' ? (
+                      <>
+                        <Shield className={cn("shrink-0", isCollapsed ? "w-4 h-4" : "w-3 h-3")} />
+                        {!isCollapsed && <span>Private Data</span>}
+                      </>
+                    ) : (
+                      <>
+                        <Globe className={cn("shrink-0", isCollapsed ? "w-4 h-4" : "w-3 h-3")} />
+                        {!isCollapsed && <span>Public Data</span>}
+                      </>
+                    )}
+                  </div>
+                </TooltipTrigger>
+                {isCollapsed && (
+                  <TooltipContent side="right" className="z-[100]">
+                    {dataType === 'private' ? 'Private Data' : 'Public Data'}
+                  </TooltipContent>
                 )}
-              </div>
+              </Tooltip>
             </div>
           </div>
         </nav>
 
 
         {/* Data Sync Button */}
-        <div className="p-4 border-t border-border">
-          <DataSyncButton isCollapsed={false} />
+        <div className={cn("border-t border-border", isCollapsed ? "p-2" : "p-4")}>
+          <DataSyncButton isCollapsed={isCollapsed} />
         </div>
       </aside>
 
       {/* Main content */}
       <main className="flex-1 bg-muted/20 overflow-y-auto lg:ml-0 ml-0">
         <div className="lg:p-8 p-4 lg:pt-8 pt-20">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </main>
       
@@ -513,5 +560,6 @@ export function Layout() {
       {/* Settings Manager (Development) - disabled */}
       {/* <SettingsManager /> */}
     </div>
+    </TooltipProvider>
   );
 }

@@ -7,6 +7,7 @@ import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
 import { isSolanaProtocol } from '../config/chainProtocols.js';
 import { getRollingRefreshSource, hasRollingRefreshSource } from '../config/rolling-refresh-config.js';
+import { getPublicRollingRefreshSource, hasPublicRollingRefreshSource } from '../config/rolling-refresh-config-public.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -172,17 +173,25 @@ export class DataManagementService {
       console.log(`Data Type: ${dataType}`);
       console.log(`==================\n`);
 
-      // Check for rolling refresh config first
+      // Check for rolling refresh config first based on data type
       let protocolConfig;
       let effectiveDataType = dataType;
 
-      if (hasRollingRefreshSource(protocolName)) {
-        // Use rolling refresh config (always private data)
+      // Check public rolling refresh config if dataType is 'public'
+      if (dataType === 'public' && hasPublicRollingRefreshSource(protocolName)) {
+        // Use public rolling refresh config
+        protocolConfig = getPublicRollingRefreshSource(protocolName);
+        effectiveDataType = 'public';
+        console.log(`✓ Using PUBLIC rolling refresh config (7-day data) for ${protocolName}`);
+        console.log(`  Query IDs: ${protocolConfig?.queryIds.join(', ')}`);
+        console.log(`  Data Type: ${effectiveDataType}`);
+      } else if (dataType === 'private' && hasRollingRefreshSource(protocolName)) {
+        // Use private rolling refresh config
         protocolConfig = getRollingRefreshSource(protocolName);
         effectiveDataType = 'private';
-        console.log(`✓ Using rolling refresh config (7-day data) for ${protocolName}`);
+        console.log(`✓ Using PRIVATE rolling refresh config (7-day data) for ${protocolName}`);
         console.log(`  Query IDs: ${protocolConfig?.queryIds.join(', ')}`);
-        console.log(`  Data Type: ${effectiveDataType} (forced)`);
+        console.log(`  Data Type: ${effectiveDataType}`);
       } else {
         // Use standard config
         const protocolSources = getProtocolSources(dataType);
@@ -521,9 +530,19 @@ export class DataManagementService {
       const data = parsed.data;
 
       // Map CSV columns to database columns and add protocol name and chain
-      const protocolSources = getProtocolSources(dataType);
-      const protocolConfig = protocolSources[protocolName];
-      const chain = protocolConfig?.chain || 'solana';
+      // First check rolling refresh configs for chain info, then fall back to standard sources
+      let chain: 'solana' | 'evm' | 'monad' = 'solana';
+      if (dataType === 'public' && hasPublicRollingRefreshSource(protocolName)) {
+        const rollingConfig = getPublicRollingRefreshSource(protocolName);
+        chain = rollingConfig?.chain || 'solana';
+      } else if (dataType === 'private' && hasRollingRefreshSource(protocolName)) {
+        const rollingConfig = getRollingRefreshSource(protocolName);
+        chain = rollingConfig?.chain || 'solana';
+      } else {
+        const protocolSources = getProtocolSources(dataType);
+        const protocolConfig = protocolSources[protocolName];
+        chain = protocolConfig?.chain || 'solana';
+      }
 
       const mappedData = data.map((row: any) => {
         const mappedRow: any = {};

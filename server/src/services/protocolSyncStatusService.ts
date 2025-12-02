@@ -27,9 +27,13 @@ export class ProtocolSyncStatusService {
       // Check if protocol has recent data (within last 3 days)
       const { hasRecentData, latestDate, daysBehind } = await this.checkRecentData(protocolName);
 
+      // Format datetime for MySQL (YYYY-MM-DD HH:MM:SS)
+      const now = new Date();
+      const mysqlDatetime = now.toISOString().slice(0, 19).replace('T', ' ');
+
       const syncStatus = {
         protocol_name: protocolName,
-        last_sync_at: new Date().toISOString(),
+        last_sync_at: mysqlDatetime,
         sync_success: success,
         rows_imported: rowsImported,
         error_message: errorMessage || null,

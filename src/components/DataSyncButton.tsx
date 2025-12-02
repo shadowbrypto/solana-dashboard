@@ -4,6 +4,7 @@ import { useDataSync } from '../hooks/useDataSync';
 import { useToast } from '../hooks/use-toast';
 import { cn } from '../lib/utils';
 import { useEffect, useState } from 'react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface DataSyncButtonProps {
   isCollapsed?: boolean;
@@ -87,13 +88,28 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
 
 
   if (isCollapsed) {
+    const getTooltipContent = () => {
+      if (isLoading && syncStep) {
+        return `${syncStep} (${syncProgress}%)`;
+      }
+      if (error) {
+        return `Error: ${error}`;
+      }
+      if (canSync) {
+        return 'Click to refresh data';
+      }
+      if (timeUntilNext) {
+        return `Next refresh in ${timeUntilNext}`;
+      }
+      return 'Data Sync';
+    };
+
     return (
-      <>
-        <div className="flex flex-col items-center space-y-3">
-          {/* Icon Button */}
-          <div className="relative">
+      <div className="flex flex-col items-center">
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
-              variant={getButtonVariant() as any}
+              variant="ghost"
               size="icon"
               onClick={() => syncData(
                 () => {
@@ -130,77 +146,48 @@ export function DataSyncButton({ isCollapsed = false }: DataSyncButtonProps) {
               )}
               disabled={!canSync || isLoading}
               className={cn(
-                "h-12 w-12 relative overflow-hidden shadow-md",
-                canSync && "hover:scale-110 transition-all duration-200 hover:shadow-lg"
+                "h-10 w-10 rounded-lg relative transition-all duration-200",
+                canSync
+                  ? "text-primary hover:bg-primary/10 hover:text-primary"
+                  : error
+                    ? "text-destructive hover:bg-destructive/10"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
-              title={`${canSync ? 'Available' : 'Waiting'}`}
             >
               {getButtonIcon()}
-              
-              {/* Status indicator ring */}
-              <div className={cn(
-                "absolute inset-0 rounded-full border-2 transition-all duration-300",
-                canSync ? "border-green-400 shadow-lg shadow-green-400/50" :
-                error ? "border-destructive shadow-sm shadow-destructive/30" :
-                "border-amber-400 shadow-sm shadow-amber-400/30"
+
+              {/* Subtle status indicator dot */}
+              <span className={cn(
+                "absolute top-1 right-1 h-2 w-2 rounded-full transition-all duration-300",
+                canSync && "bg-green-500",
+                error && "bg-destructive",
+                !canSync && !error && "bg-amber-500/70",
+                isLoading && "animate-pulse"
               )} />
-              
-              {/* Pulse effect when available */}
-              {canSync && (
-                <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
-              )}
             </Button>
-          </div>
-          
-          {/* Compact Status */}
-          <div className="text-center space-y-1">
-            {/* Status Dot */}
-            <div className="flex justify-center">
-              {canSync ? (
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50" />
-              ) : error ? (
-                <div className="h-2 w-2 rounded-full bg-destructive shadow-sm shadow-destructive/50" />
-              ) : (
-                <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="z-[100]">
+            <p className="font-medium">{getTooltipContent()}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Subtle mini progress indicator */}
+        {(isLoading || (!canSync && !error && timeUntilNext)) && (
+          <div className="w-8 h-1 mt-2 rounded-full overflow-hidden bg-muted">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                isLoading
+                  ? "bg-primary"
+                  : "bg-muted-foreground/30"
               )}
-            </div>
-            
-            {/* Countdown, Status or Progress */}
-            {isLoading && syncStep ? (
-              <div className="text-xs text-center space-y-1">
-                <div className="text-[10px] text-muted-foreground truncate max-w-16">
-                  {syncStep.replace('Refreshing ', '').replace(' data...', '')}
-                </div>
-                <div className="text-[10px] font-mono font-medium text-foreground">
-                  {syncProgress}%
-                </div>
-              </div>
-            ) : timeUntilNext && !canSync && !error ? (
-              <div className="text-xs font-mono text-foreground font-medium">
-                {timeUntilNext}
-              </div>
-            ) : null}
-            
+              style={{
+                width: `${isLoading ? Math.max(5, syncProgress) : Math.max(5, getProgressPercentage())}%`
+              }}
+            />
           </div>
-          
-          {/* Mini Progress Bar */}
-          {isLoading && syncStep ? (
-            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden shadow-sm border border-border/50">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300 ease-out shadow-sm"
-                style={{ width: `${Math.max(2, syncProgress)}%` }}
-              />
-            </div>
-          ) : !canSync && !error && timeUntilNext ? (
-            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden shadow-sm border border-border/50">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 shadow-sm"
-                style={{ width: `${Math.max(2, getProgressPercentage())}%` }}
-              />
-            </div>
-          ) : null}
-        </div>
-      </>
+        )}
+      </div>
     );
   }
 

@@ -3,6 +3,7 @@ import { syncData, getSyncStatus } from '../services/dataUpdateService.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 import { launchpadDataService } from '../services/launchpadDataService.js';
 import { getProtocolsWithRollingRefresh } from '../config/rolling-refresh-config.js';
+import { getProtocolsWithPublicRollingRefresh } from '../config/rolling-refresh-config-public.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 
 const router = Router();
@@ -145,18 +146,25 @@ router.post('/sync/launchpad/:launchpadName', async (req: Request, res: Response
 
 // POST /api/data-update/sync-rolling
 // Sync data for all protocols with rolling refresh configuration
+// Query params: dataType (optional - 'public', 'private')
 router.post('/sync-rolling', async (req: Request, res: Response) => {
   try {
-    console.log('Starting rolling refresh sync for all configured protocols...');
+    const { dataType } = req.query;
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
 
-    // Get all protocols with rolling refresh config
-    const rollingProtocols = getProtocolsWithRollingRefresh();
+    console.log(`Starting rolling refresh sync for all configured protocols (${dataTypeFilter} data)...`);
+
+    // Get protocols based on data type
+    const rollingProtocols = dataTypeFilter === 'public'
+      ? getProtocolsWithPublicRollingRefresh()
+      : getProtocolsWithRollingRefresh();
 
     if (rollingProtocols.length === 0) {
       return res.json({
         success: true,
-        message: 'No protocols configured for rolling refresh',
+        message: `No protocols configured for ${dataTypeFilter} rolling refresh`,
         data: {
+          dataType: dataTypeFilter,
           protocolsSynced: 0,
           results: [],
           timestamp: new Date().toISOString()
@@ -164,7 +172,7 @@ router.post('/sync-rolling', async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`Found ${rollingProtocols.length} protocols with rolling refresh config:`, rollingProtocols);
+    console.log(`Found ${rollingProtocols.length} protocols with ${dataTypeFilter} rolling refresh config:`, rollingProtocols);
 
     // Sync each protocol
     const results = [];
@@ -173,8 +181,8 @@ router.post('/sync-rolling', async (req: Request, res: Response) => {
 
     for (const protocol of rollingProtocols) {
       try {
-        console.log(`Syncing rolling refresh data for ${protocol}...`);
-        const result = await dataManagementService.syncProtocolData(protocol, 'private');
+        console.log(`Syncing ${dataTypeFilter} rolling refresh data for ${protocol}...`);
+        const result = await dataManagementService.syncProtocolData(protocol, dataTypeFilter);
 
         if (result.success) {
           successCount++;
@@ -203,12 +211,13 @@ router.post('/sync-rolling', async (req: Request, res: Response) => {
       }
     }
 
-    console.log(`Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`);
+    console.log(`Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} ${dataTypeFilter} protocols synced successfully`);
 
     res.json({
       success: true,
-      message: `Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`,
+      message: `Rolling refresh sync completed: ${successCount}/${rollingProtocols.length} ${dataTypeFilter} protocols synced successfully`,
       data: {
+        dataType: dataTypeFilter,
         protocolsSynced: successCount,
         totalProtocols: rollingProtocols.length,
         totalRowsImported,

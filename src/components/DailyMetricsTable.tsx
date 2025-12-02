@@ -29,7 +29,7 @@ interface DailyMetricsTableProps {
   onDateChange: (date: Date) => void;
 }
 
-type MetricKey = keyof ProtocolMetrics | 'market_share' | 'projected_volume';
+type MetricKey = keyof ProtocolMetrics | 'market_share' | 'projected_volume' | 'public_daily_users' | 'public_new_users';
 
 interface MetricDefinition {
   key: MetricKey;
@@ -71,6 +71,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
   const [weeklyVolumeData, setWeeklyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
   const [projectedVolumeData, setProjectedVolumeData] = useState<Record<string, number>>({});
+  const [publicUserData, setPublicUserData] = useState<Record<string, { dailyUsers: number; newUsers: number }>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
@@ -255,7 +256,217 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
     },
     { key: "total_volume_usd", label: "Volume", format: formatCurrency },
-    { key: "daily_users", label: "Daily Users", format: formatNumber },
+    {
+      key: "public_daily_users" as MetricKey,
+      label: "DAUs*",
+      format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => {
+        // For category rows, calculate total private DAUs for comparison
+        if (isCategory && categoryName) {
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+          const visibleProtocols = categoryProtocols
+            .map(p => p.id)
+            .filter(p => !hiddenProtocols.has(p));
+
+          // Calculate total private DAUs for the category
+          const totalPrivateDAUs = visibleProtocols
+            .reduce((sum, p) => sum + (dailyData[p as Protocol]?.daily_users || 0), 0);
+
+          if (value === 0 && totalPrivateDAUs === 0) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+
+          if (totalPrivateDAUs === 0 && value > 0) {
+            return (
+              <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                <span>{formatNumber(value)}</span>
+              </div>
+            );
+          }
+
+          const difference = value - totalPrivateDAUs;
+          const percentageDiff = totalPrivateDAUs > 0 ? (difference / totalPrivateDAUs) * 100 : 0;
+
+          const isNeutral = Math.abs(difference) < 1;
+          const isPositive = difference > 0;
+
+          let bgColor, borderColor;
+          if (isNeutral) {
+            bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+            borderColor = "border-l-gray-400";
+          } else if (isPositive) {
+            bgColor = "bg-green-100/80 dark:bg-green-950/40";
+            borderColor = "border-l-green-400";
+          } else {
+            bgColor = "bg-red-100/80 dark:bg-red-950/40";
+            borderColor = "border-l-red-400";
+          }
+
+          const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+          return (
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+              <span>{formatNumber(value)}</span>
+              {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+            </div>
+          );
+        }
+
+        // Get private value for comparison (individual protocol)
+        const privateValue = protocol ? dailyData[protocol]?.daily_users || 0 : 0;
+
+        if (value === 0 && privateValue === 0) {
+          return <span className="text-muted-foreground">-</span>;
+        }
+
+        // If only value exists (no comparison needed)
+        if (privateValue === 0 && value > 0) {
+          return (
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+              <span>{formatNumber(value)}</span>
+            </div>
+          );
+        }
+
+        // Calculate difference
+        const difference = value - privateValue;
+        const percentageDiff = privateValue > 0 ? (difference / privateValue) * 100 : 0;
+
+        // Determine styling
+        const isNeutral = Math.abs(difference) < 1;
+        const isPositive = difference > 0;
+
+        let bgColor, borderColor;
+        if (isNeutral) {
+          bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+          borderColor = "border-l-gray-400";
+        } else if (isPositive) {
+          bgColor = "bg-green-100/80 dark:bg-green-950/40";
+          borderColor = "border-l-green-400";
+        } else {
+          bgColor = "bg-red-100/80 dark:bg-red-950/40";
+          borderColor = "border-l-red-400";
+        }
+
+        const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+        return (
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+            <span>{formatNumber(value)}</span>
+            {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+          </div>
+        );
+      },
+      getValue: (data, protocol) => {
+        if (!protocol) return 0;
+        return publicUserData[protocol]?.dailyUsers || 0;
+      }
+    },
+    { key: "daily_users", label: "DAUs", format: formatNumber },
+    {
+      key: "public_new_users" as MetricKey,
+      label: "New Users*",
+      format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => {
+        // For category rows, calculate total private new users for comparison
+        if (isCategory && categoryName) {
+          const categoryProtocols = getMutableProtocolsByCategory(categoryName);
+          const visibleProtocols = categoryProtocols
+            .map(p => p.id)
+            .filter(p => !hiddenProtocols.has(p));
+
+          // Calculate total private new users for the category
+          const totalPrivateNewUsers = visibleProtocols
+            .reduce((sum, p) => sum + (dailyData[p as Protocol]?.numberOfNewUsers || 0), 0);
+
+          if (value === 0 && totalPrivateNewUsers === 0) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+
+          if (totalPrivateNewUsers === 0 && value > 0) {
+            return (
+              <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                <span>{formatNumber(value)}</span>
+              </div>
+            );
+          }
+
+          const difference = value - totalPrivateNewUsers;
+          const percentageDiff = totalPrivateNewUsers > 0 ? (difference / totalPrivateNewUsers) * 100 : 0;
+
+          const isNeutral = Math.abs(difference) < 1;
+          const isPositive = difference > 0;
+
+          let bgColor, borderColor;
+          if (isNeutral) {
+            bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+            borderColor = "border-l-gray-400";
+          } else if (isPositive) {
+            bgColor = "bg-green-100/80 dark:bg-green-950/40";
+            borderColor = "border-l-green-400";
+          } else {
+            bgColor = "bg-red-100/80 dark:bg-red-950/40";
+            borderColor = "border-l-red-400";
+          }
+
+          const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+          return (
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+              <span>{formatNumber(value)}</span>
+              {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+            </div>
+          );
+        }
+
+        // Get private value for comparison (individual protocol)
+        const privateValue = protocol ? dailyData[protocol]?.numberOfNewUsers || 0 : 0;
+
+        if (value === 0 && privateValue === 0) {
+          return <span className="text-muted-foreground">-</span>;
+        }
+
+        // If only value exists (no comparison needed)
+        if (privateValue === 0 && value > 0) {
+          return (
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+              <span>{formatNumber(value)}</span>
+            </div>
+          );
+        }
+
+        // Calculate difference
+        const difference = value - privateValue;
+        const percentageDiff = privateValue > 0 ? (difference / privateValue) * 100 : 0;
+
+        // Determine styling
+        const isNeutral = Math.abs(difference) < 1;
+        const isPositive = difference > 0;
+
+        let bgColor, borderColor;
+        if (isNeutral) {
+          bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+          borderColor = "border-l-gray-400";
+        } else if (isPositive) {
+          bgColor = "bg-green-100/80 dark:bg-green-950/40";
+          borderColor = "border-l-green-400";
+        } else {
+          bgColor = "bg-red-100/80 dark:bg-red-950/40";
+          borderColor = "border-l-red-400";
+        }
+
+        const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+        return (
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+            <span>{formatNumber(value)}</span>
+            {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+          </div>
+        );
+      },
+      getValue: (data, protocol) => {
+        if (!protocol) return 0;
+        return publicUserData[protocol]?.newUsers || 0;
+      }
+    },
     { key: "numberOfNewUsers", label: "New Users", format: formatNumber },
     { key: "daily_trades", label: "Trades", format: formatNumber },
     {
@@ -481,7 +692,37 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       effectiveColumnOrder.unshift('projected_volume');
     }
   }
-  
+
+  // Ensure public_daily_users is included for existing users who don't have it in their saved settings
+  if (!effectiveColumnOrder.includes('public_daily_users')) {
+    // Insert public_daily_users before daily_users if it exists
+    const dailyUsersIndex = effectiveColumnOrder.indexOf('daily_users');
+    if (dailyUsersIndex >= 0) {
+      effectiveColumnOrder.splice(dailyUsersIndex, 0, 'public_daily_users');
+    } else {
+      // Find total_volume_usd and insert after it
+      const volumeIndex = effectiveColumnOrder.indexOf('total_volume_usd');
+      if (volumeIndex >= 0) {
+        effectiveColumnOrder.splice(volumeIndex + 1, 0, 'public_daily_users');
+      }
+    }
+  }
+
+  // Ensure public_new_users is included for existing users who don't have it in their saved settings
+  if (!effectiveColumnOrder.includes('public_new_users')) {
+    // Insert public_new_users before numberOfNewUsers if it exists
+    const newUsersIndex = effectiveColumnOrder.indexOf('numberOfNewUsers');
+    if (newUsersIndex >= 0) {
+      effectiveColumnOrder.splice(newUsersIndex, 0, 'public_new_users');
+    } else {
+      // Find daily_users and insert after it
+      const dailyUsersIndex = effectiveColumnOrder.indexOf('daily_users');
+      if (dailyUsersIndex >= 0) {
+        effectiveColumnOrder.splice(dailyUsersIndex + 1, 0, 'public_new_users');
+      }
+    }
+  }
+
   const orderedMetrics = effectiveColumnOrder
     .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
     .map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
@@ -528,14 +769,40 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     };
   }, []);
 
+  // Track dataType preference for re-fetching when it changes
+  const [dataType, setDataType] = useState(() => Settings.getDataTypePreference());
+
+  // Listen for dataType changes from settings
+  useEffect(() => {
+    const unsubscribe = Settings.addDataTypeChangeListener((newDataType) => {
+      setDataType(newDataType);
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       setTopProtocols([]);
       try {
-        // Use the new optimized API endpoint - Solana always uses 'private' data type
-        const dataType = Settings.getDataTypePreference() === 'public' ? 'private' : Settings.getDataTypePreference();
+        // Use the dataType from settings (respects user preference)
+        // Also fetch public data for DAUs* and New Users* columns
         console.log('Calling getDailyMetricsOptimized with:', { date: date.toISOString().split('T')[0], chain: 'solana', dataType });
-        const optimizedData = await protocolApi.getDailyMetricsOptimized(date, 'solana', dataType);
+
+        // Fetch both main data and public data in parallel
+        const [optimizedData, publicData] = await Promise.all([
+          protocolApi.getDailyMetricsOptimized(date, 'solana', dataType),
+          protocolApi.getDailyMetricsOptimized(date, 'solana', 'public')
+        ]);
+
+        // Extract public user data for DAUs* and New Users* columns
+        const publicUserMap: Record<string, { dailyUsers: number; newUsers: number }> = {};
+        Object.entries(publicData.protocols).forEach(([protocolName, data]: [string, any]) => {
+          publicUserMap[protocolName] = {
+            dailyUsers: data.dailyUsers || 0,
+            newUsers: data.newUsers || 0
+          };
+        });
+        setPublicUserData(publicUserMap);
         
         
         // Transform the optimized data to match the component's data structure
@@ -612,7 +879,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
     };
     fetchData();
-  }, [date]);
+  }, [date, dataType]);
 
   // Persist settings changes
   useEffect(() => {
@@ -896,16 +1163,24 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         if (projectedVolume && projectedVolume > 0) {
                           return sum + projectedVolume;
                         }
-                        
+
                         // For Mobile Apps protocols, use actual volume as projected volume
                         const protocolConfig = getProtocolById(p);
                         if (protocolConfig?.category === 'Mobile Apps') {
                           return sum + (dailyData[p as Protocol]?.total_volume_usd || 0);
                         }
-                        
+
                         // For other protocols without projected data, add 0
                         return sum;
                       }, 0);
+                  } else if (metric.key === 'public_daily_users') {
+                    // Calculate category public DAUs total
+                    acc[metric.key] = visibleProtocols
+                      .reduce((sum, p) => sum + (publicUserData[p]?.dailyUsers || 0), 0);
+                  } else if (metric.key === 'public_new_users') {
+                    // Calculate category public new users total
+                    acc[metric.key] = visibleProtocols
+                      .reduce((sum, p) => sum + (publicUserData[p]?.newUsers || 0), 0);
                   } else {
                     acc[metric.key] = visibleProtocols
                       .reduce((sum, p) => sum + (dailyData[p as Protocol]?.[metric.key as keyof ProtocolMetrics] || 0), 0);
@@ -942,6 +1217,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             : metric.key === 'daily_growth'
                             ? metric.format(categoryTotals[metric.key], true, undefined, categoryName)
                             : metric.key === 'projected_volume'
+                            ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
+                            : metric.key === 'public_daily_users'
+                            ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
+                            : metric.key === 'public_new_users'
                             ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
                             : metric.getValue
                               ? metric.format(metric.getValue(categoryTotals as ProtocolMetrics), true, undefined, categoryName)
@@ -1071,16 +1350,26 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         if (projectedVolume && projectedVolume > 0) {
                           return sum + projectedVolume;
                         }
-                        
+
                         // For Mobile Apps protocols, use actual volume as projected volume
                         const protocolConfig = getProtocolById(p);
                         if (protocolConfig?.category === 'Mobile Apps') {
                           return sum + (dailyData[p]?.total_volume_usd || 0);
                         }
-                        
+
                         // For other protocols without projected data, add 0
                         return sum;
                       }, 0);
+                  } else if (metric.key === 'public_daily_users') {
+                    // Calculate total public DAUs for all protocols
+                    total = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => sum + (publicUserData[p]?.dailyUsers || 0), 0);
+                  } else if (metric.key === 'public_new_users') {
+                    // Calculate total public new users for all protocols
+                    total = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => sum + (publicUserData[p]?.newUsers || 0), 0);
                   } else {
                     total = protocols
                       .filter(p => p !== 'all' && !hiddenProtocols.has(p))
@@ -1231,10 +1520,124 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       </TableCell>
                     );
                   }
-                  
+
+                  // Special rendering for public_daily_users with comparison styling
+                  if (metric.key === 'public_daily_users') {
+                    // Calculate total private daily users for comparison
+                    const totalPrivateUsers = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => sum + (dailyData[p]?.daily_users || 0), 0);
+
+                    if (total === 0 && totalPrivateUsers === 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                          <span className="text-muted-foreground">-</span>
+                        </TableCell>
+                      );
+                    }
+
+                    if (totalPrivateUsers === 0 && total > 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                            <span>{formatNumber(total)}</span>
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
+                    // Calculate difference
+                    const difference = total - totalPrivateUsers;
+                    const percentageDiff = totalPrivateUsers > 0 ? (difference / totalPrivateUsers) * 100 : 0;
+
+                    // Determine styling based on difference
+                    const isNeutral = Math.abs(difference) < 1;
+                    const isPositive = difference > 0;
+
+                    let bgColor, borderColor;
+                    if (isNeutral) {
+                      bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+                      borderColor = "border-l-gray-400";
+                    } else if (isPositive) {
+                      bgColor = "bg-green-100/80 dark:bg-green-950/40";
+                      borderColor = "border-l-green-400";
+                    } else {
+                      bgColor = "bg-red-100/80 dark:bg-red-950/40";
+                      borderColor = "border-l-red-400";
+                    }
+
+                    const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+                    return (
+                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+                          <span>{formatNumber(total)}</span>
+                          {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+                        </div>
+                      </TableCell>
+                    );
+                  }
+
+                  // Special rendering for public_new_users with comparison styling
+                  if (metric.key === 'public_new_users') {
+                    // Calculate total private new users for comparison
+                    const totalPrivateNewUsers = protocols
+                      .filter(p => p !== 'all' && !hiddenProtocols.has(p))
+                      .reduce((sum, p) => sum + (dailyData[p]?.numberOfNewUsers || 0), 0);
+
+                    if (total === 0 && totalPrivateNewUsers === 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                          <span className="text-muted-foreground">-</span>
+                        </TableCell>
+                      );
+                    }
+
+                    if (totalPrivateNewUsers === 0 && total > 0) {
+                      return (
+                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                            <span>{formatNumber(total)}</span>
+                          </div>
+                        </TableCell>
+                      );
+                    }
+
+                    // Calculate difference
+                    const difference = total - totalPrivateNewUsers;
+                    const percentageDiff = totalPrivateNewUsers > 0 ? (difference / totalPrivateNewUsers) * 100 : 0;
+
+                    // Determine styling based on difference
+                    const isNeutral = Math.abs(difference) < 1;
+                    const isPositive = difference > 0;
+
+                    let bgColor, borderColor;
+                    if (isNeutral) {
+                      bgColor = "bg-gray-100/80 dark:bg-gray-950/40";
+                      borderColor = "border-l-gray-400";
+                    } else if (isPositive) {
+                      bgColor = "bg-green-100/80 dark:bg-green-950/40";
+                      borderColor = "border-l-green-400";
+                    } else {
+                      bgColor = "bg-red-100/80 dark:bg-red-950/40";
+                      borderColor = "border-l-red-400";
+                    }
+
+                    const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
+
+                    return (
+                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
+                          <span>{formatNumber(total)}</span>
+                          {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
+                        </div>
+                      </TableCell>
+                    );
+                  }
+
                   return (
-                    <TableCell 
-                      key={metric.key} 
+                    <TableCell
+                      key={metric.key}
                       className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
                     >
                       {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total, true)}

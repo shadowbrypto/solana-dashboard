@@ -45,6 +45,9 @@ export interface AppSettings {
   
   // Column visibility
   'projected-volume-hidden': boolean;
+
+  // Sidebar state
+  'sidebar-collapsed': boolean;
 }
 
 // Default values for all settings
@@ -56,7 +59,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   'daily-table-collapsed-categories': [],
   'weekly-table-collapsed-categories': [],
   'sidebar-expanded-categories': {},
-  'daily-table-column-order': ['projected_volume', 'total_volume_usd', 'daily_users', 'numberOfNewUsers', 'daily_trades', 'market_share', 'daily_growth'],
+  'daily-table-column-order': ['projected_volume', 'total_volume_usd', 'public_daily_users', 'daily_users', 'public_new_users', 'numberOfNewUsers', 'daily_trades', 'market_share', 'daily_growth'],
   'protocol-data-table-metric': 'total_volume_usd',
   'weekly-heatmap-metric': 'total_volume_usd',
   'weekly-table-metric': 'total_volume_usd',
@@ -66,6 +69,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   'last-selected-dates': {},
   'data-type-preference': 'private' as const,
   'projected-volume-hidden': false,
+  'sidebar-collapsed': false,
 };
 
 class SettingsManager {
@@ -252,6 +256,10 @@ export const Settings = {
   // Projected volume visibility
   getIsProjectedVolumeHidden: () => settingsManager.getSetting('projected-volume-hidden'),
   setIsProjectedVolumeHidden: (hidden: boolean) => settingsManager.setSetting('projected-volume-hidden', hidden),
+
+  // Sidebar collapsed state
+  getSidebarCollapsed: () => settingsManager.getSetting('sidebar-collapsed'),
+  setSidebarCollapsed: (collapsed: boolean) => settingsManager.setSetting('sidebar-collapsed', collapsed),
 };
 
 // Export default instance

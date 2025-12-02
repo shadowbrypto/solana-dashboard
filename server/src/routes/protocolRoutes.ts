@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getMonadDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
-import { simpleEVMDataMigrationService } from '../services/evmDataMigrationServiceSimple.js';
-import { getEVMProtocols, getMonadProtocols } from '../config/chainProtocols.js';
+import { getMonadProtocols } from '../config/chainProtocols.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 
 const router = Router();
@@ -286,98 +285,6 @@ router.get('/weekly-insights', async (req: Request, res: Response) => {
 });
 
 
-// GET /api/protocols/debug-sigma
-// Temporary debug endpoint to check sigma data
-router.get('/debug-sigma', async (req: Request, res: Response) => {
-  try {
-    const { data, error } = await supabase
-      .from('protocol_stats')
-      .select('chain, volume_usd, protocol_name, date')
-      .eq('protocol_name', 'sigma')
-      .eq('data_type', 'public') // Default to public data for EVM debug endpoint
-      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'arbitrum', 'polygon']);
-
-    if (error) throw error;
-
-    const totalVolume = data?.reduce((sum, row) => sum + (row.volume_usd || 0), 0) || 0;
-    
-    res.json({ 
-      success: true, 
-      data: {
-        rows: data?.length || 0,
-        totalVolume,
-        chains: [...new Set(data?.map(r => r.chain) || [])],
-        recentDates: [...new Set(data?.map(r => r.date) || [])].slice(0, 5)
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-  }
-});
-
-// GET /api/protocols/debug-sigma-raw
-// Test exact same query as getEVMChainBreakdown
-router.get('/debug-sigma-raw', async (req: Request, res: Response) => {
-  try {
-    console.log('SIGMA RAW DEBUG: Starting query...');
-    
-    const { data, error } = await supabase
-      .from('protocol_stats')
-      .select('chain, volume_usd')
-      .eq('protocol_name', 'sigma')
-      .eq('data_type', 'public') // Default to public data for EVM debug endpoint
-      .in('chain', ['ethereum', 'base', 'bsc', 'avax', 'polygon', 'arbitrum']);
-
-    console.log('SIGMA RAW DEBUG: Query completed', { 
-      error: error?.message, 
-      rowCount: data?.length,
-      firstRow: data?.[0]
-    });
-
-    if (error) throw error;
-
-    // Group by chain and calculate totals - exactly like getEVMChainBreakdown
-    const chainTotals = data?.reduce((acc: Record<string, number>, row: any) => {
-      const chain = row.chain;
-      const volume = Number(row.volume_usd) || 0;
-      
-      if (!acc[chain]) {
-        acc[chain] = 0;
-      }
-      acc[chain] += volume;
-      
-      return acc;
-    }, {}) || {};
-
-    const totalVolume = (Object.values(chainTotals) as number[]).reduce((sum: number, vol: number) => sum + vol, 0);
-    
-    const chainBreakdown = (Object.entries(chainTotals) as [string, number][])
-      .map(([chain, volume]) => ({
-        chain,
-        volume,
-        percentage: totalVolume > 0 ? (volume / totalVolume) * 100 : 0
-      }))
-      .sort((a, b) => b.volume - a.volume)
-      .filter(item => item.volume > 0);
-
-    const result = {
-      lifetimeVolume: totalVolume,
-      chainBreakdown,
-      totalChains: chainBreakdown.length
-    };
-
-    console.log('SIGMA RAW DEBUG: Result', result);
-    
-    res.json({ 
-      success: true, 
-      data: result
-    });
-  } catch (error) {
-    console.error('SIGMA RAW DEBUG: Error', error);
-    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-  }
-});
-
 // GET /api/protocols/evm-metrics/:protocol
 // Get EVM chain breakdown for a specific protocol
 router.get('/evm-metrics/:protocol', async (req: Request, res: Response) => {
@@ -568,52 +475,6 @@ router.get('/latest-dates', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/protocols/sync-evm
-// Sync all EVM protocol data
-router.post('/sync-evm', async (req: Request, res: Response) => {
-  try {
-    console.log('Starting EVM data sync for all protocols...');
-
-    // Get all EVM protocols dynamically from chain configuration (adds _evm suffix)
-    const evmProtocols = getEVMProtocols().map(protocol => `${protocol}_evm`);
-    console.log(`Syncing ${evmProtocols.length} EVM protocols:`, evmProtocols);
-    const results = [];
-    
-    for (const protocol of evmProtocols) {
-      try {
-        const result = await simpleEVMDataMigrationService.syncEVMProtocolData(protocol);
-        results.push(result);
-      } catch (error) {
-        results.push({
-          success: false,
-          protocol,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
-    
-    const totalRowsImported = results.reduce((sum, r) => sum + (r.rowsImported || 0), 0);
-    const successfulSyncs = results.filter(r => r.success).length;
-    
-    res.json({
-      success: successfulSyncs > 0,
-      message: `EVM data sync completed: ${successfulSyncs}/${results.length} protocols successful`,
-      data: {
-        rowsImported: totalRowsImported,
-        csvFilesFetched: successfulSyncs,
-        timestamp: new Date().toISOString()
-      }
-    });
-  } catch (error) {
-    console.error('Error in EVM data sync:', error);
-    res.status(500).json({
-      success: false,
-      error: 'EVM data sync failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
 // POST /api/protocols/sync-monad
 // Sync all Monad protocol data
 router.post('/sync-monad', async (req: Request, res: Response) => {
@@ -665,31 +526,6 @@ router.post('/sync-monad', async (req: Request, res: Response) => {
     });
   }
 });
-
-// POST /api/protocols/sync-evm/:protocol
-// Sync specific EVM protocol data
-router.post('/sync-evm/:protocol', async (req: Request, res: Response) => {
-  try {
-    const { protocol } = req.params;
-    console.log(`Starting simple EVM data sync for protocol: ${protocol}`);
-    
-    const result = await simpleEVMDataMigrationService.syncEVMProtocolData(protocol);
-    
-    res.json({
-      success: true,
-      message: `EVM data sync completed for ${protocol}`,
-      data: result
-    });
-  } catch (error) {
-    console.error(`Error in EVM data sync for ${req.params.protocol}:`, error);
-    res.status(500).json({
-      success: false,
-      error: `EVM data sync failed for ${req.params.protocol}`,
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
 
 // GET /api/protocols/monthly-metrics
 // Query params: endDate (required, format: YYYY-MM-DD), dataType (optional, 'public' or 'private', defaults to 'private'), chain (optional, 'solana' or 'evm', defaults to 'solana')

@@ -8,14 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "import-csv": "tsx scripts/importCsvToSupabaseWithDelete.ts",
-    "import-csv-upsert": "tsx scripts/importCsvToSupabase.ts",
-    "update-data": "bash scripts/update.sh",
-    "sync-evm": "tsx scripts/sync-evm-data.ts",
     "migrate-db": "tsx scripts/run-migrations.ts",
-    "analyze-evm": "tsx scripts/analyze-evm-csv.ts",
-    "fetch-photon-traders": "tsx src/scripts/fetchPhotonTraderStats.ts",
-    "fetch-axiom-traders": "tsx src/scripts/fetchAxiomTraderStats.ts",
     "fetch-all-trader-stats": "tsx -e \"import('./src/services/duneTraderStatsService.js').then(m => m.DuneTraderStatsService.fetchAllProtocolTraderStats())\""
   },
   "dependencies": {

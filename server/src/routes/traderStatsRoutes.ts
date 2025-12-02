@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import TraderStatsService from '../services/traderStatsService.js';
 import DuneTraderStatsService from '../services/duneTraderStatsService.js';
 import { format, parseISO, isValid } from 'date-fns';
+import { db } from '../lib/db.js';
 
 const router = express.Router();
 
@@ -604,21 +605,7 @@ router.get('/percentiles/:protocol', async (req: Request, res: Response) => {
       });
     } catch (calcError) {
       console.error('Error calculating percentiles:', calcError);
-      // Try to get from database or return empty array
-      try {
-        const brackets = await TraderStatsService.getProtocolPercentiles(protocol);
-        formattedBrackets = brackets.map(row => ({
-          percentile: row.percentile,
-          traderCount: row.trader_count,
-          rankRange: row.rank_range,
-          volume: parseFloat(row.volume_usd),
-          volumeShare: parseFloat(row.volume_share)
-        }));
-      } catch (dbError) {
-        console.error('Database lookup failed, calculating on the fly:', dbError);
-        // Fallback to real-time calculation for other protocols
-        formattedBrackets = [];
-      }
+      formattedBrackets = [];
     }
     
     console.log(`Retrieved ${formattedBrackets.length} percentile brackets for ${protocol}`);
@@ -828,27 +815,6 @@ router.get('/test/photon', async (req: Request, res: Response) => {
   }
 });
 
-// Refresh percentiles for a protocol (manual refresh endpoint)
-router.post('/percentiles/refresh/:protocol', async (req: Request, res: Response) => {
-  try {
-    const { protocol } = req.params;
-    console.log(`Manual refresh request for ${protocol} percentiles`);
-    
-    await TraderStatsService.refreshProtocolPercentiles(protocol);
-    
-    res.json({
-      success: true,
-      message: `Successfully refreshed percentiles for ${protocol}`
-    });
-  } catch (error: any) {
-    console.error('Error refreshing percentiles:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to refresh percentiles'
-    });
-  }
-});
-
 // Refresh trader data from Dune (delete existing + fetch fresh)
 router.post('/refresh/:protocol', async (req: Request, res: Response) => {
   try {
@@ -865,14 +831,13 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
     // Step 1: Fetch fresh data from Dune (includes deletion step)
     console.log(`Fetching fresh ${protocol} data from Dune...`);
     await DuneTraderStatsService.fetchAndImportTraderStats(protocol, new Date());
-    
+
     // Step 3: Verify the data was imported
-    const { count, error: countError } = await supabase
-      .from('trader_stats')
-      .select('*', { count: 'exact', head: true })
-      .eq('protocol_name', protocol.toLowerCase());
-      
-    if (countError) throw countError;
+    const countResult = await db.query<{ count: number }>(
+      `SELECT COUNT(*) as count FROM trader_stats WHERE protocol_name = ?`,
+      [protocol.toLowerCase()]
+    );
+    const count = countResult[0]?.count || 0;
     
     // Step 4: Clear all caches for this protocol
     console.log(`Clearing caches for ${protocol}...`);
@@ -924,14 +889,13 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
         
         // Fetch fresh data from Dune (includes deletion step)
         await DuneTraderStatsService.fetchAndImportTraderStats(protocol, new Date());
-        
+
         // Verify import
-        const { count, error: countError } = await supabase
-          .from('trader_stats')
-          .select('*', { count: 'exact', head: true })
-          .eq('protocol_name', protocol);
-          
-        if (countError) throw countError;
+        const countResult = await db.query<{ count: number }>(
+          `SELECT COUNT(*) as count FROM trader_stats WHERE protocol_name = ?`,
+          [protocol]
+        );
+        const count = countResult[0]?.count || 0;
         
         // Clear caches for this protocol (use correct cache key format)
         const comprehensiveCacheKey = `comprehensive_metrics_${protocol}`;

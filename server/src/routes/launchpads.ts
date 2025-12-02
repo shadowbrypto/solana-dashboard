@@ -104,9 +104,9 @@ router.get('/metrics', async (req, res) => {
     const processedData = allData.map(row => ({
       date: row.date,
       launchpad_name: row.launchpad_name,
-      launches: parseInt(row.launches) || 0,
-      graduations: parseInt(row.graduations) || 0,
-      total: (parseInt(row.launches) || 0) + (parseInt(row.graduations) || 0)
+      launches: Number(row.launches) || 0,
+      graduations: Number(row.graduations) || 0,
+      total: (Number(row.launches) || 0) + (Number(row.graduations) || 0)
     }));
 
     // Filter out data for the current calendar date (as it might have incomplete data)

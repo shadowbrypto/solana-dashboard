@@ -202,37 +202,6 @@ export class DataManagementService {
         throw new Error(`No configuration found for protocol '${protocolName}'`);
       }
 
-      // Check if this is an EVM protocol
-      if (protocolConfig.chain === 'evm') {
-        // Delegate to simple EVM migration service (no multiple files)
-        console.log(`Detected EVM protocol ${protocolName}, delegating to simple EVM service...`);
-
-        const { simpleEVMDataMigrationService } = await import('./evmDataMigrationServiceSimple.js');
-        const evmResult = await simpleEVMDataMigrationService.syncEVMProtocolData(protocolName, effectiveDataType);
-
-        // Convert simple EVM result format to standard SyncResult format
-        return {
-          success: evmResult.success,
-          csvFilesFetched: 1,
-          rowsImported: evmResult.rowsImported,
-          timestamp: evmResult.timestamp,
-          downloadResults: [{
-            success: evmResult.success,
-            protocol: protocolName.replace('_evm', ''),
-            queriesProcessed: evmResult.success ? 1 : 0,
-            queriesFailed: evmResult.success ? 0 : 1,
-            error: evmResult.error
-          }],
-          importResults: evmResult.results?.map((r: any) => ({
-            success: r.success,
-            protocol: `${protocolName.replace('_evm', '')}_${r.chain}`,
-            rowsInserted: r.rowsInserted,
-            error: r.error
-          })) || [],
-          error: evmResult.error
-        };
-      }
-
       console.log(`Starting ${protocolConfig.chain} data sync for protocol: ${protocolName}...`);
 
       // Step 1: Download CSV file for the specific protocol

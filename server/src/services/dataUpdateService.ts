@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { supabase } from '../lib/supabase.js';
+import { db } from '../lib/db.js';
 import { dataManagementService } from './dataManagementService.js';
 import { getSolanaProtocols } from '../config/chainProtocols.js';
 
@@ -17,31 +17,28 @@ async function checkCurrentDataInDB(): Promise<{ hasCurrentData: boolean; missin
   try {
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
-    
+
+    // Build placeholders for IN clause
+    const placeholders = EXPECTED_PROTOCOLS.map(() => '?').join(',');
+
     // Query for today's data for all protocols
-    const { data, error } = await supabase
-      .from('protocol_stats')
-      .select('protocol_name')
-      .eq('date', today)
-      .eq('chain', 'solana') // Filter for Solana data only
-      .eq('data_type', 'private') // Default to private data for current data check
-      .in('protocol_name', EXPECTED_PROTOCOLS);
-    
-    if (error) {
-      console.error('Error checking current data:', error);
-      return { hasCurrentData: false, missingProtocols: EXPECTED_PROTOCOLS };
-    }
-    
+    const data = await db.query<{ protocol_name: string }>(`
+      SELECT DISTINCT protocol_name
+      FROM protocol_stats
+      WHERE date = ? AND chain = 'solana' AND data_type = 'private'
+      AND protocol_name IN (${placeholders})
+    `, [today, ...EXPECTED_PROTOCOLS]);
+
     // Get list of protocols that have data for today
-    const protocolsWithData = data?.map(row => row.protocol_name) || [];
-    
+    const protocolsWithData = data?.map((row: { protocol_name: string }) => row.protocol_name) || [];
+
     // Find missing protocols
     const missingProtocols = EXPECTED_PROTOCOLS.filter(
       protocol => !protocolsWithData.includes(protocol)
     );
-    
+
     const hasCurrentData = missingProtocols.length === 0;
-    
+
     return { hasCurrentData, missingProtocols };
   } catch (error) {
     console.error('Error checking current data in DB:', error);

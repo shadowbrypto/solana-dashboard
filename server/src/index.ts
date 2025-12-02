@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import protocolRoutes from './routes/protocolRoutes.js';
-import unifiedProtocolRoutes from './routes/unifiedProtocolRoutes.js';
 import dataUpdateRoutes from './routes/dataUpdateRoutes.js';
 import protocolConfigRoutes from './routes/protocolConfigRoutes.js';
 import projectedStatsRoutes from './routes/projectedStatsRoutes.js';
@@ -40,8 +39,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/protocols', protocolRoutes); // Legacy routes (backward compatibility)
-app.use('/api/unified', unifiedProtocolRoutes); // New unified routes
+app.use('/api/protocols', protocolRoutes);
 app.use('/api/data-update', dataUpdateRoutes);
 app.use('/api/protocol-config', protocolConfigRoutes);
 app.use('/api', projectedStatsRoutes); // Projected stats routes
@@ -80,15 +78,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Sol Analytics API server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔌 API endpoints:`);
-  console.log(`   - Protocols (Legacy): http://localhost:${PORT}/api/protocols`);
-  console.log(`   - Protocols (Unified): http://localhost:${PORT}/api/unified`);
-  console.log(`   - Data Update: http://localhost:${PORT}/api/data-update`);
-  console.log(`   - Protocol Config: http://localhost:${PORT}/api/protocol-config`);
-  console.log(`   - Projected Stats: http://localhost:${PORT}/api/projected-stats`);
-  console.log(`   - Launchpads: http://localhost:${PORT}/api/launchpads`);
-  console.log(`   - Trader Stats: http://localhost:${PORT}/api/trader-stats`);
-  console.log(`   - Fee Config: http://localhost:${PORT}/api/fee-config`);
+  console.log(`Sol Analytics API server running on port ${PORT}`);
 });

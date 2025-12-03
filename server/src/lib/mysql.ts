@@ -48,6 +48,8 @@ const pool = mysql.createPool({
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+  // Use UTC timezone to avoid date shifting issues
+  timezone: 'Z',
   // Railway MySQL requires SSL
   ssl: {
     rejectUnauthorized: false

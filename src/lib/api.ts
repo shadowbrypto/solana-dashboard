@@ -491,6 +491,25 @@ export const dataSyncApi = {
     });
   },
 
+  // Sync all public rolling refresh data
+  async syncPublicRollingData(): Promise<{
+    protocolsSynced: number;
+    totalProtocols: number;
+    totalRowsImported: number;
+    results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+    timestamp: string
+  }> {
+    return apiRequest<{
+      protocolsSynced: number;
+      totalProtocols: number;
+      totalRowsImported: number;
+      results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+      timestamp: string
+    }>('/data-update/sync-public-rolling', {
+      method: 'POST'
+    });
+  },
+
   // Sync all launchpad data
   async syncAllLaunchpadData(): Promise<{ csvFilesFetched: number; rowsImported: number; timestamp: string }> {
     return apiRequest<{ csvFilesFetched: number; rowsImported: number; timestamp: string }>('/data-update/sync/launchpads', {

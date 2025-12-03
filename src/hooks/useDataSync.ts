@@ -140,9 +140,9 @@ export function useDataSync() {
       let totalProtocolsSynced = 0;
       let totalRowsImported = 0;
 
-      // Step 1: Sync Rolling Refresh Protocols (21 protocols)
-      currentStep = 'Rolling Refresh sync';
-      if (onStepUpdate) onStepUpdate('Refreshing protocol data...', 50);
+      // Step 1: Sync Solana Rolling Refresh Protocols
+      currentStep = 'Solana Rolling Refresh sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Solana protocol data...', 20);
       const rollingResult = await dataSyncApi.syncRollingRefreshData();
       console.log('Rolling refresh sync raw result:', rollingResult);
 
@@ -152,16 +152,46 @@ export function useDataSync() {
 
       totalProtocolsSynced += rollingResult.protocolsSynced || 0;
       totalRowsImported += rollingResult.totalRowsImported || 0;
-      console.log('Rolling refresh sync completed:', rollingResult);
-      if (onStepComplete) onStepComplete('Rolling Refresh', { csvFilesFetched: rollingResult.protocolsSynced || 0, rowsImported: rollingResult.totalRowsImported || 0 });
+      console.log('Solana rolling refresh sync completed:', rollingResult);
+      if (onStepComplete) onStepComplete('Solana', { csvFilesFetched: rollingResult.protocolsSynced || 0, rowsImported: rollingResult.totalRowsImported || 0 });
 
-      // Step 2: Sync Projected Stats data from Dune
+      // Step 2: Sync EVM Protocols
+      currentStep = 'EVM sync';
+      if (onStepUpdate) onStepUpdate('Refreshing EVM protocol data...', 40);
+      console.log('Starting EVM sync...');
+      const evmResult = await dataSyncApi.syncEVMData();
+      totalProtocolsSynced += evmResult.protocolsSynced || 0;
+      totalRowsImported += evmResult.totalRowsImported || 0;
+      console.log('EVM sync completed:', evmResult);
+      if (onStepComplete) onStepComplete('EVM', { csvFilesFetched: evmResult.protocolsSynced || 0, rowsImported: evmResult.totalRowsImported || 0 });
+
+      // Step 3: Sync Monad Protocols
+      currentStep = 'Monad sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Monad protocol data...', 55);
+      console.log('Starting Monad sync...');
+      const monadResult = await dataSyncApi.syncMonadData();
+      totalProtocolsSynced += monadResult.protocolsSynced || 0;
+      totalRowsImported += monadResult.totalRowsImported || 0;
+      console.log('Monad sync completed:', monadResult);
+      if (onStepComplete) onStepComplete('Monad', { csvFilesFetched: monadResult.protocolsSynced || 0, rowsImported: monadResult.totalRowsImported || 0 });
+
+      // Step 4: Sync Public Rolling Stats
+      currentStep = 'Public Rolling Stats sync';
+      if (onStepUpdate) onStepUpdate('Refreshing Public Rolling Stats...', 70);
+      console.log('Starting Public Rolling Stats sync...');
+      const publicRollingResult = await dataSyncApi.syncPublicRollingData();
+      totalProtocolsSynced += publicRollingResult.protocolsSynced || 0;
+      totalRowsImported += publicRollingResult.totalRowsImported || 0;
+      console.log('Public Rolling Stats sync completed:', publicRollingResult);
+      if (onStepComplete) onStepComplete('Public Rolling Stats', { csvFilesFetched: publicRollingResult.protocolsSynced || 0, rowsImported: publicRollingResult.totalRowsImported || 0 });
+
+      // Step 5: Sync Projected Stats data from Dune
       currentStep = 'Projected Stats sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 95);
+      if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 90);
       console.log('Starting Projected Stats sync...');
       await ProjectedStatsApi.updateProjectedData();
       console.log('Projected Stats sync completed successfully');
-      if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 }); // Placeholder values
+      if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 });
       
       // Complete
       currentStep = 'completion';

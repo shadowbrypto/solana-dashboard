@@ -235,6 +235,88 @@ router.post('/sync-rolling', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/data-update/sync-public-rolling
+// Sync public rolling refresh data for all configured protocols
+router.post('/sync-public-rolling', async (req: Request, res: Response) => {
+  try {
+    console.log('Starting public rolling refresh sync for all configured protocols...');
+
+    const rollingProtocols = getProtocolsWithPublicRollingRefresh();
+
+    if (rollingProtocols.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No protocols configured for public rolling refresh',
+        data: {
+          protocolsSynced: 0,
+          totalProtocols: 0,
+          results: [],
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    console.log(`Found ${rollingProtocols.length} protocols with public rolling refresh config:`, rollingProtocols);
+
+    const results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }> = [];
+    let successCount = 0;
+    let totalRowsImported = 0;
+
+    for (const protocol of rollingProtocols) {
+      try {
+        console.log(`Syncing public rolling refresh data for ${protocol}...`);
+        const result = await dataManagementService.syncProtocolData(protocol, 'public');
+
+        if (result.success) {
+          successCount++;
+          totalRowsImported += result.rowsImported;
+          results.push({
+            protocol,
+            success: true,
+            rowsImported: result.rowsImported
+          });
+          console.log(`✓ Successfully synced ${protocol}: ${result.rowsImported} rows`);
+        } else {
+          results.push({
+            protocol,
+            success: false,
+            error: result.error
+          });
+          console.error(`✗ Failed to sync ${protocol}:`, result.error);
+        }
+      } catch (error) {
+        results.push({
+          protocol,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        console.error(`✗ Error syncing ${protocol}:`, error);
+      }
+    }
+
+    console.log(`Public rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`);
+
+    res.json({
+      success: true,
+      message: `Public rolling refresh sync completed: ${successCount}/${rollingProtocols.length} protocols synced successfully`,
+      data: {
+        protocolsSynced: successCount,
+        totalProtocols: rollingProtocols.length,
+        totalRowsImported,
+        results,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Unexpected error in public rolling refresh sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Unexpected error during public rolling refresh sync',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // POST /api/data-update/sync/:protocol
 // Sync data for a specific protocol
 // Query params: dataType (optional - 'public', 'private')

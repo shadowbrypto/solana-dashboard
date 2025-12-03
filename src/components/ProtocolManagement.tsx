@@ -192,6 +192,7 @@ export function ProtocolManagement() {
   const [isRefreshingSolana, setIsRefreshingSolana] = useState(false);
   const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
   const [isRefreshingMonad, setIsRefreshingMonad] = useState(false);
+  const [isRefreshingPublicRolling, setIsRefreshingPublicRolling] = useState(false);
   const [isRefreshingLaunchpads, setIsRefreshingLaunchpads] = useState(false);
   const [isRefreshingProjectedStats, setIsRefreshingProjectedStats] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -532,6 +533,32 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleRefreshPublicRolling = async () => {
+    if (isRefreshingPublicRolling) return;
+
+    setIsRefreshingPublicRolling(true);
+    try {
+      const result = await dataSyncApi.syncPublicRollingData();
+
+      toast({
+        variant: "success",
+        title: "Public Rolling Stats Refresh Complete",
+        description: `Successfully refreshed ${result.protocolsSynced} protocols`,
+      });
+
+      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Public Rolling Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh public rolling stats",
+      });
+    } finally {
+      setIsRefreshingPublicRolling(false);
+    }
+  };
+
   const handleResetConfigurations = async () => {
     if (isResetting) return;
     
@@ -619,7 +646,7 @@ export function ProtocolManagement() {
         () => {
           toast({
             title: "Starting Data Refresh",
-            description: "Refreshing all data sources (Solana, EVM, Launchpads, Projected Stats)...",
+            description: "Refreshing all data sources (Solana, EVM, Monad, Public Rolling, Projected Stats)...",
           });
         },
         // onSyncSuccess
@@ -638,22 +665,32 @@ export function ProtocolManagement() {
           if (step.includes('Solana')) {
             setIsRefreshingSolana(true);
             setIsRefreshingEVM(false);
-            setIsRefreshingLaunchpads(false);
+            setIsRefreshingMonad(false);
+            setIsRefreshingPublicRolling(false);
             setIsRefreshingProjectedStats(false);
           } else if (step.includes('EVM')) {
             setIsRefreshingSolana(false);
             setIsRefreshingEVM(true);
-            setIsRefreshingLaunchpads(false);
+            setIsRefreshingMonad(false);
+            setIsRefreshingPublicRolling(false);
             setIsRefreshingProjectedStats(false);
-          } else if (step.includes('Launchpad')) {
+          } else if (step.includes('Monad')) {
             setIsRefreshingSolana(false);
             setIsRefreshingEVM(false);
-            setIsRefreshingLaunchpads(true);
+            setIsRefreshingMonad(true);
+            setIsRefreshingPublicRolling(false);
+            setIsRefreshingProjectedStats(false);
+          } else if (step.includes('Public Rolling')) {
+            setIsRefreshingSolana(false);
+            setIsRefreshingEVM(false);
+            setIsRefreshingMonad(false);
+            setIsRefreshingPublicRolling(true);
             setIsRefreshingProjectedStats(false);
           } else if (step.includes('Projected Stats')) {
             setIsRefreshingSolana(false);
             setIsRefreshingEVM(false);
-            setIsRefreshingLaunchpads(false);
+            setIsRefreshingMonad(false);
+            setIsRefreshingPublicRolling(false);
             setIsRefreshingProjectedStats(true);
           }
         },
@@ -678,7 +715,8 @@ export function ProtocolManagement() {
       setIsRefreshingAll(false);
       setIsRefreshingSolana(false);
       setIsRefreshingEVM(false);
-      setIsRefreshingLaunchpads(false);
+      setIsRefreshingMonad(false);
+      setIsRefreshingPublicRolling(false);
       setIsRefreshingProjectedStats(false);
     }
   };
@@ -1581,7 +1619,7 @@ export function ProtocolManagement() {
                       size="sm"
                       className="ml-4 shrink-0"
                     >
-                      {isRefreshingSolana ? (
+                      {(isRefreshingSolana || isRefreshingAll) ? (
                         <>
                           <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                           <span className="hidden sm:inline">Refreshing...</span>
@@ -1650,7 +1688,7 @@ export function ProtocolManagement() {
                       size="sm"
                       className="ml-4 shrink-0"
                     >
-                      {isRefreshingEVM ? (
+                      {(isRefreshingEVM || isRefreshingAll) ? (
                         <>
                           <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                           <span className="hidden sm:inline">Refreshing...</span>
@@ -1666,7 +1704,9 @@ export function ProtocolManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:gap-3">
+              {/* Monad & Public Rolling Stats Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
+                {/* Monad */}
                 <div className="group relative bg-gradient-to-br from-card via-card/95 to-violet-50/30 dark:to-violet-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-300 hover:border-violet-500/20 overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="flex items-center justify-between">
@@ -1721,7 +1761,7 @@ export function ProtocolManagement() {
                       size="sm"
                       className="ml-4 shrink-0"
                     >
-                      {isRefreshingMonad ? (
+                      {(isRefreshingMonad || isRefreshingAll) ? (
                         <>
                           <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                           <span className="hidden sm:inline">Refreshing...</span>
@@ -1730,6 +1770,41 @@ export function ProtocolManagement() {
                         <>
                           <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">Refresh Monad</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Public Rolling Stats */}
+                <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-xs sm:text-sm font-medium text-foreground">Public Rolling Stats</span>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
+                        Refresh public rolling stats for all protocols
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleRefreshPublicRolling}
+                      disabled={isRefreshingPublicRolling || isRefreshingAll}
+                      variant="outline"
+                      size="sm"
+                      className="ml-4 shrink-0"
+                    >
+                      {(isRefreshingPublicRolling || isRefreshingAll) ? (
+                        <>
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                          <span className="hidden sm:inline">Refreshing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Refresh Public</span>
                         </>
                       )}
                     </Button>

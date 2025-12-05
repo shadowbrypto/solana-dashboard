@@ -165,9 +165,12 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
       const result = await response.json();
       
       if (result.success && result.data) {
-        // Transform raw unified API data into expected format
-        const transformedData = transformUnifiedDataToEVMFormat(result.data);
-        setDailyData(transformedData);
+        // Data is already in the correct format from the API
+        // Just ensure date sorting
+        const sortedData = result.data.sort((a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        setDailyData(sortedData);
       } else {
         console.warn('No daily data available:', result.error);
         setDailyData([]);

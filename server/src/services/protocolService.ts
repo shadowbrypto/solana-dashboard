@@ -373,17 +373,18 @@ export async function getEVMDailyChainBreakdown(protocolName: string, timeframe:
     const dailyData: Record<string, { date: string; chainData: Record<string, number>; totalVolume: number }> = {};
 
     data.forEach(row => {
-      const date = row.date;
-      if (!dailyData[date]) {
-        dailyData[date] = {
-          date,
+      // Format MySQL Date object to string for consistent key lookup
+      const dateKey = format(new Date(row.date), 'yyyy-MM-dd');
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = {
+          date: dateKey,
           chainData: {},
           totalVolume: 0
         };
       }
       const volume = Number(row.volume_usd) || 0;
-      dailyData[date].chainData[row.chain] = volume;
-      dailyData[date].totalVolume += volume;
+      dailyData[dateKey].chainData[row.chain] = volume;
+      dailyData[dateKey].totalVolume += volume;
     });
 
     const result = Object.values(dailyData)

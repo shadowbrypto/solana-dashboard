@@ -12,7 +12,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
-import { getProtocolLogoFilename } from "../lib/protocol-config";
+import { getProtocolLogoFilename, getProtocolName } from "../lib/protocol-config";
 import { Badge } from "./ui/badge";
 import { DateNavigator } from "./DateNavigator";
 import { useToast } from "../hooks/use-toast";
@@ -97,19 +97,16 @@ const getGrowthBadgeClasses = (growth: number): string => {
 
 
 const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, growth }) => {
-  const chartData = data.map((value, index) => ({ 
-    day: index, 
-    value 
+  // Ensure data is a valid array with 7 elements
+  const safeData = Array.isArray(data) && data.length === 7 ? data : Array(7).fill(0);
+
+  const chartData = safeData.map((value, index) => ({
+    day: index,
+    value: value || 0
   }));
 
-  // Debug log to see actual growth values
-  if (Math.abs(growth) > 0.05) { // Log significant growth values
-    console.log(`Growth data:`, { 
-      growth, 
-      growthPercent: (growth * 100).toFixed(2) + '%',
-      isPositive: growth >= 0
-    });
-  }
+  // Check if we have actual data to show (not all zeros)
+  const hasData = chartData.some(d => d.value > 0);
 
   // Use daily growth to determine area chart color (should match growth badge)
   const isNeutral = Math.abs(growth) < 0.0001; // Less than 0.01%
@@ -188,24 +185,25 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
         const optimizedData = await protocolApi.getDailyMetricsOptimized(date, 'evm', dataType);
         
         // Transform the optimized data to match the component's data structure
+        // Backend already returns protocol names with _evm suffix (e.g., "sigma_evm", "gmgnai_evm")
         const transformedData: EVMProtocolData[] = Object.entries(optimizedData.protocols).map(([protocolName, data]) => ({
-          protocol: (protocolName + '_evm') as Protocol,
+          protocol: protocolName as Protocol,
           totalVolume: data.totalVolume,
           chainVolumes: data.chainVolumes as ChainVolume,
           dailyGrowth: data.dailyGrowth,
           weeklyTrend: data.weeklyTrend
         }));
-        
+
         console.log('Backend protocols received:', Object.keys(optimizedData.protocols));
         console.log('Transformed protocol data:', transformedData);
         console.log('Expected protocols from props:', protocols);
-        
+
         setEvmData(transformedData);
         setStandaloneVolumes({ current: optimizedData.standaloneChains });
         setBackendTotals(optimizedData.totals);
-        
-        // Set top protocols from the backend response
-        setTopProtocols(optimizedData.topProtocols.map(p => (p + '_evm') as Protocol));
+
+        // Set top protocols from the backend response (already have _evm suffix)
+        setTopProtocols(optimizedData.topProtocols.map(p => p as Protocol));
       } catch (err) {
         console.error('Error loading EVM daily data:', err);
         setError('Failed to load data from database');
@@ -226,7 +224,13 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
   const totals = useMemo(() => {
     // If we have backend totals and no protocols are hidden, use them directly
     if (backendTotals && hiddenProtocols.size === 0) {
-      return backendTotals;
+      // Ensure totalWeeklyTrend is always a valid 7-element array
+      return {
+        ...backendTotals,
+        totalWeeklyTrend: backendTotals.totalWeeklyTrend?.length === 7
+          ? backendTotals.totalWeeklyTrend
+          : Array(7).fill(0)
+      };
     }
     
     // Otherwise, calculate totals based on visible protocols only
@@ -250,11 +254,11 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
     }
 
     // Calculate total weekly trend (sum across all visible protocols for each day)
-    const totalWeeklyTrend = visibleData.length > 0 
-      ? visibleData[0].weeklyTrend.map((_, dayIndex) => 
-          visibleData.reduce((sum, data) => sum + data.weeklyTrend[dayIndex], 0)
+    const totalWeeklyTrend = visibleData.length > 0 && visibleData[0].weeklyTrend?.length === 7
+      ? visibleData[0].weeklyTrend.map((_, dayIndex) =>
+          visibleData.reduce((sum, data) => sum + (data.weeklyTrend?.[dayIndex] || 0), 0)
         )
-      : [];
+      : Array(7).fill(0);
 
     return {
       totalVolume,
@@ -483,7 +487,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                     .sort((a, b) => b.totalVolume - a.totalVolume)
                     .filter(data => !hiddenProtocols.has(data.protocol))
                     .map((data) => {
-                const protocolName = data.protocol.replace('_evm', '');
+                const displayName = getProtocolName(data.protocol);
                 const isHidden = hiddenProtocols.has(data.protocol);
                 return (
                   <TableRow key={data.protocol} className="transition-colors hover:bg-muted/30">
@@ -500,9 +504,9 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                           {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
                         <div className="w-6 h-6 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                          <img 
+                          <img
                             src={`/assets/logos/${getProtocolLogoFilename(data.protocol)}`}
-                            alt={protocolName} 
+                            alt={displayName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -517,7 +521,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                             }}
                           />
                         </div>
-                        <span className="font-medium capitalize">{protocolName}</span>
+                        <span className="font-medium">{displayName}</span>
                         {topProtocols.includes(data.protocol) && (
                           <Badge 
                             variant="secondary"
@@ -669,7 +673,7 @@ export function EVMDailyMetricsTable({ protocols, date, onDateChange }: EVMDaily
                   </div>
                 </TableCell>
                     <TableCell className="text-center rounded-br-xl">
-                      <WeeklyTrendChart data={totals.totalWeeklyTrend} growth={totals.totalGrowth} />
+                      <WeeklyTrendChart data={totals.totalWeeklyTrend || Array(7).fill(0)} growth={totals.totalGrowth || 0} />
                     </TableCell>
                   </TableRow>
                 </>

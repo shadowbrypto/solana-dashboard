@@ -54,7 +54,9 @@ export function isSolanaProtocol(protocolName: string): boolean {
 }
 
 export function isEVMProtocol(protocolName: string): boolean {
-  const config = chainBasedProtocols[protocolName.toLowerCase()];
+  // Handle both "sigma_evm" and "sigma" formats
+  const baseName = protocolName.toLowerCase().replace('_evm', '');
+  const config = chainBasedProtocols[baseName];
   return config?.evm || false;
 }
 
@@ -70,9 +72,10 @@ export function getSolanaProtocols(): string[] {
 }
 
 export function getEVMProtocols(): string[] {
+  // Return EVM protocol names with _evm suffix as stored in database
   return Object.entries(chainBasedProtocols)
     .filter(([_, config]) => config.evm)
-    .map(([protocol]) => protocol);
+    .map(([protocol]) => `${protocol}_evm`);
 }
 
 export function isMonadProtocol(protocolName: string): boolean {

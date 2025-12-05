@@ -123,11 +123,9 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
         setLoading(true);
         setError(null);
         
-        // Use clean protocol name (remove _evm suffix if present)
-        const cleanProtocol = protocol.replace('_evm', '');
-        const dataType = 'public';
+        // Use the full protocol name (e.g., sigma_evm)
         const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-        const response = await fetch(`${API_BASE_URL}/unified/chain-breakdown?protocol=${cleanProtocol}&dataType=${dataType}`);
+        const response = await fetch(`${API_BASE_URL}/protocols/evm-metrics/${protocol}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch EVM metrics: ${response.statusText}`);
@@ -156,11 +154,9 @@ export const EVMProtocolLayout: React.FC<EVMProtocolLayoutProps> = ({ protocol }
   const fetchDailyData = async (timeframe: '7d' | '30d' | '90d' | '6m' | '1y' | 'all') => {
     try {
       setDailyLoading(true);
-      
-      const cleanProtocol = protocol.replace('_evm', '');
-      const dataType = 'public';
+
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/unified/metrics?protocol=${cleanProtocol}&chain=evm&timeframe=${timeframe}&dataType=${dataType}`);
+      const response = await fetch(`${API_BASE_URL}/protocols/evm-daily-metrics/${protocol}?timeframe=${timeframe}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch daily metrics: ${response.statusText}`);

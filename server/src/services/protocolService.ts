@@ -1216,27 +1216,30 @@ export async function getEVMDailyMetrics(date: Date, dataType: string = 'public'
     const evmProtocols = getEVMProtocols();
     const evmChains = ['ethereum', 'base', 'bsc', 'avax', 'arbitrum'];
 
-    // OPTIMIZED: Parallel queries
+    // Build protocol placeholders for SQL IN clause
+    const protocolPlaceholders = evmProtocols.map(() => '?').join(',');
+
+    // OPTIMIZED: Parallel queries - filter by both chain AND protocol name
     const [currentDayData, previousDayData, trendData] = await Promise.all([
       db.query<any>(
         `SELECT protocol_name, chain, volume_usd, daily_users, new_users, trades, fees_usd
          FROM protocol_stats
-         WHERE date = ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?)`,
-        [dateStr, dataType, ...evmChains]
+         WHERE date = ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?) AND protocol_name IN (${protocolPlaceholders})`,
+        [dateStr, dataType, ...evmChains, ...evmProtocols]
       ),
       db.query<any>(
         `SELECT protocol_name, chain, volume_usd
          FROM protocol_stats
-         WHERE date = ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?)`,
-        [previousDateStr, dataType, ...evmChains]
+         WHERE date = ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?) AND protocol_name IN (${protocolPlaceholders})`,
+        [previousDateStr, dataType, ...evmChains, ...evmProtocols]
       ),
       db.query<any>(
         `SELECT protocol_name, date, SUM(volume_usd) as volume_usd
          FROM protocol_stats
-         WHERE date >= ? AND date <= ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?)
+         WHERE date >= ? AND date <= ? AND data_type = ? AND chain IN (?, ?, ?, ?, ?) AND protocol_name IN (${protocolPlaceholders})
          GROUP BY protocol_name, date
          ORDER BY date ASC`,
-        [startDateStr, dateStr, dataType, ...evmChains]
+        [startDateStr, dateStr, dataType, ...evmChains, ...evmProtocols]
       )
     ]);
 
@@ -1290,7 +1293,9 @@ export async function getEVMDailyMetrics(date: Date, dataType: string = 'public'
       if (!trendByProtocolDate[record.protocol_name]) {
         trendByProtocolDate[record.protocol_name] = {};
       }
-      trendByProtocolDate[record.protocol_name][record.date] = Number(record.volume_usd) || 0;
+      // Format date to string for consistent key lookup (MySQL returns Date objects)
+      const dateKey = format(new Date(record.date), 'yyyy-MM-dd');
+      trendByProtocolDate[record.protocol_name][dateKey] = Number(record.volume_usd) || 0;
     });
 
     Object.keys(protocolData).forEach(protocol => {
@@ -1326,15 +1331,19 @@ export async function getEVMDailyMetrics(date: Date, dataType: string = 'public'
       });
     });
 
-    const topProtocols = Object.entries(protocolData)
-      .filter(([_, data]: [string, any]) => data.totalVolume > 0)
+    // Filter out protocols with no data
+    const protocolsWithData = Object.fromEntries(
+      Object.entries(protocolData).filter(([_, data]: [string, any]) => data.totalVolume > 0)
+    );
+
+    const topProtocols = Object.entries(protocolsWithData)
       .sort(([_, a]: [string, any], [__, b]: [string, any]) => b.totalVolume - a.totalVolume)
       .slice(0, 3)
       .map(([protocol, _]) => protocol);
 
     const result = {
       date: dateStr,
-      protocols: protocolData,
+      protocols: protocolsWithData,
       standaloneChains: { avax: allChainVolumes.avax, arbitrum: allChainVolumes.arbitrum },
       topProtocols,
       totals: {
@@ -1457,7 +1466,9 @@ export async function getMonadDailyMetrics(date: Date, dataType: string = 'priva
       if (!trendByProtocolDate[record.protocol_name]) {
         trendByProtocolDate[record.protocol_name] = {};
       }
-      trendByProtocolDate[record.protocol_name][record.date] = Number(record.volume_usd) || 0;
+      // Format date to string for consistent key lookup (MySQL returns Date objects)
+      const dateKey = format(new Date(record.date), 'yyyy-MM-dd');
+      trendByProtocolDate[record.protocol_name][dateKey] = Number(record.volume_usd) || 0;
     });
 
     Object.keys(protocolData).forEach(protocol => {

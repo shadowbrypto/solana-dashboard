@@ -132,13 +132,13 @@ export const getProtocolName = (protocolId: string): string => {
 
 // Centralized logo mapping for terminal protocols and special cases
 export const getProtocolLogoFilename = (protocolId: string): string => {
-  // Handle terminal protocols - use base protocol logo
-  if (protocolId.includes('terminal')) {
+  // Handle "nova terminal" style protocols with space - use first word
+  if (protocolId.includes(' ') && protocolId.includes('terminal')) {
     const baseName = protocolId.split(' ')[0];
     return `${baseName}.jpg`;
   }
-  
-  // Handle special cases
+
+  // Handle special cases (including _evm and _monad suffixes)
   switch (protocolId.toLowerCase()) {
     case 'bull x':
       return 'bullx.jpg';

@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight, Calendar, Download, Copy, Eye, EyeOff } from
 import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { protocolApi } from "../lib/api";
-import { getProtocolLogoFilename } from "../lib/protocol-config";
+import { getProtocolLogoFilename, getProtocolName } from "../lib/protocol-config";
 import { useToast } from "../hooks/use-toast";
 // @ts-ignore
 import domtoimage from "dom-to-image";
@@ -527,8 +527,8 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <span className="font-medium text-sm capitalize">
-                            {item.protocol.replace('_', ' ')}
+                          <span className="font-medium text-sm">
+                            {getProtocolName(item.protocol)}
                           </span>
                         </div>
                       </TableCell>

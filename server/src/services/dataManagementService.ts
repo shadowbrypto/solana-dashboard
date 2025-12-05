@@ -5,9 +5,9 @@ import Papa from 'papaparse';
 import { db } from '../lib/db.js';
 import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
-import { isSolanaProtocol } from '../config/chainProtocols.js';
 import { getRollingRefreshSource, hasRollingRefreshSource } from '../config/rolling-refresh-config.js';
 import { getPublicRollingRefreshSource, hasPublicRollingRefreshSource } from '../config/rolling-refresh-config-public.js';
+import { getProtocolSources } from '../config/protocol-sources-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,111 +22,8 @@ if (!API_KEY) {
   throw new Error('DUNE_API_KEY environment variable is not set');
 }
 
-// Protocol configuration with chain support
-interface ProtocolSource {
-  queryIds: number[];
-  chain: 'solana' | 'evm' | 'monad';
-}
-
-// Protocol sources mapping - now supports multiple query IDs and chains
-// Public data sources (when dataType is 'public')
-const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
-  // Solana protocols
-  "trojan": { queryIds: [5500774], chain: 'solana' },
-  "photon": { queryIds: [5500907, 5579135], chain: 'solana' },
-  "bullx": { queryIds: [5500910, 5579188], chain: 'solana' },
-  "axiom": { queryIds: [5556317, 5376750, 5376740, 5376694, 4663709, 5829313], chain: 'solana' },
-  "gmgnai": { queryIds: [4231939], chain: 'solana' },
-  "bloom": { queryIds: [4340509], chain: 'solana' },
-  "bonkbot": { queryIds: [4278881], chain: 'solana' },
-  "nova": { queryIds: [6106735], chain: 'solana' },
-  "soltradingbot": { queryIds: [3954872], chain: 'solana' },
-  "maestro": { queryIds: [4537256], chain: 'solana' },
-  "banana": { queryIds: [4537271], chain: 'solana' },
-  "terminal": { queryIds: [5099279], chain: 'solana' },
-  "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },
-  "vector": { queryIds: [4969231], chain: 'solana' },
-  "telemetry": { queryIds: [5212810], chain: 'solana' },
-  "nova terminal": { queryIds: [6106638], chain: 'solana' },
-  "slingshot": { queryIds: [4968360, 5785477], chain: 'solana' },
-  "fomo": { queryIds: [5315650, 5713629], chain: 'solana' },
-  "mevx": { queryIds: [5498846], chain: 'solana' },
-  "rhythm": { queryIds: [5698641], chain: 'solana' },
-  "vyper": { queryIds: [5284061], chain: 'solana' },
-  "opensea": { queryIds: [5910228], chain: 'solana' },
-  "phantom": { queryIds: [6229269], chain: 'solana' },
-  "okx": { queryIds: [6289758], chain: 'solana' },
-
-  // Ethereum protocols
-  "sigma_evm": { queryIds: [5430634], chain: 'evm' },
-  "maestro_evm": { queryIds: [3832557], chain: 'evm' },
-  "bloom_evm": { queryIds: [4824799], chain: 'evm' },
-  "banana_evm": { queryIds: [4750709], chain: 'evm' },
-  "terminal_evm": { queryIds: [5793181], chain: 'evm' },
-  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
-  "photon_evm": { queryIds: [5929750], chain: 'evm' },
-  "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6031024], chain: 'evm' },
-
-  // Monad protocols
-  "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
-  "bloom_monad": { queryIds: [6257400], chain: 'monad' },
-  "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
-  "basedbot_monad": { queryIds: [6271223], chain: 'monad' },
-};
-
-// Private data sources (when dataType is 'private' or default)
-const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
-  // Solana protocols
-  "trojan": { queryIds: [4251075], chain: 'solana' },
-  "photon": { queryIds: [5845657, 5845717, 5845732], chain: 'solana' },
-  "bullx": { queryIds: [3823331], chain: 'solana' },
-  "axiom": { queryIds: [5556317, 5376750, 5376740, 5376694, 4663709, 5829313], chain: 'solana' },
-  "gmgnai": { queryIds: [4231939], chain: 'solana' },
-  "bloom": { queryIds: [4340509], chain: 'solana' },
-  "bonkbot": { queryIds: [4278881], chain: 'solana' },
-  "nova": { queryIds: [6106735], chain: 'solana' },
-  "soltradingbot": { queryIds: [3954872], chain: 'solana' },
-  "maestro": { queryIds: [4537256], chain: 'solana' },
-  "banana": { queryIds: [4537271], chain: 'solana' },
-  "terminal": { queryIds: [5099279], chain: 'solana' },
-  "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },
-  "vector": { queryIds: [4969231], chain: 'solana' },
-  "telemetry": { queryIds: [5212810], chain: 'solana' },
-  "nova terminal": { queryIds: [6106638], chain: 'solana' },
-  "slingshot": { queryIds: [4968360, 5785477], chain: 'solana' },
-  "fomo": { queryIds: [5315650, 5713629], chain: 'solana' },
-  "mevx": { queryIds: [5498846], chain: 'solana' },
-  "rhythm": { queryIds: [5698641], chain: 'solana' },
-  "vyper": { queryIds: [5284061], chain: 'solana' },
-  "opensea": { queryIds: [5910228], chain: 'solana' },
-  "phantom": { queryIds: [6229269], chain: 'solana' },
-  "okx": { queryIds: [6289758], chain: 'solana' },
-
-  // Ethereum protocols
-  "sigma_evm": { queryIds: [5430634], chain: 'evm' },
-  "maestro_evm": { queryIds: [3832557], chain: 'evm' },
-  "bloom_evm": { queryIds: [4824799], chain: 'evm' },
-  "banana_evm": { queryIds: [4750709], chain: 'evm' },
-  "terminal_evm": { queryIds: [5793181], chain: 'evm' },
-  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
-  "photon_evm": { queryIds: [5929750], chain: 'evm' },
-  "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6031024], chain: 'evm' },
-
-  // Monad protocols
-  "gmgnai_monad": { queryIds: [6252295], chain: 'monad' },
-  "bloom_monad": { queryIds: [6257400], chain: 'monad' },
-  "nadfun_monad": { queryIds: [6252536], chain: 'monad' },
-  "basedbot_monad": { queryIds: [6271223], chain: 'monad' },
-};
-
-// Get protocol sources based on data type
-function getProtocolSources(dataType: string = 'private'): Record<string, ProtocolSource> {
-  return dataType === 'public' ? PUBLIC_PROTOCOL_SOURCES : PRIVATE_PROTOCOL_SOURCES;
-}
-
 // CSV column mapping to database columns
+// Primary columns (snake_case - used by Solana)
 const COLUMN_MAP: Record<string, string> = {
   formattedDay: "date",
   total_volume_usd: "volume_usd",
@@ -134,6 +31,25 @@ const COLUMN_MAP: Record<string, string> = {
   numberOfNewUsers: "new_users",
   daily_trades: "trades",
   total_fees_usd: "fees_usd",
+};
+
+// Alternative columns (camelCase - used by EVM queries)
+// Maps DB column name -> alternative CSV column names to check
+const ALTERNATIVE_COLUMNS: Record<string, string[]> = {
+  volume_usd: ["totalVolumeUSD"],
+  daily_users: ["numberOfUsers"],
+  trades: ["numberOfTrades"],
+  fees_usd: ["feesUSD"],
+};
+
+// EVM chain column mapping for parsing chain-specific data
+// Maps chain name -> { volumeCol, usersCol }
+const EVM_CHAIN_COLUMNS: Record<string, { volumeCol: string; usersCol: string }> = {
+  ethereum: { volumeCol: 'ethereumVolumeUSD', usersCol: 'ethereumNumberOfUsers' },
+  base: { volumeCol: 'baseVolumeUSD', usersCol: 'baseNumberOfUsers' },
+  bsc: { volumeCol: 'bscVolumeUSD', usersCol: 'bscNumberOfUsers' },
+  avax: { volumeCol: 'avalancheVolumeUSD', usersCol: 'avalancheNumberOfUsers' },
+  arbitrum: { volumeCol: 'arbitrumVolumeUSD', usersCol: 'arbitrumNumberOfUsers' },
 };
 
 interface DownloadResult {
@@ -546,55 +462,121 @@ export class DataManagementService {
         chain = protocolConfig?.chain || 'solana';
       }
 
-      const mappedData = data.map((row: any) => {
-        const mappedRow: any = {};
+      // For EVM protocols, parse chain-specific columns into separate rows
+      let mappedData: any[] = [];
 
-        for (const csvCol in COLUMN_MAP) {
-          let value = row[csvCol];
-
-          // Convert date from DD/MM/YYYY to YYYY-MM-DD
-          if (COLUMN_MAP[csvCol] === "date" && value) {
-            const [day, month, year] = value.split("/");
-            value = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      if (chain === 'evm') {
+        // EVM protocol: create separate rows for each chain
+        data.forEach((row: any) => {
+          // Convert date
+          let dateValue = row.formattedDay;
+          if (dateValue) {
+            const [day, month, year] = dateValue.split("/");
+            dateValue = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
           }
 
-          // Handle <nil> values by replacing with 0 for numeric fields
-          if (value === '<nil>' || value === null || value === undefined || value === '') {
-            const numericFields = ['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'];
-            if (numericFields.includes(COLUMN_MAP[csvCol])) {
-              value = 0;
+          // Get common fields
+          const numberOfNewUsers = parseFloat(row.numberOfNewUsers) || 0;
+          const numberOfTrades = parseFloat(row.numberOfTrades) || 0;
+          const feesUSD = parseFloat(row.feesUSD) || 0;
+
+          // Create a row for each chain that has data
+          for (const [chainName, cols] of Object.entries(EVM_CHAIN_COLUMNS)) {
+            const volume = parseFloat(row[cols.volumeCol]) || 0;
+            const users = parseFloat(row[cols.usersCol]) || 0;
+
+            // Only create row if there's any data for this chain
+            if (volume > 0 || users > 0) {
+              mappedData.push({
+                date: dateValue,
+                volume_usd: volume,
+                daily_users: users,
+                new_users: numberOfNewUsers, // Shared across chains for now
+                trades: numberOfTrades,
+                fees_usd: feesUSD, // Shared across chains for now
+                protocol_name: protocolName,
+                chain: chainName,
+                data_type: dataType
+              });
             }
           }
+        });
 
-          // Convert scientific notation to decimal for numeric fields
-          if (value && typeof value === 'string' && value.toLowerCase().includes('e+')) {
-            const numericFields = ['volume_usd', 'fees_usd'];
-            if (numericFields.includes(COLUMN_MAP[csvCol])) {
-              try {
-                const numValue = parseFloat(value);
-                if (!isNaN(numValue)) {
-                  value = numValue;
+        console.log(`EVM protocol ${protocolName}: parsed ${mappedData.length} chain-specific rows from ${data.length} CSV rows`);
+      } else {
+        // Non-EVM protocol: standard single-row mapping
+        mappedData = data.map((row: any) => {
+          const mappedRow: any = {};
+
+          for (const csvCol in COLUMN_MAP) {
+            const dbCol = COLUMN_MAP[csvCol];
+            let value = row[csvCol];
+
+            // Convert date from DD/MM/YYYY to YYYY-MM-DD
+            if (dbCol === "date" && value) {
+              const [day, month, year] = value.split("/");
+              value = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+            }
+
+            // Check if value is empty/zero and try alternative columns (for EVM data)
+            const numericFields = ['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'];
+            if (numericFields.includes(dbCol)) {
+              const numValue = parseFloat(value);
+              // If primary column is empty or zero, check alternative columns
+              if (isNaN(numValue) || numValue === 0) {
+                const altCols = ALTERNATIVE_COLUMNS[dbCol];
+                if (altCols) {
+                  for (const altCol of altCols) {
+                    const altValue = row[altCol];
+                    if (altValue !== undefined && altValue !== null && altValue !== '' && altValue !== '<nil>') {
+                      const parsedAlt = parseFloat(altValue);
+                      if (!isNaN(parsedAlt) && parsedAlt !== 0) {
+                        value = altValue;
+                        break;
+                      }
+                    }
+                  }
                 }
-              } catch (error) {
-                console.warn(`Failed to convert scientific notation for ${csvCol}: ${value}`);
               }
             }
+
+            // Handle <nil> values by replacing with 0 for numeric fields
+            if (value === '<nil>' || value === null || value === undefined || value === '') {
+              if (numericFields.includes(dbCol)) {
+                value = 0;
+              }
+            }
+
+            // Convert scientific notation to decimal for numeric fields
+            if (value && typeof value === 'string' && value.toLowerCase().includes('e+')) {
+              const sciNumericFields = ['volume_usd', 'fees_usd'];
+              if (sciNumericFields.includes(dbCol)) {
+                try {
+                  const numValue = parseFloat(value);
+                  if (!isNaN(numValue)) {
+                    value = numValue;
+                  }
+                } catch (error) {
+                  console.warn(`Failed to convert scientific notation for ${csvCol}: ${value}`);
+                }
+              }
+            }
+
+            // Convert string numbers to proper numbers for numeric fields
+            if (numericFields.includes(dbCol)) {
+              value = parseFloat(value) || 0;
+            }
+
+            mappedRow[dbCol] = value;
           }
 
-          // Convert string numbers to proper numbers for numeric fields
-          if (['volume_usd', 'daily_users', 'new_users', 'trades', 'fees_usd'].includes(COLUMN_MAP[csvCol])) {
-            value = parseFloat(value) || 0;
-          }
+          mappedRow.protocol_name = protocolName;
+          mappedRow.chain = chain;
+          mappedRow.data_type = dataType;
 
-          mappedRow[COLUMN_MAP[csvCol]] = value;
-        }
-
-        mappedRow.protocol_name = protocolName;
-        mappedRow.chain = chain;
-        mappedRow.data_type = dataType;
-
-        return mappedRow;
-      });
+          return mappedRow;
+        });
+      }
 
       // Calculate 15 days ago for monitoring
       const fifteenDaysAgo = new Date();
@@ -602,18 +584,21 @@ export class DataManagementService {
       const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split('T')[0];
 
       // TEMPORARY LOGGING - PRE-REFRESH SNAPSHOT
+      const chainsForQuery = chain === 'evm' ? Object.keys(EVM_CHAIN_COLUMNS) : [chain];
       console.log(`\n┌─────────────────────────────────────────────────────────┐`);
       console.log(`│ [REFRESH-MONITOR] PRE-REFRESH DATABASE SNAPSHOT        │`);
       console.log(`│ Protocol: ${protocolName.padEnd(20)} Chain: ${chain.padEnd(10)} │`);
       console.log(`└─────────────────────────────────────────────────────────┘`);
 
-      // MySQL: Get pre-refresh data
+      // MySQL: Get pre-refresh data (for EVM, query all individual chains and aggregate)
+      const chainPlaceholders = chainsForQuery.map(() => '?').join(',');
       const preRefreshData = await db.query<{ date: string; volume_usd: number; fees_usd: number; data_type: string }>(
-        `SELECT date, volume_usd, fees_usd, data_type
+        `SELECT date, SUM(volume_usd) as volume_usd, SUM(fees_usd) as fees_usd, data_type
          FROM ${TABLE_NAME}
-         WHERE protocol_name = ? AND chain = ? AND data_type = ? AND date >= ?
+         WHERE protocol_name = ? AND chain IN (${chainPlaceholders}) AND data_type = ? AND date >= ?
+         GROUP BY date, data_type
          ORDER BY date ASC`,
-        [protocolName, chain, dataType, fifteenDaysAgoStr]
+        [protocolName, ...chainsForQuery, dataType, fifteenDaysAgoStr]
       );
 
       console.log(`[REFRESH-MONITOR] Found ${preRefreshData.length} existing rows in last 15 days\n`);
@@ -643,13 +628,14 @@ export class DataManagementService {
       console.log(`│ [REFRESH-MONITOR] POST-REFRESH DATABASE SNAPSHOT       │`);
       console.log(`└─────────────────────────────────────────────────────────┘`);
 
-      // MySQL: Get post-refresh data
+      // MySQL: Get post-refresh data (for EVM, query all individual chains and aggregate)
       const postRefreshData = await db.query<{ date: string; volume_usd: number; fees_usd: number; data_type: string }>(
-        `SELECT date, volume_usd, fees_usd, data_type
+        `SELECT date, SUM(volume_usd) as volume_usd, SUM(fees_usd) as fees_usd, data_type
          FROM ${TABLE_NAME}
-         WHERE protocol_name = ? AND chain = ? AND data_type = ? AND date >= ?
+         WHERE protocol_name = ? AND chain IN (${chainPlaceholders}) AND data_type = ? AND date >= ?
+         GROUP BY date, data_type
          ORDER BY date ASC`,
-        [protocolName, chain, dataType, fifteenDaysAgoStr]
+        [protocolName, ...chainsForQuery, dataType, fifteenDaysAgoStr]
       );
 
       console.log(`[REFRESH-MONITOR] Found ${postRefreshData.length} rows after refresh\n`);

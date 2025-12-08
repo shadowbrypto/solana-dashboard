@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getMonadDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
-import { getMonadProtocols } from '../config/chainProtocols.js';
+import { getMonadProtocols, getEVMProtocols } from '../config/chainProtocols.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 
 const router = Router();
@@ -470,6 +470,58 @@ router.get('/latest-dates', async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch latest data dates',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// POST /api/protocols/sync-evm
+// Sync all EVM protocol data
+router.post('/sync-evm', async (req: Request, res: Response) => {
+  try {
+    console.log('Starting EVM data sync for all protocols...');
+
+    // Get all EVM protocols from chain configuration
+    const evmProtocols = getEVMProtocols();
+    console.log(`Syncing ${evmProtocols.length} EVM protocols:`, evmProtocols);
+    const results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }> = [];
+
+    for (const protocol of evmProtocols) {
+      try {
+        // Use dataManagementService to sync EVM data
+        const result = await dataManagementService.syncProtocolData(protocol, 'public');
+        results.push({
+          protocol,
+          success: true,
+          rowsImported: result.rowsImported
+        });
+      } catch (error) {
+        results.push({
+          protocol,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    const totalRowsImported = results.reduce((sum, r) => sum + (r.rowsImported || 0), 0);
+    const successfulSyncs = results.filter(r => r.success).length;
+
+    res.json({
+      success: successfulSyncs > 0,
+      csvFilesFetched: successfulSyncs,
+      protocolsSynced: successfulSyncs,
+      totalProtocols: evmProtocols.length,
+      totalRowsImported,
+      rowsImported: totalRowsImported,
+      results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error in EVM data sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'EVM data sync failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

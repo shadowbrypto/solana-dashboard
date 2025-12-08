@@ -142,9 +142,8 @@ export function useDataSync() {
 
       // Step 1: Sync Solana Rolling Refresh Protocols
       currentStep = 'Solana Rolling Refresh sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Solana protocol data...', 20);
+      if (onStepUpdate) onStepUpdate('Refreshing Solana protocol data...', 25);
       const rollingResult = await dataSyncApi.syncRollingRefreshData();
-      console.log('Rolling refresh sync raw result:', rollingResult);
 
       if (!rollingResult || typeof rollingResult.protocolsSynced === 'undefined') {
         throw new Error('Invalid rolling refresh sync response - missing protocolsSynced');
@@ -152,58 +151,35 @@ export function useDataSync() {
 
       totalProtocolsSynced += rollingResult.protocolsSynced || 0;
       totalRowsImported += rollingResult.totalRowsImported || 0;
-      console.log('Solana rolling refresh sync completed:', rollingResult);
+      console.log(`Solana: ${rollingResult.protocolsSynced} protocols, ${rollingResult.totalRowsImported} rows`);
       if (onStepComplete) onStepComplete('Solana', { csvFilesFetched: rollingResult.protocolsSynced || 0, rowsImported: rollingResult.totalRowsImported || 0 });
 
-      // Step 2: Sync EVM Protocols
-      currentStep = 'EVM sync';
-      if (onStepUpdate) onStepUpdate('Refreshing EVM protocol data...', 40);
-      console.log('Starting EVM sync...');
-      const evmResult = await dataSyncApi.syncEVMData();
-      totalProtocolsSynced += evmResult.protocolsSynced || 0;
-      totalRowsImported += evmResult.totalRowsImported || 0;
-      console.log('EVM sync completed:', evmResult);
-      if (onStepComplete) onStepComplete('EVM', { csvFilesFetched: evmResult.protocolsSynced || 0, rowsImported: evmResult.totalRowsImported || 0 });
-
-      // Step 3: Sync Monad Protocols
-      currentStep = 'Monad sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Monad protocol data...', 55);
-      console.log('Starting Monad sync...');
-      const monadResult = await dataSyncApi.syncMonadData();
-      totalProtocolsSynced += monadResult.protocolsSynced || 0;
-      totalRowsImported += monadResult.totalRowsImported || 0;
-      console.log('Monad sync completed:', monadResult);
-      if (onStepComplete) onStepComplete('Monad', { csvFilesFetched: monadResult.protocolsSynced || 0, rowsImported: monadResult.totalRowsImported || 0 });
-
-      // Step 4: Sync Public Rolling Stats
+      // Step 2: Sync Public Rolling Stats
       currentStep = 'Public Rolling Stats sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Public Rolling Stats...', 70);
-      console.log('Starting Public Rolling Stats sync...');
+      if (onStepUpdate) onStepUpdate('Refreshing Public Rolling Stats...', 50);
       const publicRollingResult = await dataSyncApi.syncPublicRollingData();
       totalProtocolsSynced += publicRollingResult.protocolsSynced || 0;
       totalRowsImported += publicRollingResult.totalRowsImported || 0;
-      console.log('Public Rolling Stats sync completed:', publicRollingResult);
+      console.log(`Public Rolling: ${publicRollingResult.protocolsSynced} protocols, ${publicRollingResult.totalRowsImported} rows`);
       if (onStepComplete) onStepComplete('Public Rolling Stats', { csvFilesFetched: publicRollingResult.protocolsSynced || 0, rowsImported: publicRollingResult.totalRowsImported || 0 });
 
-      // Step 5: Sync Projected Stats data from Dune
+      // Step 3: Sync Projected Stats data from Dune
       currentStep = 'Projected Stats sync';
-      if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 90);
-      console.log('Starting Projected Stats sync...');
+      if (onStepUpdate) onStepUpdate('Refreshing Projected Stats data...', 80);
       await ProjectedStatsApi.updateProjectedData();
-      console.log('Projected Stats sync completed successfully');
+      console.log('Projected Stats: synced');
       if (onStepComplete) onStepComplete('Projected Stats', { csvFilesFetched: 1, rowsImported: 0 });
-      
+
       // Complete
       currentStep = 'completion';
       if (onStepUpdate) onStepUpdate('Sync completed successfully!', 100);
-      
+
       // Store the sync time
       const now = getCETDate();
       localStorage.setItem(STORAGE_KEY, now.toISOString());
-      
-      // Reset all caches and settings after successful data refresh
+
+      // Reset all caches
       resetAllCaches();
-      console.log('All caches reset after successful data sync');
       
       setState(prev => ({
         ...prev,

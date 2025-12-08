@@ -646,7 +646,7 @@ export function ProtocolManagement() {
         () => {
           toast({
             title: "Starting Data Refresh",
-            description: "Refreshing all data sources (Solana, EVM, Monad, Public Rolling, Projected Stats)...",
+            description: "Refreshing Solana protocols, Public Rolling Stats, and Projected Stats...",
           });
         },
         // onSyncSuccess
@@ -654,7 +654,7 @@ export function ProtocolManagement() {
           toast({
             variant: "success",
             title: "All Data Synced Successfully",
-            description: `Complete refresh finished! (${result.csvFilesFetched} sources synced)`,
+            description: `Complete refresh finished! (${result.csvFilesFetched} protocols synced)`,
           });
           // Reload sync statuses after successful refresh
           setForceRender(prev => prev + 1);
@@ -664,32 +664,14 @@ export function ProtocolManagement() {
           // Update individual loading states based on step
           if (step.includes('Solana')) {
             setIsRefreshingSolana(true);
-            setIsRefreshingEVM(false);
-            setIsRefreshingMonad(false);
-            setIsRefreshingPublicRolling(false);
-            setIsRefreshingProjectedStats(false);
-          } else if (step.includes('EVM')) {
-            setIsRefreshingSolana(false);
-            setIsRefreshingEVM(true);
-            setIsRefreshingMonad(false);
-            setIsRefreshingPublicRolling(false);
-            setIsRefreshingProjectedStats(false);
-          } else if (step.includes('Monad')) {
-            setIsRefreshingSolana(false);
-            setIsRefreshingEVM(false);
-            setIsRefreshingMonad(true);
             setIsRefreshingPublicRolling(false);
             setIsRefreshingProjectedStats(false);
           } else if (step.includes('Public Rolling')) {
             setIsRefreshingSolana(false);
-            setIsRefreshingEVM(false);
-            setIsRefreshingMonad(false);
             setIsRefreshingPublicRolling(true);
             setIsRefreshingProjectedStats(false);
           } else if (step.includes('Projected Stats')) {
             setIsRefreshingSolana(false);
-            setIsRefreshingEVM(false);
-            setIsRefreshingMonad(false);
             setIsRefreshingPublicRolling(false);
             setIsRefreshingProjectedStats(true);
           }

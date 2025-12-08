@@ -445,8 +445,24 @@ export const dataSyncApi = {
   },
 
   // Sync all EVM protocol data
-  async syncEVMData(): Promise<{ csvFilesFetched: number; rowsImported: number; timestamp: string }> {
-    return apiRequest<{ csvFilesFetched: number; rowsImported: number; timestamp: string }>('/protocols/sync-evm', {
+  async syncEVMData(): Promise<{
+    protocolsSynced: number;
+    totalProtocols: number;
+    totalRowsImported: number;
+    csvFilesFetched: number;
+    rowsImported: number;
+    results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+    timestamp: string
+  }> {
+    return apiRequest<{
+      protocolsSynced: number;
+      totalProtocols: number;
+      totalRowsImported: number;
+      csvFilesFetched: number;
+      rowsImported: number;
+      results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
+      timestamp: string
+    }>('/protocols/sync-evm', {
       method: 'POST'
     });
   },

@@ -517,8 +517,17 @@ export class DataManagementService {
         });
       }
 
+      // Sanitize data: convert undefined to null for MySQL compatibility
+      const sanitizedData = mappedData.map(row => {
+        const sanitizedRow: any = {};
+        for (const key in row) {
+          sanitizedRow[key] = row[key] === undefined ? null : row[key];
+        }
+        return sanitizedRow;
+      });
+
       // MySQL: Batch upsert with INSERT...ON DUPLICATE KEY UPDATE
-      const result = await db.batchUpsert(TABLE_NAME, mappedData, ['protocol_name', 'date', 'chain', 'data_type']);
+      const result = await db.batchUpsert(TABLE_NAME, sanitizedData, ['protocol_name', 'date', 'chain', 'data_type']);
 
       console.log(`${protocolName}: ${result.affectedRows} rows synced`);
 

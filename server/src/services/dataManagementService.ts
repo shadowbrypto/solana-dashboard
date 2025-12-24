@@ -170,36 +170,39 @@ export class DataManagementService {
   }
 
   /**
-   * Download CSV data from Dune API for a single query
+   * Download data from Dune API for a single query using JSON endpoint
+   * JSON endpoint returns fresher data than CSV endpoint
    */
   private async downloadSingleQuery(protocolName: string, queryId: number, queryIndex: number): Promise<{ success: boolean; data?: any[]; error?: string }> {
     try {
-      const url = `https://api.dune.com/api/v1/query/${queryId}/results/csv?api_key=${API_KEY}`;
+      // Use JSON endpoint instead of CSV - JSON returns fresher/more accurate data
+      const url = `https://api.dune.com/api/v1/query/${queryId}/results?api_key=${API_KEY}`;
       const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const csvData = await response.text();
+      const jsonData = await response.json();
 
-      if (!csvData.trim()) {
+      if (!jsonData.result || !jsonData.result.rows || jsonData.result.rows.length === 0) {
         throw new Error('Downloaded data is empty');
       }
 
-      // Parse CSV data
-      const parsed = Papa.parse(csvData, {
-        header: true,
-        skipEmptyLines: true,
+      // Convert JSON rows to the expected format (same as CSV parsing would produce)
+      const data = jsonData.result.rows.map((row: any) => {
+        // Ensure all values are converted to strings for consistency with CSV parsing
+        const processedRow: any = {};
+        for (const key of Object.keys(row)) {
+          const value = row[key];
+          processedRow[key] = value === null || value === undefined ? '' : String(value);
+        }
+        return processedRow;
       });
-
-      if (parsed.errors.length) {
-        throw new Error(`CSV parse errors: ${JSON.stringify(parsed.errors)}`);
-      }
 
       return {
         success: true,
-        data: parsed.data
+        data
       };
 
     } catch (error) {

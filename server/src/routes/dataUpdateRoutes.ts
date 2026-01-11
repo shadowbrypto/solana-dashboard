@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { syncData, getSyncStatus } from '../services/dataUpdateService.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 import { launchpadDataService } from '../services/launchpadDataService.js';
-import { getProtocolsWithRollingRefresh } from '../config/rolling-refresh-config.js';
+import { getProtocolsWithRollingRefresh, getProtocolsWithRollingRefreshByChain } from '../config/rolling-refresh-config.js';
 import { getProtocolsWithPublicRollingRefresh } from '../config/rolling-refresh-config-public.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 
@@ -145,19 +145,25 @@ router.post('/sync/launchpad/:launchpadName', async (req: Request, res: Response
 });
 
 // POST /api/data-update/sync-rolling
-// Sync data for all protocols with rolling refresh configuration
-// Query params: dataType (optional - 'public', 'private')
+// Sync data for protocols with rolling refresh configuration
+// Query params: dataType (optional - 'public', 'private'), chain (optional - 'solana', 'evm', 'monad')
 router.post('/sync-rolling', async (req: Request, res: Response) => {
   try {
-    const { dataType } = req.query;
+    const { dataType, chain } = req.query;
     const dataTypeFilter = typeof dataType === 'string' ? dataType : 'private';
+    const chainFilter = typeof chain === 'string' ? chain as 'solana' | 'evm' | 'monad' : undefined;
 
-    console.log(`Starting rolling refresh sync for all configured protocols (${dataTypeFilter} data)...`);
+    console.log(`Starting rolling refresh sync for ${chainFilter || 'all'} protocols (${dataTypeFilter} data)...`);
 
-    // Get protocols based on data type
-    const rollingProtocols = dataTypeFilter === 'public'
-      ? getProtocolsWithPublicRollingRefresh()
-      : getProtocolsWithRollingRefresh();
+    // Get protocols based on data type and chain filter
+    let rollingProtocols: string[];
+    if (dataTypeFilter === 'public') {
+      rollingProtocols = getProtocolsWithPublicRollingRefresh();
+    } else if (chainFilter) {
+      rollingProtocols = getProtocolsWithRollingRefreshByChain(chainFilter);
+    } else {
+      rollingProtocols = getProtocolsWithRollingRefresh();
+    }
 
     if (rollingProtocols.length === 0) {
       return res.json({

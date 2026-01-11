@@ -210,8 +210,34 @@ export const protocolApi = {
     const day = String(endDate.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
     const endpoint = `/protocols/${protocol}/cumulative-volume?endDate=${dateStr}${dataType ? `&dataType=${dataType}` : ''}`;
-    
+
     return apiRequest<number>(endpoint);
+  },
+
+  // Get user milestones for a protocol (when they reached 1M, 2M users etc.)
+  async getUserMilestones(protocol: string, dataType?: string): Promise<{
+    milestones: Array<{
+      milestone: number;
+      milestoneLabel: string;
+      dateReached: string | null;
+      daysFromStart: number | null;
+      daysFromPrevious: number | null;
+    }>;
+    totalUsers: number;
+    firstDataDate: string | null;
+  }> {
+    const endpoint = `/protocols/${protocol}/user-milestones${dataType ? `?dataType=${dataType}` : ''}`;
+    return apiRequest<{
+      milestones: Array<{
+        milestone: number;
+        milestoneLabel: string;
+        dateReached: string | null;
+        daysFromStart: number | null;
+        daysFromPrevious: number | null;
+      }>;
+      totalUsers: number;
+      firstDataDate: string | null;
+    }>(endpoint);
   },
 
   // Health check
@@ -360,21 +386,22 @@ export const dataSyncApi = {
     });
   },
 
-  // Sync rolling refresh data for all configured protocols
-  async syncRollingRefreshData(): Promise<{
+  // Sync rolling refresh data for configured protocols (optionally filtered by chain)
+  async syncRollingRefreshData(chain?: 'solana' | 'evm' | 'monad'): Promise<{
     protocolsSynced: number;
     totalProtocols: number;
     totalRowsImported: number;
     results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
     timestamp: string
   }> {
+    const endpoint = chain ? `/data-update/sync-rolling?chain=${chain}` : '/data-update/sync-rolling';
     return apiRequest<{
       protocolsSynced: number;
       totalProtocols: number;
       totalRowsImported: number;
       results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
       timestamp: string
-    }>('/data-update/sync-rolling', {
+    }>(endpoint, {
       method: 'POST'
     });
   },

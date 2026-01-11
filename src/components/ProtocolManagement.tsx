@@ -385,21 +385,21 @@ export function ProtocolManagement() {
 
   const handleHardRefresh = async () => {
     if (isRefreshingSolana) return;
-    
+
     setIsRefreshingSolana(true);
     try {
-      // Sync only Solana protocols (filter out EVM ones) using current data type preference
-      const result = await dataSyncApi.syncData(dataTypePreference);
-      
+      // Sync ONLY Solana protocols from rolling-refresh-config.ts (7-day rolling data)
+      const result = await dataSyncApi.syncRollingRefreshData('solana');
+
       // Clear all frontend caches after successful refresh
       clearAllFrontendCaches();
-      
+
       toast({
         variant: "success",
         title: "Solana Data Refresh Complete",
-        description: `Successfully refreshed ${dataTypePreference} Solana data for ${result.csvFilesFetched} protocols`,
+        description: `Successfully refreshed ${result.protocolsSynced} Solana protocols`,
       });
-      
+
       // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {

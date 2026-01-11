@@ -104,6 +104,17 @@ export function getProtocolsWithRollingRefresh(): string[] {
 }
 
 /**
+ * Get protocols with valid rolling refresh configurations filtered by chain
+ * @param chain - The chain to filter by ('solana', 'evm', or 'monad')
+ * @returns Array of protocol IDs for the specified chain
+ */
+export function getProtocolsWithRollingRefreshByChain(chain: 'solana' | 'evm' | 'monad'): string[] {
+  return Object.entries(ROLLING_REFRESH_SOURCES)
+    .filter(([_, config]) => config.chain === chain && config.queryIds.length > 0)
+    .map(([protocolId]) => protocolId);
+}
+
+/**
  * Get all protocol IDs that have rolling refresh query configurations
  * @returns Array of all protocol IDs in the configuration
  */

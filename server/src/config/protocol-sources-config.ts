@@ -73,7 +73,7 @@ export const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
   "photon_evm": { queryIds: [5929750], chain: 'evm' },
   "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6031024], chain: 'evm' },
+  "axiom_evm": { queryIds: [6506374], chain: 'evm' },
 
   // ==========================================
   // MONAD PROTOCOLS

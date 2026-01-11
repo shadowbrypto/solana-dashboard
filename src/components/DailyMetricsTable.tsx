@@ -1004,60 +1004,86 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   const copyToClipboard = async () => {
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
-    
-    if (tableElement) {
-      // Check element dimensions
-      const rect = tableElement.getBoundingClientRect();
-      
-      if (rect.width === 0 || rect.height === 0) {
+
+    if (!tableElement) {
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Table element not found",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Check element dimensions
+    const rect = tableElement.getBoundingClientRect();
+
+    if (rect.width === 0 || rect.height === 0) {
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Table is not visible",
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      const scale = 2; // 2x resolution for higher quality
+      const dataUrl = await Promise.race([
+        domtoimage.toPng(tableElement, {
+          quality: 1,
+          bgcolor: '#ffffff',
+          width: (tableElement.scrollWidth + 40) * scale,
+          height: (tableElement.scrollHeight + 40) * scale,
+          style: {
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            overflow: 'visible',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Copy timeout after 10 seconds')), 10000)
+        )
+      ]) as string;
+
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      // Check if Clipboard API is available
+      if (!navigator.clipboard || !navigator.clipboard.write) {
+        toast({
+          variant: "destructive",
+          title: "Copy Failed",
+          description: "Clipboard API not available - try using HTTPS or localhost",
+          duration: 3000,
+        });
         return;
       }
-      
-      try {
-        const scale = 2; // 2x resolution for higher quality
-        const dataUrl = await Promise.race([
-          domtoimage.toPng(tableElement, {
-            quality: 1,
-            bgcolor: '#ffffff',
-            width: (tableElement.scrollWidth + 40) * scale,
-            height: (tableElement.scrollHeight + 40) * scale,
-            style: {
-              transform: `scale(${scale})`,
-              transformOrigin: 'top left',
-              overflow: 'visible',
-              padding: '20px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
-          )
-        ]) as string;
-        
-        // Convert data URL to blob
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-        
-        if (blob) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': blob
-              })
-            ]);
-            toast({
-              title: "Copied to clipboard",
-              description: "Daily report image copied successfully",
-              duration: 2000,
-            });
-          } catch (error) {
-            // Handle error silently or show user-friendly message
-          }
-        }
-      } catch (error) {
-        // Handle error silently or show user-friendly message
-      }
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+
+      toast({
+        title: "Copied to clipboard",
+        description: "Daily report image copied successfully",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Copy to clipboard error:', error);
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: error instanceof Error ? error.message : "Failed to generate image for clipboard",
+        duration: 3000,
+      });
     }
   };
 

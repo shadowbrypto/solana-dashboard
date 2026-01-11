@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getMonadDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
+import { getProtocolStats, getTotalProtocolStats, getDailyMetrics, getAggregatedProtocolStats, generateWeeklyInsights, getEVMChainBreakdown, getEVMDailyChainBreakdown, getEVMDailyData, getSolanaDailyMetrics, getEVMDailyMetrics, getMonadDailyMetrics, getSolanaDailyHighlights, getLatestDataDates, getCumulativeVolume, getUserMilestones, getSolanaWeeklyMetrics, getEVMWeeklyMetrics, getSolanaMonthlyMetrics, getEVMMonthlyMetrics, getMonthlyInsights, getSolanaMonthlyMetricsWithDaily, getEVMMonthlyMetricsWithDaily } from '../services/protocolService.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 import { getMonadProtocols, getEVMProtocols } from '../config/chainProtocols.js';
 import { dataManagementService } from '../services/dataManagementService.js';
@@ -246,6 +246,26 @@ router.get('/:protocol/cumulative-volume', async (req: Request, res: Response) =
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch cumulative volume',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/protocols/:protocol/user-milestones
+// Get user milestone data for a specific protocol (when they reached 1M, 2M users etc.)
+router.get('/:protocol/user-milestones', async (req: Request, res: Response) => {
+  try {
+    const { protocol } = req.params;
+    const { dataType } = req.query;
+
+    const dataTypeFilter = typeof dataType === 'string' ? dataType : 'public';
+    const milestones = await getUserMilestones(protocol, dataTypeFilter);
+    res.json({ success: true, data: milestones });
+  } catch (error) {
+    console.error(`Error fetching user milestones for ${req.params.protocol}:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user milestones',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -1733,6 +1733,141 @@ export async function getCumulativeVolume(protocolName: string, endDate: Date, d
 }
 
 /**
+ * Get cumulative new users for a protocol from inception to a specific end date
+ */
+export async function getCumulativeUsers(protocolName: string, endDate: Date, dataType: string = 'private'): Promise<number> {
+  try {
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    const result = await db.queryOne<{ total_users: number | null }>(
+      `SELECT SUM(new_users) as total_users
+       FROM protocol_stats
+       WHERE protocol_name = ?
+         AND data_type = ?
+         AND date <= ?
+         AND new_users IS NOT NULL`,
+      [protocolName, dataType, endDateStr]
+    );
+
+    return result?.total_users || 0;
+  } catch (error) {
+    console.error(`Error getting cumulative users for ${protocolName}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get user milestone data for a protocol - when they reached 1M, 2M, 3M users etc.
+ */
+export async function getUserMilestones(protocolName: string, dataType: string = 'public'): Promise<{
+  milestones: Array<{
+    milestone: number;
+    milestoneLabel: string;
+    dateReached: string | null;
+    daysFromStart: number | null;
+    daysFromPrevious: number | null;
+  }>;
+  totalUsers: number;
+  firstDataDate: string | null;
+}> {
+  try {
+    // Get all daily new users data ordered by date
+    const dailyData = await db.query<{ date: string; new_users: number }>(
+      `SELECT date, new_users
+       FROM protocol_stats
+       WHERE protocol_name = ?
+         AND data_type = ?
+         AND new_users IS NOT NULL
+         AND new_users > 0
+       ORDER BY date ASC`,
+      [protocolName, dataType]
+    );
+
+    if (!dailyData || dailyData.length === 0) {
+      return {
+        milestones: [],
+        totalUsers: 0,
+        firstDataDate: null
+      };
+    }
+
+    const firstDataDate = dailyData[0].date;
+    const firstDate = new Date(firstDataDate);
+
+    // Calculate cumulative users and find milestones
+    let cumulativeUsers = 0;
+
+    // Milestone values: 500K increments up to 5M, then larger increments
+    const milestoneValues = [
+      500000, 1000000, 1500000, 2000000, 2500000, 3000000,
+      3500000, 4000000, 4500000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000
+    ];
+    const milestoneLabels = [
+      '500K', '1M', '1.5M', '2M', '2.5M', '3M',
+      '3.5M', '4M', '4.5M', '5M', '6M', '7M', '8M', '9M', '10M'
+    ];
+
+    const milestonesReached: Map<number, { date: string; daysFromStart: number }> = new Map();
+
+    dailyData.forEach((day) => {
+      cumulativeUsers += Math.round(Number(day.new_users) || 0);
+      const currentDate = new Date(day.date);
+
+      // Check each milestone
+      milestoneValues.forEach((milestone) => {
+        if (cumulativeUsers >= milestone && !milestonesReached.has(milestone)) {
+          // Calculate actual calendar days from first date
+          const daysFromStart = Math.floor((currentDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+          milestonesReached.set(milestone, { date: day.date, daysFromStart });
+        }
+      });
+    });
+
+    // Build milestone response with days from previous milestone
+    let previousMilestoneDate: Date | null = null;
+    const milestones = milestoneValues.map((milestone, index) => {
+      const reached = milestonesReached.get(milestone);
+      let daysFromPrevious: number | null = null;
+
+      if (reached && previousMilestoneDate !== null) {
+        const currentMilestoneDate = new Date(reached.date);
+        daysFromPrevious = Math.floor((currentMilestoneDate.getTime() - previousMilestoneDate.getTime()) / (1000 * 60 * 60 * 24));
+      }
+
+      if (reached) {
+        previousMilestoneDate = new Date(reached.date);
+      }
+
+      return {
+        milestone,
+        milestoneLabel: milestoneLabels[index],
+        dateReached: reached?.date || null,
+        daysFromStart: reached?.daysFromStart ?? null,
+        daysFromPrevious
+      };
+    });
+
+    // Filter to only show relevant milestones (reached ones + next 2 unreached)
+    const reachedCount = milestones.filter(m => m.dateReached).length;
+    const filteredMilestones = milestones.filter((m, i) => {
+      if (m.dateReached) return true;
+      // Show next 2 unreached milestones
+      const unreachedIndex = i - reachedCount;
+      return unreachedIndex < 2;
+    });
+
+    return {
+      milestones: filteredMilestones,
+      totalUsers: Math.round(cumulativeUsers),
+      firstDataDate
+    };
+  } catch (error) {
+    console.error(`Error getting user milestones for ${protocolName}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Get EVM weekly metrics with growth calculations
  * OPTIMIZED: Single query with date range instead of pagination loops
  */

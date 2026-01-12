@@ -160,7 +160,7 @@ export default function TradingAppsComparison() {
                    statProtocol?.toLowerCase() === protocolId.toLowerCase() ||
                    statProtocol?.toLowerCase() === cleanProtocolName.toLowerCase() ||
                    (protocolId === 'fomo' && (statProtocol === 'tryFomo' || statProtocol === 'tryfomo')) ||
-                   (cleanProtocolName === 'trojan' && statProtocol === 'trojan') ||
+                   (cleanProtocolName === 'trojanonsolana' && statProtocol === 'trojanonsolana') ||
                    (cleanProtocolName === 'bloom' && statProtocol === 'bloom');
             
             // Chain must match what we expect for this protocol type
@@ -172,7 +172,7 @@ export default function TradingAppsComparison() {
             return protocolMatches && chainMatches;
           });
           
-          if (protocolId.includes('trojan') || protocolId.includes('bloom') || protocolId.includes('evm')) {
+          if (protocolId.includes('trojanonsolana') || protocolId.includes('bloom') || protocolId.includes('evm')) {
             console.log(`OneVsOne - ${protocolId} (${cleanProtocolName}) stats count:`, protocolStats.length);
             if (protocolStats.length > 0) {
               console.log(`  Sample stat:`, {

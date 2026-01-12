@@ -73,7 +73,7 @@ const WeeklyInsights: React.FC = () => {
       const last7Days = sortedData.slice(0, 7);
       const previous7Days = sortedData.slice(7, 14);
 
-      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector"];
+      const protocols = ["bullx", "photon", "trojanonsolana", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector"];
       
       // Calculate weekly stats for each protocol
       const weeklyStatsData: WeeklyStats[] = protocols.map(protocol => {
@@ -158,7 +158,7 @@ const WeeklyInsights: React.FC = () => {
       render: (stat: WeeklyStats) => (
         <div className="flex items-center gap-2">
           <span className="font-medium capitalize text-foreground">{stat.protocol}</span>
-          {stat.protocol === 'trojan' && (
+          {stat.protocol === 'trojanonsolana' && (
             <Badge variant="outline" className="text-xs">Focus</Badge>
           )}
         </div>

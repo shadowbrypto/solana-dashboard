@@ -184,7 +184,7 @@ export async function getAggregatedProtocolStats(): Promise<any[]> {
     
     // Fallback to the old method if the new endpoint fails
     try {
-      const protocols = ["bullx", "photon", "trojan", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector", "fomo", "slingshot", "telemetry", "nova terminal", "rhythm", "vyper"];
+      const protocols = ["bullx", "photon", "trojanonsolana", "axiom", "gmgnai", "bloom", "bonkbot", "nova", "soltradingbot", "maestro", "banana", "terminal", "moonshot", "vector", "fomo", "slingshot", "telemetry", "nova terminal", "rhythm", "vyper"];
       const allData = await getProtocolStats(protocols);
 
       // Transform the data to match the aggregated format

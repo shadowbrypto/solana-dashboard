@@ -30,7 +30,7 @@ interface AIInsight {
 
 // Protocol categories for comparative analysis
 const PROTOCOL_CATEGORIES = {
-  'trading_bots': ['bullx', 'photon', 'trojan'],
+  'trading_bots': ['bullx', 'photon', 'trojanonsolana'],
   'ai_platforms': ['gmgnai', 'axiom'],
   'dex_tools': ['bloom', 'vector'],
   'social_bots': ['bonkbot', 'soltradingbot', 'maestro'],
@@ -90,10 +90,10 @@ export async function generateAdvancedAIInsights(weeklyStats: WeeklyStats[]): Pr
   }
 
   // 2. Trojan Competitive Analysis
-  const trojanStats = weeklyStats.find(s => s.protocol === 'trojan');
+  const trojanStats = weeklyStats.find(s => s.protocol === 'trojanonsolana');
   if (trojanStats) {
     const tradingBotPeers = weeklyStats.filter(s => PROTOCOL_CATEGORIES.trading_bots.includes(s.protocol));
-    const peerPerformance = tradingBotPeers.filter(p => p.protocol !== 'trojan');
+    const peerPerformance = tradingBotPeers.filter(p => p.protocol !== 'trojanonsolana');
     const avgPeerVolumeChange = peerPerformance.reduce((sum, p) => sum + p.volume_change, 0) / peerPerformance.length;
     const avgPeerMarketShare = peerPerformance.reduce((sum, p) => sum + p.market_share_volume, 0) / peerPerformance.length;
     
@@ -107,7 +107,7 @@ export async function generateAdvancedAIInsights(weeklyStats: WeeklyStats[]): Pr
         title: `Trojan ${performanceGap > 0 ? 'Outperforms' : 'Underperforms'} Trading Bot Category`,
         description: `Trojan shows a ${performanceGap.toFixed(1)}% ${performanceGap > 0 ? 'advantage' : 'disadvantage'} compared to trading bot peers (BullX, Photon). Market share gap of ${marketShareGap.toFixed(1)}% suggests ${performanceGap > 0 ? 'competitive strength' : 'need for strategic repositioning'}.`,
         impact: Math.abs(performanceGap) > 15 ? 'high' : 'medium',
-        protocols: ['trojan', 'bullx', 'photon'],
+        protocols: ['trojanonsolana', 'bullx', 'photon'],
         metrics: [
           { metric: 'Performance Gap', change: performanceGap, value: trojanStats.volume_total },
           { metric: 'Market Share Gap', change: marketShareGap, value: trojanStats.market_share_volume }

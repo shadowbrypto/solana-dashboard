@@ -18,7 +18,7 @@ export function WeeklyHeatMapExample() {
     "axiom",
     "bullx", 
     "photon",
-    "trojan",
+    "trojanonsolana",
     "gmgnai",
     "bloom",
     "bonkbot",

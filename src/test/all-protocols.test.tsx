@@ -169,7 +169,7 @@ describe('All Trading Apps Page', () => {
           const content = page.textContent || '';
           
           // Check for presence of major protocols
-          const majorProtocols = ['bullx', 'photon', 'trojan'];
+          const majorProtocols = ['bullx', 'photon', 'trojanonsolana'];
           const protocolsFound = majorProtocols.filter(protocol => 
             content.toLowerCase().includes(protocol)
           );

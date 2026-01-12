@@ -162,7 +162,7 @@ export default function CustomReports() {
   const { toast } = useToast();
 
   // Control state
-  const [selectedProtocol, setSelectedProtocol] = useState<string>('trojan');
+  const [selectedProtocol, setSelectedProtocol] = useState<string>('trojanonsolana');
   const [reportType, setReportType] = useState<ReportType>('monthly');
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 6)); // Default to 6 months ago
   const [endDate, setEndDate] = useState<Date>(new Date());

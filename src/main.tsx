@@ -26,7 +26,7 @@ import { useLocation } from "react-router-dom";
 function AppWrapper() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const protocol = searchParams.get('protocol') || 'trojan';
+  const protocol = searchParams.get('protocol') || 'trojanonsolana';
   return <App key={protocol} />;
 }
 

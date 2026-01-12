@@ -22,7 +22,7 @@ export interface ProtocolMetrics {
 export type Protocol = 
   | 'bullx'
   | 'photon'
-  | 'trojan'
+  | 'trojanonsolana'
   | 'axiom'
   | 'gmgnai'
   | 'bloom'

@@ -86,7 +86,7 @@ export default function UserMilestones() {
   const [milestoneData, setMilestoneData] = useState<MilestoneResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProtocol, setSelectedProtocol] = useState<string>('trojan');
+  const [selectedProtocol, setSelectedProtocol] = useState<string>('trojanonsolana');
   const [dataType] = useState<'public' | 'private'>('public'); // Always use public for user milestones
 
   // Get available protocols (only Solana for now since milestones data is primarily for Solana)

@@ -121,7 +121,7 @@ describe('Daily Metrics Report', () => {
         const tableContent = table.textContent || '';
         
         // Should display multiple protocols
-        const majorProtocols = ['bullx', 'photon', 'trojan'];
+        const majorProtocols = ['bullx', 'photon', 'trojanonsolana'];
         const protocolsFound = majorProtocols.filter(protocol => 
           tableContent.toLowerCase().includes(protocol.toLowerCase())
         );

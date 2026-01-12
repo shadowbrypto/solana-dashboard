@@ -18,7 +18,7 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'terminal': { solana: true, evm: true, monad: false },
   'photon': { solana: true, evm: true, monad: false },
   'soltradingbot': { solana: true, evm: false, monad: false },
-  'trojan': { solana: true, evm: false, monad: false },
+  'trojanonsolana': { solana: true, evm: false, monad: false },
   'vector': { solana: true, evm: false, monad: false },
   'mevx': { solana: true, evm: true, monad: false },
   'telemetry': { solana: true, evm: false, monad: false },

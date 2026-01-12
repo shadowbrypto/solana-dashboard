@@ -141,7 +141,7 @@ export default function TraderStats() {
     { id: 'photon', name: 'Photon', logo: 'photon.jpg' },
     { id: 'axiom', name: 'Axiom', logo: 'axiom.jpg' },
     { id: 'bloom', name: 'Bloom', logo: 'bloom.jpg' },
-    { id: 'trojan', name: 'Trojan', logo: 'trojan.jpg' }
+    { id: 'trojanonsolana', name: 'Trojan', logo: 'trojanonsolana.jpg' }
   ];
 
   // Percentile data is now included in comprehensive endpoint

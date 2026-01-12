@@ -24,7 +24,7 @@ export default function About() {
         <ul className="list-disc pl-6 space-y-2">
           <li><code className="bg-[#13131A] px-2 py-1 rounded">?protocol=bullx</code> - View Bull X data</li>
           <li><code className="bg-[#13131A] px-2 py-1 rounded">?protocol=photon</code> - View Photon data</li>
-          <li><code className="bg-[#13131A] px-2 py-1 rounded">?protocol=trojan</code> - View Trojan data</li>
+          <li><code className="bg-[#13131A] px-2 py-1 rounded">?protocol=trojanonsolana</code> - View Trojan data</li>
           <li><code className="bg-[#13131A] px-2 py-1 rounded">?protocol=all</code> - View combined data from all protocols</li>
         </ul>
       </div>

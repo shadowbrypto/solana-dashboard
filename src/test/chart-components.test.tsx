@@ -174,7 +174,7 @@ describe('Chart Components Integration', () => {
         <StackedBarChart
           title="Stacked Test"
           data={mockStackedData}
-          dataKeys={['bullx_volume', 'photon_volume', 'trojan_volume']}
+          dataKeys={['bullx_volume', 'photon_volume', 'trojanonsolana_volume']}
           labels={['BullX', 'Photon', 'Trojan']}
           loading={false}
         />

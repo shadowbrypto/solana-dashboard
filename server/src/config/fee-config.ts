@@ -11,7 +11,7 @@ export interface ProtocolFeeConfig {
 
 export const PROTOCOL_FEES: ProtocolFeeConfig = {
   // Telegram Bots (Solana)
-  'trojan': '1.0%',
+  'trojanonsolana': '1.0%',
   'bonkbot': '1.0%',
   'bloom': '1.0%',
   'nova': '1.0%',

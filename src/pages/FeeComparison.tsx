@@ -63,9 +63,9 @@ export default function FeeComparison() {
     ? protocolConfigs.filter(protocol => feeConfig[protocol.id] && !hiddenProtocols.has(protocol.id))
     : [];
 
-  const trojanProtocol = allProtocolsWithFees.find(p => p.id === 'trojan');
+  const trojanProtocol = allProtocolsWithFees.find(p => p.id === 'trojanonsolana');
   const otherProtocols = allProtocolsWithFees
-    .filter(p => p.id !== 'trojan')
+    .filter(p => p.id !== 'trojanonsolana')
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const protocolsWithFees = trojanProtocol
@@ -220,7 +220,7 @@ export default function FeeComparison() {
                   const fee = feeConfig ? getProtocolFee(feeConfig, protocol.id) : 'N/A';
                   const netFee = netFees ? getProtocolNetFee(netFees, protocol.id) : (loadingNetFees ? 'Loading...' : 'N/A');
                   const logoFilename = getProtocolLogoFilename(protocol.id);
-                  const isTrojan = protocol.id === 'trojan';
+                  const isTrojan = protocol.id === 'trojanonsolana';
                   const details = netFeesDetails?.[protocol.id.toLowerCase()];
 
                   return (

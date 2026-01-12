@@ -27,7 +27,7 @@ interface RollingRefreshSource {
  */
 export const ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource> = {
   // Solana Protocols - Telegram Bots
-   'trojan': { queryIds: [6169496], chain: 'solana' },
+   'trojanonsolana': { queryIds: [6169496], chain: 'solana' },
    'bonkbot': { queryIds: [6169502], chain: 'solana' },
   'bloom': { queryIds: [6169658], chain: 'solana' },
   // 'nova': { queryIds: [], chain: 'solana' },

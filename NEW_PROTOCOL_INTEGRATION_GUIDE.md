@@ -258,7 +258,7 @@ Find the category section (Telegram Bots, Trading Terminals, or Mobile Apps) and
 
 **For Telegram Bots** (around line 1093):
 ```typescript
-{['trojan', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro'].map(protocolId => {
+{['trojanonsolana', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro'].map(protocolId => {
 ```
 
 **Example:**

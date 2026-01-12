@@ -873,7 +873,7 @@ export function ProtocolManagement() {
     }
   };
 
-  const handleRefreshIndividualTraderStats = async (protocol: 'photon' | 'axiom' | 'bloom' | 'trojan') => {
+  const handleRefreshIndividualTraderStats = async (protocol: 'photon' | 'axiom' | 'bloom' | 'trojanonsolana') => {
     if (refreshingTraderStatsProtocols.has(protocol)) return;
     
     setRefreshingTraderStatsProtocols(prev => new Set([...prev, protocol]));
@@ -1126,7 +1126,7 @@ export function ProtocolManagement() {
               <div className="space-y-2 sm:space-y-3">
                 <h4 className="text-sm font-semibold text-muted-foreground">Telegram Bots</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-                  {['trojan', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro', 'basedbot'].map(protocolId => {
+                  {['trojanonsolana', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro', 'basedbot'].map(protocolId => {
                     const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
                     if (!protocol) return null;
                     
@@ -1454,7 +1454,7 @@ export function ProtocolManagement() {
               <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
                   <img 
-                    src="/assets/logos/trojan.jpg"
+                    src="/assets/logos/trojanonsolana.jpg"
                     alt="Trojan" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -1481,7 +1481,7 @@ export function ProtocolManagement() {
                     variant="secondary" 
                     className="text-xs font-medium"
                   >
-                    {(traderStatsRowCounts['trojan'] || 0).toLocaleString()} rows
+                    {(traderStatsRowCounts['trojanonsolana'] || 0).toLocaleString()} rows
                   </Badge>
                 </div>
                 <Button
@@ -1489,13 +1489,13 @@ export function ProtocolManagement() {
                   variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleRefreshIndividualTraderStats('trojan');
+                    handleRefreshIndividualTraderStats('trojanonsolana');
                   }}
-                  disabled={refreshingTraderStatsProtocols.has('trojan')}
+                  disabled={refreshingTraderStatsProtocols.has('trojanonsolana')}
                   className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                   title="Refresh Trojan trader stats"
                 >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('trojan') ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('trojanonsolana') ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>

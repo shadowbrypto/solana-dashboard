@@ -24,7 +24,7 @@ export default function NotFound() {
           <ul className="text-white/80 list-disc list-inside text-left">
             <li>bullx - Bull X data</li>
             <li>photon - Photon data</li>
-            <li>trojan - Trojan data</li>
+            <li>trojanonsolana - Trojan data</li>
             <li>all - Combined data from all protocols</li>
           </ul>
         </div>

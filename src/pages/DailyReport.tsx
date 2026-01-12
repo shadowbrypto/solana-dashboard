@@ -179,7 +179,7 @@ export default function DailyReport() {
     protocols.forEach(protocol => {
       if (chainType === 'solana') {
         // Solana-specific mock data
-        if (protocol === 'trojan') {
+        if (protocol === 'trojanonsolana') {
           mockDataForDate[protocol] = {
             total_volume_usd: 3000000,
             daily_users: 300,
@@ -467,7 +467,7 @@ export default function DailyReport() {
                       type="volume"
                       prefix="$"
                       protocolName="Trojan"
-                      protocolLogo="trojan.jpg"
+                      protocolLogo="trojanonsolana.jpg"
                       latestDate={date}
                     />
                   )}

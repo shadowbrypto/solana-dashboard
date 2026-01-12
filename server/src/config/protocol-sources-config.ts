@@ -29,7 +29,7 @@ export const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // ==========================================
 
   // Telegram Bots
-  "trojan": { queryIds: [5500774], chain: 'solana' },
+  "trojanonsolana": { queryIds: [5500774], chain: 'solana' },
   "bonkbot": { queryIds: [4278881], chain: 'solana' },
   "bloom": { queryIds: [4340509], chain: 'solana' },
   "nova": { queryIds: [6106735], chain: 'solana' },
@@ -94,7 +94,7 @@ export const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // ==========================================
 
   // Telegram Bots
-  "trojan": { queryIds: [4251075], chain: 'solana' },
+  "trojanonsolana": { queryIds: [4251075], chain: 'solana' },
   "bonkbot": { queryIds: [4278881], chain: 'solana' },
   "bloom": { queryIds: [4340509], chain: 'solana' },
   "nova": { queryIds: [6106735], chain: 'solana' },

@@ -581,7 +581,7 @@ export async function generateWeeklyInsights() {
   const last7Days = sortedData.slice(0, 7);
   const previous7Days = sortedData.slice(7, 14);
 
-  const protocols = ["axiom", "banana", "bloom", "bonkbot", "bullx", "gmgnai", "maestro", "moonshot", "nova", "terminal", "photon", "soltradingbot", "trojan", "vector"];
+  const protocols = ["axiom", "banana", "bloom", "bonkbot", "bullx", "gmgnai", "maestro", "moonshot", "nova", "terminal", "photon", "soltradingbot", "trojanonsolana", "vector"];
 
   const weeklyStats = protocols.map(protocol => {
     const protocolKey = protocol.replace(/\s+/g, '_').toLowerCase();
@@ -646,9 +646,9 @@ export async function generateWeeklyInsights() {
     });
   }
 
-  const trojan = weeklyStats.find(s => s.protocol === 'trojan');
+  const trojan = weeklyStats.find(s => s.protocol === 'trojanonsolana');
   if (trojan) {
-    const tradingBots = weeklyStats.filter(s => ['bullx', 'photon', 'trojan'].includes(s.protocol));
+    const tradingBots = weeklyStats.filter(s => ['bullx', 'photon', 'trojanonsolana'].includes(s.protocol));
     const avgGrowth = tradingBots.reduce((sum, s) => sum + s.volume_change, 0) / tradingBots.length;
 
     insights.push({
@@ -656,7 +656,7 @@ export async function generateWeeklyInsights() {
       title: `Trojan ${trojan.volume_change > avgGrowth ? 'outperforms' : 'underperforms'} trading bot category`,
       description: `${trojan.volume_change.toFixed(1)}% vs ${avgGrowth.toFixed(1)}% category average`,
       impact: 'medium',
-      protocols: ['trojan', 'bullx', 'photon'],
+      protocols: ['trojanonsolana', 'bullx', 'photon'],
       confidence: 0.8
     });
   }

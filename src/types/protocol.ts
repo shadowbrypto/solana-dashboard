@@ -1,4 +1,4 @@
-export type Protocol = "axiom" | "bullx" | "photon" | "trojan" | "gmgnai" | "bloom" | "all" | "bonkbot" | "nova" | "soltradingbot" | "maestro" | "banana" | "terminal" | "moonshot" | "vector" | "nova terminal" | "telemetry" | "slingshot" | "fomo" | "rhythm" | "vyper" | "phantom" | "basedbot" | "okx" | "gmgnai_monad" | "bloom_monad" | "nadfun_monad" | "basedbot_monad";
+export type Protocol = "axiom" | "bullx" | "photon" | "trojanonsolana" | "gmgnai" | "bloom" | "all" | "bonkbot" | "nova" | "soltradingbot" | "maestro" | "banana" | "terminal" | "moonshot" | "vector" | "nova terminal" | "telemetry" | "slingshot" | "fomo" | "rhythm" | "vyper" | "phantom" | "basedbot" | "okx" | "gmgnai_monad" | "bloom_monad" | "nadfun_monad" | "basedbot_monad";
 
 export interface ProtocolStats {
   protocol_name: Protocol;

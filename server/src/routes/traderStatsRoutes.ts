@@ -821,10 +821,10 @@ router.post('/refresh/:protocol', async (req: Request, res: Response) => {
     const { protocol } = req.params;
     console.log(`Full data refresh request for ${protocol}`);
     
-    if (!['photon', 'axiom', 'bloom', 'trojan'].includes(protocol.toLowerCase())) {
+    if (!['photon', 'axiom', 'bloom', 'trojanonsolana'].includes(protocol.toLowerCase())) {
       return res.status(400).json({
         success: false,
-        error: `Refresh not supported for protocol: ${protocol}. Only 'photon', 'axiom', 'bloom', and 'trojan' are supported.`
+        error: `Refresh not supported for protocol: ${protocol}. Only 'photon', 'axiom', 'bloom', and 'trojanonsolana' are supported.`
       });
     }
     
@@ -880,7 +880,7 @@ router.post('/refresh-all', async (req: Request, res: Response) => {
   try {
     console.log('Full data refresh request for all protocols (Photon + Axiom + Bloom + Trojan)');
     
-    const protocols = ['photon', 'axiom', 'bloom', 'trojan'];
+    const protocols = ['photon', 'axiom', 'bloom', 'trojanonsolana'];
     const results = [];
     
     for (const protocol of protocols) {

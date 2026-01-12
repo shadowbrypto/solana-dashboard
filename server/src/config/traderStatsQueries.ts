@@ -26,7 +26,7 @@ export const traderStatsQueries: TraderStatsQuery[] = [
     description: 'Bloom trader volume data'
   },
   {
-    protocol: 'trojan',
+    protocol: 'trojanonsolana',
     chain: 'solana',
     duneQueryId: '5770723',
     description: 'Trojan trader volume data'

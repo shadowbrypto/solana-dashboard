@@ -9,7 +9,7 @@ export function TrojanIcon({ className = "", size = 16 }: TrojanIconProps) {
   return (
     <div className={`inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
       <img 
-        src="/assets/logos/trojan-logo.jpg" 
+        src="/assets/logos/trojanonsolana.jpg" 
         alt="Trojan" 
         className="w-full h-full object-contain rounded-full"
         onError={(e) => {

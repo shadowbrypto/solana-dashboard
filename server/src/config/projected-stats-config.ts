@@ -44,6 +44,8 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
   'phantom': '6229270',
   'opensea': '6230767',
   'okx': '6289768',
+  'trojan': '6511276',
+  'trojanterminal': '6511237',
 
   // Mobile Apps
   'moonshot': '',

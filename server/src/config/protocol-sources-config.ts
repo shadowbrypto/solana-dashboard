@@ -51,6 +51,8 @@ export const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "opensea": { queryIds: [5910228], chain: 'solana' },
   "phantom": { queryIds: [6229269], chain: 'solana' },
   "okx": { queryIds: [6289758], chain: 'solana' },
+  "trojan": { queryIds: [6511088], chain: 'solana' },
+  "trojanterminal": { queryIds: [6511104], chain: 'solana' },
 
   // Mobile Apps
   "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },
@@ -116,6 +118,8 @@ export const PRIVATE_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   "opensea": { queryIds: [5910228], chain: 'solana' },
   "phantom": { queryIds: [6229269], chain: 'solana' },
   "okx": { queryIds: [6289758], chain: 'solana' },
+  "trojan": { queryIds: [6511274], chain: 'solana' },
+  "trojanterminal": { queryIds: [6511236], chain: 'solana' },
 
   // Mobile Apps
   "moonshot": { queryIds: [4103111, 5691748], chain: 'solana' },

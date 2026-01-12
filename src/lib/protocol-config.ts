@@ -73,6 +73,8 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'opensea', name: 'OpenSea', icon: OpenSeaIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'phantom', name: 'Phantom', icon: PhantomIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'okx', name: 'OKX', icon: OKXIcon, category: 'Trading Terminal', chain: 'solana' },
+  { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Trading Terminal', chain: 'solana' },
+  { id: 'trojanterminal', name: 'Trojan Terminal', icon: TrojanIcon, category: 'Trading Terminal', chain: 'solana' },
 
   // Solana - Mobile Apps
   { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile App', chain: 'solana' },
@@ -142,6 +144,10 @@ export const getProtocolLogoFilename = (protocolId: string): string => {
   switch (protocolId.toLowerCase()) {
     case 'trojanonsolana':
       return 'trojanonsolana.jpg';
+    case 'trojan':
+      return 'trojan.jpg';
+    case 'trojanterminal':
+      return 'trojan.jpg';
     case 'bull x':
       return 'bullx.jpg';
     case 'telemetry':

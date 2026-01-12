@@ -32,6 +32,8 @@ export const PROTOCOL_FEES: ProtocolFeeConfig = {
   'vyper': '1.0%',
   'opensea': '1.0%',
   'phantom': '1.0%',
+  'trojan': '1.0%',
+  'trojanterminal': '1.0%',
 
   // Mobile Apps (Solana)
   'moonshot': '1.0%',

@@ -2,6 +2,8 @@ export const protocolColors: { [key: string]: string } = {
   bullx: "hsl(0 94% 65%)",      // Vibrant Red
   photon: "hsl(280 91% 65%)",   // Bright Purple
   trojanonsolana: "hsl(145 80% 42%)",   // Deep Green
+  trojan: "hsl(140 75% 40%)",           // Forest Green
+  trojanterminal: "hsl(135 70% 38%)",   // Dark Green
   axiom: "hsl(45 93% 47%)",     // Golden Yellow
   gmgnai: "hsl(200 98% 50%)",   // Electric Blue
   bloom: "hsl(326 100% 59%)",   // Hot Pink

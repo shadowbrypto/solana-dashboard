@@ -49,6 +49,8 @@ export const PUBLIC_ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource
   "opensea": { queryIds: [6289269], chain: 'solana' },
   'phantom': { queryIds: [6289138], chain: 'solana' },
     'okx': { queryIds: [6289758], chain: 'solana' },
+  'trojan': { queryIds: [], chain: 'solana' },
+  'trojanterminal': { queryIds: [], chain: 'solana' },
 
   // Solana Protocols - Mobile Apps
   'moonshot': { queryIds: [6289258], chain: 'solana' },

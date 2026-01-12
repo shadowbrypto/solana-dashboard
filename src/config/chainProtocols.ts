@@ -18,6 +18,8 @@ export const chainBasedProtocols: Record<string, ProtocolChainConfig> = {
   'photon': { solana: true, evm: true },
   'soltradingbot': { solana: true, evm: false },
   'trojanonsolana': { solana: true, evm: false },
+  'trojan': { solana: true, evm: false },
+  'trojanterminal': { solana: true, evm: false },
   'vector': { solana: true, evm: false },
   
   // Multi-chain protocols (both Solana and EVM)

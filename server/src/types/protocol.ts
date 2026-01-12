@@ -23,6 +23,8 @@ export type Protocol =
   | 'bullx'
   | 'photon'
   | 'trojanonsolana'
+  | 'trojan'
+  | 'trojanterminal'
   | 'axiom'
   | 'gmgnai'
   | 'bloom'

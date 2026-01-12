@@ -13,7 +13,7 @@ export const BonkBotIcon = (props: any) => (
 );
 
 export const TrojanIcon = (props: any) => (
-  <ProtocolLogo protocolId="trojanonsolana" protocolName="Trojan" fallbackIcon={Sword} {...props} />
+  <ProtocolLogo protocolId="trojanonsolana" protocolName="Trojan On Solana" fallbackIcon={Sword} {...props} />
 );
 
 export const BloomIcon = (props: any) => (

@@ -10,7 +10,7 @@ export function ProtocolSelector({ currentProtocol, onProtocolChange }: Protocol
   const protocols = [
     { id: 'bullx', name: 'Bull X' },
     { id: 'photon', name: 'Photon' },
-    { id: 'trojanonsolana', name: 'Trojan' },
+    { id: 'trojanonsolana', name: 'Trojan On Solana' },
     { id: 'axiom', name: 'Axiom' },
     { id: 'gmgnai', name: 'GmGnAi' },
     { id: 'bloom', name: 'Bloom' },

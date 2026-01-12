@@ -175,7 +175,7 @@ describe('Chart Components Integration', () => {
           title="Stacked Test"
           data={mockStackedData}
           dataKeys={['bullx_volume', 'photon_volume', 'trojanonsolana_volume']}
-          labels={['BullX', 'Photon', 'Trojan']}
+          labels={['BullX', 'Photon', 'Trojan On Solana']}
           loading={false}
         />
       );

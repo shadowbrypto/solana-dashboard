@@ -1455,7 +1455,7 @@ export function ProtocolManagement() {
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
                   <img 
                     src="/assets/logos/trojanonsolana.jpg"
-                    alt="Trojan" 
+                    alt="Trojan On Solana" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;

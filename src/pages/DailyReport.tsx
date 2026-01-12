@@ -457,7 +457,7 @@ export default function DailyReport() {
                     <MetricCardSkeleton
                       title="Trojan Missed Revenue Opportunity"
                       type="volume"
-                      protocolName="Trojan"
+                      protocolName="Trojan On Solana"
                     />
                   ) : (
                     <MetricCard
@@ -466,7 +466,7 @@ export default function DailyReport() {
                       description={axiomRevenue > 0 ? `50% of Axiom's adjusted fees ($${(axiomRevenue * 2).toFixed(2)})` : `Calculating from Axiom adjusted fees...`}
                       type="volume"
                       prefix="$"
-                      protocolName="Trojan"
+                      protocolName="Trojan On Solana"
                       protocolLogo="trojanonsolana.jpg"
                       latestDate={date}
                     />

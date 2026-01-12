@@ -66,16 +66,16 @@ export const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
 
   // Telegram Bots
   "sigma_evm": { queryIds: [5430634], chain: 'evm' },
-  "maestro_evm": { queryIds: [3832557], chain: 'evm' },
-  "bloom_evm": { queryIds: [4824799], chain: 'evm' },
+  "maestro_evm": { queryIds: [6512185], chain: 'evm' },
+  "bloom_evm": { queryIds: [6511725], chain: 'evm' },
   "banana_evm": { queryIds: [4750709], chain: 'evm' },
 
   // Trading Terminals
-  "terminal_evm": { queryIds: [5793181], chain: 'evm' },
-  "gmgnai_evm": { queryIds: [5823908], chain: 'evm' },
-  "photon_evm": { queryIds: [5929750], chain: 'evm' },
-  "mevx_evm": { queryIds: [5498756], chain: 'evm' },
-  "axiom_evm": { queryIds: [6506374], chain: 'evm' },
+  "terminal_evm": { queryIds: [6511711], chain: 'evm' },
+  "gmgnai_evm": { queryIds: [6511781], chain: 'evm' },
+  "photon_evm": { queryIds: [6511701], chain: 'evm' },
+  "mevx_evm": { queryIds: [6511636], chain: 'evm' },
+  "axiom_evm": { queryIds: [6511808], chain: 'evm' },
 
   // ==========================================
   // MONAD PROTOCOLS

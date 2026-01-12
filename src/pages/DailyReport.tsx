@@ -236,7 +236,7 @@ export default function DailyReport() {
     setData(mockData);
   }, [date, protocols, chainType]);
 
-  // Fetch Axiom revenue for Trojan missed revenue card
+  // Fetch Axiom revenue for Trojan Terminal missed revenue card
   useEffect(() => {
     const fetchAxiomRevenue = async () => {
       if (chainType !== 'solana') {
@@ -266,14 +266,14 @@ export default function DailyReport() {
           // Access Axiom from the protocols object
           const axiomData = result.data.protocols.axiom;
           const adjustedFees = axiomData?.projectedFees || 0; // Use projected fees as adjusted fees
-          // Trojan missed revenue = adjusted fees * 50%
-          const trojanMissedRevenue = adjustedFees * 0.5;
+          // Trojan Terminal missed revenue = adjusted fees * 50%
+          const trojanTerminalMissedRevenue = adjustedFees * 0.5;
           
           console.log('Axiom calculations for', dateStr, ':', {
             adjustedFees,
-            trojanMissedRevenue
+            trojanTerminalMissedRevenue
           });
-          setAxiomRevenue(trojanMissedRevenue);
+          setAxiomRevenue(trojanTerminalMissedRevenue);
         } else {
           console.warn('No data found for date:', dateStr);
           setAxiomRevenue(0);
@@ -449,25 +449,25 @@ export default function DailyReport() {
               {/* HIGHLIGHTS TEMPORARILY DISABLED */}
               {/* <DailyHighlights date={date} /> */}
 
-              {/* Trojan Missed Revenue Card - TEMPORARILY COMMENTED OUT */}
+              {/* Trojan Terminal Missed Revenue Card - TEMPORARILY COMMENTED OUT */}
               {/*
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-1">
                   {axiomLoading ? (
                     <MetricCardSkeleton
-                      title="Trojan Missed Revenue Opportunity"
+                      title="Trojan Terminal Missed Revenue Opportunity"
                       type="volume"
-                      protocolName="Trojan On Solana"
+                      protocolName="Trojan Terminal"
                     />
                   ) : (
                     <MetricCard
-                      title="Trojan Missed Revenue Opportunity"
+                      title="Trojan Terminal Missed Revenue Opportunity"
                       value={axiomRevenue > 0 ? Math.round(axiomRevenue) : 0}
                       description={axiomRevenue > 0 ? `50% of Axiom's adjusted fees ($${(axiomRevenue * 2).toFixed(2)})` : `Calculating from Axiom adjusted fees...`}
                       type="volume"
                       prefix="$"
-                      protocolName="Trojan On Solana"
-                      protocolLogo="trojanonsolana.jpg"
+                      protocolName="Trojan Terminal"
+                      protocolLogo="trojan.jpg"
                       latestDate={date}
                     />
                   )}

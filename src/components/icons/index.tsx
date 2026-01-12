@@ -16,6 +16,14 @@ export const TrojanIcon = (props: any) => (
   <ProtocolLogo protocolId="trojanonsolana" protocolName="Trojan On Solana" fallbackIcon={Sword} {...props} />
 );
 
+export const TrojanTerminalIcon = (props: any) => (
+  <ProtocolLogo protocolId="trojan" protocolName="Trojan" fallbackIcon={Sword} {...props} />
+);
+
+export const TrojanTerminalAppIcon = (props: any) => (
+  <ProtocolLogo protocolId="trojan" protocolName="Trojan Terminal" fallbackIcon={Sword} {...props} />
+);
+
 export const BloomIcon = (props: any) => (
   <ProtocolLogo protocolId="bloom" protocolName="Bloom" fallbackIcon={Wand2} {...props} />
 );

@@ -20,7 +20,7 @@ import {
   LucideIcon
 } from 'lucide-react';
 import {
-  BonkBotIcon, TrojanIcon, BloomIcon, NovaIcon, SolTradingBotIcon,
+  BonkBotIcon, TrojanIcon, TrojanTerminalIcon, TrojanTerminalAppIcon, BloomIcon, NovaIcon, SolTradingBotIcon,
   BananaIcon, MaestroIcon, PhotonIcon, BullXIcon, AxiomIcon,
   GMGNAIIcon, MoonshotIcon, VectorIcon, SlingshotIcon, FomoIcon, TerminalProtocolIcon,
   SigmaIcon, SigmaEVMIcon, MaestroEVMIcon, BloomEVMIcon, BananaEVMIcon, MevxIcon, MevxEVMIcon, AxiomEVMIcon,
@@ -73,8 +73,8 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'opensea', name: 'OpenSea', icon: OpenSeaIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'phantom', name: 'Phantom', icon: PhantomIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'okx', name: 'OKX', icon: OKXIcon, category: 'Trading Terminal', chain: 'solana' },
-  { id: 'trojan', name: 'Trojan', icon: TrojanIcon, category: 'Trading Terminal', chain: 'solana' },
-  { id: 'trojanterminal', name: 'Trojan Terminal', icon: TrojanIcon, category: 'Trading Terminal', chain: 'solana' },
+  { id: 'trojan', name: 'Trojan', icon: TrojanTerminalIcon, category: 'Trading Terminal', chain: 'solana' },
+  { id: 'trojanterminal', name: 'Trojan Terminal', icon: TrojanTerminalAppIcon, category: 'Trading Terminal', chain: 'solana' },
 
   // Solana - Mobile Apps
   { id: 'moonshot', name: 'Moonshot', icon: MoonshotIcon, category: 'Mobile App', chain: 'solana' },

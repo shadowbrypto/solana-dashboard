@@ -17,7 +17,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DateNavigator } from "./DateNavigator";
 import { protocolApi } from "../lib/api";
-import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById } from "../lib/protocol-config";
+import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolName, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
@@ -1278,7 +1278,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                               </button>
                               <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                                 <img 
-                                  src={`/assets/logos/${protocol.includes('terminal') ? protocol.split(' ')[0] : protocol === 'bull x' ? 'bullx' : protocol}.jpg`}
+                                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
                                   alt={protocol} 
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -1294,7 +1294,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                   }}
                                 />
                               </div>
-                              <span className="truncate">{protocol.charAt(0).toUpperCase() + protocol.slice(1)}</span>
+                              <span className="truncate">{getProtocolName(protocol)}</span>
                               {topProtocols.includes(protocol) && (
                                 <Badge 
                                   variant="secondary"

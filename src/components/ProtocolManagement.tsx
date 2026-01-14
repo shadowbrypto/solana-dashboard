@@ -42,7 +42,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Section group container - mimics iOS Settings grouped style
 function SettingsGroup({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-card rounded-[10px] overflow-hidden ${className}`}>
+    <div className={`bg-card rounded-[12px] overflow-hidden border border-border/50 shadow-sm ${className}`}>
       {children}
     </div>
   );

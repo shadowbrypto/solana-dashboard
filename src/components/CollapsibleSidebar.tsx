@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs, getProtocolLogoFilename } from "../lib/protocol-config";
 import { getAllLaunchpads, getLaunchpadLogoFilename } from "../lib/launchpad-config";
-import { ChevronDown, ChevronRight, Rocket } from "lucide-react";
+import { ChevronRight, LayoutGrid, Rocket } from "lucide-react";
 
 interface CategoryItemProps {
   name: string;
@@ -30,62 +30,71 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol, isL
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-1">
+      {/* Category Header - Disclosure Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-left hover:bg-gray-700 rounded-md"
+        className="group flex items-center gap-2 w-full px-3 py-[7px] text-[13px] font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors rounded-lg hover:bg-sidebar-accent/50"
       >
+        <ChevronRight
+          className={`w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+        />
         <span>{name}</span>
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4" />
-        ) : (
-          <ChevronRight className="w-4 h-4" />
-        )}
+        <span className="ml-auto text-[11px] text-sidebar-foreground/30 font-normal">
+          {protocols.length}
+        </span>
       </button>
-      {isExpanded && (
-        <div className="ml-4 mt-1 space-y-1">
-          {protocols.map((protocol) => (
-            <button
-              key={protocol}
-              onClick={() => onSelectProtocol(protocol)}
-              className={`
-                flex items-center gap-3 w-full px-4 py-2 text-sm text-left rounded-md transition-colors
-                ${selectedProtocol === protocol ? 'bg-gray-700' : 'hover:bg-gray-700'}
-              `}
-            >
-              <div className="w-6 h-6 bg-gray-600 rounded-md overflow-hidden ring-1 ring-gray-500 flex-shrink-0">
-                <img 
-                  src={`/assets/logos/${getLogoFilename(protocol)}`}
-                  alt={getProtocolDisplayName(protocol)} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    const container = target.parentElement;
-                    if (container) {
-                      container.innerHTML = '';
-                      container.className = 'w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center';
-                      const iconEl = document.createElement('div');
-                      if (isLaunchpad) {
-                        iconEl.innerHTML = '<svg class="h-3 w-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                      } else {
-                        iconEl.innerHTML = '<svg class="h-3 w-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+
+      {/* Protocol List */}
+      <div className={`overflow-hidden transition-all duration-200 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="pl-3 py-1 space-y-0.5">
+          {protocols.map((protocol) => {
+            const isSelected = selectedProtocol === protocol;
+            return (
+              <button
+                key={protocol}
+                onClick={() => onSelectProtocol(protocol)}
+                className={`
+                  flex items-center gap-2.5 w-full px-2.5 py-[6px] text-[13px] text-left rounded-lg transition-all duration-150
+                  ${isSelected
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  }
+                `}
+              >
+                <div className={`w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ${isSelected ? 'ring-1 ring-white/20' : 'ring-1 ring-sidebar-border/50'}`}>
+                  <img
+                    src={`/assets/logos/${getLogoFilename(protocol)}`}
+                    alt={getProtocolDisplayName(protocol)}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.innerHTML = '';
+                        container.className = `w-5 h-5 rounded-md flex items-center justify-center ${isSelected ? 'bg-sidebar-accent-foreground/10' : 'bg-sidebar-accent/30'}`;
+                        const iconEl = document.createElement('div');
+                        if (isLaunchpad) {
+                          iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                        } else {
+                          iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                        }
+                        container.appendChild(iconEl);
                       }
-                      container.appendChild(iconEl);
-                    }
-                  }}
-                />
-              </div>
-              <span className="truncate">{getProtocolDisplayName(protocol)}</span>
-            </button>
-          ))}
+                    }}
+                  />
+                </div>
+                <span className="truncate">{getProtocolDisplayName(protocol)}</span>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 export function CollapsibleSidebar() {
-  console.log('CollapsibleSidebar component loaded');
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedProtocol = searchParams.get("protocol")?.toLowerCase() || "bullx";
@@ -95,10 +104,8 @@ export function CollapsibleSidebar() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    console.log('useEffect in CollapsibleSidebar running');
     const loadCategories = async () => {
       try {
-        console.log('Starting loadCategories');
         await loadProtocolConfigurations();
         const categoryNames = getMutableAllCategoriesIncludingEVM();
         const categoryData = categoryNames.map(name => ({
@@ -106,43 +113,29 @@ export function CollapsibleSidebar() {
           protocols: getMutableProtocolsByCategoryIncludingEVM(name).map(p => p.id)
         }));
         setCategories(categoryData);
-        
-        // Load launchpads
-        console.log('About to call getAllLaunchpads');
+
         try {
           const allLaunchpads = getAllLaunchpads();
-          console.log('All launchpads loaded:', allLaunchpads);
           const launchpadIds = allLaunchpads.map(l => l.id);
-          console.log('Launchpad IDs:', launchpadIds);
-          
-          // Force show pumpfun if no launchpads are found
-          if (launchpadIds.length === 0) {
-            console.log('No launchpads found, forcing pumpfun');
-            setLaunchpads(['pumpfun']);
-          } else {
-            setLaunchpads(launchpadIds);
-          }
-        } catch (launchpadError) {
-          console.error('Error loading launchpads:', launchpadError);
-          console.log('Fallback: setting pumpfun manually');
+          setLaunchpads(launchpadIds.length === 0 ? ['pumpfun'] : launchpadIds);
+        } catch {
           setLaunchpads(['pumpfun']);
         }
-        
+
         setIsLoaded(true);
-        console.log('loadCategories completed');
       } catch (error) {
         console.error('Error in loadCategories:', error);
         setIsLoaded(true);
       }
     };
-    
+
     loadCategories();
   }, []);
 
   const handleProtocolSelect = (protocol: string) => {
     setSearchParams((params) => {
       params.set("protocol", protocol);
-      params.delete("launchpad"); // Clear launchpad when selecting protocol
+      params.delete("launchpad");
       return params;
     });
   };
@@ -153,60 +146,92 @@ export function CollapsibleSidebar() {
 
   if (!isLoaded) {
     return (
-      <div className="w-64 h-full bg-gray-800 text-white p-4">
-        <div className="text-center py-8">Loading...</div>
+      <div className="w-60 h-full bg-sidebar border-r border-sidebar-border">
+        <div className="flex items-center justify-center h-full">
+          <div className="w-5 h-5 border-2 border-sidebar-foreground/20 border-t-sidebar-foreground/60 rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-64 h-full bg-gray-800 text-white p-4">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2 px-4">Overview</h2>
-        <button
-          onClick={() => handleProtocolSelect("all")}
-          className={`
-            flex items-center gap-3 w-full px-4 py-2 text-sm text-left rounded-md transition-colors
-            ${selectedProtocol === "all" ? 'bg-gray-700' : 'hover:bg-gray-700'}
-          `}
-        >
-          <div className="w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center ring-1 ring-gray-500 flex-shrink-0">
-            <svg className="h-3 w-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect width="7" height="7" x="3" y="3" rx="1"/>
-              <rect width="7" height="7" x="14" y="3" rx="1"/>
-              <rect width="7" height="7" x="14" y="14" rx="1"/>
-              <rect width="7" height="7" x="3" y="14" rx="1"/>
-            </svg>
+    <div className="w-60 h-full bg-sidebar border-r border-sidebar-border flex flex-col">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto py-2 px-2">
+
+        {/* Overview Section */}
+        <div className="mb-4">
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              Overview
+            </span>
           </div>
-          <span className="truncate">All Trading Apps</span>
-        </button>
-      </div>
+          <button
+            onClick={() => handleProtocolSelect("all")}
+            className={`
+              flex items-center gap-2.5 w-full px-3 py-[7px] text-[13px] text-left rounded-lg transition-all duration-150
+              ${selectedProtocol === "all"
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+              }
+            `}
+          >
+            <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+              selectedProtocol === "all"
+                ? 'bg-blue-500 text-white'
+                : 'bg-sidebar-accent/60 text-sidebar-foreground/60'
+            }`}>
+              <LayoutGrid className="w-3 h-3" />
+            </div>
+            <span>All Trading Apps</span>
+          </button>
+        </div>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-2 px-4">Protocols</h2>
-        {categories.map((category) => (
-          <CategoryItem
-            key={category.name}
-            name={category.name}
-            protocols={category.protocols}
-            selectedProtocol={selectedProtocol}
-            onSelectProtocol={handleProtocolSelect}
-          />
-        ))}
-      </div>
+        {/* Divider */}
+        <div className="mx-3 mb-4 border-t border-sidebar-border/50" />
 
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold mb-2 px-4">Launchpads</h2>
-        <div className="ml-4 mt-1 space-y-1">
+        {/* Protocols Section */}
+        <div className="mb-4">
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              Protocols
+            </span>
+          </div>
+          {categories.map((category) => (
+            <CategoryItem
+              key={category.name}
+              name={category.name}
+              protocols={category.protocols}
+              selectedProtocol={selectedProtocol}
+              onSelectProtocol={handleProtocolSelect}
+            />
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div className="mx-3 mb-4 border-t border-sidebar-border/50" />
+
+        {/* Launchpads Section */}
+        <div>
+          <div className="px-3 py-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              Launchpads
+            </span>
+          </div>
           <button
             onClick={() => handleLaunchpadSelect('pumpfun')}
             className={`
-              flex items-center gap-3 w-full px-4 py-2 text-sm text-left rounded-md transition-colors
-              ${selectedLaunchpad === 'pumpfun' ? 'bg-gray-700' : 'hover:bg-gray-700'}
+              flex items-center gap-2.5 w-full px-3 py-[7px] text-[13px] text-left rounded-lg transition-all duration-150
+              ${selectedLaunchpad === 'pumpfun'
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+              }
             `}
           >
-            <div className="w-6 h-6 bg-gray-600 rounded-md overflow-hidden ring-1 ring-gray-500 flex-shrink-0">
-              <img 
+            <div className={`w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ${
+              selectedLaunchpad === 'pumpfun' ? 'ring-1 ring-white/20' : 'ring-1 ring-sidebar-border/50'
+            }`}>
+              <img
                 src="/assets/logos/pumpfun.jpg"
                 alt="PumpFun"
                 className="w-full h-full object-cover"
@@ -215,15 +240,17 @@ export function CollapsibleSidebar() {
                   const container = target.parentElement;
                   if (container) {
                     container.innerHTML = '';
-                    container.className = 'w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center';
+                    container.className = `w-5 h-5 rounded-md flex items-center justify-center ${
+                      selectedLaunchpad === 'pumpfun' ? 'bg-sidebar-accent-foreground/10' : 'bg-sidebar-accent/30'
+                    }`;
                     const iconEl = document.createElement('div');
-                    iconEl.innerHTML = '<svg class="h-3 w-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
+                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
                     container.appendChild(iconEl);
                   }
                 }}
               />
             </div>
-            <span className="truncate">PumpFun</span>
+            <span>PumpFun</span>
           </button>
         </div>
       </div>

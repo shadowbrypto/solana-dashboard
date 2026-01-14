@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { 
-  getMutableProtocolConfigs, 
-  getMutableAllCategories, 
+import {
+  getMutableProtocolConfigs,
+  getMutableAllCategories,
   getMutableProtocolsByCategory,
   getMutableAllCategoriesIncludingEVM,
   getMutableProtocolsByCategoryIncludingEVM,
@@ -15,7 +14,7 @@ import {
   getProtocolLogoFilename
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCcw, AlertCircle, GripVertical, Save, RotateCcw, RefreshCw, Clock, Shield, Globe, CheckCircle2 } from 'lucide-react';
+import { RefreshCcw, GripVertical, Save, RotateCcw, RefreshCw, Shield, Globe, ChevronRight, Check } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { LaunchpadApi, LaunchpadLatestDate } from '../lib/launchpad-api';
@@ -23,9 +22,7 @@ import { useToast } from '../hooks/use-toast';
 import { clearAllFrontendCaches, clearProtocolFrontendCache, clearEVMProtocolsCaches } from '../lib/protocol';
 import { useDataSync } from '../hooks/useDataSync';
 import { Switch } from './ui/switch';
-import { Label } from './ui/label';
 import { Settings } from '../lib/settings';
-import { ProjectedStatsApi } from '../lib/projected-stats-api';
 import { API_BASE_URL } from '../lib/api';
 import {
   DndContext,
@@ -43,67 +40,137 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface SortableProtocolProps {
-  protocol: any;
-  isDragging?: boolean;
-  onRefresh: (protocolId: string) => void;
-  isRefreshing: boolean;
-  syncStatus?: ProtocolSyncStatus;
-  latestDate?: ProtocolLatestDate;
-}
-
-interface DroppableCategoryProps {
-  category: string;
-  protocols: any[];
-  onRefresh: (protocolId: string) => void;
-  refreshingProtocols: Set<string>;
-  syncStatuses: Map<string, ProtocolSyncStatus>;
-  latestDates: Map<string, ProtocolLatestDate>;
-}
-
-function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols, syncStatuses, latestDates }: DroppableCategoryProps) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: `category-${category}`,
-  });
-
+// ============================================================================
+// Section Header Component
+// ============================================================================
+function SectionHeader({ title, description }: { title: string; description?: string }) {
   return (
-    <div
-      ref={setNodeRef}
-      className={`min-h-[100px] p-2 sm:p-4 border-2 border-dashed rounded-lg transition-all duration-200 ${
-        isOver 
-          ? 'border-primary bg-primary/10 shadow-md' 
-          : 'border-muted-foreground/25 bg-muted/40 hover:bg-muted/60 hover:border-muted-foreground/40'
-      }`}
-    >
-      <SortableContext items={protocols.map(p => p.id)} strategy={verticalListSortingStrategy}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-          {protocols.map(protocol => (
-            <SortableProtocol 
-              key={protocol.id} 
-              protocol={protocol} 
-              onRefresh={onRefresh}
-              isRefreshing={refreshingProtocols.has(protocol.id)}
-              syncStatus={syncStatuses.get(protocol.id)}
-              latestDate={latestDates.get(protocol.id) || latestDates.get(protocol.id.replace('_evm', ''))}
-            />
-          ))}
-        </div>
-      </SortableContext>
-      {protocols.length === 0 && (
-        <div className="text-center py-6 sm:py-12">
-          <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">
-            Drop trading apps here
-          </p>
-          <p className="text-muted-foreground/70 text-[10px] sm:text-xs">
-            Drag and drop trading apps to organize them
-          </p>
-        </div>
+    <div className="px-1 mb-4">
+      <h2 className="text-xl font-semibold text-foreground tracking-tight">{title}</h2>
+      {description && (
+        <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
       )}
     </div>
   );
 }
 
-function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncStatus, latestDate }: SortableProtocolProps) {
+// ============================================================================
+// Section Container Component
+// ============================================================================
+function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-card rounded-2xl border border-border/40 shadow-sm ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// List Item Component - Apple style row
+// ============================================================================
+interface ListItemProps {
+  icon?: React.ReactNode;
+  logo?: string;
+  logoAlt?: string;
+  title: string;
+  subtitle?: string;
+  badge?: { text: string; variant: 'success' | 'warning' | 'info' | 'default' };
+  rightElement?: React.ReactNode;
+  onClick?: () => void;
+  isLast?: boolean;
+  disabled?: boolean;
+}
+
+function ListItem({ icon, logo, logoAlt, title, subtitle, badge, rightElement, onClick, isLast = false, disabled = false }: ListItemProps) {
+  return (
+    <div
+      className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-border/30' : ''} ${onClick && !disabled ? 'hover:bg-muted/30 cursor-pointer active:bg-muted/50 transition-colors' : ''} ${disabled ? 'opacity-50' : ''}`}
+      onClick={disabled ? undefined : onClick}
+    >
+      {logo && (
+        <div className="w-10 h-10 rounded-xl bg-muted/30 overflow-hidden flex-shrink-0 ring-1 ring-border/10">
+          <img
+            src={logo}
+            alt={logoAlt || title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      {icon && !logo && (
+        <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
+          {icon}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground truncate">{title}</span>
+          {badge && (
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+              badge.variant === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+              badge.variant === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+              badge.variant === 'info' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+              'bg-muted text-muted-foreground'
+            }`}>
+              {badge.text}
+            </span>
+          )}
+        </div>
+        {subtitle && (
+          <span className="text-xs text-muted-foreground truncate block">{subtitle}</span>
+        )}
+      </div>
+      {rightElement}
+    </div>
+  );
+}
+
+// ============================================================================
+// Refresh Button Component
+// ============================================================================
+function RefreshButton({ onClick, isRefreshing, size = 'sm' }: { onClick: () => void; isRefreshing: boolean; size?: 'sm' | 'md' }) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      disabled={isRefreshing}
+      className={`${size === 'sm' ? 'w-8 h-8' : 'w-9 h-9'} rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50`}
+    >
+      <RefreshCw className={`${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} ${isRefreshing ? 'animate-spin' : ''}`} />
+    </button>
+  );
+}
+
+// ============================================================================
+// Status Indicator Component
+// ============================================================================
+function StatusIndicator({ isCurrent, latestDate }: { isCurrent: boolean; latestDate: string }) {
+  const formattedDate = new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return (
+    <div className={`flex items-center gap-1.5 text-xs ${isCurrent ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${isCurrent ? 'bg-green-500' : 'bg-amber-500'}`} />
+      <span>{formattedDate}</span>
+    </div>
+  );
+}
+
+// ============================================================================
+// Sortable Protocol Component (for drag and drop)
+// ============================================================================
+interface SortableProtocolProps {
+  protocol: any;
+  isDragging?: boolean;
+  onRefresh: (protocolId: string) => void;
+  isRefreshing: boolean;
+  latestDate?: ProtocolLatestDate;
+}
+
+function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, latestDate }: SortableProtocolProps) {
   const {
     attributes,
     listeners,
@@ -123,71 +190,94 @@ function SortableProtocol({ protocol, isDragging, onRefresh, isRefreshing, syncS
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg transition-all duration-200 ${
-        sortableIsDragging 
-          ? 'shadow-lg z-50 ring-2 ring-primary/50 bg-card scale-105' 
-          : 'bg-card border-border hover:bg-accent hover:shadow-sm hover:border-border/80'
+      className={`flex items-center gap-3 p-3 bg-card rounded-xl border border-border/40 transition-all ${
+        sortableIsDragging ? 'shadow-lg ring-2 ring-primary/20 scale-[1.02]' : 'hover:border-border/60 hover:shadow-sm'
       }`}
       {...attributes}
     >
-      <div {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-accent p-1.5 rounded transition-colors">
-        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+      <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-muted/50 rounded-lg transition-colors">
+        <GripVertical className="h-4 w-4 text-muted-foreground/50" />
       </div>
-      <div className="bg-muted/20 rounded-sm w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
-        <protocol.icon size={40} className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" style={{ width: '40px', height: '40px' }} />
+      <div className="w-9 h-9 rounded-lg bg-muted/20 overflow-hidden ring-1 ring-border/10 flex-shrink-0">
+        <img
+          src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+          alt={protocol.name}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+          }}
+        />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-foreground">{protocol.name}</p>
+          <span className="font-medium text-sm text-foreground truncate">{protocol.name}</span>
           {protocol.chain === 'evm' && (
-            <Badge variant="secondary" className="h-5 px-2 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-              EVM
-            </Badge>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">EVM</span>
           )}
           {protocol.chain === 'solana' && (
-            <Badge variant="secondary" className="h-5 px-2 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-              SOL
-            </Badge>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">SOL</span>
           )}
         </div>
         {latestDate && (
-          <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
-            latestDate.is_current 
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-          }`} title={latestDate.is_current ? 'Data is current' : `${latestDate.days_behind} days behind`}>
-            <div className={`w-1 h-1 rounded-full ${
-              latestDate.is_current ? 'bg-green-600' : 'bg-red-600'
-            }`} />
-            <span className="font-medium text-[10px] sm:text-xs">
-              Latest: {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </span>
-          </div>
-        )}
-        {syncStatus && !syncStatus.sync_success && !latestDate?.is_current && (
-          <div className="flex items-center gap-1 mt-1">
-            <AlertCircle className="h-2 w-2 sm:h-3 sm:w-3 text-red-500" />
-            <span className="text-[10px] sm:text-xs text-red-500">Sync Failed</span>
-          </div>
+          <StatusIndicator isCurrent={latestDate.is_current} latestDate={latestDate.latest_date} />
         )}
       </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRefresh(protocol.id);
-        }}
-        disabled={isRefreshing}
-        className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-        title={`Refresh ${protocol.name} data`}
-      >
-        <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-      </Button>
+      <RefreshButton onClick={() => onRefresh(protocol.id)} isRefreshing={isRefreshing} />
     </div>
   );
 }
 
+// ============================================================================
+// Droppable Category Component
+// ============================================================================
+interface DroppableCategoryProps {
+  category: string;
+  protocols: any[];
+  onRefresh: (protocolId: string) => void;
+  refreshingProtocols: Set<string>;
+  latestDates: Map<string, ProtocolLatestDate>;
+}
+
+function DroppableCategory({ category, protocols, onRefresh, refreshingProtocols, latestDates }: DroppableCategoryProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `category-${category}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[80px] p-3 border-2 border-dashed rounded-xl transition-all ${
+        isOver
+          ? 'border-primary/50 bg-primary/5'
+          : 'border-border/30 bg-muted/10 hover:border-border/50'
+      }`}
+    >
+      <SortableContext items={protocols.map(p => p.id)} strategy={verticalListSortingStrategy}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {protocols.map(protocol => (
+            <SortableProtocol
+              key={protocol.id}
+              protocol={protocol}
+              onRefresh={onRefresh}
+              isRefreshing={refreshingProtocols.has(protocol.id)}
+              latestDate={latestDates.get(protocol.id) || latestDates.get(protocol.id.replace('_evm', ''))}
+            />
+          ))}
+        </div>
+      </SortableContext>
+      {protocols.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-sm text-muted-foreground">Drop protocols here</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
 export function ProtocolManagement() {
   const [isRefreshingSolana, setIsRefreshingSolana] = useState(false);
   const [isRefreshingEVM, setIsRefreshingEVM] = useState(false);
@@ -196,8 +286,6 @@ export function ProtocolManagement() {
   const [isRefreshingLaunchpads, setIsRefreshingLaunchpads] = useState(false);
   const [isRefreshingProjectedStats, setIsRefreshingProjectedStats] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
-  const [isRefreshingTraderStatsPhoton, setIsRefreshingTraderStatsPhoton] = useState(false);
-  const [isRefreshingTraderStatsAxiom, setIsRefreshingTraderStatsAxiom] = useState(false);
   const [isRefreshingTraderStatsAll, setIsRefreshingTraderStatsAll] = useState(false);
   const [refreshingProjectedStatsProtocols, setRefreshingProjectedStatsProtocols] = useState<Set<string>>(new Set());
   const [refreshingTraderStatsProtocols, setRefreshingTraderStatsProtocols] = useState<Set<string>>(new Set());
@@ -216,10 +304,10 @@ export function ProtocolManagement() {
   const [dataTypePreference, setDataTypePreference] = useState<'private' | 'public'>('private');
   const [traderStatsRowCounts, setTraderStatsRowCounts] = useState<Record<string, number>>({});
   const { toast } = useToast();
-  
-  const categories = getMutableAllCategoriesIncludingEVM(); // Show all protocols including EVM in management
+
+  const categories = getMutableAllCategoriesIncludingEVM();
   const sensors = useSensors(useSensor(PointerSensor));
-  
+
   // Load data type preference on component mount
   useEffect(() => {
     const preference = Settings.getDataTypePreference();
@@ -231,7 +319,7 @@ export function ProtocolManagement() {
     const loadConfigs = async () => {
       try {
         await loadProtocolConfigurations();
-        setForceRender(prev => prev + 1); // Trigger re-render after loading
+        setForceRender(prev => prev + 1);
       } catch (error) {
         console.error('Failed to load protocol configurations:', error);
         toast({
@@ -241,11 +329,10 @@ export function ProtocolManagement() {
         });
       }
     };
-    
     loadConfigs();
   }, []);
 
-  // Fetch trader stats row counts - ONLY on page load, no polling
+  // Fetch trader stats row counts
   useEffect(() => {
     const fetchTraderStatsRowCounts = async () => {
       try {
@@ -260,45 +347,38 @@ export function ProtocolManagement() {
         console.error('Failed to fetch trader stats row counts:', error);
       }
     };
-
-    // Only fetch on initial page load - no continuous polling
     fetchTraderStatsRowCounts();
   }, []);
-  
+
   // Handle data type preference change
   const handleDataTypeChange = async (isPublic: boolean) => {
     const newDataType = isPublic ? 'public' : 'private';
     setDataTypePreference(newDataType);
     Settings.setDataTypePreference(newDataType);
-    
-    // Clear all caches when switching data types
     clearAllFrontendCaches();
-    
-    // Show initial toast
+
     toast({
       variant: "success",
-      title: "Data Type Updated",
-      description: `Switched to ${newDataType} data. Starting auto-sync for all Solana protocols...`,
+      title: "Data Source Updated",
+      description: `Switched to ${newDataType} data`,
     });
-    
-    // Trigger auto-sync for all Solana protocols
+
     try {
       setIsRefreshingSolana(true);
       const result = await dataSyncApi.syncData(newDataType);
-      
+
       toast({
         variant: "success",
-        title: "Auto-Sync Complete",
-        description: `Successfully synced ${result.csvFilesFetched} Solana protocols with ${newDataType} data`,
+        title: "Sync Complete",
+        description: `Synced ${result.csvFilesFetched} protocols`,
       });
-      
-      // Reload sync statuses after successful sync
+
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Auto-Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync Solana protocols",
+        title: "Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to sync",
       });
     } finally {
       setIsRefreshingSolana(false);
@@ -310,40 +390,31 @@ export function ProtocolManagement() {
     const loadSyncData = async () => {
       try {
         setLoadingSyncStatus(true);
-        
-        // Load sync statuses
         const statuses = await protocolApi.getAllSyncStatus();
         const statusMap = new Map(statuses.map(s => [s.protocol_name, s]));
         setSyncStatuses(statusMap);
-        
-        // Load latest dates
+
         const latestDatesData = await protocolApi.getLatestDataDates();
         const latestDatesMap = new Map(latestDatesData.map(d => [d.protocol_name, d]));
         setLatestDates(latestDatesMap);
-        
-        // Load launchpad latest dates
+
         const launchpadLatestDatesData = await LaunchpadApi.getLatestDataDates();
         const launchpadLatestDatesMap = new Map(launchpadLatestDatesData.map(d => [d.launchpad_name, d]));
         setLaunchpadLatestDates(launchpadLatestDatesMap);
-        
-        
       } catch (error) {
         console.error('Failed to load sync data:', error);
       } finally {
         setLoadingSyncStatus(false);
       }
     };
-
     loadSyncData();
-    // Reload sync data after any refresh
   }, [forceRender]);
 
-  // Separate effect for projected stats latest dates
+  // Load projected stats latest dates
   useEffect(() => {
     const loadProjectedStatsLatestDates = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/projected-stats/latest-dates`);
-        
         if (response.ok) {
           const data = await response.json();
           const projectedStatsLatestDatesMap = new Map(Object.entries(data));
@@ -353,7 +424,6 @@ export function ProtocolManagement() {
         console.error('Error loading projected stats latest dates:', error);
       }
     };
-
     loadProjectedStatsLatestDates();
   }, [forceRender]);
 
@@ -364,7 +434,6 @@ export function ProtocolManagement() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-
     if (!over) return;
 
     const activeId = active.id as string;
@@ -376,37 +445,29 @@ export function ProtocolManagement() {
       setForceRender(prev => prev + 1);
       toast({
         variant: "success",
-        title: "Success",
-        description: `Protocol moved to ${newCategory}`,
+        title: "Protocol Moved",
+        description: `Moved to ${newCategory}`,
       });
     }
   };
 
-
   const handleHardRefresh = async () => {
     if (isRefreshingSolana) return;
-
     setIsRefreshingSolana(true);
     try {
-      // Sync ONLY Solana protocols from rolling-refresh-config.ts (7-day rolling data)
       const result = await dataSyncApi.syncRollingRefreshData('solana');
-
-      // Clear all frontend caches after successful refresh
       clearAllFrontendCaches();
-
       toast({
         variant: "success",
-        title: "Solana Data Refresh Complete",
-        description: `Successfully refreshed ${result.protocolsSynced} Solana protocols`,
+        title: "Solana Refresh Complete",
+        description: `Refreshed ${result.protocolsSynced} protocols`,
       });
-
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Solana Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh Solana data",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh",
       });
     } finally {
       setIsRefreshingSolana(false);
@@ -415,53 +476,65 @@ export function ProtocolManagement() {
 
   const handleSaveConfigurations = async () => {
     if (isSaving) return;
-    
     setIsSaving(true);
     try {
       await saveProtocolConfigurations();
       toast({
         variant: "success",
-        title: "Configurations Saved",
-        description: "Trading app configurations saved to database successfully!",
+        title: "Saved",
+        description: "Configurations saved successfully",
       });
-      setForceRender(prev => prev + 1); // Trigger re-render to update unsaved changes indicator
+      setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Save Failed",
-        description: error instanceof Error ? error.message : "Failed to save configurations",
+        description: error instanceof Error ? error.message : "Failed to save",
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleRefreshProtocol = async (protocolId: string) => {
-    if (refreshingProtocols.has(protocolId)) return;
-    
-    setRefreshingProtocols(prev => new Set([...prev, protocolId]));
-    
+  const handleResetConfigurations = async () => {
+    if (isResetting) return;
+    setIsResetting(true);
     try {
-      // Check if this is an EVM protocol to determine data type
-      const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
-      const isEVMProtocol = protocol?.chain === 'evm';
-      
-      // For EVM protocols, always use 'public', otherwise use user preference
-      const dataType = isEVMProtocol ? 'public' : dataTypePreference;
-      
-      // Use unified sync endpoint - backend will route EVM protocols automatically
-      const result = await dataSyncApi.syncProtocolData(protocolId, dataType);
-      
-      // Clear frontend cache for this protocol
-      clearProtocolFrontendCache(protocolId);
-      
+      await resetProtocolConfigurations();
       toast({
         variant: "success",
-        title: isEVMProtocol ? "EVM Protocol Refreshed" : "Protocol Refreshed",
-        description: `Successfully refreshed data for ${protocolId}`,
+        title: "Reset",
+        description: "Configurations reset to defaults",
       });
-      
-      // Reload sync statuses after successful refresh
+      setForceRender(prev => prev + 1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Reset Failed",
+        description: error instanceof Error ? error.message : "Failed to reset",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleRefreshProtocol = async (protocolId: string) => {
+    if (refreshingProtocols.has(protocolId)) return;
+    setRefreshingProtocols(prev => new Set([...prev, protocolId]));
+
+    try {
+      const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
+      const isEVMProtocol = protocol?.chain === 'evm';
+      const dataType = isEVMProtocol ? 'public' : dataTypePreference;
+
+      await dataSyncApi.syncProtocolData(protocolId, dataType);
+      clearProtocolFrontendCache(protocolId);
+
+      toast({
+        variant: "success",
+        title: "Refreshed",
+        description: `${protocolId} data updated`,
+      });
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
@@ -480,27 +553,21 @@ export function ProtocolManagement() {
 
   const handleRefreshAllEVM = async () => {
     if (isRefreshingEVM) return;
-    
     setIsRefreshingEVM(true);
     try {
       const result = await dataSyncApi.syncEVMData();
-      
-      // Clear EVM protocol caches specifically after successful refresh
       clearEVMProtocolsCaches();
-      
       toast({
         variant: "success",
-        title: "EVM Data Refresh Complete",
-        description: `Successfully refreshed ${result.csvFilesFetched} protocols`,
+        title: "EVM Refresh Complete",
+        description: `Refreshed ${result.csvFilesFetched} protocols`,
       });
-      
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "EVM Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh EVM data",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh EVM",
       });
     } finally {
       setIsRefreshingEVM(false);
@@ -509,24 +576,20 @@ export function ProtocolManagement() {
 
   const handleRefreshMonad = async () => {
     if (isRefreshingMonad) return;
-
     setIsRefreshingMonad(true);
     try {
-      const result = await dataSyncApi.syncMonadData();
-
+      const result = await dataSyncApi.syncRollingRefreshData('monad');
       toast({
         variant: "success",
-        title: "Monad Data Refresh Complete",
-        description: `Successfully refreshed ${result.protocolsSynced} Monad protocols`,
+        title: "Monad Refresh Complete",
+        description: `Refreshed ${result.protocolsSynced} protocols`,
       });
-
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Monad Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh Monad data",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh Monad",
       });
     } finally {
       setIsRefreshingMonad(false);
@@ -535,74 +598,42 @@ export function ProtocolManagement() {
 
   const handleRefreshPublicRolling = async () => {
     if (isRefreshingPublicRolling) return;
-
     setIsRefreshingPublicRolling(true);
     try {
-      const result = await dataSyncApi.syncPublicRollingData();
-
+      const result = await dataSyncApi.syncRollingRefreshData('solana', 'public');
       toast({
         variant: "success",
-        title: "Public Rolling Stats Refresh Complete",
-        description: `Successfully refreshed ${result.protocolsSynced} protocols`,
+        title: "Public Stats Refresh Complete",
+        description: `Refreshed ${result.protocolsSynced} protocols`,
       });
-
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Public Rolling Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh public rolling stats",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh",
       });
     } finally {
       setIsRefreshingPublicRolling(false);
     }
   };
 
-  const handleResetConfigurations = async () => {
-    if (isResetting) return;
-    
-    setIsResetting(true);
-    try {
-      await resetProtocolConfigurations();
-      toast({
-        variant: "success",
-        title: "Configurations Reset",
-        description: "Trading app configurations reset to defaults!",
-      });
-      setForceRender(prev => prev + 1); // Trigger re-render to show reset changes
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Reset Failed",
-        description: error instanceof Error ? error.message : "Failed to reset configurations",
-      });
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
-
   const handleRefreshAllLaunchpads = async () => {
     if (isRefreshingLaunchpads) return;
-    
     setIsRefreshingLaunchpads(true);
     try {
       const result = await dataSyncApi.syncAllLaunchpadData();
-      
       toast({
         variant: "success",
-        title: "Launchpad Data Refresh Complete",
-        description: `Successfully refreshed ${result.csvFilesFetched} launchpads`,
+        title: "Launchpads Refresh Complete",
+        description: `Refreshed ${result.launchpadsSynced} launchpads`,
       });
-      
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Launchpad Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh launchpad data",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh launchpads",
       });
     } finally {
       setIsRefreshingLaunchpads(false);
@@ -611,24 +642,21 @@ export function ProtocolManagement() {
 
   const handleRefreshProjectedStats = async () => {
     if (isRefreshingProjectedStats) return;
-    
     setIsRefreshingProjectedStats(true);
     try {
-      const result = await ProjectedStatsApi.updateProjectedData();
-      
+      const response = await fetch(`${API_BASE_URL}/projected-stats/update`, { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to refresh');
       toast({
         variant: "success",
-        title: "Projected Stats Refresh Complete",
-        description: `Successfully updated projected volume data for ${result.successCount} out of ${result.totalCount} protocols`,
+        title: "Projected Stats Refreshed",
+        description: "All projected stats updated",
       });
-      
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Projected Stats Refresh Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh projected stats data",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh projected stats",
       });
     } finally {
       setIsRefreshingProjectedStats(false);
@@ -637,61 +665,36 @@ export function ProtocolManagement() {
 
   const handleRefreshAll = async () => {
     if (isRefreshingAll) return;
-    
     setIsRefreshingAll(true);
-    
+    setIsRefreshingSolana(true);
+    setIsRefreshingEVM(true);
+    setIsRefreshingMonad(true);
+    setIsRefreshingPublicRolling(true);
+    setIsRefreshingLaunchpads(true);
+    setIsRefreshingProjectedStats(true);
+
     try {
-      await syncData(
-        // onSyncStart
-        () => {
-          toast({
-            title: "Starting Data Refresh",
-            description: "Refreshing Solana protocols, Public Rolling Stats, and Projected Stats...",
-          });
-        },
-        // onSyncSuccess
-        (result) => {
-          toast({
-            variant: "success",
-            title: "All Data Synced Successfully",
-            description: `Complete refresh finished! (${result.csvFilesFetched} protocols synced)`,
-          });
-          // Reload sync statuses after successful refresh
-          setForceRender(prev => prev + 1);
-        },
-        // onStepUpdate
-        (step, progress) => {
-          // Update individual loading states based on step
-          if (step.includes('Solana')) {
-            setIsRefreshingSolana(true);
-            setIsRefreshingPublicRolling(false);
-            setIsRefreshingProjectedStats(false);
-          } else if (step.includes('Public Rolling')) {
-            setIsRefreshingSolana(false);
-            setIsRefreshingPublicRolling(true);
-            setIsRefreshingProjectedStats(false);
-          } else if (step.includes('Projected Stats')) {
-            setIsRefreshingSolana(false);
-            setIsRefreshingPublicRolling(false);
-            setIsRefreshingProjectedStats(true);
-          }
-        },
-        // onStepComplete
-        (stepName, result) => {
-          toast({
-            variant: "success",
-            title: `${stepName} Data Synced`,
-            description: `${stepName} refresh completed! (${result.csvFilesFetched} protocols)`,
-          });
-        },
-        // forceSync - bypass time restrictions for manual refresh
-        true
-      );
+      await Promise.all([
+        dataSyncApi.syncRollingRefreshData('solana'),
+        dataSyncApi.syncEVMData(),
+        dataSyncApi.syncRollingRefreshData('monad'),
+        dataSyncApi.syncRollingRefreshData('solana', 'public'),
+        dataSyncApi.syncAllLaunchpadData(),
+        fetch(`${API_BASE_URL}/projected-stats/update`, { method: 'POST' }),
+      ]);
+
+      clearAllFrontendCaches();
+      toast({
+        variant: "success",
+        title: "All Data Refreshed",
+        description: "Successfully refreshed all data sources",
+      });
+      setForceRender(prev => prev + 1);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Refresh All Failed",
-        description: error instanceof Error ? error.message : "Failed to refresh all data sources",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Some refreshes failed",
       });
     } finally {
       setIsRefreshingAll(false);
@@ -699,28 +702,24 @@ export function ProtocolManagement() {
       setIsRefreshingEVM(false);
       setIsRefreshingMonad(false);
       setIsRefreshingPublicRolling(false);
+      setIsRefreshingLaunchpads(false);
       setIsRefreshingProjectedStats(false);
     }
   };
 
   const handleRefreshLaunchpad = async (launchpadId: string) => {
     if (refreshingLaunchpads.has(launchpadId)) return;
-    
     setRefreshingLaunchpads(prev => new Set([...prev, launchpadId]));
-    
+
     try {
-      const result = await dataSyncApi.syncLaunchpadData(launchpadId);
-      
+      await dataSyncApi.syncLaunchpadData(launchpadId);
       toast({
         variant: "success",
-        title: "Launchpad Refreshed",
-        description: `Successfully refreshed data for ${launchpadId}`,
+        title: "Refreshed",
+        description: `${launchpadId} data updated`,
       });
-      
-      // Reload sync statuses after successful refresh
       setForceRender(prev => prev + 1);
     } catch (error) {
-      console.error('Launchpad refresh error:', error);
       toast({
         variant: "destructive",
         title: "Refresh Failed",
@@ -735,134 +734,25 @@ export function ProtocolManagement() {
     }
   };
 
-  const handleRefreshTraderStats = async (protocol: 'photon' | 'axiom') => {
-    const setRefreshing = protocol === 'photon' ? setIsRefreshingTraderStatsPhoton : setIsRefreshingTraderStatsAxiom;
-    const isRefreshing = protocol === 'photon' ? isRefreshingTraderStatsPhoton : isRefreshingTraderStatsAxiom;
-    
-    if (isRefreshing) return;
-    
-    setRefreshing(true);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/trader-stats/refresh/${protocol}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast({
-          variant: "success",
-          title: "Trader Stats Refreshed",
-          description: `Successfully refreshed ${protocol} with ${result.data?.tradersImported || 0} traders`,
-        });
-        
-        // Refresh row counts after successful import
-        const countsResponse = await fetch(`${API_BASE_URL}/trader-stats/row-counts`);
-        if (countsResponse.ok) {
-          const countsData = await countsResponse.json();
-          if (countsData.success) {
-            setTraderStatsRowCounts(countsData.data);
-          }
-        }
-      } else {
-        throw new Error(result.error || 'Unknown error occurred');
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Trader Stats Refresh Failed",
-        description: `Failed to refresh ${protocol}: ${error.message}`,
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefreshAllTraderStats = async () => {
-    if (isRefreshingTraderStatsAll) return;
-    
-    setIsRefreshingTraderStatsAll(true);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/trader-stats/refresh-all`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        const summary = result.data?.summary || {};
-        toast({
-          variant: "success",
-          title: "All Trader Stats Refreshed",
-          description: `Successfully refreshed ${summary.successful} out of ${summary.total} protocols`,
-        });
-      } else {
-        throw new Error(result.error || 'Unknown error occurred');
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Trader Stats Refresh Failed",
-        description: `Failed to refresh trader stats: ${error.message}`,
-      });
-    } finally {
-      setIsRefreshingTraderStatsAll(false);
-    }
-  };
-
   const handleRefreshIndividualProjectedStats = async (protocolId: string) => {
     if (refreshingProjectedStatsProtocols.has(protocolId)) return;
-    
     setRefreshingProjectedStatsProtocols(prev => new Set([...prev, protocolId]));
-    
+
     try {
-      // Call the projected stats API for individual protocol
-      const response = await fetch(`${API_BASE_URL}/projected-stats/refresh/${protocolId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${API_BASE_URL}/projected-stats/refresh/${protocolId}`, { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to refresh');
+
+      toast({
+        variant: "success",
+        title: "Refreshed",
+        description: `${protocolId} projected stats updated`,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast({
-          variant: "success",
-          title: "Projected Stats Refreshed",
-          description: `Successfully refreshed projected stats for ${protocolId}`,
-        });
-        
-        // Reload data after successful refresh
-        setForceRender(prev => prev + 1);
-      } else {
-        throw new Error(result.error || 'Unknown error occurred');
-      }
-    } catch (error: any) {
+      setForceRender(prev => prev + 1);
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Projected Stats Refresh Failed",
-        description: `Failed to refresh ${protocolId}: ${error.message}`,
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : `Failed to refresh ${protocolId}`,
       });
     } finally {
       setRefreshingProjectedStatsProtocols(prev => {
@@ -875,46 +765,33 @@ export function ProtocolManagement() {
 
   const handleRefreshIndividualTraderStats = async (protocol: 'photon' | 'axiom' | 'bloom' | 'trojanonsolana') => {
     if (refreshingTraderStatsProtocols.has(protocol)) return;
-    
     setRefreshingTraderStatsProtocols(prev => new Set([...prev, protocol]));
-    
-    // Show starting toast notification
-    toast({
-      title: "Trader Stats Refresh Started",
-      description: `Starting refresh for ${protocol.charAt(0).toUpperCase() + protocol.slice(1)}...`,
-    });
-    
+
     try {
-      const response = await fetch(`${API_BASE_URL}/trader-stats/refresh/${protocol}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      const response = await fetch(`${API_BASE_URL}/trader-stats/refresh/${protocol}`, { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to refresh');
       const result = await response.json();
 
       if (result.success) {
         toast({
           variant: "success",
-          title: "Trader Stats Refresh Complete",
-          description: `Successfully refreshed ${protocol.charAt(0).toUpperCase() + protocol.slice(1)} with ${result.data?.tradersImported?.toLocaleString() || '0'} trader records imported`,
+          title: "Trader Stats Refreshed",
+          description: `${protocol}: ${result.data?.tradersImported || 0} traders`,
         });
-        
-        // Reload data after successful refresh
-        setForceRender(prev => prev + 1);
-      } else {
-        throw new Error(result.error || 'Unknown error occurred');
+
+        const countsResponse = await fetch(`${API_BASE_URL}/trader-stats/row-counts`);
+        if (countsResponse.ok) {
+          const countsData = await countsResponse.json();
+          if (countsData.success) {
+            setTraderStatsRowCounts(countsData.data);
+          }
+        }
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Trader Stats Refresh Failed",
-        description: `Failed to refresh ${protocol}: ${error.message}`,
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : `Failed to refresh ${protocol}`,
       });
     } finally {
       setRefreshingTraderStatsProtocols(prev => {
@@ -925,1165 +802,370 @@ export function ProtocolManagement() {
     }
   };
 
+  const handleRefreshAllTraderStats = async () => {
+    if (isRefreshingTraderStatsAll) return;
+    setIsRefreshingTraderStatsAll(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/trader-stats/refresh-all`, { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to refresh');
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          variant: "success",
+          title: "All Trader Stats Refreshed",
+          description: `${result.data?.summary?.successful || 0} protocols updated`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Refresh Failed",
+        description: error instanceof Error ? error.message : "Failed to refresh trader stats",
+      });
+    } finally {
+      setIsRefreshingTraderStatsAll(false);
+    }
+  };
+
   const activeProtocol = activeId ? getMutableProtocolConfigs().find(p => p.id === activeId) : null;
 
+  // Get protocols for projected stats sections
+  const telegramBotProtocols = ['trojanonsolana', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro', 'basedbot'];
+  const terminalProtocols = ['photon', 'bullx', 'axiom', 'gmgnai', 'terminal', 'nova terminal', 'telemetry', 'mevx', 'rhythm', 'vyper', 'phantom', 'opensea', 'okx', 'trojan', 'trojanterminal'];
+  const traderStatsProtocols = [
+    { id: 'photon', name: 'Photon' },
+    { id: 'axiom', name: 'Axiom' },
+    { id: 'bloom', name: 'Bloom' },
+    { id: 'trojanonsolana', name: 'Trojan' },
+  ];
+
   return (
-    <div className="space-y-2 sm:space-y-6">
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">Trading App Configuration</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Current trading apps organized by category. Drag trading apps between categories to reorganize them.
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Button
-                onClick={handleResetConfigurations}
-                disabled={isResetting || isSaving}
-                variant="outline"
-                size="sm"
-              >
-                {isResetting ? (
-                  <>
-                    <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    <span className="hidden sm:inline">Resetting...</span>
-                  </>
-                ) : (
-                  <>
-                    <RotateCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Reset</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={handleSaveConfigurations}
-                disabled={isSaving || isResetting || !hasUnsavedChanges()}
-                size="sm"
-              >
-                {isSaving ? (
-                  <>
-                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    <span className="hidden sm:inline">Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Save Changes</span>
-                  </>
-                )}
-              </Button>
+    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+      {/* Page Header */}
+      <div className="pt-2">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-1">Manage your dashboard preferences and data sources</p>
+      </div>
+
+      {/* Data Source Section */}
+      <div>
+        <SectionHeader title="Data Source" description="Choose between private analytics or public data" />
+        <Section>
+          <div className="p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  dataTypePreference === 'private'
+                    ? 'bg-blue-100 dark:bg-blue-900/30'
+                    : 'bg-green-100 dark:bg-green-900/30'
+                }`}>
+                  {dataTypePreference === 'private' ? (
+                    <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  ) : (
+                    <Globe className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground">
+                    {dataTypePreference === 'private' ? 'Private Analytics' : 'Public Data'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {dataTypePreference === 'private'
+                      ? 'In-house metrics with real-time updates'
+                      : 'Community verified, open source data'
+                    }
+                  </div>
+                </div>
+              </div>
+              <Switch
+                checked={dataTypePreference === 'public'}
+                onCheckedChange={handleDataTypeChange}
+                className="data-[state=checked]:bg-green-500"
+              />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          {hasUnsavedChanges() && (
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 border rounded-lg bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200">
-                You have unsaved changes. Click "Save Changes" to make them permanent.
-              </p>
+        </Section>
+      </div>
+
+      {/* Quick Actions Section */}
+      <div>
+        <SectionHeader title="Data Refresh" description="Sync data from external sources" />
+        <Section>
+          <div className="divide-y divide-border/30">
+            {/* Refresh All */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                  <RefreshCcw className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Refresh All Data</div>
+                  <div className="text-xs text-muted-foreground">Sync all protocols, launchpads, and stats</div>
+                </div>
+              </div>
+              <Button
+                onClick={handleRefreshAll}
+                disabled={isRefreshingAll}
+                size="sm"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0"
+              >
+                {isRefreshingAll ? (
+                  <RefreshCcw className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Refresh All'
+                )}
+              </Button>
             </div>
-          )}
+
+            {/* Solana */}
+            <ListItem
+              logo="/assets/logos/solana.jpg"
+              logoAlt="Solana"
+              title="Solana Protocols"
+              subtitle={`${getMutableProtocolConfigs().filter(p => p.chain === 'solana').length} protocols`}
+              rightElement={<RefreshButton onClick={handleHardRefresh} isRefreshing={isRefreshingSolana || isRefreshingAll} />}
+            />
+
+            {/* EVM */}
+            <ListItem
+              logo="/assets/logos/ethereum.jpg"
+              logoAlt="Ethereum"
+              title="EVM Protocols"
+              subtitle={`${getMutableProtocolConfigs().filter(p => p.chain === 'evm').length} protocols`}
+              rightElement={<RefreshButton onClick={handleRefreshAllEVM} isRefreshing={isRefreshingEVM || isRefreshingAll} />}
+            />
+
+            {/* Monad */}
+            <ListItem
+              logo="/assets/logos/monad.jpg"
+              logoAlt="Monad"
+              title="Monad Protocols"
+              subtitle={`${getMutableProtocolConfigs().filter(p => p.chain === 'monad').length} protocols`}
+              rightElement={<RefreshButton onClick={handleRefreshMonad} isRefreshing={isRefreshingMonad || isRefreshingAll} />}
+            />
+
+            {/* Public Rolling */}
+            <ListItem
+              icon={<Globe className="w-5 h-5 text-emerald-600" />}
+              title="Public Rolling Stats"
+              subtitle="Refresh public rolling stats"
+              rightElement={<RefreshButton onClick={handleRefreshPublicRolling} isRefreshing={isRefreshingPublicRolling || isRefreshingAll} />}
+            />
+
+            {/* Launchpads */}
+            <ListItem
+              icon={<span className="text-lg">🚀</span>}
+              title="All Launchpads"
+              subtitle={`${getAllLaunchpads().length} launchpads`}
+              rightElement={<RefreshButton onClick={handleRefreshAllLaunchpads} isRefreshing={isRefreshingLaunchpads || isRefreshingAll} />}
+            />
+
+            {/* Projected Stats */}
+            <ListItem
+              icon={<span className="text-lg">📊</span>}
+              title="Projected Volume Data"
+              subtitle="Analytics from Dune queries"
+              rightElement={<RefreshButton onClick={handleRefreshProjectedStats} isRefreshing={isRefreshingProjectedStats || isRefreshingAll} />}
+            />
+
+            {/* Trader Stats */}
+            <ListItem
+              icon={<span className="text-lg">👥</span>}
+              title="All Trader Stats"
+              subtitle="Photon, Axiom, Bloom, Trojan"
+              rightElement={<RefreshButton onClick={handleRefreshAllTraderStats} isRefreshing={isRefreshingTraderStatsAll} />}
+              isLast
+            />
+          </div>
+        </Section>
+      </div>
+
+      {/* Protocol Configuration Section */}
+      <div>
+        <div className="flex items-center justify-between px-1 mb-4">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground tracking-tight">Protocol Configuration</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Drag protocols between categories to organize</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleResetConfigurations}
+              disabled={isResetting || isSaving}
+              variant="ghost"
+              size="sm"
+            >
+              {isResetting ? <RotateCcw className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              <span className="ml-2 hidden sm:inline">Reset</span>
+            </Button>
+            <Button
+              onClick={handleSaveConfigurations}
+              disabled={isSaving || isResetting || !hasUnsavedChanges()}
+              size="sm"
+            >
+              {isSaving ? <Save className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span className="ml-2 hidden sm:inline">Save</span>
+            </Button>
+          </div>
+        </div>
+
+        {hasUnsavedChanges() && (
+          <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              You have unsaved changes. Click Save to keep them.
+            </p>
+          </div>
+        )}
+
+        <Section className="p-4">
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="space-y-3 sm:space-y-6">
+            <div className="space-y-6">
               {categories.map(category => {
-                const categoryProtocols = getMutableProtocolsByCategoryIncludingEVM(category); // Show all protocols including EVM
+                const categoryProtocols = getMutableProtocolsByCategoryIncludingEVM(category);
                 return (
                   <div key={category}>
-                    <h3 className="text-sm sm:text-lg font-semibold mb-2 sm:mb-3">{category}</h3>
-                    <DroppableCategory 
-                      category={category} 
-                      protocols={categoryProtocols} 
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">{category}</h3>
+                    <DroppableCategory
+                      category={category}
+                      protocols={categoryProtocols}
                       onRefresh={handleRefreshProtocol}
                       refreshingProtocols={refreshingProtocols}
-                      syncStatuses={syncStatuses}
                       latestDates={latestDates}
                     />
                   </div>
                 );
               })}
             </div>
-            
+
             <DragOverlay>
               {activeProtocol ? (
-                <div className="flex items-center gap-3 p-3 border rounded-lg bg-card border-border shadow-2xl ring-2 ring-primary/50 backdrop-blur-sm transform rotate-1">
-                  <div className="p-1 bg-muted/20 rounded-sm w-10 h-10 flex items-center justify-center">
-                    <activeProtocol.icon size={32} className="text-muted-foreground" />
+                <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-primary/30 shadow-2xl">
+                  <div className="w-9 h-9 rounded-lg bg-muted/20 overflow-hidden">
+                    <img
+                      src={`/assets/logos/${getProtocolLogoFilename(activeProtocol.id)}`}
+                      alt={activeProtocol.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{activeProtocol.name}</p>
-                    <p className="text-sm text-muted-foreground">{activeProtocol.id}</p>
-                  </div>
+                  <span className="font-medium">{activeProtocol.name}</span>
                 </div>
               ) : null}
             </DragOverlay>
           </DndContext>
-        </CardContent>
-      </Card>
+        </Section>
+      </div>
 
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">Launchpad Management</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                View and manage individual launchpad configurations
-              </CardDescription>
-            </div>
+      {/* Launchpads Section */}
+      <div>
+        <SectionHeader title="Launchpads" description="Individual launchpad data management" />
+        <Section>
+          <div className="divide-y divide-border/30">
+            {getAllLaunchpads().map((launchpad, index) => (
+              <ListItem
+                key={launchpad.id}
+                logo={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                logoAlt={launchpad.name}
+                title={launchpad.name}
+                badge={{ text: launchpad.chain.toUpperCase(), variant: 'info' }}
+                subtitle={launchpadLatestDates.get(launchpad.id) ?
+                  `Latest: ${new Date(launchpadLatestDates.get(launchpad.id)!.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` :
+                  'Loading...'
+                }
+                rightElement={<RefreshButton onClick={() => handleRefreshLaunchpad(launchpad.id)} isRefreshing={refreshingLaunchpads.has(launchpad.id)} />}
+                isLast={index === getAllLaunchpads().length - 1}
+              />
+            ))}
           </div>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {/* Individual Launchpad Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-              {getAllLaunchpads().map(launchpad => (
-                <div
-                  key={launchpad.id}
-                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                    <img 
-                      src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
-                      alt={launchpad.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to icon if logo not found
-                        const target = e.target as HTMLImageElement;
-                        const container = target.parentElement;
-                        if (container) {
-                          container.innerHTML = '';
-                          container.className = 'w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center';
-                          const iconElement = document.createElement('div');
-                          iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                          container.appendChild(iconElement);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground text-xs sm:text-base">{launchpad.name}</p>
-                      <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                        {launchpad.chain.toUpperCase()}
-                      </Badge>
-                    </div>
-                    {launchpadLatestDates.get(launchpad.id) && (
-                      <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
-                        launchpadLatestDates.get(launchpad.id)!.is_current 
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                      }`} title={launchpadLatestDates.get(launchpad.id)!.is_current ? 'Data is current' : `${launchpadLatestDates.get(launchpad.id)!.days_behind} days behind`}>
-                        <div className={`w-1 h-1 rounded-full ${
-                          launchpadLatestDates.get(launchpad.id)!.is_current ? 'bg-green-600' : 'bg-red-600'
-                        }`} />
-                        <span className="font-medium text-[10px] sm:text-xs">
-                          Latest: {new Date(launchpadLatestDates.get(launchpad.id)!.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRefreshLaunchpad(launchpad.id);
-                    }}
-                    disabled={refreshingLaunchpads.has(launchpad.id)}
-                    className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                    title={`Refresh ${launchpad.name} data`}
-                  >
-                    <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingLaunchpads.has(launchpad.id) ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </Section>
+      </div>
 
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">Projected Stats Management</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                View and manage individual protocol projected statistics refresh
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {/* Organize by Categories */}
-            <div className="space-y-4 sm:space-y-6">
-              {/* Telegram Bots */}
-              <div className="space-y-2 sm:space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground">Telegram Bots</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-                  {['trojanonsolana', 'bonkbot', 'bloom', 'soltradingbot', 'banana', 'maestro', 'basedbot'].map(protocolId => {
-                    const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
-                    if (!protocol) return null;
-                    
-                    const latestDateInfo = projectedStatsLatestDates.get(protocolId);
-                    
-                    return (
-                      <div
-                        key={protocol.id}
-                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
-                      >
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                            alt={protocol.name} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center';
-                                const iconElement = document.createElement('div');
-                                iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="m3 8 4-4 4 4"/><path d="M14 3v5h5"/><path d="m14 8 4-4 4 4"/><path d="M3 16v5h5"/><path d="m3 21 4-4 4 4"/><path d="M14 16v5h5"/><path d="m14 21 4-4 4 4"/></svg>';
-                                container.appendChild(iconElement);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground text-xs sm:text-base">{protocol.name}</p>
-                            <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                              TG BOT
-                            </Badge>
-                          </div>
-                          {latestDateInfo ? (
-                            <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
-                              latestDateInfo.is_current 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`} title={latestDateInfo.is_current ? 'Data is current' : `${latestDateInfo.days_behind} days behind`}>
-                              <div className={`w-1 h-1 rounded-full ${
-                                latestDateInfo.is_current ? 'bg-green-600' : 'bg-red-600'
-                              }`} />
-                              <span className="font-medium text-[10px] sm:text-xs">
-                                Latest: {new Date(latestDateInfo.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-                              <div className="w-1 h-1 rounded-full bg-gray-600" />
-                              <span className="font-medium text-[10px] sm:text-xs">
-                                Loading...
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRefreshIndividualProjectedStats(protocol.id);
-                          }}
-                          disabled={refreshingProjectedStatsProtocols.has(protocol.id)}
-                          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                          title={`Refresh ${protocol.name} projected stats`}
-                        >
-                          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingProjectedStatsProtocols.has(protocol.id) ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </div>
-                    );
-                  }).filter(Boolean)}
-                </div>
-              </div>
+      {/* Projected Stats Section */}
+      <div>
+        <SectionHeader title="Projected Stats" description="Individual protocol projected volume management" />
 
-              {/* Trading Terminals */}
-              <div className="space-y-2 sm:space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground">Trading Terminals</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-                  {['photon', 'bullx', 'axiom', 'gmgnai', 'terminal', 'nova terminal', 'telemetry', 'mevx', 'rhythm', 'vyper', 'phantom', 'opensea', 'okx', 'trojan', 'trojanterminal'].map(protocolId => {
-                    const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
-                    if (!protocol) return null;
-                    
-                    const latestDateInfo = projectedStatsLatestDates.get(protocolId);
-                    
-                    return (
-                      <div
-                        key={protocol.id}
-                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200"
-                      >
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                            alt={protocol.name} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center';
-                                const iconElement = document.createElement('div');
-                                iconElement.innerHTML = '<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="m3 8 4-4 4 4"/><path d="M14 3v5h5"/><path d="m14 8 4-4 4 4"/><path d="M3 16v5h5"/><path d="m3 21 4-4 4 4"/><path d="M14 16v5h5"/><path d="m14 21 4-4 4 4"/></svg>';
-                                container.appendChild(iconElement);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground text-xs sm:text-base">{protocol.name}</p>
-                            <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                              TERMINAL
-                            </Badge>
-                          </div>
-                          {latestDateInfo ? (
-                            <div className={`inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
-                              latestDateInfo.is_current 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`} title={latestDateInfo.is_current ? 'Data is current' : `${latestDateInfo.days_behind} days behind`}>
-                              <div className={`w-1 h-1 rounded-full ${
-                                latestDateInfo.is_current ? 'bg-green-600' : 'bg-red-600'
-                              }`} />
-                              <span className="font-medium text-[10px] sm:text-xs">
-                                Latest: {new Date(latestDateInfo.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-                              <div className="w-1 h-1 rounded-full bg-gray-600" />
-                              <span className="font-medium text-[10px] sm:text-xs">
-                                Loading...
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRefreshIndividualProjectedStats(protocol.id);
-                          }}
-                          disabled={refreshingProjectedStatsProtocols.has(protocol.id)}
-                          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                          title={`Refresh ${protocol.name} projected stats`}
-                        >
-                          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingProjectedStatsProtocols.has(protocol.id) ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </div>
-                    );
-                  }).filter(Boolean)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Telegram Bots */}
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Telegram Bots</h3>
+          <Section>
+            <div className="divide-y divide-border/30">
+              {telegramBotProtocols.map((protocolId, index) => {
+                const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
+                if (!protocol) return null;
+                const latestDateInfo = projectedStatsLatestDates.get(protocolId);
 
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">Trader Stats Management</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                View and manage individual protocol trader statistics refresh
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {/* Trader Stats Info Cards with Individual Refresh Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-              {/* Photon Trader Stats */}
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                  <img 
-                    src="/assets/logos/photon.jpg"
-                    alt="Photon" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center';
-                        const iconElement = document.createElement('div');
-                        iconElement.innerHTML = '<svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
-                        container.appendChild(iconElement);
-                      }
-                    }}
+                return (
+                  <ListItem
+                    key={protocolId}
+                    logo={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                    logoAlt={protocol.name}
+                    title={protocol.name}
+                    subtitle={latestDateInfo ?
+                      `Latest: ${new Date(latestDateInfo.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` :
+                      'Loading...'
+                    }
+                    rightElement={<RefreshButton onClick={() => handleRefreshIndividualProjectedStats(protocol.id)} isRefreshing={refreshingProjectedStatsProtocols.has(protocol.id)} />}
+                    isLast={index === telegramBotProtocols.filter(id => getMutableProtocolConfigs().find(p => p.id === id)).length - 1}
                   />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-xs sm:text-base">Photon</p>
-                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
-                      TRADERS
-                    </Badge>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs font-medium"
-                  >
-                    {(traderStatsRowCounts['photon'] || 0).toLocaleString()} rows
-                  </Badge>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRefreshIndividualTraderStats('photon');
-                  }}
-                  disabled={refreshingTraderStatsProtocols.has('photon')}
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                  title="Refresh Photon trader stats"
-                >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('photon') ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
+                );
+              }).filter(Boolean)}
+            </div>
+          </Section>
+        </div>
 
-              {/* Axiom Trader Stats */}
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                  <img 
-                    src="/assets/logos/axiom.jpg"
-                    alt="Axiom" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center';
-                        const iconElement = document.createElement('div');
-                        iconElement.innerHTML = '<svg class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
-                        container.appendChild(iconElement);
-                      }
-                    }}
+        {/* Trading Terminals */}
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Trading Terminals</h3>
+          <Section>
+            <div className="divide-y divide-border/30">
+              {terminalProtocols.map((protocolId, index) => {
+                const protocol = getMutableProtocolConfigs().find(p => p.id === protocolId);
+                if (!protocol) return null;
+                const latestDateInfo = projectedStatsLatestDates.get(protocolId);
+
+                return (
+                  <ListItem
+                    key={protocolId}
+                    logo={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                    logoAlt={protocol.name}
+                    title={protocol.name}
+                    subtitle={latestDateInfo ?
+                      `Latest: ${new Date(latestDateInfo.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` :
+                      'Loading...'
+                    }
+                    rightElement={<RefreshButton onClick={() => handleRefreshIndividualProjectedStats(protocol.id)} isRefreshing={refreshingProjectedStatsProtocols.has(protocol.id)} />}
+                    isLast={index === terminalProtocols.filter(id => getMutableProtocolConfigs().find(p => p.id === id)).length - 1}
                   />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-xs sm:text-base">Axiom</p>
-                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400">
-                      TRADERS
-                    </Badge>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs font-medium"
-                  >
-                    {(traderStatsRowCounts['axiom'] || 0).toLocaleString()} rows
-                  </Badge>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRefreshIndividualTraderStats('axiom');
-                  }}
-                  disabled={refreshingTraderStatsProtocols.has('axiom')}
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                  title="Refresh Axiom trader stats"
-                >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('axiom') ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
-
-              {/* Bloom Trader Stats */}
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                  <img 
-                    src="/assets/logos/bloom.jpg"
-                    alt="Bloom" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center';
-                        const iconElement = document.createElement('div');
-                        iconElement.innerHTML = '<svg class="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
-                        container.appendChild(iconElement);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-xs sm:text-base">Bloom</p>
-                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                      TRADERS
-                    </Badge>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs font-medium"
-                  >
-                    {(traderStatsRowCounts['bloom'] || 0).toLocaleString()} rows
-                  </Badge>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRefreshIndividualTraderStats('bloom');
-                  }}
-                  disabled={refreshingTraderStatsProtocols.has('bloom')}
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                  title="Refresh Bloom trader stats"
-                >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('bloom') ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
-
-              {/* Trojan Trader Stats */}
-              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-4 border rounded-lg bg-card border-border hover:bg-accent hover:shadow-sm transition-all duration-200">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted/20 rounded-full overflow-hidden ring-1 ring-border/20 flex items-center justify-center">
-                  <img 
-                    src="/assets/logos/trojanonsolana.jpg"
-                    alt="Trojan On Solana" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center';
-                        const iconElement = document.createElement('div');
-                        iconElement.innerHTML = '<svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3-3m-3 3-3 3"/></svg>';
-                        container.appendChild(iconElement);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-xs sm:text-base">Trojan</p>
-                    <Badge variant="secondary" className="h-4 sm:h-5 px-1 sm:px-2 text-[10px] sm:text-xs bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                      TRADERS
-                    </Badge>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="text-xs font-medium"
-                  >
-                    {(traderStatsRowCounts['trojanonsolana'] || 0).toLocaleString()} rows
-                  </Badge>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRefreshIndividualTraderStats('trojanonsolana');
-                  }}
-                  disabled={refreshingTraderStatsProtocols.has('trojanonsolana')}
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0"
-                  title="Refresh Trojan trader stats"
-                >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshingTraderStatsProtocols.has('trojanonsolana') ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
+                );
+              }).filter(Boolean)}
             </div>
+          </Section>
+        </div>
+      </div>
 
+      {/* Trader Stats Section */}
+      <div>
+        <SectionHeader title="Trader Stats" description="Individual protocol trader statistics" />
+        <Section>
+          <div className="divide-y divide-border/30">
+            {traderStatsProtocols.map((item, index) => (
+              <ListItem
+                key={item.id}
+                logo={`/assets/logos/${item.id === 'trojanonsolana' ? 'trojanonsolana' : item.id}.jpg`}
+                logoAlt={item.name}
+                title={item.name}
+                subtitle={`${(traderStatsRowCounts[item.id] || 0).toLocaleString()} traders`}
+                rightElement={<RefreshButton onClick={() => handleRefreshIndividualTraderStats(item.id as any)} isRefreshing={refreshingTraderStatsProtocols.has(item.id)} />}
+                isLast={index === traderStatsProtocols.length - 1}
+              />
+            ))}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">Data Refresh Operations</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Force refresh data for trading apps and launchpads
-              </CardDescription>
-            </div>
-            <Button
-              onClick={handleRefreshAll}
-              disabled={isRefreshingAll || isRefreshingSolana || isRefreshingEVM || isRefreshingLaunchpads || isRefreshingProjectedStats}
-              variant="default"
-              size="sm"
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0"
-            >
-              {isRefreshingAll ? (
-                <>
-                  <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                  <span className="hidden sm:inline">Refreshing All...</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Refresh All</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-6">
-            {/* Trading Apps Section */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/30"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground font-medium">Trading Apps</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 sm:space-y-2">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <span className="text-xs sm:text-sm font-medium text-foreground">Solana Protocols</span>
-                        <div className="flex -space-x-1">
-                          {getMutableProtocolConfigs()
-                            .filter(p => p.chain === 'solana')
-                            .slice(0, 4)
-                            .map((protocol, index) => (
-                            <div 
-                              key={protocol.id}
-                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
-                              style={{ zIndex: 4 - index }}
-                              title={protocol.name}
-                            >
-                              <img 
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                alt={protocol.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ))}
-                          {getMutableProtocolConfigs().filter(p => p.chain === 'solana').length > 4 && (
-                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                              +{getMutableProtocolConfigs().filter(p => p.chain === 'solana').length - 4}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        Refresh all Solana trading apps data
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleHardRefresh}
-                      disabled={isRefreshingSolana || isRefreshingAll}
-                      variant="outline"
-                      size="sm"
-                      className="ml-4 shrink-0"
-                    >
-                      {(isRefreshingSolana || isRefreshingAll) ? (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                          <span className="hidden sm:inline">Refreshing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">Refresh Solana</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-blue-50/30 dark:to-blue-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-500/20 overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 sm:space-y-2">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="text-xs sm:text-sm font-medium text-foreground">EVM</span>
-                        <div className="flex -space-x-1">
-                          {getMutableProtocolConfigs()
-                            .filter(p => p.chain === 'evm')
-                            .slice(0, 4)
-                            .map((protocol, index) => (
-                            <div 
-                              key={protocol.id}
-                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
-                              style={{ zIndex: 4 - index }}
-                              title={protocol.name}
-                            >
-                              <img 
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                alt={protocol.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ))}
-                          {getMutableProtocolConfigs().filter(p => p.chain === 'evm').length > 4 && (
-                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                              +{getMutableProtocolConfigs().filter(p => p.chain === 'evm').length - 4}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        Refresh all EVM trading apps data
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleRefreshAllEVM}
-                      disabled={isRefreshingEVM || isRefreshingAll}
-                      variant="outline"
-                      size="sm"
-                      className="ml-4 shrink-0"
-                    >
-                      {(isRefreshingEVM || isRefreshingAll) ? (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                          <span className="hidden sm:inline">Refreshing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">Refresh EVM</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Monad & Public Rolling Stats Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
-                {/* Monad */}
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-violet-50/30 dark:to-violet-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-300 hover:border-violet-500/20 overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 sm:space-y-2">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-2 h-2 rounded-full bg-violet-500"></div>
-                        <span className="text-xs sm:text-sm font-medium text-foreground">Monad</span>
-                        <div className="flex -space-x-1">
-                          {getMutableProtocolConfigs()
-                            .filter(p => p.chain === 'monad')
-                            .slice(0, 4)
-                            .map((protocol, index) => (
-                            <div
-                              key={protocol.id}
-                              className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden"
-                              style={{ zIndex: 4 - index }}
-                              title={protocol.name}
-                            >
-                              <img
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                alt={protocol.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ))}
-                          {getMutableProtocolConfigs().filter(p => p.chain === 'monad').length > 4 && (
-                            <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                              +{getMutableProtocolConfigs().filter(p => p.chain === 'monad').length - 4}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        Refresh all Monad trading apps data
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleRefreshMonad}
-                      disabled={isRefreshingMonad || isRefreshingAll}
-                      variant="outline"
-                      size="sm"
-                      className="ml-4 shrink-0"
-                    >
-                      {(isRefreshingMonad || isRefreshingAll) ? (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                          <span className="hidden sm:inline">Refreshing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">Refresh Monad</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Public Rolling Stats */}
-                <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1 sm:space-y-2">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <span className="text-xs sm:text-sm font-medium text-foreground">Public Rolling Stats</span>
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                        Refresh public rolling stats for all protocols
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleRefreshPublicRolling}
-                      disabled={isRefreshingPublicRolling || isRefreshingAll}
-                      variant="outline"
-                      size="sm"
-                      className="ml-4 shrink-0"
-                    >
-                      {(isRefreshingPublicRolling || isRefreshingAll) ? (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                          <span className="hidden sm:inline">Refreshing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                          <span className="hidden sm:inline">Refresh Public</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Separator */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/30"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Launchpads</span>
-              </div>
-            </div>
-
-            {/* Launchpads Section */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="group relative bg-gradient-to-br from-card via-card/95 to-emerald-50/30 dark:to-emerald-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 hover:border-emerald-500/20 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1 sm:space-y-2">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      <span className="text-xs sm:text-sm font-medium text-foreground">All Launchpads</span>
-                      <div className="flex -space-x-1">
-                        {getAllLaunchpads().slice(0, 4).map((launchpad, index) => (
-                          <div 
-                            key={launchpad.id}
-                            className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" 
-                            style={{ zIndex: 4 - index }}
-                            title={launchpad.name}
-                          >
-                            <img 
-                              src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
-                              alt={launchpad.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const container = target.parentElement;
-                                if (container) {
-                                  container.innerHTML = '';
-                                  container.className = 'w-5 h-5 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                  const iconEl = document.createElement('div');
-                                  iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                                  container.appendChild(iconEl);
-                                }
-                              }}
-                            />
-                          </div>
-                        ))}
-                        {getAllLaunchpads().length > 4 && (
-                          <div className="w-5 h-5 rounded-full border border-background bg-muted/80 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                            +{getAllLaunchpads().length - 4}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                      Refresh data for PumpFun, Moonshot, and other launchpad metrics
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleRefreshAllLaunchpads}
-                    disabled={isRefreshingLaunchpads || isRefreshingAll}
-                    variant="outline"
-                    size="sm"
-                    className="ml-4 shrink-0"
-                  >
-                    {isRefreshingLaunchpads ? (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                        <span className="hidden sm:inline">Refreshing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">Refresh Launchpads</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Separator */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/30"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Projected Stats</span>
-              </div>
-            </div>
-
-            {/* Projected Stats Section */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="group relative bg-gradient-to-br from-card via-card/95 to-purple-50/30 dark:to-purple-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 hover:border-purple-500/20 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1 sm:space-y-2">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                      <span className="text-xs sm:text-sm font-medium text-foreground">Projected Volume Data</span>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                      Refresh projected trading volume data from analytics queries
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleRefreshProjectedStats}
-                    disabled={isRefreshingProjectedStats || isRefreshingAll}
-                    variant="outline"
-                    size="sm"
-                    className="ml-4 shrink-0"
-                  >
-                    {isRefreshingProjectedStats ? (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                        <span className="hidden sm:inline">Refreshing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">Refresh Projected</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Separator */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/30"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Trader Stats</span>
-              </div>
-            </div>
-
-            {/* Trader Stats Section */}
-            <div className="space-y-2 sm:space-y-3">
-              {/* All Trader Stats Refresh - Only button, no individual ones */}
-              <div className="group relative bg-gradient-to-br from-card via-card/95 to-indigo-50/30 dark:to-indigo-950/10 border border-border/50 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 hover:border-indigo-500/20 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1 sm:space-y-2">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                      <span className="text-xs sm:text-sm font-medium text-foreground">All Trader Stats</span>
-                      <div className="flex -space-x-1">
-                        {/* Photon logo */}
-                        <div className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" style={{ zIndex: 2 }}>
-                          <img 
-                            src="/assets/logos/photon.jpg"
-                            alt="Photon"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-5 h-5 rounded-full border border-background bg-orange-500/20 flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                        {/* Axiom logo */}
-                        <div className="w-5 h-5 rounded-full border border-background bg-muted overflow-hidden" style={{ zIndex: 1 }}>
-                          <img 
-                            src="/assets/logos/axiom.jpg"
-                            alt="Axiom"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-5 h-5 rounded-full border border-background bg-cyan-500/20 flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2.5 w-2.5 text-cyan-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
-                      Refresh trader statistics for both Photon and Axiom protocols
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleRefreshAllTraderStats}
-                    disabled={isRefreshingTraderStatsAll || isRefreshingTraderStatsPhoton || isRefreshingTraderStatsAxiom}
-                    variant="outline"
-                    size="sm"
-                    className="ml-4 shrink-0 bg-white dark:bg-white/10 border-border/50 hover:bg-gray-50 dark:hover:bg-white/20"
-                  >
-                    {isRefreshingTraderStatsAll ? (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                        <span className="hidden sm:inline">Refreshing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCcw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="hidden sm:inline">Refresh All</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Data Source Settings */}
-      <Card>
-        <CardHeader className="pb-2 p-3 sm:px-6 sm:pt-6 sm:pb-3">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1 sm:space-y-1.5">
-              <CardTitle className="text-base sm:text-lg">
-                Active Data Source
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Switch between in-house analytics and publicly verified sources
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className={`text-sm px-3 py-1.5 gap-1.5 ${
-              dataTypePreference === 'private' 
-                ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'
-                : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-            }`}>
-              {dataTypePreference === 'private' ? (
-                <>
-                  <Shield className="w-3.5 h-3.5" />
-                  Private
-                </>
-              ) : (
-                <>
-                  <Globe className="w-3.5 h-3.5" />
-                  Public
-                </>
-              )}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-2 p-3 sm:px-6 sm:pt-3 sm:pb-6">
-          <div>
-            {/* Data Source Toggle */}
-            <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-md ${
-                    dataTypePreference === 'private' 
-                      ? 'bg-blue-100 dark:bg-blue-900/20' 
-                      : 'bg-green-100 dark:bg-green-900/20'
-                  }`}>
-                    {dataTypePreference === 'private' ? (
-                      <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    ) : (
-                      <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {dataTypePreference === 'private' ? "In-house Analytics" : "Publicly Verified Sources"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {dataTypePreference === 'private' 
-                        ? "Premium data with advanced metrics and real-time updates" 
-                        : "Community verified, open source data from public APIs"
-                      }
-                    </div>
-                  </div>
-                </div>
-                
-                <Switch
-                  id="data-type-toggle"
-                  checked={dataTypePreference === 'public'}
-                  onCheckedChange={handleDataTypeChange}
-                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-blue-500"
-                />
-              </div>
-            </div>
-        </CardContent>
-      </Card>
-
+        </Section>
+      </div>
     </div>
   );
 }

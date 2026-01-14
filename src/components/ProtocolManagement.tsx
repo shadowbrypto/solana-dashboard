@@ -305,7 +305,8 @@ function SortableProtocolCard({ protocol, onRefresh, isRefreshing, latestDate }:
       <div className="flex-1 min-w-0">
         <div className="text-[14px] font-medium text-foreground truncate">{protocol.name}</div>
         {latestDate && (
-          <div className={`text-[11px] ${latestDate.is_current ? 'text-green-500' : 'text-amber-500'}`}>
+          <div className={`text-[11px] font-medium flex items-center gap-1 ${latestDate.is_current ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${latestDate.is_current ? 'bg-emerald-500' : 'bg-red-500'}`} />
             {new Date(latestDate.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </div>
         )}

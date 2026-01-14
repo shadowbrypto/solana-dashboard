@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { format, subDays } from "date-fns";
 import { TrendingUp, TrendingDown, Award, Target, AlertTriangle, Info, Activity, Users, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
+import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -512,24 +513,11 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
                         <div className="flex items-center gap-1.5">
                           {insight.protocol && (
                             <Badge variant="outline" className="text-xs font-medium px-2 py-1 flex items-center gap-1.5">
-                              <div className="w-3 h-3 bg-muted/10 rounded-full overflow-hidden ring-1 ring-border/20">
-                                <img 
-                                  src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
-                                  alt={insight.protocol} 
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    const container = target.parentElement;
-                                    if (container) {
-                                      container.innerHTML = '';
-                                      container.className = 'w-3 h-3 bg-muted/20 rounded-full flex items-center justify-center';
-                                      const iconEl = document.createElement('div');
-                                      iconEl.innerHTML = '<svg class="h-1.5 w-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                      container.appendChild(iconEl);
-                                    }
-                                  }}
-                                />
-                              </div>
+                              <ProtocolLogo
+                                src={`/assets/logos/${getProtocolLogoFilename(insight.protocol)}`}
+                                alt={insight.protocol}
+                                size="xs"
+                              />
                               {insight.protocol.replace('_evm', '').charAt(0).toUpperCase() + insight.protocol.replace('_evm', '').slice(1)}
                             </Badge>
                           )}

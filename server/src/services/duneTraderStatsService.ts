@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { z } from 'zod';
 import TraderStatsService from './traderStatsService.js';
 import { getTraderStatsQueryId, traderStatsQueries } from '../config/traderStatsQueries.js';
 import fs from 'fs';
@@ -6,6 +7,15 @@ import path from 'path';
 import { pipeline } from 'stream/promises';
 import { createReadStream } from 'fs';
 import { parse } from 'csv-parse';
+
+// Zod schema for Dune query results info endpoint
+const DuneResultsInfoSchema = z.object({
+  result: z.object({
+    metadata: z.object({
+      total_row_count: z.number().optional(),
+    }).optional(),
+  }).optional(),
+});
 
 interface DuneQueryResult {
   user: string;
@@ -36,7 +46,16 @@ export class DuneTraderStatsService {
         return { rowCount: 0, hasResults: false };
       }
 
-      const data = await response.json();
+      const rawData = await response.json();
+
+      // Validate response structure with Zod
+      const parseResult = DuneResultsInfoSchema.safeParse(rawData);
+      if (!parseResult.success) {
+        console.warn(`Invalid Dune results info response for query ${queryId}:`, parseResult.error.format());
+        return { rowCount: 0, hasResults: false };
+      }
+
+      const data = parseResult.data;
       const rowCount = data.result?.metadata?.total_row_count || 0;
       const hasResults = rowCount > 0;
 

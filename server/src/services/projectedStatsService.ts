@@ -1,10 +1,28 @@
 import { db } from '../lib/db.js';
+import { z } from 'zod';
 import {
   getDuneQueryId,
   hasValidDuneQueryId,
   getAllConfiguredProtocolIds,
   getValidDuneQueryMappings
 } from '../config/projected-stats-config.js';
+
+// Zod schemas for Dune Analytics API response validation
+const DuneRowSchema = z.object({
+  formattedDay: z.string().optional(),
+  fees_sol: z.union([z.number(), z.string(), z.null()]).optional(),
+  volume_sol: z.union([z.number(), z.string(), z.null()]).optional(),
+  fees_usd: z.union([z.number(), z.string(), z.null()]).optional(),
+  volume_usd: z.union([z.number(), z.string(), z.null()]).optional(),
+});
+
+const DuneApiResponseSchema = z.object({
+  result: z.object({
+    rows: z.array(DuneRowSchema),
+  }),
+});
+
+type DuneRow = z.infer<typeof DuneRowSchema>;
 
 export interface ProjectedStatsData {
   id?: number;
@@ -50,9 +68,17 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
       throw new Error(`Failed to fetch data from Dune Analytics: ${errorDetails}`);
     }
 
-    const data = await response.json();
+    const rawData = await response.json();
 
-    return data.result.rows.map((row: any) => {
+    // Validate API response structure with Zod
+    const parseResult = DuneApiResponseSchema.safeParse(rawData);
+    if (!parseResult.success) {
+      console.error(`Invalid Dune API response structure for query ${duneQueryId}:`, parseResult.error.format());
+      throw new Error(`Invalid Dune API response: ${parseResult.error.message}`);
+    }
+
+    const data = parseResult.data;
+    return data.result.rows.map((row: DuneRow) => {
       let formattedDate = row.formattedDay;
 
       // Convert DD-MM-YYYY to YYYY-MM-DD format
@@ -63,12 +89,19 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
         }
       }
 
+      // Safely parse numeric fields (handles string, number, null, undefined)
+      const parseNumeric = (value: string | number | null | undefined): number => {
+        if (value === null || value === undefined) return 0;
+        const num = typeof value === 'string' ? parseFloat(value) : value;
+        return isNaN(num) ? 0 : num;
+      };
+
       return {
-        formattedDay: formattedDate,
-        fees_sol: parseFloat(row.fees_sol) || 0,
-        volume_sol: parseFloat(row.volume_sol) || 0,
-        fees_usd: parseFloat(row.fees_usd) || 0,
-        volume_usd: parseFloat(row.volume_usd) || 0,
+        formattedDay: formattedDate || '',
+        fees_sol: parseNumeric(row.fees_sol),
+        volume_sol: parseNumeric(row.volume_sol),
+        fees_usd: parseNumeric(row.fees_usd),
+        volume_usd: parseNumeric(row.volume_usd),
       };
     });
   } catch (error) {

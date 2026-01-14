@@ -2,12 +2,20 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
+import { z } from 'zod';
 import { db } from '../lib/db.js';
 import { clearAllCaches, clearProtocolCache } from './protocolService.js';
 import { protocolSyncStatusService } from './protocolSyncStatusService.js';
 import { getRollingRefreshSource, hasRollingRefreshSource } from '../config/rolling-refresh-config.js';
 import { getPublicRollingRefreshSource, hasPublicRollingRefreshSource } from '../config/rolling-refresh-config-public.js';
 import { getProtocolSources } from '../config/protocol-sources-config.js';
+
+// Zod schema for Dune API query results
+const DuneQueryResultSchema = z.object({
+  result: z.object({
+    rows: z.array(z.record(z.string(), z.unknown())),
+  }),
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -183,14 +191,21 @@ export class DataManagementService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const jsonData = await response.json();
+      const rawData = await response.json();
 
-      if (!jsonData.result || !jsonData.result.rows || jsonData.result.rows.length === 0) {
+      // Validate API response structure with Zod
+      const parseResult = DuneQueryResultSchema.safeParse(rawData);
+      if (!parseResult.success) {
+        throw new Error(`Invalid Dune API response structure: ${parseResult.error.message}`);
+      }
+
+      const jsonData = parseResult.data;
+      if (jsonData.result.rows.length === 0) {
         throw new Error('Downloaded data is empty');
       }
 
       // Convert JSON rows to the expected format (same as CSV parsing would produce)
-      const data = jsonData.result.rows.map((row: any) => {
+      const data = jsonData.result.rows.map((row) => {
         // Ensure all values are converted to strings for consistency with CSV parsing
         const processedRow: any = {};
         for (const key of Object.keys(row)) {

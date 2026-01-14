@@ -75,6 +75,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenColumns()));
   const [isProjectedVolumeHidden, setIsProjectedVolumeHidden] = useState<boolean>(() => Settings.getIsProjectedVolumeHidden());
   const [backendTotals, setBackendTotals] = useState<{
     totalVolume: number;
@@ -725,13 +726,27 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
   const orderedMetrics = effectiveColumnOrder
     .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
+    .filter(key => !hiddenColumns.has(key))
     .map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
 
-  // Toggle projected volume visibility
+  // Toggle projected volume visibility (legacy)
   const toggleProjectedVolumeVisibility = () => {
     const newHidden = !isProjectedVolumeHidden;
     setIsProjectedVolumeHidden(newHidden);
     Settings.setIsProjectedVolumeHidden(newHidden);
+  };
+
+  // Toggle column visibility
+  const toggleColumnVisibility = (columnKey: string) => {
+    setHiddenColumns(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(columnKey)) {
+        newSet.delete(columnKey);
+      } else {
+        newSet.add(columnKey);
+      }
+      return newSet;
+    });
   };
 
 
@@ -894,6 +909,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     Settings.setDailyTableHiddenProtocols(Array.from(hiddenProtocols));
   }, [hiddenProtocols]);
 
+  useEffect(() => {
+    Settings.setDailyTableHiddenColumns(Array.from(hiddenColumns));
+  }, [hiddenColumns]);
+
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
       onDateChange(newDate);
@@ -932,6 +951,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     // Always show projected volume when clicking Show All
     setIsProjectedVolumeHidden(false);
     Settings.setIsProjectedVolumeHidden(false);
+    // Also show all hidden columns
+    setHiddenColumns(new Set());
   };
 
   const hideAllProtocols = () => {
@@ -1100,12 +1121,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
             </div>
             <div className="flex items-center gap-1 sm:gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
               <button
-                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+                onClick={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? showAllProtocols : hideAllProtocols}
                 className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+                title={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
               >
-                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show All" : "Hide All"}
               </button>
             </div>
           </div>
@@ -1120,24 +1141,26 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[120px] sm:w-[200px] py-0.5 text-[9px] sm:text-sm px-1 sm:px-4">Protocol</TableHead>
                 {orderedMetrics.map((metric, index) => (
-                  <TableHead 
-                    key={metric.key} 
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''} ${metric.key === 'projected_volume' ? 'group relative' : ''}`}
+                  <TableHead
+                    key={metric.key}
+                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-[9px] sm:text-sm px-1 sm:px-4 group ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
                   >
-                    {metric.key === 'projected_volume' ? (
-                      <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-                        <span className="truncate">{metric.label}</span>
-                        <button
-                          onClick={toggleProjectedVolumeVisibility}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
-                          title="Hide Adj. Volume column"
-                        >
-                          <EyeOff className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                       <span className="truncate">{metric.label}</span>
-                    )}
+                      <button
+                        onClick={() => {
+                          if (metric.key === 'projected_volume') {
+                            toggleProjectedVolumeVisibility();
+                          } else {
+                            toggleColumnVisibility(metric.key);
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
+                        title={`Hide ${metric.label} column`}
+                      >
+                        <EyeOff className="h-3 w-3" />
+                      </button>
+                    </div>
                   </TableHead>
                 ))}
               </TableRow>
@@ -1259,23 +1282,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     {orderedProtocols.map((protocol) => {
                       const isHidden = hiddenProtocols.has(protocol);
                       return (
-                        <TableRow 
-                          key={protocol} 
+                        <TableRow
+                          key={protocol}
                           className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
                         >
                           <TableCell className="pl-1 sm:pl-6 text-muted-foreground text-[9px] sm:text-sm px-1 sm:px-4">
                             <div className="flex items-center gap-0.5 sm:gap-2">
-                              <button
-                                onClick={(e) => {
-                                  console.log('Protocol visibility button clicked');
-                                  e.stopPropagation();
-                                  toggleProtocolVisibility(protocol);
-                                }}
-                                className="opacity-0 hover:opacity-100 transition-opacity duration-200"
-                                title={isHidden ? "Show protocol" : "Hide protocol"}
-                              >
-                                {isHidden ? <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
-                              </button>
                               <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                                 <img 
                                   src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}

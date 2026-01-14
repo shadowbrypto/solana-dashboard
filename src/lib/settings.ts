@@ -253,9 +253,13 @@ export const Settings = {
     return () => dataTypeChangeListeners.delete(listener);
   },
 
-  // Projected volume visibility
+  // Projected volume visibility (legacy - kept for backwards compatibility)
   getIsProjectedVolumeHidden: () => settingsManager.getSetting('projected-volume-hidden'),
   setIsProjectedVolumeHidden: (hidden: boolean) => settingsManager.setSetting('projected-volume-hidden', hidden),
+
+  // Hidden columns for daily table
+  getDailyTableHiddenColumns: (): string[] => settingsManager.getSetting('daily-table-hidden-columns') || [],
+  setDailyTableHiddenColumns: (columns: string[]) => settingsManager.setSetting('daily-table-hidden-columns', columns),
 
   // Sidebar collapsed state
   getSidebarCollapsed: () => settingsManager.getSetting('sidebar-collapsed'),

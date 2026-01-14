@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { format } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { cn } from "../lib/utils";
@@ -16,12 +16,12 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { DateNavigator } from "./DateNavigator";
-import { protocolApi } from "../lib/api";
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolById, getProtocolName, getProtocolLogoFilename } from "../lib/protocol-config";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Settings } from "../lib/settings";
 import { useToast } from "../hooks/use-toast";
+import { useDailyMetrics } from "../hooks/useDailyMetrics";
 
 interface DailyMetricsTableProps {
   protocols: Protocol[];
@@ -57,26 +57,26 @@ const formatPercentage = (value: number): string => {
 };
 
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
-  const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
+  // Use the custom hook for data fetching
+  const {
+    dailyData,
+    previousDayData,
+    weeklyVolumeData,
+    projectedVolumeData,
+    publicUserData,
+    backendTotals,
+    topProtocols,
+    loading: dataLoading,
+    error: dataError,
+  } = useDailyMetrics({ date, chain: 'solana' });
+
+  // Local UI state
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>(() => Settings.getDailyTableCollapsedCategories());
-  const [dailyData, setDailyData] = useState<Record<Protocol, ProtocolMetrics>>({});
-  const [previousDayData, setPreviousDayData] = useState<Record<Protocol, ProtocolMetrics>>({});
-  const [weeklyVolumeData, setWeeklyVolumeData] = useState<Record<Protocol, Record<string, number>>>({});
-  const [projectedVolumeData, setProjectedVolumeData] = useState<Record<string, number>>({});
-  const [publicUserData, setPublicUserData] = useState<Record<string, { dailyUsers: number; newUsers: number }>>({});
   const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
   const [columnOrder, setColumnOrder] = useState<MetricKey[]>(() => Settings.getDailyTableColumnOrder() as MetricKey[]);
   const [hiddenProtocols, setHiddenProtocols] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenProtocols()));
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(() => new Set(Settings.getDailyTableHiddenColumns()));
   const [isProjectedVolumeHidden, setIsProjectedVolumeHidden] = useState<boolean>(() => Settings.getIsProjectedVolumeHidden());
-  const [backendTotals, setBackendTotals] = useState<{
-    totalVolume: number;
-    totalUsers: number;
-    totalTrades: number;
-    totalFees: number;
-    totalGrowth: number;
-    totalWeeklyTrend: number[];
-  } | null>(null);
   const { toast } = useToast();
 
   // Calculate total volume for market share (excluding hidden protocols)
@@ -764,114 +764,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     }
   }, []);
 
-
-  // Track dataType preference for re-fetching when it changes
-  const [dataType, setDataType] = useState(() => Settings.getDataTypePreference());
-
-  // Listen for dataType changes from settings
-  useEffect(() => {
-    const unsubscribe = Settings.addDataTypeChangeListener((newDataType) => {
-      setDataType(newDataType);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setTopProtocols([]);
-      try {
-        // Fetch both main data and public data in parallel
-        const [optimizedData, publicData] = await Promise.all([
-          protocolApi.getDailyMetricsOptimized(date, 'solana', dataType),
-          protocolApi.getDailyMetricsOptimized(date, 'solana', 'public')
-        ]);
-
-        // Extract public user data for DAUs* and New Users* columns
-        const publicUserMap: Record<string, { dailyUsers: number; newUsers: number }> = {};
-        Object.entries(publicData.protocols).forEach(([protocolName, data]: [string, any]) => {
-          publicUserMap[protocolName] = {
-            dailyUsers: data.dailyUsers || 0,
-            newUsers: data.newUsers || 0
-          };
-        });
-        setPublicUserData(publicUserMap);
-        
-        
-        // Transform the optimized data to match the component's data structure
-        const transformedDailyData: Record<Protocol, ProtocolMetrics> = {};
-        const transformedPreviousData: Record<Protocol, ProtocolMetrics> = {};
-        const transformedWeeklyData: Record<Protocol, Record<string, number>> = {};
-        const projectedVolumeMap: Record<string, number> = {};
-        
-        // Generate last 7 days for weekly data structure
-        const last7Days = eachDayOfInterval({
-          start: subDays(date, 6),
-          end: date
-        });
-        
-        Object.entries(optimizedData.protocols).forEach(([protocolName, data]) => {
-          const protocol = protocolName as Protocol;
-          // Current day data
-          transformedDailyData[protocol] = {
-            total_volume_usd: data.totalVolume,
-            daily_users: data.dailyUsers,
-            numberOfNewUsers: data.newUsers,
-            daily_trades: data.trades,
-            total_fees_usd: data.fees,
-            projected_volume: data.projectedVolume || 0,
-            adjustedVolume: data.adjustedVolume || data.totalVolume,
-            daily_growth: data.dailyGrowth || 0
-          };
-
-          // Previous day data (calculate from current volume and growth)
-          // Use actual volume if projected volume is not available
-          const currentVolume = (data.projectedVolume && data.projectedVolume > 0) ? data.projectedVolume : data.totalVolume;
-          const previousVolume = data.dailyGrowth !== 0 && currentVolume > 0
-            ? currentVolume / (1 + data.dailyGrowth)
-            : 0;
-          transformedPreviousData[protocol] = {
-            total_volume_usd: previousVolume,
-            daily_users: 0,
-            numberOfNewUsers: 0,
-            daily_trades: 0,
-            total_fees_usd: 0,
-            projected_volume: (data.projectedVolume && data.projectedVolume > 0) ? previousVolume : 0,
-            daily_growth: 0
-          };
-          
-          // Weekly volume data
-          transformedWeeklyData[protocol] = {};
-          last7Days.forEach((day, index) => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            transformedWeeklyData[protocol][dateKey] = data.weeklyTrend[index] || 0;
-          });
-          
-          // Projected volume data
-          if (data.projectedVolume && data.projectedVolume > 0) {
-            projectedVolumeMap[protocol] = data.projectedVolume;
-          }
-        });
-        
-        setDailyData(transformedDailyData);
-        setPreviousDayData(transformedPreviousData);
-        setWeeklyVolumeData(transformedWeeklyData);
-        setProjectedVolumeData(projectedVolumeMap);
-        setBackendTotals(optimizedData.totals);
-        
-        // Set top protocols from the backend response
-        setTopProtocols(optimizedData.topProtocols as Protocol[]);
-        
-      } catch (error) {
-        console.error('Error loading Solana daily data:', error);
-        setDailyData({});
-        setPreviousDayData({});
-        setWeeklyVolumeData({});
-        setProjectedVolumeData({});
-        setBackendTotals(null);
-      }
-    };
-    fetchData();
-  }, [date, dataType]);
 
   // Persist settings changes
   useEffect(() => {

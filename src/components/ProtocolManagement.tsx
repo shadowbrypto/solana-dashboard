@@ -842,13 +842,7 @@ export function ProtocolManagement() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
-      {/* Page Header */}
-      <div className="pt-2">
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your dashboard preferences and data sources</p>
-      </div>
-
+    <div className="max-w-5xl space-y-6 pb-12">
       {/* Data Source Section */}
       <div>
         <SectionHeader title="Data Source" description="Choose between private analytics or public data" />

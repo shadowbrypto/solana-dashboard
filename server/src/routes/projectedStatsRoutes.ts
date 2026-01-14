@@ -1,13 +1,14 @@
 import express from 'express';
-import { 
-  getProjectedStats, 
-  getProjectedStatsForDate, 
+import {
+  getProjectedStats,
+  getProjectedStatsForDate,
   updateAllProjectedData,
   getLatestProjectedVolumes,
   getMonthlyAdjustedVolumes,
   updateProjectedDataForProtocol,
   getLatestProjectedDates
 } from '../services/projectedStatsService';
+import { DUNE_QUERY_IDS, getProtocolsWithValidDuneIds } from '../config/projected-stats-config';
 
 const router = express.Router();
 
@@ -198,6 +199,26 @@ router.post('/projected-stats/refresh/:protocol', async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Failed to refresh projected data',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /api/projected-stats/config
+ * Get the Dune query configuration (single source of truth)
+ * This endpoint serves the config to the frontend so it doesn't need its own copy
+ */
+router.get('/projected-stats/config', async (req, res) => {
+  try {
+    res.json({
+      queryIds: DUNE_QUERY_IDS,
+      protocolsWithValidIds: getProtocolsWithValidDuneIds()
+    });
+  } catch (error) {
+    console.error('Error fetching projected stats config:', error);
+    res.status(500).json({
+      error: 'Failed to fetch projected stats config',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

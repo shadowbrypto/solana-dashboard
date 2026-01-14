@@ -1,64 +1,77 @@
 /**
  * Projected Stats Configuration (Frontend)
  *
- * ⚠️ IMPORTANT: This file MUST be kept in sync with server/src/config/projected-stats-config.ts
+ * This file fetches the configuration from the backend API, making the server
+ * the single source of truth for Dune query IDs.
  *
- * This file manages the mapping between protocol IDs and their corresponding
- * Dune query IDs for display and validation in the UI.
- *
- * To add a new protocol's Dune query:
- * 1. Add the SAME query ID to BOTH this file AND server/src/config/projected-stats-config.ts
- * 2. The protocol ID should match the ID used in protocol-config.ts
- * 3. Use empty string '' if protocol doesn't have projected stats (e.g., 'nova': '')
- *
- * Note: If a protocol doesn't have a Dune query ID, projected volume will show '-'
- *
- * Synchronization: The query IDs in this file should match exactly with the backend config
- * to ensure projected stats display correctly in the UI and settings page.
+ * The config is cached after the first fetch to avoid repeated API calls.
  */
+
+import { API_BASE_URL } from './api';
 
 interface DuneQueryConfig {
   [protocolId: string]: string;
 }
 
+interface ProjectedStatsConfig {
+  queryIds: DuneQueryConfig;
+  protocolsWithValidIds: string[];
+}
+
+// Cached config from backend
+let cachedConfig: ProjectedStatsConfig | null = null;
+let fetchPromise: Promise<ProjectedStatsConfig> | null = null;
+
 /**
- * Mapping of protocol IDs to their Dune query IDs
- * Replace the placeholder values with actual Dune query IDs
+ * Fetch the projected stats config from the backend
+ * This is the single source of truth for Dune query IDs
  */
-export const DUNE_QUERY_IDS: DuneQueryConfig = {
-  // Telegram Bots
-  'trojanonsolana': '4899624',
-  'bonkbot': '4899822',
-  'bloom': '4899851',
-  'nova': '',
-  'soltradingbot': '4954880',
-  'banana': '4899926',
-  'maestro': '4899904',
-  'basedbot': '6271560',
+async function fetchConfig(): Promise<ProjectedStatsConfig> {
+  if (cachedConfig) {
+    return cachedConfig;
+  }
 
-  // Trading Terminals
-  'photon': '4899788',
-  'bullx': '6168578',
-  'axiom': '4899853',
-  'gmgnai': '4899849',
-  'terminal': '5622891',
-  'nova terminal': '4899891',
-  'telemetry': '5666888',
-  'mevx': '6169736',
-  'rhythm': '5698770',
-  'vyper': '5699029',
-  'phantom': '6229270',
-  'opensea': '6230767',
-  'okx': '6289768',
-  'trojan': '6511276',
-  'trojanterminal': '6511237',
+  // If a fetch is already in progress, wait for it
+  if (fetchPromise) {
+    return fetchPromise;
+  }
 
-  // Mobile Apps
-  'moonshot': '',
-  'vector': '',
-  'slingshot': '',
-  'fomo': '',
-};
+  fetchPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/projected-stats/config`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch config: ${response.status}`);
+      }
+      cachedConfig = await response.json();
+      return cachedConfig!;
+    } catch (error) {
+      console.warn('[projected-stats-config] Failed to fetch config from backend, using fallback:', error);
+      // Fallback to empty config if backend is unavailable
+      cachedConfig = { queryIds: {}, protocolsWithValidIds: [] };
+      return cachedConfig;
+    } finally {
+      fetchPromise = null;
+    }
+  })();
+
+  return fetchPromise;
+}
+
+/**
+ * Get Dune query IDs (synchronous, uses cached value)
+ * Call loadProjectedStatsConfig() first to ensure config is loaded
+ */
+export function getDuneQueryIds(): DuneQueryConfig {
+  return cachedConfig?.queryIds || {};
+}
+
+/**
+ * Load the projected stats config from the backend
+ * Call this once during app initialization
+ */
+export async function loadProjectedStatsConfig(): Promise<void> {
+  await fetchConfig();
+}
 
 /**
  * Get Dune query ID for a specific protocol
@@ -66,17 +79,18 @@ export const DUNE_QUERY_IDS: DuneQueryConfig = {
  * @returns The Dune query ID or null if not found
  */
 export function getDuneQueryId(protocolId: string): string | null {
-  return DUNE_QUERY_IDS[protocolId] || null;
+  const queryIds = getDuneQueryIds();
+  return queryIds[protocolId] || null;
 }
 
 /**
  * Check if a protocol has a valid Dune query ID
- * @param protocolId - The protocol identifier  
+ * @param protocolId - The protocol identifier
  * @returns True if the protocol has a valid Dune query ID
  */
 export function hasValidDuneQueryId(protocolId: string): boolean {
-  const queryId = DUNE_QUERY_IDS[protocolId];
-  return queryId != null && queryId !== 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID';
+  const queryId = getDuneQueryId(protocolId);
+  return queryId != null && queryId !== '';
 }
 
 /**
@@ -84,7 +98,7 @@ export function hasValidDuneQueryId(protocolId: string): boolean {
  * @returns Array of protocol IDs that have valid Dune query IDs
  */
 export function getProtocolsWithValidDuneIds(): string[] {
-  return Object.keys(DUNE_QUERY_IDS).filter(hasValidDuneQueryId);
+  return cachedConfig?.protocolsWithValidIds || [];
 }
 
 /**
@@ -92,7 +106,26 @@ export function getProtocolsWithValidDuneIds(): string[] {
  * Only includes protocols with valid (non-placeholder) query IDs
  */
 export function getValidDuneQueryMappings(): { protocolId: string; duneQueryId: string }[] {
-  return Object.entries(DUNE_QUERY_IDS)
-    .filter(([_, queryId]) => queryId !== 'REPLACE_WITH_ACTUAL_DUNE_QUERY_ID')
+  const queryIds = getDuneQueryIds();
+  return Object.entries(queryIds)
+    .filter(([_, queryId]) => queryId !== '')
     .map(([protocolId, duneQueryId]) => ({ protocolId, duneQueryId }));
 }
+
+// Legacy export for backwards compatibility
+export const DUNE_QUERY_IDS: DuneQueryConfig = new Proxy({} as DuneQueryConfig, {
+  get(_, prop: string) {
+    const queryIds = getDuneQueryIds();
+    return queryIds[prop];
+  },
+  ownKeys() {
+    return Object.keys(getDuneQueryIds());
+  },
+  getOwnPropertyDescriptor(_, prop: string) {
+    const queryIds = getDuneQueryIds();
+    if (prop in queryIds) {
+      return { enumerable: true, configurable: true, value: queryIds[prop] };
+    }
+    return undefined;
+  }
+});

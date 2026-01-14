@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs, getProtocolLogoFilename } from "../lib/protocol-config";
+import { loadProjectedStatsConfig } from "../lib/projected-stats-config";
 import { getAllLaunchpads, getLaunchpadLogoFilename } from "../lib/launchpad-config";
 import { ChevronRight, LayoutGrid, Rocket, MonitorSmartphone } from "lucide-react";
 
@@ -132,7 +133,11 @@ export function CollapsibleSidebar() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        await loadProtocolConfigurations();
+        // Load both configs in parallel
+        await Promise.all([
+          loadProtocolConfigurations(),
+          loadProjectedStatsConfig()
+        ]);
         const categoryNames = getMutableAllCategoriesIncludingEVM();
         const categoryData = categoryNames.map(name => ({
           name,

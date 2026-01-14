@@ -71,48 +71,39 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ MySQL Database
 - **Caching**: Two-tier caching (backend 30s, frontend 15min)
 - **Dune Analytics**: External data source for protocol metrics and projected stats
 
-### Projected Stats System (Dual Configuration)
+### Projected Stats System (Single Source of Truth)
 
-**⚠️ IMPORTANT**: Projected volume data requires configuration in TWO separate files:
+The backend is the single source of truth for Dune query IDs.
 
-1. **Backend Config**: `server/src/config/projected-stats-config.ts`
-   - Defines Dune query IDs for fetching projected volume data
-   - Used by backend services to fetch data from Dune Analytics
+**Backend Config**: `server/src/config/projected-stats-config.ts`
+- Defines Dune query IDs for fetching projected volume data
+- Served to frontend via `/api/projected-stats/config` endpoint
 
-2. **Frontend Config**: `src/lib/projected-stats-config.ts`
-   - Same Dune query IDs as backend config
-   - Used for validation and display logic in UI components
-   - Missing this will prevent "Adj. Volume" column from showing data
+**Frontend Config**: `src/lib/projected-stats-config.ts`
+- Fetches config from backend on app initialization
+- Caches config locally to avoid repeated API calls
+- Falls back gracefully if backend is unavailable
 
 **Data Flow**:
-1. Backend fetches data from Dune Analytics using backend config
-2. Data stored in MySQL `projected_stats` table
-3. Frontend requests data via `/api/protocols/daily-metrics` endpoint
-4. Frontend validates using frontend config before displaying
+1. Frontend loads config from `/api/projected-stats/config` on startup
+2. Backend fetches data from Dune Analytics using backend config
+3. Data stored in MySQL `projected_stats` table
+4. Frontend requests data via `/api/protocols/daily-metrics` endpoint
 5. Displayed as "Adj. Volume" column in DailyMetricsTable
 
 **API Endpoints**:
+- `GET /api/projected-stats/config` - Get Dune query configuration (single source of truth)
 - `POST /api/projected-stats/update` - Fetch latest data from Dune
 - `GET /api/protocols/daily-metrics` - Get protocol metrics with projected volume
 
 **Environment Variables**:
 - `DUNE_API_KEY` - Required in `server/.env` for Dune Analytics API access
 
-**Configuration Synchronization (CRITICAL)**:
-⚠️ The frontend and backend projected stats configs MUST be kept in sync:
-- When adding a protocol: Update BOTH files with same query ID
-- When updating a query ID: Update BOTH files
+**Adding a New Protocol's Projected Stats**:
+Only update the backend config (`server/src/config/projected-stats-config.ts`):
+- Add the protocol ID and Dune query ID
 - Use empty string `''` for protocols without projected stats
-- Mismatched configs cause:
-  - Settings page to show incomplete protocol list
-  - "Adj. Volume" column to not display data
-  - UI validation failures
-
-**How to Verify Sync**:
-1. Open both `server/src/config/projected-stats-config.ts` and `src/lib/projected-stats-config.ts`
-2. Compare query IDs for each protocol - they must match exactly
-3. Check that all protocols with backend query IDs also have frontend query IDs
-4. Empty strings (`''`) are acceptable for protocols without projected stats
+- Frontend will automatically pick up changes on next app load
 
 ### Report Types
 - **Daily Report**: Single day metrics with protocol breakdown

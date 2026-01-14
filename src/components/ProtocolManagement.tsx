@@ -40,10 +40,66 @@ import { CSS } from '@dnd-kit/utilities';
 // ============================================================================
 
 // Section group container - mimics iOS Settings grouped style
-function SettingsGroup({ children }: { children: React.ReactNode }) {
+function SettingsGroup({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="bg-card rounded-[10px] overflow-hidden">
+    <div className={`bg-card rounded-[10px] overflow-hidden ${className}`}>
       {children}
+    </div>
+  );
+}
+
+// Grid container for card layouts
+function SettingsGrid({ children, columns = 3 }: { children: React.ReactNode; columns?: 2 | 3 | 4 }) {
+  const colClass = {
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  }[columns];
+
+  return (
+    <div className={`grid ${colClass} gap-3`}>
+      {children}
+    </div>
+  );
+}
+
+// Card variant for grid layouts
+interface SettingsCardProps {
+  icon?: React.ReactNode;
+  iconBg?: string;
+  logo?: string;
+  title: string;
+  subtitle?: string;
+  value?: string;
+  action?: React.ReactNode;
+  onClick?: () => void;
+}
+
+function SettingsCard({ icon, iconBg = 'bg-gray-500', logo, title, subtitle, value, action, onClick }: SettingsCardProps) {
+  return (
+    <div
+      className={`bg-card rounded-[10px] p-4 flex items-center gap-3 ${onClick ? 'cursor-pointer active:bg-muted/50' : ''}`}
+      onClick={onClick}
+    >
+      {(icon || logo) && (
+        <div className="flex-shrink-0">
+          {logo ? (
+            <div className="w-10 h-10 rounded-[8px] overflow-hidden bg-muted">
+              <img src={logo} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            </div>
+          ) : (
+            <div className={`w-10 h-10 rounded-[8px] ${iconBg} flex items-center justify-center`}>
+              {icon}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="text-[14px] font-medium text-foreground truncate">{title}</div>
+        {subtitle && <div className="text-[12px] text-muted-foreground/70 truncate">{subtitle}</div>}
+        {value && <div className="text-[12px] text-muted-foreground/70 truncate">{value}</div>}
+      </div>
+      {action}
     </div>
   );
 }
@@ -680,53 +736,51 @@ export function ProtocolManagement() {
 
       {/* Data Refresh */}
       <SectionLabel>Data Refresh</SectionLabel>
-      <SettingsGroup>
-        <SettingsRow
+      <SettingsGrid columns={4}>
+        <SettingsCard
           logo="/assets/logos/solana.jpg"
           title="Solana"
           subtitle={`${solanaCount} protocols`}
-          value={<RefreshAction onClick={refreshSolana} loading={isRefreshingSolana} />}
-          isFirst
+          action={<RefreshAction onClick={refreshSolana} loading={isRefreshingSolana} />}
         />
-        <SettingsRow
+        <SettingsCard
           logo="/assets/logos/ethereum.jpg"
           title="EVM"
           subtitle={`${evmCount} protocols`}
-          value={<RefreshAction onClick={refreshEVM} loading={isRefreshingEVM} />}
+          action={<RefreshAction onClick={refreshEVM} loading={isRefreshingEVM} />}
         />
-        <SettingsRow
+        <SettingsCard
           logo="/assets/logos/monad.jpg"
           title="Monad"
           subtitle={`${monadCount} protocols`}
-          value={<RefreshAction onClick={refreshMonad} loading={isRefreshingMonad} />}
+          action={<RefreshAction onClick={refreshMonad} loading={isRefreshingMonad} />}
         />
-        <SettingsRow
-          icon={<span className="text-white text-[13px]">📊</span>}
+        <SettingsCard
+          icon={<span className="text-white text-[14px]">📊</span>}
           iconBg="bg-emerald-500"
-          title="Public Rolling Stats"
-          value={<RefreshAction onClick={refreshPublicRolling} loading={isRefreshingPublicRolling} />}
+          title="Public Rolling"
+          action={<RefreshAction onClick={refreshPublicRolling} loading={isRefreshingPublicRolling} />}
         />
-        <SettingsRow
-          icon={<span className="text-white text-[13px]">🚀</span>}
+        <SettingsCard
+          icon={<span className="text-white text-[14px]">🚀</span>}
           iconBg="bg-purple-500"
           title="Launchpads"
           subtitle={`${getAllLaunchpads().length} launchpads`}
-          value={<RefreshAction onClick={refreshLaunchpads} loading={isRefreshingLaunchpads} />}
+          action={<RefreshAction onClick={refreshLaunchpads} loading={isRefreshingLaunchpads} />}
         />
-        <SettingsRow
-          icon={<span className="text-white text-[13px]">📈</span>}
+        <SettingsCard
+          icon={<span className="text-white text-[14px]">📈</span>}
           iconBg="bg-indigo-500"
           title="Projected Stats"
-          value={<RefreshAction onClick={refreshProjectedStats} loading={isRefreshingProjectedStats} />}
+          action={<RefreshAction onClick={refreshProjectedStats} loading={isRefreshingProjectedStats} />}
         />
-        <SettingsRow
-          icon={<span className="text-white text-[13px]">👥</span>}
+        <SettingsCard
+          icon={<span className="text-white text-[14px]">👥</span>}
           iconBg="bg-pink-500"
           title="Trader Stats"
-          value={<RefreshAction onClick={refreshTraderStats} loading={isRefreshingTraderStatsAll} />}
-          isLast
+          action={<RefreshAction onClick={refreshTraderStats} loading={isRefreshingTraderStatsAll} />}
         />
-      </SettingsGroup>
+      </SettingsGrid>
 
       {/* Protocol Organization */}
       <SectionLabel>Protocol Organization</SectionLabel>
@@ -781,80 +835,72 @@ export function ProtocolManagement() {
 
       {/* Launchpads */}
       <SectionLabel>Launchpads</SectionLabel>
-      <SettingsGroup>
-        {getAllLaunchpads().map((lp, i, arr) => {
+      <SettingsGrid columns={4}>
+        {getAllLaunchpads().map((lp) => {
           const date = launchpadLatestDates.get(lp.id);
           return (
-            <SettingsRow
+            <SettingsCard
               key={lp.id}
               logo={`/assets/logos/${getLaunchpadLogoFilename(lp.id)}`}
               title={lp.name}
               subtitle={date ? new Date(date.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Loading...'}
-              value={<RefreshAction onClick={() => refreshLaunchpad(lp.id)} loading={refreshingLaunchpads.has(lp.id)} />}
-              isFirst={i === 0}
-              isLast={i === arr.length - 1}
+              action={<RefreshAction onClick={() => refreshLaunchpad(lp.id)} loading={refreshingLaunchpads.has(lp.id)} />}
             />
           );
         })}
-      </SettingsGroup>
+      </SettingsGrid>
 
       {/* Projected Stats - Telegram Bots */}
       <SectionLabel>Projected Stats — Telegram Bots</SectionLabel>
-      <SettingsGroup>
-        {telegramBots.map((id, i, arr) => {
+      <SettingsGrid columns={4}>
+        {telegramBots.map((id) => {
           const protocol = getMutableProtocolConfigs().find(p => p.id === id);
           if (!protocol) return null;
           const date = projectedStatsLatestDates.get(id);
           return (
-            <SettingsRow
+            <SettingsCard
               key={id}
               logo={`/assets/logos/${getProtocolLogoFilename(id)}`}
               title={protocol.name}
               subtitle={date ? new Date(date.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Loading...'}
-              value={<RefreshAction onClick={() => refreshIndividualProjectedStats(id)} loading={refreshingProjectedStatsProtocols.has(id)} />}
-              isFirst={i === 0}
-              isLast={i === arr.filter(x => getMutableProtocolConfigs().find(p => p.id === x)).length - 1}
+              action={<RefreshAction onClick={() => refreshIndividualProjectedStats(id)} loading={refreshingProjectedStatsProtocols.has(id)} />}
             />
           );
         }).filter(Boolean)}
-      </SettingsGroup>
+      </SettingsGrid>
 
       {/* Projected Stats - Terminals */}
       <SectionLabel>Projected Stats — Terminals</SectionLabel>
-      <SettingsGroup>
-        {terminals.map((id, i, arr) => {
+      <SettingsGrid columns={4}>
+        {terminals.map((id) => {
           const protocol = getMutableProtocolConfigs().find(p => p.id === id);
           if (!protocol) return null;
           const date = projectedStatsLatestDates.get(id);
           return (
-            <SettingsRow
+            <SettingsCard
               key={id}
               logo={`/assets/logos/${getProtocolLogoFilename(id)}`}
               title={protocol.name}
               subtitle={date ? new Date(date.latest_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Loading...'}
-              value={<RefreshAction onClick={() => refreshIndividualProjectedStats(id)} loading={refreshingProjectedStatsProtocols.has(id)} />}
-              isFirst={i === 0}
-              isLast={i === arr.filter(x => getMutableProtocolConfigs().find(p => p.id === x)).length - 1}
+              action={<RefreshAction onClick={() => refreshIndividualProjectedStats(id)} loading={refreshingProjectedStatsProtocols.has(id)} />}
             />
           );
         }).filter(Boolean)}
-      </SettingsGroup>
+      </SettingsGrid>
 
       {/* Trader Stats */}
       <SectionLabel>Trader Stats</SectionLabel>
-      <SettingsGroup>
-        {traderStatsItems.map((item, i, arr) => (
-          <SettingsRow
+      <SettingsGrid columns={4}>
+        {traderStatsItems.map((item) => (
+          <SettingsCard
             key={item.id}
             logo={`/assets/logos/${item.id}.jpg`}
             title={item.name}
             subtitle={`${(traderStatsRowCounts[item.id] || 0).toLocaleString()} traders`}
-            value={<RefreshAction onClick={() => refreshIndividualTraderStats(item.id)} loading={refreshingTraderStatsProtocols.has(item.id)} />}
-            isFirst={i === 0}
-            isLast={i === arr.length - 1}
+            action={<RefreshAction onClick={() => refreshIndividualTraderStats(item.id)} loading={refreshingTraderStatsProtocols.has(item.id)} />}
           />
         ))}
-      </SettingsGroup>
+      </SettingsGrid>
 
       {/* Bottom padding */}
       <div className="h-8" />

@@ -11,7 +11,7 @@ import {
   getProtocolLogoFilename
 } from '../lib/protocol-config';
 import { Button } from './ui/button';
-import { RefreshCw, GripVertical, ChevronRight, Check } from 'lucide-react';
+import { RefreshCw, GripVertical, ChevronRight, Check, Globe, Rocket, TrendingUp, Users, Lock, Database } from 'lucide-react';
 import { dataSyncApi, protocolApi, ProtocolSyncStatus, ProtocolLatestDate } from '../lib/api';
 import { getAllLaunchpads, getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { LaunchpadApi, LaunchpadLatestDate } from '../lib/launchpad-api';
@@ -705,8 +705,8 @@ export function ProtocolManagement() {
       <SectionLabel>Data Source</SectionLabel>
       <SettingsGroup>
         <SettingsRow
-          icon={<span className="text-white text-[14px]">🔒</span>}
-          iconBg="bg-blue-500"
+          icon={dataTypePreference === 'private' ? <Lock className="w-4 h-4 text-white" /> : <Globe className="w-4 h-4 text-white" />}
+          iconBg={dataTypePreference === 'private' ? 'bg-blue-500' : 'bg-green-500'}
           title={dataTypePreference === 'private' ? 'Private Analytics' : 'Public Data'}
           subtitle={dataTypePreference === 'private' ? 'In-house metrics' : 'Community verified'}
           showSwitch
@@ -756,26 +756,26 @@ export function ProtocolManagement() {
           action={<RefreshAction onClick={refreshMonad} loading={isRefreshingMonad} />}
         />
         <SettingsCard
-          icon={<span className="text-white text-[14px]">📊</span>}
+          icon={<Globe className="w-5 h-5 text-white" />}
           iconBg="bg-emerald-500"
           title="Public Rolling"
           action={<RefreshAction onClick={refreshPublicRolling} loading={isRefreshingPublicRolling} />}
         />
         <SettingsCard
-          icon={<span className="text-white text-[14px]">🚀</span>}
+          icon={<Rocket className="w-5 h-5 text-white" />}
           iconBg="bg-purple-500"
           title="Launchpads"
           subtitle={`${getAllLaunchpads().length} launchpads`}
           action={<RefreshAction onClick={refreshLaunchpads} loading={isRefreshingLaunchpads} />}
         />
         <SettingsCard
-          icon={<span className="text-white text-[14px]">📈</span>}
+          icon={<TrendingUp className="w-5 h-5 text-white" />}
           iconBg="bg-indigo-500"
           title="Projected Stats"
           action={<RefreshAction onClick={refreshProjectedStats} loading={isRefreshingProjectedStats} />}
         />
         <SettingsCard
-          icon={<span className="text-white text-[14px]">👥</span>}
+          icon={<Users className="w-5 h-5 text-white" />}
           iconBg="bg-pink-500"
           title="Trader Stats"
           action={<RefreshAction onClick={refreshTraderStats} loading={isRefreshingTraderStatsAll} />}

@@ -78,7 +78,7 @@ interface SettingsCardProps {
 function SettingsCard({ icon, iconBg = 'bg-gray-500', logo, title, subtitle, value, action, onClick }: SettingsCardProps) {
   return (
     <div
-      className={`bg-card rounded-[10px] p-4 flex items-center gap-3 ${onClick ? 'cursor-pointer active:bg-muted/50' : ''}`}
+      className={`bg-card rounded-[12px] p-4 flex items-center gap-3 border border-border/50 shadow-sm hover:shadow-md hover:border-border/80 transition-all duration-200 ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
       onClick={onClick}
     >
       {(icon || logo) && (
@@ -281,8 +281,8 @@ function SortableProtocolCard({ protocol, onRefresh, isRefreshing, latestDate }:
       ref={setNodeRef}
       style={style}
       className={`
-        flex items-center gap-3 p-3 bg-card rounded-[10px] border border-border/30
-        ${isDragging ? 'opacity-50 shadow-lg scale-[1.02]' : 'hover:bg-muted/30'}
+        flex items-center gap-3 p-3 bg-card rounded-[10px] border border-border/50 shadow-sm
+        ${isDragging ? 'opacity-50 shadow-lg scale-[1.02]' : 'hover:shadow-md hover:border-border/80'}
         transition-all duration-150
       `}
       {...attributes}

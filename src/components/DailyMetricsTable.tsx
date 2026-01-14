@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -89,22 +89,25 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   // Calculate total volume for market share (excluding hidden protocols)
   // Use backend totals if available and no protocols are hidden, otherwise calculate from visible protocols
   // IMPORTANT: Use adjustedVolume to match backend calculation
-  const totalVolume = (backendTotals && hiddenProtocols.size === 0)
-    ? backendTotals.totalVolume
-    : protocols
-        .filter(protocol => protocol !== 'all' && !hiddenProtocols.has(protocol))
-        .reduce((sum, protocol) => sum + (dailyData[protocol]?.adjustedVolume || dailyData[protocol]?.total_volume_usd || 0), 0);
+  const totalVolume = useMemo(() => {
+    if (backendTotals && hiddenProtocols.size === 0) {
+      return backendTotals.totalVolume;
+    }
+    return protocols
+      .filter(protocol => protocol !== 'all' && !hiddenProtocols.has(protocol))
+      .reduce((sum, protocol) => sum + (dailyData[protocol]?.adjustedVolume || dailyData[protocol]?.total_volume_usd || 0), 0);
+  }, [backendTotals, hiddenProtocols, protocols, dailyData]);
 
   // Weekly trend functions
-  const getWeeklyVolumeChart = (protocolId: Protocol) => {
+  const getWeeklyVolumeChart = useCallback((protocolId: Protocol) => {
     const protocolWeeklyData = weeklyVolumeData[protocolId];
     if (!protocolWeeklyData) return [];
-    
+
     const last7Days = eachDayOfInterval({
       start: subDays(date, 6),
       end: date
     });
-    
+
     return last7Days.map((day, index) => {
       const dateKey = format(day, 'yyyy-MM-dd');
       return {
@@ -112,22 +115,22 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         value: protocolWeeklyData[dateKey] || 0
       };
     });
-  };
-  
-  const getVolumeTrend = (protocolId: Protocol): 'up' | 'down' | 'neutral' => {
+  }, [weeklyVolumeData, date]);
+
+  const getVolumeTrend = useCallback((protocolId: Protocol): 'up' | 'down' | 'neutral' => {
     const data = getWeeklyVolumeChart(protocolId);
     if (data.length < 2) return 'neutral';
-    
+
     const firstHalf = data.slice(0, Math.floor(data.length / 2));
     const secondHalf = data.slice(Math.floor(data.length / 2));
-    
+
     const firstHalfAvg = firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length;
     const secondHalfAvg = secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length;
-    
+
     if (secondHalfAvg > firstHalfAvg * 1.1) return 'up';
     if (secondHalfAvg < firstHalfAvg * 0.9) return 'down';
     return 'neutral';
-  };
+  }, [getWeeklyVolumeChart]);
 
   const metrics: MetricDefinition[] = [
     { 
@@ -645,19 +648,19 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     },
   ];
 
-  const handleDragStart = (e: React.DragEvent, columnIndex: number) => {
+  const handleDragStart = useCallback((e: React.DragEvent, columnIndex: number) => {
     setDraggedColumn(columnIndex);
     e.dataTransfer.effectAllowed = 'move';
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
+
     if (draggedColumn === null || draggedColumn === dropIndex) {
       setDraggedColumn(null);
       return;
@@ -665,78 +668,84 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
     const newOrder = [...columnOrder];
     const draggedItem = newOrder[draggedColumn];
-    
+
     // Remove the dragged item
     newOrder.splice(draggedColumn, 1);
-    
+
     // Insert at new position
     newOrder.splice(dropIndex, 0, draggedItem);
-    
+
     setColumnOrder(newOrder);
     setDraggedColumn(null);
-  };
+  }, [draggedColumn, columnOrder]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedColumn(null);
-  };
+  }, []);
 
   // Create ordered metrics based on column order
   // Ensure projected_volume is always included for existing users who don't have it in their saved settings
-  let effectiveColumnOrder = [...columnOrder];
-  if (!effectiveColumnOrder.includes('projected_volume')) {
-    // Insert projected_volume before total_volume_usd if it exists, otherwise at the beginning
-    const volumeIndex = effectiveColumnOrder.indexOf('total_volume_usd');
-    if (volumeIndex >= 0) {
-      effectiveColumnOrder.splice(volumeIndex, 0, 'projected_volume');
-    } else {
-      effectiveColumnOrder.unshift('projected_volume');
-    }
-  }
-
-  // Ensure public_daily_users is included for existing users who don't have it in their saved settings
-  if (!effectiveColumnOrder.includes('public_daily_users')) {
-    // Insert public_daily_users before daily_users if it exists
-    const dailyUsersIndex = effectiveColumnOrder.indexOf('daily_users');
-    if (dailyUsersIndex >= 0) {
-      effectiveColumnOrder.splice(dailyUsersIndex, 0, 'public_daily_users');
-    } else {
-      // Find total_volume_usd and insert after it
-      const volumeIndex = effectiveColumnOrder.indexOf('total_volume_usd');
+  const effectiveColumnOrder = useMemo(() => {
+    const order = [...columnOrder];
+    if (!order.includes('projected_volume')) {
+      // Insert projected_volume before total_volume_usd if it exists, otherwise at the beginning
+      const volumeIndex = order.indexOf('total_volume_usd');
       if (volumeIndex >= 0) {
-        effectiveColumnOrder.splice(volumeIndex + 1, 0, 'public_daily_users');
+        order.splice(volumeIndex, 0, 'projected_volume');
+      } else {
+        order.unshift('projected_volume');
       }
     }
-  }
 
-  // Ensure public_new_users is included for existing users who don't have it in their saved settings
-  if (!effectiveColumnOrder.includes('public_new_users')) {
-    // Insert public_new_users before numberOfNewUsers if it exists
-    const newUsersIndex = effectiveColumnOrder.indexOf('numberOfNewUsers');
-    if (newUsersIndex >= 0) {
-      effectiveColumnOrder.splice(newUsersIndex, 0, 'public_new_users');
-    } else {
-      // Find daily_users and insert after it
-      const dailyUsersIndex = effectiveColumnOrder.indexOf('daily_users');
+    // Ensure public_daily_users is included for existing users who don't have it in their saved settings
+    if (!order.includes('public_daily_users')) {
+      // Insert public_daily_users before daily_users if it exists
+      const dailyUsersIndex = order.indexOf('daily_users');
       if (dailyUsersIndex >= 0) {
-        effectiveColumnOrder.splice(dailyUsersIndex + 1, 0, 'public_new_users');
+        order.splice(dailyUsersIndex, 0, 'public_daily_users');
+      } else {
+        // Find total_volume_usd and insert after it
+        const volumeIndex = order.indexOf('total_volume_usd');
+        if (volumeIndex >= 0) {
+          order.splice(volumeIndex + 1, 0, 'public_daily_users');
+        }
       }
     }
-  }
 
-  const orderedMetrics = effectiveColumnOrder
-    .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
-    .filter(key => !hiddenColumns.has(key))
-    .map(key => metrics.find(m => m.key === key)).filter(Boolean) as MetricDefinition[];
+    // Ensure public_new_users is included for existing users who don't have it in their saved settings
+    if (!order.includes('public_new_users')) {
+      // Insert public_new_users before numberOfNewUsers if it exists
+      const newUsersIndex = order.indexOf('numberOfNewUsers');
+      if (newUsersIndex >= 0) {
+        order.splice(newUsersIndex, 0, 'public_new_users');
+      } else {
+        // Find daily_users and insert after it
+        const dailyUsersIndex = order.indexOf('daily_users');
+        if (dailyUsersIndex >= 0) {
+          order.splice(dailyUsersIndex + 1, 0, 'public_new_users');
+        }
+      }
+    }
+    return order;
+  }, [columnOrder]);
+
+  const orderedMetrics = useMemo(() => {
+    return effectiveColumnOrder
+      .filter(key => key !== 'projected_volume' || !isProjectedVolumeHidden)
+      .filter(key => !hiddenColumns.has(key))
+      .map(key => metrics.find(m => m.key === key))
+      .filter(Boolean) as MetricDefinition[];
+  }, [effectiveColumnOrder, isProjectedVolumeHidden, hiddenColumns, metrics]);
 
   // Toggle projected volume visibility (legacy)
-  const toggleProjectedVolumeVisibility = () => {
+  const toggleProjectedVolumeVisibility = useCallback(() => {
     const newHidden = !isProjectedVolumeHidden;
     setIsProjectedVolumeHidden(newHidden);
     Settings.setIsProjectedVolumeHidden(newHidden);
-  };
+  }, [isProjectedVolumeHidden]);
 
   // Toggle column visibility
-  const toggleColumnVisibility = (columnKey: string) => {
+  const toggleColumnVisibility = useCallback((columnKey: string) => {
     setHiddenColumns(prev => {
       const newSet = new Set(prev);
       if (newSet.has(columnKey)) {
@@ -746,11 +755,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
       return newSet;
     });
-  };
-
+  }, []);
 
   // Category-based bright coloring using shadcn theme colors
-  const getCategoryRowColor = (categoryName: string): string => {
+  const getCategoryRowColor = useCallback((categoryName: string): string => {
     switch (categoryName) {
       case 'Telegram Bots':
         return 'bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40';
@@ -761,7 +769,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       default:
         return 'hover:bg-muted/30';
     }
-  };
+  }, []);
 
 
   // Track dataType preference for re-fetching when it changes
@@ -889,28 +897,28 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     Settings.setDailyTableHiddenColumns(Array.from(hiddenColumns));
   }, [hiddenColumns]);
 
-  const handleDateChange = (newDate: Date | undefined) => {
+  const handleDateChange = useCallback((newDate: Date | undefined) => {
     if (newDate) {
       onDateChange(newDate);
     }
-  };
+  }, [onDateChange]);
 
-  const selectedDate = format(date, "dd/MM/yyyy");
+  const selectedDate = useMemo(() => format(date, "dd/MM/yyyy"), [date]);
 
-  const formatValue = (metric: MetricDefinition, value: number, isCategory = false, protocol?: Protocol, categoryName?: string) => {
+  const formatValue = useCallback((metric: MetricDefinition, value: number, isCategory = false, protocol?: Protocol, categoryName?: string) => {
     if (isCategory && metric.key === 'market_share') return '—';
     return metric.format(value, isCategory, protocol, categoryName);
-  };
+  }, []);
 
-  const toggleCollapse = (categoryName: string) => {
+  const toggleCollapse = useCallback((categoryName: string) => {
     setCollapsedCategories(prev =>
       prev.includes(categoryName)
         ? prev.filter(c => c !== categoryName)
         : [...prev, categoryName]
     );
-  };
+  }, []);
 
-  const toggleProtocolVisibility = (protocol: string) => {
+  const toggleProtocolVisibility = useCallback((protocol: string) => {
     setHiddenProtocols(prev => {
       const newSet = new Set(prev);
       if (newSet.has(protocol)) {
@@ -920,18 +928,18 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const showAllProtocols = () => {
+  const showAllProtocols = useCallback(() => {
     setHiddenProtocols(new Set());
     // Always show projected volume when clicking Show All
     setIsProjectedVolumeHidden(false);
     Settings.setIsProjectedVolumeHidden(false);
     // Also show all hidden columns
     setHiddenColumns(new Set());
-  };
+  }, []);
 
-  const hideAllProtocols = () => {
+  const hideAllProtocols = useCallback(() => {
     const allProtocols = new Set<string>();
     const categories = getMutableAllCategories();
     categories.forEach(categoryName => {
@@ -944,24 +952,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     });
     setHiddenProtocols(allProtocols);
     // Don't hide projected volume when hiding all protocols
-  };
+  }, [protocols]);
 
-  const downloadReport = async () => {
-    console.log('Download report clicked - checking if this interferes with navigation');
+  const downloadReport = useCallback(async () => {
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
-    
+
     if (tableElement) {
       // Check element dimensions
       const rect = tableElement.getBoundingClientRect();
-      console.log('Table element dimensions:', rect);
-      
+
       if (rect.width === 0 || rect.height === 0) {
-        console.log('Table element has zero dimensions, skipping dom-to-image');
         return;
       }
-      
+
       try {
-        console.log('Starting dom-to-image conversion...');
         const scale = 2; // 2x resolution for higher quality
         const dataUrl = await Promise.race([
           domtoimage.toPng(tableElement, {
@@ -978,12 +982,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }
           }),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('dom-to-image timeout after 10 seconds')), 10000)
           )
         ]) as string;
-        
-        console.log('Dom-to-image conversion completed');
+
         // Create download link
         const link = document.createElement('a');
         link.download = `Daily Report - ${format(date, 'dd.MM')}.png`;
@@ -991,15 +994,13 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('Download completed');
       } catch (error) {
         console.error('Dom-to-image error:', error);
-        // Handle error silently or show user-friendly message
       }
     }
-  };
+  }, [date]);
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = useCallback(async () => {
     const tableElement = document.querySelector('[data-table="daily-metrics"]') as HTMLElement;
 
     if (!tableElement) {
@@ -1082,7 +1083,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         duration: 3000,
       });
     }
-  };
+  }, [toast]);
 
   return (
     <div className="space-y-4">

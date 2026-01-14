@@ -1,6 +1,5 @@
 import { ProtocolStats, ProtocolMetrics, Protocol } from '../types/protocol';
 import { format } from 'date-fns';
-import { unifiedApi, UnifiedApiError } from './unifiedApi';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -96,95 +95,63 @@ export interface ProtocolLatestDate {
 export const protocolApi = {
   // Get protocol stats with optional filtering
   async getProtocolStats(protocolName?: string | string[], chain?: string, dataType?: string): Promise<ProtocolStats[]> {
-    try {
-      // For EVM protocols, always use legacy API to ensure proper chain handling
-      if (chain === 'evm') {
-        throw new Error('Force legacy API for EVM');
-      }
-      // Try unified API first for non-EVM
-      return await unifiedApi.getProtocolStats(protocolName, chain, dataType);
-    } catch (error) {
-      console.warn('Unified API failed, falling back to legacy API:', error);
-      
-      // Fallback to legacy API
-      let endpoint = '/protocols/stats';
-      const params = new URLSearchParams();
-      
-      if (protocolName) {
-        const protocols = Array.isArray(protocolName) ? protocolName.join(',') : protocolName;
-        params.append('protocol', protocols);
-      }
-      
-      if (chain) {
-        params.append('chain', chain);
-      }
-      
-      if (dataType) {
-        params.append('dataType', dataType);
-      }
-      
-      if (params.toString()) {
-        endpoint += `?${params.toString()}`;
-      }
-      
-      return apiRequest<ProtocolStats[]>(endpoint);
+    let endpoint = '/protocols/stats';
+    const params = new URLSearchParams();
+
+    if (protocolName) {
+      const protocols = Array.isArray(protocolName) ? protocolName.join(',') : protocolName;
+      params.append('protocol', protocols);
     }
+
+    if (chain) {
+      params.append('chain', chain);
+    }
+
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+
+    return apiRequest<ProtocolStats[]>(endpoint);
   },
 
   // Get total protocol stats with optional filtering
   async getTotalProtocolStats(protocolName?: string, chain?: string, dataType?: string): Promise<ProtocolMetrics> {
-    try {
-      // For EVM protocols, always use legacy API to ensure proper chain handling
-      if (chain === 'evm') {
-        throw new Error('Force legacy API for EVM');
-      }
-      // Try unified API first for non-EVM
-      return await unifiedApi.getTotalProtocolStats(protocolName, chain, dataType);
-    } catch (error) {
-      console.warn('Unified API failed, falling back to legacy API:', error);
-      
-      // Fallback to legacy API
-      let endpoint = '/protocols/total-stats';
-      const params = new URLSearchParams();
-      
-      if (protocolName) {
-        params.append('protocol', protocolName);
-      }
-      
-      if (chain) {
-        params.append('chain', chain);
-      }
-      
-      if (dataType) {
-        params.append('dataType', dataType);
-      }
-      
-      if (params.toString()) {
-        endpoint += `?${params.toString()}`;
-      }
-      
-      return apiRequest<ProtocolMetrics>(endpoint);
+    let endpoint = '/protocols/total-stats';
+    const params = new URLSearchParams();
+
+    if (protocolName) {
+      params.append('protocol', protocolName);
     }
+
+    if (chain) {
+      params.append('chain', chain);
+    }
+
+    if (dataType) {
+      params.append('dataType', dataType);
+    }
+
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+
+    return apiRequest<ProtocolMetrics>(endpoint);
   },
 
   // Get daily metrics for a specific date
   async getDailyMetrics(date: Date, dataType?: string): Promise<Record<Protocol, ProtocolMetrics>> {
-    try {
-      // Try unified API first
-      return await unifiedApi.getDailyMetrics(date, undefined, undefined, dataType);
-    } catch (error) {
-      console.warn('Unified API failed, falling back to legacy API:', error);
-      
-      // Fallback to legacy API
-      // Use local date components to avoid timezone issues
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      const endpoint = `/protocols/daily-metrics?date=${dateStr}${dataType ? `&dataType=${dataType}` : ''}`;
-      
-      return apiRequest<Record<Protocol, ProtocolMetrics>>(endpoint);
-    }
+    // Use local date components to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const endpoint = `/protocols/daily-metrics?date=${dateStr}${dataType ? `&dataType=${dataType}` : ''}`;
+
+    return apiRequest<Record<Protocol, ProtocolMetrics>>(endpoint);
   },
 
   // Get aggregated stats for all protocols (optimized for "all" view)

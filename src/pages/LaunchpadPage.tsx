@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { LaunchpadApi, LaunchpadMetrics } from '../lib/launchpad-api';
 import { getLaunchpadById, getLaunchpadLogoFilename, getLaunchpadTheme } from '../lib/launchpad-config';
+import { LaunchpadLogo } from '../components/ui/logo-with-fallback';
 import { MetricCard } from '../components/MetricCard';
 import { StackedBarChart } from '../components/charts/StackedBarChart';
 import { TimelineChart } from '../components/charts/TimelineChart';
@@ -221,25 +222,11 @@ export function LaunchpadPage() {
     <div className="p-2 sm:p-4 lg:p-6">
       {/* Header */}
       <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-muted/10 ring-1 ring-border">
-          <img 
-            src={`/assets/logos/${getLaunchpadLogoFilename(launchpadId)}`}
-            alt={launchpadName} 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to rocket icon if logo not found
-              const target = e.target as HTMLImageElement;
-              const container = target.parentElement;
-              if (container) {
-                container.innerHTML = '';
-                container.className = 'w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-lg flex items-center justify-center';
-                const iconElement = document.createElement('div');
-                iconElement.innerHTML = '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                container.appendChild(iconElement);
-              }
-            }}
-          />
-        </div>
+        <LaunchpadLogo
+          src={`/assets/logos/${getLaunchpadLogoFilename(launchpadId)}`}
+          alt={launchpadName}
+          size="lg"
+        />
         <div className="flex items-center justify-center gap-3">
           <h1 className="text-2xl sm:text-3xl text-center font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent tracking-tight">
             {launchpadName} Launchpad

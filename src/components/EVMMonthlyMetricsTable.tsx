@@ -13,6 +13,7 @@ import { Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
+import { ProtocolLogo } from './ui/logo-with-fallback';
 import { Badge } from "./ui/badge";
 import { MonthNavigator } from "./MonthNavigator";
 import { useToast } from "../hooks/use-toast";
@@ -552,24 +553,11 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
                         >
                           {isHidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
-                        <div className="w-6 h-6 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(data.protocol)}`}
-                            alt={protocolName} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-6 h-6 bg-muted/20 rounded-md flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
+                        <ProtocolLogo
+                          src={`/assets/logos/${getProtocolLogoFilename(data.protocol)}`}
+                          alt={protocolName}
+                          size="lg"
+                        />
                         <span className="font-medium capitalize">{protocolName}</span>
                         {topProtocols.includes(data.protocol) && (
                           <Badge 

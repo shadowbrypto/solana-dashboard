@@ -1,5 +1,6 @@
 import { Card, CardContent } from "./ui/card";
 import { protocolConfigs, getProtocolLogoFilename } from "../lib/protocol-config";
+import { ProtocolLogo } from './ui/logo-with-fallback';
 import { StackedBarChart } from "./charts/StackedBarChart";
 import { useState, useMemo, useEffect } from "react";
 import { protocolApi } from "../lib/api";
@@ -318,27 +319,13 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
                           title={isDisabled ? `Click to show ${protocol.protocolName}` : `Click to hide ${protocol.protocolName}`}
                         >
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className={`w-5 h-5 bg-muted/10 rounded overflow-hidden ring-1 shrink-0 transition-all ${
-                              isDisabled ? 'ring-border/20 grayscale opacity-50' : 'ring-border/20'
+                            <div className={`transition-all ${
+                              isDisabled ? 'grayscale opacity-50' : ''
                             }`}>
-                              <img
+                              <ProtocolLogo
                                 src={`/assets/logos/${getProtocolLogoFilename(protocol.protocolId)}`}
                                 alt={protocol.protocolName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = `w-5 h-5 rounded shrink-0 flex items-center justify-center transition-all ${
-                                      isDisabled ? 'border border-dashed border-muted-foreground' : ''
-                                    }`;
-                                    container.style.backgroundColor = isDisabled ? 'transparent' : 'hsl(271, 91%, 65%)';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2 w-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
+                                size="md"
                               />
                             </div>
                             <span className={`text-xs font-medium truncate transition-all ${
@@ -423,27 +410,13 @@ export function WeeklyChainVolumeChart({ endDate }: WeeklyChainVolumeChartProps)
                           title={isDisabled ? `Click to show ${protocol.protocolName}` : `Click to hide ${protocol.protocolName}`}
                         >
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className={`w-5 h-5 bg-muted/10 rounded overflow-hidden ring-1 shrink-0 transition-all ${
-                              isDisabled ? 'ring-border/20 grayscale opacity-50' : 'ring-border/20'
+                            <div className={`transition-all ${
+                              isDisabled ? 'grayscale opacity-50' : ''
                             }`}>
-                              <img
+                              <ProtocolLogo
                                 src={`/assets/logos/${getProtocolLogoFilename(protocol.protocolId)}`}
                                 alt={protocol.protocolName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = `w-5 h-5 rounded shrink-0 flex items-center justify-center transition-all ${
-                                      isDisabled ? 'border border-dashed border-muted-foreground' : ''
-                                    }`;
-                                    container.style.backgroundColor = isDisabled ? 'transparent' : 'hsl(217, 91%, 60%)';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-2 w-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
+                                size="md"
                               />
                             </div>
                             <span className={`text-xs font-medium truncate transition-all ${

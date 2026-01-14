@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { ProtocolLogo } from '../ui/logo-with-fallback';
 import {
   Bar,
   BarChart as RechartsBarChart,
@@ -157,24 +158,11 @@ export function HorizontalBarChart({
                   if (protocolMatch) {
                     return (
                       <>
-                        <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
-                            alt={subtitle} 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
+                        <ProtocolLogo
+                          src={`/assets/logos/${getProtocolLogoFilename(protocolMatch.id)}`}
+                          alt={subtitle}
+                          size="sm"
+                        />
                         {subtitle}
                       </>
                     );
@@ -231,38 +219,11 @@ export function HorizontalBarChart({
                     <g transform={`translate(${x},${y})`}>
                       <g transform={`translate(${-18}, ${-8})`}>
                         <foreignObject x="0" y="0" width="16" height="16">
-                          <div style={{
-                            width: '16px',
-                            height: '16px',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: 'hsl(var(--background))',
-                            border: '1px solid hsl(var(--border))'
-                          }}>
-                            <img 
-                              src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
-                              alt={payload.value}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover'
-                              }}
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const container = target.parentElement;
-                                if (container) {
-                                  container.innerHTML = '';
-                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                  const iconEl = document.createElement('div');
-                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                  container.appendChild(iconEl);
-                                }
-                              }}
-                            />
-                          </div>
+                          <ProtocolLogo
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
+                            alt={payload.value}
+                            size="sm"
+                          />
                         </foreignObject>
                       </g>
                     </g>
@@ -272,49 +233,22 @@ export function HorizontalBarChart({
                 // Desktop: Show both text and logos
                 return (
                   <g transform={`translate(${x},${y})`}>
-                    <text 
-                      x={-30} 
-                      y={4} 
-                      textAnchor="end" 
-                      fill="hsl(var(--muted-foreground))" 
+                    <text
+                      x={-30}
+                      y={4}
+                      textAnchor="end"
+                      fill="hsl(var(--muted-foreground))"
                       fontSize="11"
                     >
                       {payload.value}
                     </text>
                     <g transform={`translate(${-25}, ${-8})`}>
                       <foreignObject x="0" y="0" width="16" height="16">
-                        <div style={{
-                          width: '16px',
-                          height: '16px',
-                          borderRadius: '4px',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))'
-                        }}>
-                          <img 
-                            src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
-                            alt={payload.value}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover'
-                            }}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
-                          />
-                        </div>
+                        <ProtocolLogo
+                          src={`/assets/logos/${getProtocolLogoFilename(protocolName)}`}
+                          alt={payload.value}
+                          size="sm"
+                        />
                       </foreignObject>
                     </g>
                   </g>

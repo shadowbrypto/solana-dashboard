@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { formatNumber } from '../lib/utils';
 import { getLaunchpadLogoFilename } from '../lib/launchpad-config';
 import { Rocket, Trophy } from 'lucide-react';
+import { LaunchpadLogo } from './ui/logo-with-fallback';
 
 interface LaunchpadData {
   launchpad: string;
@@ -68,29 +69,18 @@ function SingleMetricComponent({ data, metricType, title, icon, hiddenLaunchpads
           <div className="flex justify-end mt-2">
             <div className="flex -space-x-2">
               {visibleData.slice(0, 10).map((launchpad, index) => (
-                <div 
+                <div
                   key={launchpad.launchpad}
-                  className="w-6 h-6 rounded-full border border-background bg-muted overflow-hidden shadow-sm hover:z-10 transition-all hover:scale-110"
-                  style={{ 
+                  className="hover:z-10 transition-all hover:scale-110"
+                  style={{
                     zIndex: sortedData.length - index,
                   }}
                   title={launchpad.name}
                 >
-                  <img 
+                  <LaunchpadLogo
                     src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.launchpad)}`}
                     alt={launchpad.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = 'w-6 h-6 rounded-full border border-background bg-muted/50 flex items-center justify-center shadow-sm';
-                        const iconEl = document.createElement('div');
-                        iconEl.innerHTML = '<svg class="w-3 h-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                        container.appendChild(iconEl);
-                      }
-                    }}
+                    size="lg"
                   />
                 </div>
               ))}

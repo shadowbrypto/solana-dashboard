@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
+import { ProtocolLogo } from './ui/logo-with-fallback';
 import { ComponentActions } from './ComponentActions';
 
 interface ProtocolData {
@@ -115,24 +116,11 @@ export function MultiComparisonMetricCard({
                     <span className={cn("text-[10px] sm:text-xs font-semibold w-4 sm:w-6 flex-shrink-0", styling.rankColor)}>
                       #{index + 1}
                     </span>
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
-                      <img 
-                        src={`/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
-                        alt={item.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          const container = target.parentElement;
-                          if (container) {
-                            container.innerHTML = '';
-                            container.className = 'w-3 h-3 sm:w-4 sm:h-4 bg-muted/20 rounded flex items-center justify-center flex-shrink-0';
-                            const iconEl = document.createElement('div');
-                            iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                            container.appendChild(iconEl);
-                          }
-                        }}
-                      />
-                    </div>
+                    <ProtocolLogo
+                      src={`/assets/logos/${getProtocolLogoFilename(item.protocol)}`}
+                      alt={item.name}
+                      size="sm"
+                    />
                     <span className="text-[10px] sm:text-xs font-medium truncate min-w-0">
                       {item.name}
                     </span>

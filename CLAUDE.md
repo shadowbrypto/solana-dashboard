@@ -47,14 +47,14 @@ This is a **full-stack analytics dashboard** for Solana and EVM trading protocol
 
 ### Core Architecture
 ```
-Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
+Frontend (React + Vite) ←→ Backend API (Express.js) ←→ MySQL Database
      Port 3000                    Port 3001
 ```
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS, shadcn/ui
-- **Backend**: Express.js, TypeScript, Supabase client
-- **Database**: Supabase (PostgreSQL)
+- **Backend**: Express.js, TypeScript, MySQL client
+- **Database**: MySQL
 - **Charts**: Recharts library
 - **Testing**: Vitest, React Testing Library
 
@@ -66,9 +66,9 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
 - **Chain Support**: Solana and EVM protocols with chain-specific routing
 
 ### Data Sources
-- **Primary**: Supabase database via backend API
+- **Primary**: MySQL database via backend API
 - **CSV Import**: Scripts for importing CSV data to database
-- **Caching**: Two-tier caching (backend 1hr, frontend 5min)
+- **Caching**: Two-tier caching (backend 30s, frontend 15min)
 - **Dune Analytics**: External data source for protocol metrics and projected stats
 
 ### Projected Stats System (Dual Configuration)
@@ -86,7 +86,7 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
 
 **Data Flow**:
 1. Backend fetches data from Dune Analytics using backend config
-2. Data stored in Supabase `projected_stats` table
+2. Data stored in MySQL `projected_stats` table
 3. Frontend requests data via `/api/protocols/daily-metrics` endpoint
 4. Frontend validates using frontend config before displaying
 5. Displayed as "Adj. Volume" column in DailyMetricsTable
@@ -146,10 +146,14 @@ Frontend (React + Vite) ←→ Backend API (Express.js) ←→ Supabase Database
 ## Environment Setup
 
 ### Backend Configuration
-1. Create `server/.env` with Supabase credentials:
+1. Create `server/.env` with MySQL credentials:
    ```
-   REACT_APP_SUPABASE_URL=your_supabase_url
-   REACT_APP_SUPABASE_ANON_KEY=your_anon_key
+   MYSQL_HOST=your_mysql_host
+   MYSQL_PORT=3306
+   MYSQL_USER=your_mysql_user
+   MYSQL_PASSWORD=your_mysql_password
+   MYSQL_DATABASE=your_database_name
+   DUNE_API_KEY=your_dune_api_key
    ```
 
 ### Frontend Configuration

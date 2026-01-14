@@ -10,7 +10,6 @@ import {
 import { format, subDays, eachDayOfInterval } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
-// @ts-ignore
 import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
@@ -765,25 +764,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   };
 
 
-  useEffect(() => {
-    // Debug: Add global click listener to detect if events are being captured
-    const globalClickHandler = (e: MouseEvent) => {
-      console.log('Global click detected on Daily Report page:', e.target);
-    };
-    
-    const globalWheelHandler = (e: WheelEvent) => {
-      console.log('Global wheel event detected on Daily Report page');
-    };
-    
-    document.addEventListener('click', globalClickHandler, true);
-    document.addEventListener('wheel', globalWheelHandler, true);
-    
-    return () => {
-      document.removeEventListener('click', globalClickHandler, true);
-      document.removeEventListener('wheel', globalWheelHandler, true);
-    };
-  }, []);
-
   // Track dataType preference for re-fetching when it changes
   const [dataType, setDataType] = useState(() => Settings.getDataTypePreference());
 
@@ -799,10 +779,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     const fetchData = async () => {
       setTopProtocols([]);
       try {
-        // Use the dataType from settings (respects user preference)
-        // Also fetch public data for DAUs* and New Users* columns
-        console.log('Calling getDailyMetricsOptimized with:', { date: date.toISOString().split('T')[0], chain: 'solana', dataType });
-
         // Fetch both main data and public data in parallel
         const [optimizedData, publicData] = await Promise.all([
           protocolApi.getDailyMetricsOptimized(date, 'solana', dataType),

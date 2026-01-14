@@ -235,13 +235,14 @@ const loadSavedConfigurations = async (): Promise<ProtocolConfigMutable[]> => {
       return mergedConfigs;
     }
   } catch (error) {
+    console.warn('[protocol-config] Database fetch failed, falling back to localStorage:', error instanceof Error ? error.message : error);
     // Fallback to localStorage for backward compatibility
     try {
       const saved = localStorage.getItem('saved_protocol_configurations');
       if (saved) {
         const savedConfigs = JSON.parse(saved);
         const mergedConfigs = [...protocolConfigs];
-        
+
         savedConfigs.forEach((savedProtocol: ProtocolConfigMutable) => {
           const existingIndex = mergedConfigs.findIndex(p => p.id === savedProtocol.id);
           if (existingIndex !== -1) {
@@ -251,11 +252,11 @@ const loadSavedConfigurations = async (): Promise<ProtocolConfigMutable[]> => {
             };
           }
         });
-        
+
         return mergedConfigs;
       }
     } catch (localStorageError) {
-      // Silent fallback failure
+      console.warn('[protocol-config] localStorage fallback failed (may be private browsing):', localStorageError instanceof Error ? localStorageError.message : localStorageError);
     }
   }
   return [...protocolConfigs];
@@ -273,6 +274,7 @@ const initializeConfigurations = async (): Promise<void> => {
     mutableProtocolConfigs = await loadSavedConfigurations();
     isLoaded = true;
   } catch (error) {
+    console.error('[protocol-config] Failed to initialize configurations, using defaults:', error instanceof Error ? error.message : error);
     mutableProtocolConfigs = [...protocolConfigs];
     isLoaded = true;
   }
@@ -327,9 +329,10 @@ export const saveProtocolConfigurations = async (): Promise<void> => {
     try {
       localStorage.setItem('saved_protocol_configurations', JSON.stringify(mutableProtocolConfigs));
     } catch (localStorageError) {
-      // Silent localStorage failure
+      console.warn('[protocol-config] localStorage backup failed (may be private browsing):', localStorageError instanceof Error ? localStorageError.message : localStorageError);
     }
   } catch (error) {
+    console.error('[protocol-config] Failed to save configurations:', error instanceof Error ? error.message : error);
     throw new Error('Failed to save configurations');
   }
 };
@@ -344,9 +347,10 @@ export const resetProtocolConfigurations = async (): Promise<void> => {
     try {
       localStorage.removeItem('saved_protocol_configurations');
     } catch (localStorageError) {
-      // Silent localStorage failure
+      console.warn('[protocol-config] localStorage clear failed (may be private browsing):', localStorageError instanceof Error ? localStorageError.message : localStorageError);
     }
   } catch (error) {
+    console.error('[protocol-config] Failed to reset configurations:', error instanceof Error ? error.message : error);
     throw new Error('Failed to reset configurations');
   }
 };
@@ -356,6 +360,7 @@ export const hasUnsavedChanges = (): boolean => {
   try {
     return JSON.stringify(mutableProtocolConfigs) !== JSON.stringify(protocolConfigs);
   } catch (error) {
+    console.warn('[protocol-config] Error checking unsaved changes:', error instanceof Error ? error.message : error);
     return false;
   }
 };

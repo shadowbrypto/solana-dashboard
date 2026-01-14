@@ -4,14 +4,6 @@ import { unifiedApi, UnifiedApiError } from './unifiedApi';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-// Debug log for deployment troubleshooting
-console.log('Environment variables:', {
-  VITE_API_URL: import.meta.env.VITE_API_URL,
-  API_BASE_URL,
-  mode: import.meta.env.MODE,
-  prod: import.meta.env.PROD
-});
-
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -107,7 +99,6 @@ export const protocolApi = {
     try {
       // For EVM protocols, always use legacy API to ensure proper chain handling
       if (chain === 'evm') {
-        console.log('Using legacy API for EVM protocol stats to ensure proper chain filtering');
         throw new Error('Force legacy API for EVM');
       }
       // Try unified API first for non-EVM
@@ -145,7 +136,6 @@ export const protocolApi = {
     try {
       // For EVM protocols, always use legacy API to ensure proper chain handling
       if (chain === 'evm') {
-        console.log('Using legacy API for EVM total stats to ensure proper chain filtering');
         throw new Error('Force legacy API for EVM');
       }
       // Try unified API first for non-EVM
@@ -408,22 +398,15 @@ export const dataSyncApi = {
 
   // Sync both Solana and EVM data sequentially to avoid overwhelming the server
   async syncAllData(): Promise<{ solana: { csvFilesFetched: number; timestamp: string }, evm: { csvFilesFetched: number; rowsImported: number; timestamp: string } }> {
-    console.log('Starting sequential data sync...');
-    
     // Sync Solana data first
-    console.log('Syncing Solana data...');
     const solanaResult = await this.syncData();
-    console.log('Solana sync completed:', solanaResult);
-    
+
     // Wait 2 seconds before starting EVM sync to prevent server overload
-    console.log('Waiting 2 seconds before EVM sync...');
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Then sync EVM data
-    console.log('Syncing EVM data...');
     const evmResult = await this.syncEVMData();
-    console.log('EVM sync completed:', evmResult);
-    
+
     return {
       solana: solanaResult,
       evm: evmResult.data

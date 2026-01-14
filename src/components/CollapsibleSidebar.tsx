@@ -2,7 +2,49 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getMutableAllCategoriesIncludingEVM, getMutableProtocolsByCategoryIncludingEVM, loadProtocolConfigurations, getMutableProtocolConfigs, getProtocolLogoFilename } from "../lib/protocol-config";
 import { getAllLaunchpads, getLaunchpadLogoFilename } from "../lib/launchpad-config";
-import { ChevronRight, LayoutGrid, Rocket } from "lucide-react";
+import { ChevronRight, LayoutGrid, Rocket, MonitorSmartphone } from "lucide-react";
+
+// Fallback icon component for when logo fails to load
+function FallbackIcon({ isLaunchpad, className }: { isLaunchpad?: boolean; className?: string }) {
+  if (isLaunchpad) {
+    return <Rocket className={className || "h-2.5 w-2.5 opacity-50"} />;
+  }
+  return <MonitorSmartphone className={className || "h-2.5 w-2.5 opacity-50"} />;
+}
+
+// Protocol logo with fallback handling
+function ProtocolLogoWithFallback({
+  src,
+  alt,
+  isSelected,
+  isLaunchpad
+}: {
+  src: string;
+  alt: string;
+  isSelected: boolean;
+  isLaunchpad?: boolean;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className={`w-5 h-5 rounded-md flex items-center justify-center ${isSelected ? 'bg-sidebar-accent-foreground/10' : 'bg-sidebar-accent/30'}`}>
+        <FallbackIcon isLaunchpad={isLaunchpad} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ${isSelected ? 'ring-1 ring-white/20' : 'ring-1 ring-sidebar-border/50'}`}>
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
 
 interface CategoryItemProps {
   name: string;
@@ -62,28 +104,12 @@ function CategoryItem({ name, protocols, selectedProtocol, onSelectProtocol, isL
                   }
                 `}
               >
-                <div className={`w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ${isSelected ? 'ring-1 ring-white/20' : 'ring-1 ring-sidebar-border/50'}`}>
-                  <img
-                    src={`/assets/logos/${getLogoFilename(protocol)}`}
-                    alt={getProtocolDisplayName(protocol)}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const container = target.parentElement;
-                      if (container) {
-                        container.innerHTML = '';
-                        container.className = `w-5 h-5 rounded-md flex items-center justify-center ${isSelected ? 'bg-sidebar-accent-foreground/10' : 'bg-sidebar-accent/30'}`;
-                        const iconEl = document.createElement('div');
-                        if (isLaunchpad) {
-                          iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                        } else {
-                          iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                        }
-                        container.appendChild(iconEl);
-                      }
-                    }}
-                  />
-                </div>
+                <ProtocolLogoWithFallback
+                  src={`/assets/logos/${getLogoFilename(protocol)}`}
+                  alt={getProtocolDisplayName(protocol)}
+                  isSelected={isSelected}
+                  isLaunchpad={isLaunchpad}
+                />
                 <span className="truncate">{getProtocolDisplayName(protocol)}</span>
               </button>
             );
@@ -228,28 +254,12 @@ export function CollapsibleSidebar() {
               }
             `}
           >
-            <div className={`w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ${
-              selectedLaunchpad === 'pumpfun' ? 'ring-1 ring-white/20' : 'ring-1 ring-sidebar-border/50'
-            }`}>
-              <img
-                src="/assets/logos/pumpfun.jpg"
-                alt="PumpFun"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  const container = target.parentElement;
-                  if (container) {
-                    container.innerHTML = '';
-                    container.className = `w-5 h-5 rounded-md flex items-center justify-center ${
-                      selectedLaunchpad === 'pumpfun' ? 'bg-sidebar-accent-foreground/10' : 'bg-sidebar-accent/30'
-                    }`;
-                    const iconEl = document.createElement('div');
-                    iconEl.innerHTML = '<svg class="h-2.5 w-2.5 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                    container.appendChild(iconEl);
-                  }
-                }}
-              />
-            </div>
+            <ProtocolLogoWithFallback
+              src="/assets/logos/pumpfun.jpg"
+              alt="PumpFun"
+              isSelected={selectedLaunchpad === 'pumpfun'}
+              isLaunchpad={true}
+            />
             <span>PumpFun</span>
           </button>
         </div>

@@ -1284,10 +1284,20 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       return (
                         <TableRow
                           key={protocol}
-                          className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                          className={`group/row ${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
                         >
                           <TableCell className="pl-1 sm:pl-6 text-muted-foreground text-[9px] sm:text-sm px-1 sm:px-4">
                             <div className="flex items-center gap-0.5 sm:gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProtocolVisibility(protocol);
+                                }}
+                                className="opacity-0 group-hover/row:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+                                title={`Hide ${getProtocolName(protocol)}`}
+                              >
+                                <EyeOff className="h-3 w-3 text-muted-foreground" />
+                              </button>
                               <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
                                 <img 
                                   src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}

@@ -9,6 +9,7 @@ import {
 } from "./ui/table";
 import { format, subDays, eachDayOfInterval } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
+import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { cn } from "../lib/utils";
 import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
@@ -36,14 +37,6 @@ interface MetricDefinition {
   format: (value: number, isCategory?: boolean, protocol?: Protocol, categoryName?: string) => React.ReactNode;
   getValue?: (data: ProtocolMetrics, protocol?: Protocol) => number;
   skipGradient?: boolean;
-}
-
-function getGradientColor(value: number, min: number, max: number, allValues: number[]): string {
-  return '';
-}
-
-function getGrowthBackground(value: number): string {
-  return '';
 }
 
 const formatCurrency = (value: number): string => {
@@ -1275,24 +1268,10 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                               >
                                 <EyeOff className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                                <img 
-                                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
-                                  alt={protocol} 
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    const container = target.parentElement;
-                                    if (container) {
-                                      container.innerHTML = '';
-                                      container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                      const iconEl = document.createElement('div');
-                                      iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                      container.appendChild(iconEl);
-                                    }
-                                  }}
-                                />
-                              </div>
+                              <ProtocolLogo
+                                src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                                alt={protocol}
+                              />
                               <span className="truncate">{getProtocolName(protocol)}</span>
                               {topProtocols.includes(protocol) && (
                                 <Badge 
@@ -1310,28 +1289,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                             </div>
                           </TableCell>
                         {orderedMetrics.map((metric) => (
-                          <TableCell 
-                            key={metric.key} 
-                            className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth'
-                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[70px] sm:min-w-[90px]' : ' min-w-[100px] sm:min-w-[130px]')
-                              : !metric.skipGradient
-                                ? getGradientColor(
-                                    metric.getValue 
-                                      ? metric.getValue(dailyData[protocol] || {} as ProtocolMetrics, protocol)
-                                      : (dailyData[protocol]?.[metric.key as keyof ProtocolMetrics] || 0),
-                                    0,
-                                    protocols.reduce((max, p) => {
-                                      const value = metric.getValue 
-                                        ? metric.getValue(dailyData[p] || {} as ProtocolMetrics, p)
-                                        : (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0);
-                                      return Math.max(max, value);
-                                    }, 0),
-                                    protocols.map(p => metric.getValue
-                                      ? metric.getValue(dailyData[p] || {} as ProtocolMetrics, p)
-                                      : (dailyData[p]?.[metric.key as keyof ProtocolMetrics] || 0)
-                                    )
-                                  )
-                              : ''
+                          <TableCell
+                            key={metric.key}
+                            className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${
+                              metric.key === 'daily_growth'
+                                ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]')
+                                : ''
                             }`}
                           >
                             <span>

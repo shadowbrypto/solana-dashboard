@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { GitCompare, TrendingUp, Users, DollarSign, Activity, Plus, X, BarChart3, RefreshCw, Zap, MessageSquare, Monitor, Smartphone, Frown } from 'lucide-react';
+import { ProtocolLogo } from '../components/ui/logo-with-fallback';
 import { protocolConfigs, getProtocolLogoFilename, getProtocolsByCategory } from '../lib/protocol-config';
 import { getProtocolStats, getTotalProtocolStats } from '../lib/protocol';
 import { ProtocolStats, ProtocolMetrics } from '../types/protocol';
@@ -350,24 +351,10 @@ export default function TradingAppsComparison() {
                     return (
                       <SelectItem key={protocol.id} value={protocol.id} className="relative pr-36">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
-                            <img 
-                              src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                              alt={protocol.name} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const container = target.parentElement;
-                                if (container) {
-                                  container.innerHTML = '';
-                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                  const iconEl = document.createElement('div');
-                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                  container.appendChild(iconEl);
-                                }
-                              }}
-                            />
-                          </div>
+                          <ProtocolLogo
+                            src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                            alt={protocol.name}
+                          />
                           <span>{protocol.name}</span>
                         </div>
                         <Badge 
@@ -434,26 +421,14 @@ export default function TradingAppsComparison() {
                             </div>
                             <div className="flex -space-x-1">
                               {preset.protocols.slice(0, 3).map((protocolId, avatarIndex) => (
-                                <div 
+                                <div
                                   key={protocolId}
-                                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-background bg-muted overflow-hidden"
                                   style={{ zIndex: preset.protocols.length - avatarIndex }}
                                 >
-                                  <img 
+                                  <ProtocolLogo
                                     src={`/assets/logos/${getProtocolLogoFilename(protocolId)}`}
                                     alt={protocolConfigs.find(p => p.id === protocolId)?.name || protocolId}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      const container = target.parentElement;
-                                      if (container) {
-                                        container.innerHTML = '';
-                                        container.className = 'w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-background bg-muted/50 flex items-center justify-center';
-                                        const iconEl = document.createElement('div');
-                                        iconEl.innerHTML = '<svg class="h-3 w-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                        container.appendChild(iconEl);
-                                      }
-                                    }}
+                                    size="md"
                                   />
                                 </div>
                               ))}
@@ -489,24 +464,10 @@ export default function TradingAppsComparison() {
                     <Card key={protocolId} className="group">
                       <CardContent className="p-2 sm:p-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20 flex-shrink-0">
-                            <img 
-                              src={`/assets/logos/${getProtocolLogoFilename(protocolId)}`}
-                              alt={data?.name || protocolId} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const container = target.parentElement;
-                                if (container) {
-                                  container.innerHTML = '';
-                                  container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
-                                  const iconEl = document.createElement('div');
-                                  iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                  container.appendChild(iconEl);
-                                }
-                              }}
-                            />
-                          </div>
+                          <ProtocolLogo
+                            src={`/assets/logos/${getProtocolLogoFilename(protocolId)}`}
+                            alt={data?.name || protocolId}
+                          />
                           <h4 className="font-medium text-xs sm:text-sm flex-1 truncate">{data?.name || protocolId}</h4>
                           <Badge variant="outline" className={`text-[10px] sm:text-xs hidden sm:inline-flex ${getCategoryBadgeStyle(getProtocolCategory(protocolId) || '')}`}>
                             {getProtocolCategory(protocolId)}

@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { LayoutGrid, CalendarDays, Calendar, CalendarRange, ChevronDown, ChevronRight, Brain, Settings, Menu, X, GitCompare, Database, Globe, Rocket, Shield, Home, Users, DollarSign, PanelLeftClose, PanelLeft, Trophy } from 'lucide-react';
+import { LogoWithFallback, LaunchpadLogo, ProtocolLogo } from '../components/ui/logo-with-fallback';
 import { Button } from '../components/ui/button';
 import { useState, useEffect } from 'react';
 import { Separator } from '../components/ui/separator';
@@ -271,22 +272,11 @@ export function Layout() {
                   {!expandedCategories['Launchpads'] && (
                     <div className="flex -space-x-1">
                       {getAllLaunchpads().slice(0, 3).map((launchpad, index) => (
-                        <div key={launchpad.id} className="w-4 h-4 rounded-full border border-background bg-muted overflow-hidden" style={{ zIndex: getAllLaunchpads().length - index }}>
-                          <img 
+                        <div key={launchpad.id} style={{ zIndex: getAllLaunchpads().length - index }}>
+                          <LaunchpadLogo
                             src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
                             alt={launchpad.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              const container = target.parentElement;
-                              if (container) {
-                                container.innerHTML = '';
-                                container.className = 'w-4 h-4 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                const iconEl = document.createElement('div');
-                                iconEl.innerHTML = '<svg class="h-2 w-2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                                container.appendChild(iconEl);
-                              }
-                            }}
+                            size="xs"
                           />
                         </div>
                       ))}
@@ -312,24 +302,11 @@ export function Layout() {
                       )}
                       onClick={() => navigate(`/launchpad?launchpad=${launchpad.id}`)}
                     >
-                      <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                        <img 
-                          src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
-                          alt={launchpad.name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const container = target.parentElement;
-                            if (container) {
-                              container.innerHTML = '';
-                              container.className = 'w-5 h-5 bg-muted/20 rounded-md flex items-center justify-center';
-                              const iconEl = document.createElement('div');
-                              iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.25-2 5.2-2 5.2s4-0.5 5.2-2c1.6-2 2.8-7 2.8-7s-5 1.2-7 2.8Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>';
-                              container.appendChild(iconEl);
-                            }
-                          }}
-                        />
-                      </div>
+                      <LaunchpadLogo
+                        src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
+                        alt={launchpad.name}
+                        size="md"
+                      />
                       <span className="flex-1 text-left">{launchpad.name}</span>
                     </Button>
                   ))}
@@ -355,26 +332,14 @@ export function Layout() {
                             const protocol = protocols.find(p => p.id === protocolId);
                             if (!protocol) return null;
                             return (
-                              <div 
+                              <div
                                 key={protocolId}
-                                className="w-4 h-4 rounded-full border border-background bg-muted overflow-hidden"
                                 style={{ zIndex: category.protocols.length - avatarIndex }}
                               >
-                                <img 
+                                <ProtocolLogo
                                   src={`/assets/logos/${getProtocolLogoFilename(protocolId)}`}
                                   alt={protocol.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    const container = target.parentElement;
-                                    if (container) {
-                                      container.innerHTML = '';
-                                      container.className = 'w-4 h-4 rounded-full border border-background bg-muted/50 flex items-center justify-center';
-                                      const iconEl = document.createElement('div');
-                                      iconEl.innerHTML = '<svg class="h-2 w-2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
-                                      container.appendChild(iconEl);
-                                    }
-                                  }}
+                                  size="xs"
                                 />
                               </div>
                             );
@@ -413,24 +378,11 @@ export function Layout() {
                             )}
                             onClick={() => handleProtocolChange(protocol.id)}
                           >
-                            <div className="w-5 h-5 bg-muted/10 rounded-md overflow-hidden ring-1 ring-border/20">
-                              <img
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
-                                alt={protocol.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  const container = target.parentElement;
-                                  if (container) {
-                                    container.innerHTML = '';
-                                    container.className = 'w-5 h-5 bg-muted/20 rounded-md flex items-center justify-center';
-                                    const iconEl = document.createElement('div');
-                                    iconEl.innerHTML = '<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M12 8V4H8"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
-                                    container.appendChild(iconEl);
-                                  }
-                                }}
-                              />
-                            </div>
+                            <ProtocolLogo
+                              src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
+                              alt={protocol.name}
+                              size="md"
+                            />
                             <span className="flex-1 text-left">{protocol.name}</span>
                             <span className={cn(
                               "text-xs px-1.5 py-0.5 rounded-md font-medium",

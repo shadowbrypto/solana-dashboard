@@ -64,6 +64,30 @@ const formatPercentage = (value: number): string => {
   return `${(value * 100).toFixed(2)}%`;
 };
 
+// Trojan protocol family - special display names and badges
+const TROJAN_PROTOCOLS = ['trojanonsolana', 'trojan', 'trojanterminal'] as const;
+
+const getTrojanDisplayName = (protocol: string): string => {
+  if (protocol === 'trojan') return 'Trojan Total';
+  return getProtocolName(protocol);
+};
+
+const getTrojanRowStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Strong gradient from left to right across entire row
+  return 'bg-gradient-to-r from-purple-200 via-purple-100/50 to-transparent dark:from-purple-700/60 dark:via-purple-800/30 dark:to-transparent';
+};
+
+const getTrojanFirstCellStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Left border only - gradient comes from row
+  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400 !bg-transparent';
+};
+
+const isTrojanProtocol = (protocol: string): boolean => {
+  return TROJAN_PROTOCOLS.includes(protocol as typeof TROJAN_PROTOCOLS[number]);
+};
+
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>(() => Settings.getDailyTableCollapsedCategories());
@@ -1108,6 +1132,13 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     }
   };
 
+  // Get Trojan protocol stats for the highlight section
+  const trojanOnSolanaData = dailyData['trojanonsolana' as Protocol];
+  const trojanTerminalData = dailyData['trojanterminal' as Protocol];
+  const trojanTotalData = dailyData['trojan' as Protocol];
+
+  const hasTrojanData = trojanOnSolanaData || trojanTerminalData || trojanTotalData;
+
   return (
     <div className="space-y-4">
       <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
@@ -1135,7 +1166,116 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           </div>
         </div>
 
-          <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        {/* Trojan Ecosystem Table */}
+        {hasTrojanData && (
+          <div className="rounded-xl border border-gray-400 dark:border-gray-500 bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+            <Table className="min-w-[600px] sm:min-w-[800px]">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[120px] sm:w-[200px] py-0.5 text-[9px] sm:text-sm px-1 sm:px-4">
+                    <span>Trojan Ecosystem</span>
+                  </TableHead>
+                  {orderedMetrics.map((metric) => (
+                    <TableHead
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span className="truncate">{metric.label}</span>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Trojan On Solana */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojanonsolana')}`}
+                          alt="Trojan On Solana"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate">{getProtocolName('trojanonsolana')}</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanOnSolanaData || {} as ProtocolMetrics, 'trojanonsolana' as Protocol), false, 'trojanonsolana' as Protocol)
+                          : metric.format(trojanOnSolanaData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojanonsolana' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Trojan Terminal */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojanterminal')}`}
+                          alt="Trojan Terminal"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate">{getProtocolName('trojanterminal')}</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanTerminalData || {} as ProtocolMetrics, 'trojanterminal' as Protocol), false, 'trojanterminal' as Protocol)
+                          : metric.format(trojanTerminalData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojanterminal' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Trojan Total */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30 font-semibold">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojan')}`}
+                          alt="Trojan Total"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate font-bold">Trojan Total</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 font-bold ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanTotalData || {} as ProtocolMetrics, 'trojan' as Protocol), false, 'trojan' as Protocol)
+                          : metric.format(trojanTotalData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojan' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
           <Table className="min-w-[600px] sm:min-w-[800px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -1284,9 +1424,16 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       return (
                         <TableRow
                           key={protocol}
-                          className={`group/row ${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                          className={cn(
+                            "group/row transition-colors hover:bg-muted/30",
+                            isCollapsed || isHidden ? 'hidden' : '',
+                            getTrojanRowStyle(protocol)
+                          )}
                         >
-                          <TableCell className="pl-1 sm:pl-6 text-muted-foreground text-[9px] sm:text-sm px-1 sm:px-4">
+                          <TableCell className={cn(
+                              "pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm",
+                              getTrojanFirstCellStyle(protocol)
+                            )}>
                             <div className="flex items-center gap-0.5 sm:gap-2">
                               <button
                                 onClick={(e) => {
@@ -1294,7 +1441,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                   toggleProtocolVisibility(protocol);
                                 }}
                                 className="opacity-0 group-hover/row:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
-                                title={`Hide ${getProtocolName(protocol)}`}
+                                title={`Hide ${isTrojanProtocol(protocol) ? getTrojanDisplayName(protocol) : getProtocolName(protocol)}`}
                               >
                                 <EyeOff className="h-3 w-3 text-muted-foreground" />
                               </button>
@@ -1316,7 +1463,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                   }}
                                 />
                               </div>
-                              <span className="truncate">{getProtocolName(protocol)}</span>
+                              <span className="truncate">{isTrojanProtocol(protocol) ? getTrojanDisplayName(protocol) : getProtocolName(protocol)}</span>
                               {topProtocols.includes(protocol) && (
                                 <Badge 
                                   variant="secondary"

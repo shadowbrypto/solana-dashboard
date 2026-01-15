@@ -3,6 +3,7 @@ import { protocolApi } from './api';
 import { format } from 'date-fns';
 import { Settings } from './settings';
 import { cacheManager, CACHE_NAMESPACES } from './cache-manager';
+import { CACHE_TTL as CACHE_CONFIG } from './cache-config';
 
 export interface ProtocolStatsWithDay extends Omit<ProtocolStats, 'formattedDay'> {
   formattedDay: string;
@@ -15,8 +16,9 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache for better performance
-const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes cache for better performance
+// Use centralized cache config
+const CACHE_TTL = CACHE_CONFIG.PROTOCOL_STATS;
+const CACHE_EXPIRY = CACHE_CONFIG.PROTOCOL_STATS;
 const protocolStatsCache = new Map<string, CacheEntry<ProtocolStats[]>>();
 const totalStatsCache = new Map<string, CacheEntry<ProtocolMetrics>>();
 const dailyMetricsCache = new Map<string, CacheEntry<Record<string, ProtocolMetrics>>>();

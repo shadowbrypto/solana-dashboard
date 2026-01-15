@@ -1,5 +1,6 @@
 import { API_BASE_URL } from './api';
 import { Settings } from './settings';
+import { CACHE_TTL } from './cache-config';
 
 export interface DashboardStats {
   yesterday: {
@@ -60,7 +61,7 @@ export interface DashboardStats {
 
 class DashboardApi {
   private cache: Map<string, { data: DashboardStats; timestamp: number }> = new Map();
-  private CACHE_DURATION = 60 * 1000; // 1 minute cache
+  private CACHE_DURATION = CACHE_TTL.DASHBOARD_STATS;
 
   async getDashboardStats(): Promise<DashboardStats> {
     const dataType = Settings.getDataTypePreference();

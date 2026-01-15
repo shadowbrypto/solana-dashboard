@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { traderStatsApi, TraderRankData, ComprehensiveTraderStats, PaginatedTraderResponse } from '../lib/trader-stats-api';
+import { CACHE_TTL } from '../lib/cache-config';
 
 // Global cache for trader stats data
 interface CachedTraderData {
@@ -10,7 +11,7 @@ interface CachedTraderData {
 }
 
 const traderStatsCache = new Map<string, CachedTraderData>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_DURATION = CACHE_TTL.TRADER_STATS;
 const PAGE_LOAD_TIME = Date.now(); // Track when page was loaded
 
 // Clear cache only on actual page refresh (F5/Ctrl+R)

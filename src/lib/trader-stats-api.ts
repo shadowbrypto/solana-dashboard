@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './api';
+import { CACHE_TTL } from './cache-config';
 
 export interface TraderStats {
   protocol_name: string;
@@ -97,7 +98,7 @@ export interface VolumeRangeData {
 class TraderStatsApi {
   private baseUrl = `${API_BASE_URL}/trader-stats`;
   private cache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private readonly CACHE_DURATION = CACHE_TTL.TRADER_STATS;
 
   // Get comprehensive stats (metrics + percentiles only) for Custom Reports
   async getComprehensiveStats(protocol: string): Promise<ComprehensiveTraderStats> {

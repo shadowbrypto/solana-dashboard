@@ -3,6 +3,8 @@
  * Provides consistent caching behavior and cache invalidation
  */
 
+import { CACHE_TTL } from './cache-config';
+
 export interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -15,7 +17,7 @@ export interface CacheOptions {
 
 class CacheManager {
   private caches = new Map<string, Map<string, CacheEntry<any>>>();
-  private defaultTTL = 15 * 60 * 1000; // 15 minutes default
+  private defaultTTL = CACHE_TTL.DEFAULT;
 
   /**
    * Get or create a cache namespace
@@ -156,7 +158,7 @@ class CacheManager {
    */
   reset(): void {
     this.clearAll();
-    this.defaultTTL = 15 * 60 * 1000; // Reset to 15 minutes
+    this.defaultTTL = CACHE_TTL.DEFAULT; // Reset to default from config
     console.log('Cache manager reset to default state');
   }
 }

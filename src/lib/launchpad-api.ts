@@ -1,8 +1,9 @@
 import { format } from 'date-fns';
 import { cacheManager, CACHE_NAMESPACES } from './cache-manager';
+import { CACHE_TTL as CACHE_CONFIG } from './cache-config';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes cache
+const CACHE_TTL = CACHE_CONFIG.LAUNCHPAD_DATA;
 
 export interface LaunchpadMetrics {
   date: string;

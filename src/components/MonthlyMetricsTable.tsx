@@ -9,7 +9,7 @@ import {
 } from "./ui/table";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, eachMonthOfInterval } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency, formatNumber, formatPercentage } from "../lib/utils";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
@@ -140,25 +140,6 @@ function getGradientColor(value: number, min: number, max: number, allValues: nu
 function getGrowthBackground(value: number): string {
   return '';
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000000) {
-    return `$${(value / 1000000000).toFixed(2)}B`;
-  } else if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
-};
-
-const formatPercentage = (value: number): string => {
-  return `${(value * 100).toFixed(2)}%`;
-};
 
 export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = false }: MonthlyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);

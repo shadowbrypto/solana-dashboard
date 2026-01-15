@@ -5,6 +5,7 @@ import { ProtocolLogo } from './ui/logo-with-fallback';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Activity, TrendingUp } from 'lucide-react';
 import { ComponentActions } from './ComponentActions';
+import { formatCurrency } from '../lib/utils';
 
 interface VolumeActivityProps {
   title: string;
@@ -54,13 +55,6 @@ const formatTooltipDate = (dateStr: string): string => {
   } catch {
     return dateStr;
   }
-};
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)} Billion`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)} Million`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)} Thousand`;
-  return `$${value.toFixed(2)}`;
 };
 
 const getIntensityLevel = (value: number, max: number): number => {

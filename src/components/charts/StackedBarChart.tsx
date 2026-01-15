@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency, formatNumber } from "../../lib/utils";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { ProtocolLogo } from '../ui/logo-with-fallback';
 import { Badge } from "../ui/badge";
@@ -36,14 +37,6 @@ interface StackedBarChartProps {
   disableTimeframeSelector?: boolean;
   defaultDisabledKeys?: string[];
   timelineDataKey?: string;
-}
-
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toFixed(0);
 }
 
 export function StackedBarChart({ 
@@ -322,7 +315,7 @@ export function StackedBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 9 }}
-                tickFormatter={(value) => formatNumberWithSuffix(value)}
+                tickFormatter={(value) => formatNumber(value)}
                 width={isDesktop ? 55 : 45}
               />
               <Tooltip
@@ -352,7 +345,7 @@ export function StackedBarChart({
                                     style={{ backgroundColor: colors[dataKeyIndex] }}
                                   />
                                   <span className="text-sm text-foreground">
-                                    {labels[dataKeyIndex]}: <span className="font-mono">{entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumberWithSuffix(entry.value || 0)}</span>
+                                    {labels[dataKeyIndex]}: <span className="font-mono">{entry.name?.toString().includes('volume') ? valueFormatter(entry.value || 0) : formatNumber(entry.value || 0)}</span>
                                   </span>
                                 </div>
                               );
@@ -364,7 +357,7 @@ export function StackedBarChart({
                               <span className="text-foreground font-mono">
                                 {(() => {
                                   const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
-                                  return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumberWithSuffix(total);
+                                  return payload[0]?.name?.toString().includes('volume') ? valueFormatter(total) : formatNumber(total);
                                 })()}
                               </span>
                             </div>

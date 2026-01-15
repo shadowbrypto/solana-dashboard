@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowUp, ArrowDown, Crown } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency, formatNumber } from '../lib/utils';
 import { getProtocolById } from '../lib/protocol-config';
 
 interface DailyStatsRow {
@@ -32,24 +32,6 @@ export function DailyStatsCard({
   className 
 }: DailyStatsCardProps) {
   const [activeMetric, setActiveMetric] = useState<MetricType>('volume');
-
-  const formatCurrency = (value: number): string => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    }
-    return `$${value.toFixed(2)}`;
-  };
-
-  const formatNumber = (value: number): string => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(2)}K`;
-    }
-    return value.toLocaleString();
-  };
 
   const getMetricValue = (row: DailyStatsRow, metric: MetricType): number => {
     switch (metric) {

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency, formatNumber } from "../../lib/utils";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { ProtocolLogo } from '../ui/logo-with-fallback';
 import {
@@ -28,14 +29,6 @@ interface EVMDailyChartProps {
   loading?: boolean;
   timeframe: EVMTimeFrame;
   onTimeframeChange: (timeframe: EVMTimeFrame) => void;
-}
-
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toFixed(0);
 }
 
 export function EVMDailyChart({ 
@@ -112,7 +105,7 @@ export function EVMDailyChart({
               />
               <YAxis 
                 tick={{ fontSize: 11 }}
-                tickFormatter={formatNumberWithSuffix}
+                tickFormatter={formatNumber}
               />
               <Tooltip
                 content={({ active, payload, label }: TooltipProps<any, any>) => {

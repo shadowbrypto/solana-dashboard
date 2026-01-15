@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from "date-fns";
 import { TrendingUp, TrendingDown, Award, Target, AlertTriangle, Info, Activity, Users, Calendar } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency } from "../lib/utils";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { ProtocolMetrics, Protocol } from "../types/protocol";
 import { protocolApi } from "../lib/api";
@@ -75,17 +75,6 @@ export function MonthlyHighlights({ date, loading: externalLoading = false }: Mo
 
     analyzeMonthlyData();
   }, [date]);
-
-  const formatCurrency = (value: number): string => {
-    if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
-    } else if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    }
-    return `$${value.toFixed(2)}`;
-  };
 
   const getIconForInsight = (type: string, title: string) => {
     if (title.includes('Leader') || title.includes('Volume')) {

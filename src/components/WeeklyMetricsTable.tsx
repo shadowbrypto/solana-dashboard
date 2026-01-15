@@ -9,7 +9,7 @@ import {
 } from "./ui/table";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isAfter, isBefore, subDays, addDays } from "date-fns";
 import { GripVertical, ChevronRight, Eye, EyeOff, Download, Copy, ChevronLeft, Calendar } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency, formatNumber } from "../lib/utils";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, Cell } from 'recharts';
@@ -42,19 +42,6 @@ interface DailyData {
 interface VolumeData {
   [protocol: string]: Record<string, number>; // date -> volume value
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
-};
 
 const formatGrowthPercentage = (growth: number): string => {
   const percentage = growth * 100;

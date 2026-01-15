@@ -5,6 +5,7 @@ import { StackedBarChart } from "./charts/StackedBarChart";
 import { useState, useMemo, useEffect } from "react";
 import { protocolApi } from "../lib/api";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { formatVolume } from "../lib/utils";
 
 interface MonthlyChainVolumeChartProps {
   endDate: Date;
@@ -29,13 +30,6 @@ interface ProtocolVolumeData {
   chainVolumes?: Record<string, number>;
 }
 
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (absValue >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (absValue >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toLocaleString()}`;
-}
 
 // Chain configuration with colors
 const CHAIN_CONFIG = [
@@ -273,7 +267,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
             labels={CHAIN_CONFIG.map(c => c.name)}
             colors={CHAIN_CONFIG.map(c => c.color)}
             xAxisKey="formattedDay"
-            valueFormatter={formatNumberWithSuffix}
+            valueFormatter={formatVolume}
             loading={loading}
             disableTimeframeSelector={true}
           />
@@ -291,7 +285,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
                       <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'hsl(271, 91%, 65%)' }}></span>
                       <span className="text-sm font-bold uppercase tracking-wide text-foreground">Solana</span>
                       <span className="text-[9px] text-muted-foreground font-mono ml-auto">
-                        {formatNumberWithSuffix(solanaVolume)}
+                        {formatVolume(solanaVolume)}
                       </span>
                     </div>
                     {(isSolanaExpanded ? solanaProtocols : solanaProtocols.slice(0, 7)).map((protocol) => {
@@ -340,7 +334,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
                             <span className={`text-xs font-semibold font-mono transition-all ${
                               isDisabled ? 'text-muted-foreground' : 'text-foreground'
                             }`}>
-                              {isDisabled ? '$0' : formatNumberWithSuffix(value)}
+                              {isDisabled ? '$0' : formatVolume(value)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono w-12 text-right">
                               {isDisabled ? '0%' : `${percentage.toFixed(1)}%`}
@@ -381,7 +375,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
                       <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'hsl(217, 91%, 60%)' }}></span>
                       <span className="text-sm font-bold uppercase tracking-wide text-foreground">EVM</span>
                       <span className="text-[9px] text-muted-foreground font-mono ml-auto">
-                        {formatNumberWithSuffix(ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume)}
+                        {formatVolume(ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume)}
                       </span>
                     </div>
                     {(isEVMExpanded ? evmProtocols : evmProtocols.slice(0, 6)).map((protocol) => {
@@ -431,7 +425,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
                             <span className={`text-xs font-semibold font-mono transition-all ${
                               isDisabled ? 'text-muted-foreground' : 'text-foreground'
                             }`}>
-                              {isDisabled ? '$0' : formatNumberWithSuffix(value)}
+                              {isDisabled ? '$0' : formatVolume(value)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono w-12 text-right">
                               {isDisabled ? '0%' : `${percentage.toFixed(1)}%`}
@@ -485,7 +479,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
               <div className="flex items-baseline gap-1.5">
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">Total Volume:</span>
                 <span className="text-base font-bold font-mono text-foreground">
-                  {formatNumberWithSuffix(totalVolume)}
+                  {formatVolume(totalVolume)}
                 </span>
               </div>
             </div>
@@ -544,7 +538,7 @@ export function MonthlyChainVolumeChart({ endDate }: MonthlyChainVolumeChartProp
 
                     <div className="flex items-baseline gap-1">
                       <span className="text-sm font-bold font-mono text-foreground">
-                        {formatNumberWithSuffix(chain.volume)}
+                        {formatVolume(chain.volume)}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono">
                         ({totalVolume > 0 ? ((chain.volume / totalVolume) * 100).toFixed(1) : '0'}%)

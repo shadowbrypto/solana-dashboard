@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { format, subDays } from "date-fns";
 import { TrendingUp, TrendingDown, Award, Target, AlertTriangle, Info, Activity, Users, Calendar } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency } from "../lib/utils";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
@@ -346,15 +346,6 @@ export function EVMDailyHighlights({ date }: EVMDailyHighlightsProps) {
 
     analyzeData();
   }, [date]);
-
-  const formatCurrency = (value: number): string => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`;
-    }
-    return `$${value.toFixed(2)}`;
-  };
 
   const getInsightBadgeColor = (type: Insight['type']) => {
     switch (type) {

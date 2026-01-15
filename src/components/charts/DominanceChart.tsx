@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency, formatNumber } from "../../lib/utils";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { ProtocolLogo } from '../ui/logo-with-fallback';
 import {

@@ -3,6 +3,7 @@ import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { LifetimeVolumeBreakdownSkeleton } from "./LifetimeVolumeBreakdownSkeleton";
 import { ComponentActions } from "./ComponentActions";
+import { formatCurrency } from "../lib/utils";
 
 interface ProtocolVolumeData {
   name: string;
@@ -17,13 +18,6 @@ interface LifetimeVolumeBreakdownProps {
   protocolData: ProtocolVolumeData[];
   loading?: boolean;
 }
-
-const formatVolume = (value: number): string => {
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
-};
 
 const getColorWithOpacity = (hslColor: string, opacity: number): string => {
   // Convert hsl(h s% l%) to hsla(h, s%, l%, opacity)
@@ -72,7 +66,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                 </div>
                 <div className="flex flex-col items-end sm:hidden">
                   <div className="text-lg font-bold">
-                    {formatVolume(totalVolume)}
+                    {formatCurrency(totalVolume)}
                   </div>
                   {/* Mobile stacked avatars below the number */}
                   <div className="flex items-center mt-1">
@@ -112,7 +106,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
             {/* Desktop total volume and avatars */}
             <div className="hidden sm:block text-right">
               <div className="text-3xl font-bold mb-2">
-                {formatVolume(totalVolume)}
+                {formatCurrency(totalVolume)}
               </div>
               <div className="flex justify-end">
                 {significantProtocols.map((protocol, index) => (
@@ -172,7 +166,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                       backgroundColor: protocol.color,
                       minWidth: protocol.percentage > 15 ? 'auto' : '0',
                     }}
-                    title={`${protocol.name}: ${formatVolume(protocol.value)} (${protocol.percentage.toFixed(1)}%)`}
+                    title={`${protocol.name}: ${formatCurrency(protocol.value)} (${protocol.percentage.toFixed(1)}%)`}
                   >
                     {protocol.percentage > 15 && (
                       <span className="px-0.5 sm:px-1">
@@ -208,7 +202,7 @@ export function LifetimeVolumeBreakdown({ totalVolume, protocolData, loading = f
                   </div>
                   <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                     <span className="text-[10px] sm:text-xs font-semibold text-gray-900 dark:text-gray-100">
-                      {formatVolume(protocol.value)}
+                      {formatCurrency(protocol.value)}
                     </span>
                     <span className="text-[9px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {protocol.percentage.toFixed(1)}%

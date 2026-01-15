@@ -10,7 +10,7 @@ import {
 import { format } from "date-fns";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { Eye, EyeOff, Download, Copy } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatVolume } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename } from "../lib/protocol-config";
 import { Badge } from "./ui/badge";
@@ -36,13 +36,6 @@ interface MonadProtocolData {
   fees: number;
   lifetimeVolume: number;
 }
-
-const formatVolume = (volume: number): string => {
-  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
-  return `$${volume.toFixed(2)}`;
-};
 
 const WeeklyTrendChart: React.FC<{ data: number[]; growth: number }> = ({ data, growth }) => {
   const chartData = data.map((value, index) => ({

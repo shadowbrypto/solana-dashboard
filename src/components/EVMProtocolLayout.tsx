@@ -7,6 +7,7 @@ import { StackedBarChart } from './charts/StackedBarChart';
 import { StackedAreaChart } from './charts/StackedAreaChart';
 import { ComponentActions } from './ComponentActions';
 import { Settings } from '../lib/settings';
+import { formatVolume } from '../lib/utils';
 
 interface EVMMetrics {
   lifetimeVolume: number;
@@ -48,12 +49,6 @@ const chainNames: Record<string, string> = {
   polygon: 'Polygon'
 };
 
-const formatVolume = (volume: number): string => {
-  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
-  return `$${volume.toFixed(2)}`;
-};
 
 // Transform raw unified API data into the format expected by EVMProtocolLayout
 const transformUnifiedDataToEVMFormat = (rawData: any[]): EVMDailyData[] => {

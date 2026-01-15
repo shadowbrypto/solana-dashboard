@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency, formatNumber } from "../../lib/utils";
 import { getProtocolLogoFilename, protocolConfigs } from "../../lib/protocol-config";
 import { getLaunchpadLogoFilename, getLaunchpadById } from "../../lib/launchpad-config";
 import { ProtocolLogo, LaunchpadLogo } from '../ui/logo-with-fallback';
@@ -42,14 +43,6 @@ interface PieChartProps {
   outerRadius?: number;
   centerLabel?: string;
   defaultDisabledKeys?: string[];
-}
-
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-  if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toLocaleString();
 }
 
 export function PieChart({ 
@@ -318,7 +311,7 @@ export function PieChart({
                             <div className="space-y-0.5 text-xs">
                               <div className="flex justify-between gap-3">
                                 <span className="text-muted-foreground">Value:</span>
-                                <span className="font-semibold text-popover-foreground font-mono">{formatNumberWithSuffix(data.value)}</span>
+                                <span className="font-semibold text-popover-foreground font-mono">{formatNumber(data.value)}</span>
                               </div>
                               {showPercentages && (
                                 <div className="flex justify-between gap-3">
@@ -354,7 +347,7 @@ export function PieChart({
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                   <div className="text-center">
                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{centerLabel}</div>
-                    <div className="text-2xl font-bold text-foreground font-mono">{formatNumberWithSuffix(total)}</div>
+                    <div className="text-2xl font-bold text-foreground font-mono">{formatNumber(total)}</div>
                   </div>
                 </div>
               )}
@@ -448,7 +441,7 @@ export function PieChart({
                         <span className={`text-xs font-semibold font-mono transition-all ${
                           isDisabled ? 'text-muted-foreground' : 'text-foreground'
                         }`}>
-                          {isDisabled ? '0' : formatNumberWithSuffix(value)}
+                          {isDisabled ? '0' : formatNumber(value)}
                         </span>
                         {showPercentages && (
                           <span className="text-[10px] text-muted-foreground font-mono ml-1">

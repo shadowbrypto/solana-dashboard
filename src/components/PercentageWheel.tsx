@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency } from '../lib/utils';
 import { TrendingUp, Target, RotateCcw } from 'lucide-react';
 
 interface PercentageWheelProps {
@@ -75,10 +75,6 @@ export function PercentageWheel({ value, onChange, axiomRevenue, className }: Pe
       document.body.style.userSelect = '';
     };
   }, [isDragging, value, startY, startValue]);
-
-  const formatCurrency = (amount: number) => {
-    return `$${Math.round(amount).toLocaleString()}`;
-  };
 
   const missedRevenue = axiomRevenue * (value / 100);
 

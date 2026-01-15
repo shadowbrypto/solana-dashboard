@@ -48,7 +48,7 @@ export function useDailyMetrics({
   const [data, setData] = useState<DailyMetricsData>(emptyData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [dataType, setDataType] = useState<'private' | 'public'>(Settings.getDataType());
+  const [dataType, setDataType] = useState<'private' | 'public'>(Settings.getDataTypePreference());
 
   // Listen for dataType changes from settings
   useEffect(() => {

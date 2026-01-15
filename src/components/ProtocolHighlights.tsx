@@ -16,6 +16,7 @@ import {
   Award,
   Activity
 } from 'lucide-react';
+import { formatCurrency, formatNumber } from '../lib/utils';
 import { ProtocolLogo } from './ui/logo-with-fallback';
 import { getProtocolLogoFilename } from '../lib/protocol-config';
 
@@ -57,19 +58,6 @@ const formatDate = (dateStr: string): string => {
   } catch {
     return dateStr;
   }
-};
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
-  return value.toLocaleString();
 };
 
 const calculateWeeklyData = (data: any[]) => {

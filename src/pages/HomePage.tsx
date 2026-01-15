@@ -11,6 +11,7 @@ import { GradientAreaSkeleton } from '../components/skeletons/GradientAreaSkelet
 import { LogoButtonSkeleton } from '../components/skeletons/LogoButtonSkeleton';
 import { GradientBarSkeleton } from '../components/skeletons/GradientBarSkeleton';
 import { DailyStatsSkeleton } from '../components/skeletons/DailyStatsSkeleton';
+import { formatCurrency, formatNumber } from '../lib/utils';
 
 export function HomePage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -39,24 +40,6 @@ export function HomePage() {
     
     return () => clearInterval(interval);
   }, []);
-
-  const formatCurrency = (value: number): string => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
-    }
-    return `$${value.toFixed(0)}`;
-  };
-
-  const formatNumber = (value: number): string => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`;
-    }
-    return value.toLocaleString();
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-4">

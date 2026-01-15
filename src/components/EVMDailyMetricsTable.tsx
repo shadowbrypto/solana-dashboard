@@ -10,7 +10,7 @@ import {
 import { format, subDays, eachDayOfInterval } from "date-fns";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { Eye, EyeOff, Download, Copy } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatVolume } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { getProtocolLogoFilename, getProtocolName } from "../lib/protocol-config";
 import { LogoWithFallback } from "./ui/logo-with-fallback";
@@ -77,13 +77,6 @@ const additionalChainNames: Record<string, string> = {
   arbitrum: 'Arbitrum'
 };
 
-
-const formatVolume = (volume: number): string => {
-  if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`;
-  if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`;
-  if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`;
-  return `$${volume.toFixed(2)}`;
-};
 
 const formatGrowthPercentage = (growth: number): string => {
   const percentage = growth * 100;

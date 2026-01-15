@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency, formatNumber } from "../../lib/utils";
 import { ProtocolLogo } from '../ui/logo-with-fallback';
 import {
   Bar,
@@ -35,18 +36,6 @@ interface HorizontalBarChartProps {
   valueFormatter?: (value: number) => string;
   loading?: boolean;
 }
-
-const formatNumber = (value: number): string => {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) {
-    return (value / 1e9).toFixed(2) + 'b';
-  } else if (absValue >= 1e6) {
-    return (value / 1e6).toFixed(2) + 'm';
-  } else if (absValue >= 1e3) {
-    return (value / 1e3).toFixed(2) + 'k';
-  }
-  return value.toFixed(2);
-};
 
 export function HorizontalBarChart({ 
   title, 

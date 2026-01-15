@@ -22,7 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../components/ui/pagination';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency, formatNumber } from '../lib/utils';
 import { useToast } from '../hooks/use-toast';
 import { MetricCard } from '../components/MetricCard';
 import { MetricCardSkeleton } from '../components/MetricCardSkeleton';
@@ -44,24 +44,6 @@ declare global {
     lastLoadedProtocol?: string;
   }
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000000) {
-    return `$${(value / 1000000000).toFixed(2)}B`;
-  } else if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  if (value >= 10000) {
-    return value.toLocaleString();
-  }
-  return value.toString();
-};
 
 // Helper to render volume range label with bold numbers
 const renderVolumeRangeLabel = (label: string) => {

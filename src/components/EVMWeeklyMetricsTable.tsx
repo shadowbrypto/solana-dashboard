@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { ChevronLeft, ChevronRight, Calendar, Download, Copy, Eye, EyeOff } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency, formatNumber } from "../lib/utils";
 import { Protocol } from "../types/protocol";
 import { protocolApi } from "../lib/api";
 import { getProtocolLogoFilename, getProtocolName } from "../lib/protocol-config";
@@ -52,19 +52,6 @@ const chainColors: Record<string, string> = {
   bsc: '#F3BA2F',
   avax: '#E84142',
   arbitrum: '#28A0F0'
-};
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
 };
 
 const formatGrowthPercentage = (growth: number): string => {

@@ -13,6 +13,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ComponentActions } from './ComponentActions';
 import { protocolApi } from "../lib/api";
 import { format } from 'date-fns';
+import { formatVolume } from "../lib/utils";
 
 interface ChainVolumeBreakdownProps {
   date: Date;
@@ -27,13 +28,6 @@ interface ProtocolVolumeData {
   chainVolumes?: Record<string, number>; // For EVM protocols: breakdown by chain (ethereum, base, bsc, avax, arbitrum)
 }
 
-function formatNumberWithSuffix(value: number): string {
-  const absValue = Math.abs(value);
-  if (absValue >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (absValue >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (absValue >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toLocaleString()}`;
-}
 
 // Chart colors
 const CHART_COLORS = [
@@ -359,7 +353,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                                   <div className="flex justify-between gap-3">
                                     <span className="text-muted-foreground">Volume:</span>
                                     <span className="font-semibold text-popover-foreground font-mono">
-                                      {formatNumberWithSuffix(data.value)}
+                                      {formatVolume(data.value)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between gap-3">
@@ -387,7 +381,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <div className="text-center">
                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Volume</div>
-                    <div className="text-2xl font-bold text-foreground font-mono">{formatNumberWithSuffix(totalVolume)}</div>
+                    <div className="text-2xl font-bold text-foreground font-mono">{formatVolume(totalVolume)}</div>
                   </div>
                 </div>
               </div>
@@ -437,7 +431,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                       {/* Volume and Percentage */}
                       <div className="flex items-baseline gap-1">
                         <span className="text-sm font-bold font-mono text-foreground">
-                          {formatNumberWithSuffix(chain.volume)}
+                          {formatVolume(chain.volume)}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-mono">
                           ({totalVolume > 0 ? ((chain.volume / totalVolume) * 100).toFixed(1) : '0'}%)
@@ -458,7 +452,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                       <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'hsl(271, 91%, 65%)' }}></span>
                       <span className="text-xs font-bold uppercase tracking-wide text-foreground">Solana</span>
                       <span className="text-[9px] text-muted-foreground font-mono ml-auto">
-                        {formatNumberWithSuffix(solanaVolume)}
+                        {formatVolume(solanaVolume)}
                       </span>
                     </div>
                     {(isSolanaExpanded ? solanaProtocols : solanaProtocols.slice(0, 5)).map((protocol) => {
@@ -507,7 +501,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                             <span className={`text-xs font-semibold font-mono transition-all ${
                               isDisabled ? 'text-muted-foreground' : 'text-foreground'
                             }`}>
-                              {isDisabled ? '$0' : formatNumberWithSuffix(value)}
+                              {isDisabled ? '$0' : formatVolume(value)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono w-12 text-right">
                               {isDisabled ? '0%' : `${percentage.toFixed(1)}%`}
@@ -548,7 +542,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                       <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'hsl(217, 91%, 60%)' }}></span>
                       <span className="text-xs font-bold uppercase tracking-wide text-foreground">EVM</span>
                       <span className="text-[9px] text-muted-foreground font-mono ml-auto">
-                        {formatNumberWithSuffix(ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume)}
+                        {formatVolume(ethereumVolume + baseVolume + bscVolume + avaxVolume + arbitrumVolume)}
                       </span>
                     </div>
                     {(isEvmExpanded ? evmProtocols : evmProtocols.slice(0, 5)).map((protocol) => {
@@ -598,7 +592,7 @@ export function ChainVolumeBreakdown({ date }: ChainVolumeBreakdownProps) {
                             <span className={`text-xs font-semibold font-mono transition-all ${
                               isDisabled ? 'text-muted-foreground' : 'text-foreground'
                             }`}>
-                              {isDisabled ? '$0' : formatNumberWithSuffix(value)}
+                              {isDisabled ? '$0' : formatVolume(value)}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono w-12 text-right">
                               {isDisabled ? '0%' : `${percentage.toFixed(1)}%`}

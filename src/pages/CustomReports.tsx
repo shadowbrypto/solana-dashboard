@@ -42,7 +42,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { cn } from '../lib/utils';
+import { cn, formatCurrency, formatNumber } from '../lib/utils';
 import { protocolApi } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { Settings } from '../lib/settings';
@@ -81,24 +81,6 @@ declare global {
     lastLoadedProtocol?: string;
   }
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000000) {
-    return `$${(value / 1000000000).toFixed(2)}B`;
-  } else if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  if (value >= 10000) {
-    return value.toLocaleString();
-  }
-  return value.toString();
-};
 
 const formatGrowthPercentage = (growth: number): string => {
   const percentage = growth * 100;

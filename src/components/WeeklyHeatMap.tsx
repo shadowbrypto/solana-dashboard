@@ -8,7 +8,7 @@ import domtoimage from "dom-to-image";
 import { Protocol } from "../types/protocol";
 import { getDailyMetrics } from "../lib/protocol";
 import { getMutableAllCategories, getMutableProtocolsByCategory } from "../lib/protocol-config";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency, formatNumber } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
@@ -26,19 +26,6 @@ type MetricKey = 'total_volume_usd' | 'daily_users' | 'numberOfNewUsers' | 'dail
 interface DailyData {
   [protocol: string]: Record<string, number>; // date -> value
 }
-
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
-};
 
 // Color scale function - returns a color based on the value and max value
 const getHeatMapColor = (value: number, maxValue: number, minValue: number = 0): string => {

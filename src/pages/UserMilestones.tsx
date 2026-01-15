@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { Trophy, Users, Calendar, Clock, TrendingUp } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 import { protocolApi } from '../lib/api';
 import { protocolConfigs, getProtocolById, getProtocolLogoFilename, getAllCategories } from '../lib/protocol-config';
 
@@ -37,16 +37,6 @@ interface MilestoneResponse {
   totalUsers: number;
   firstDataDate: string | null;
 }
-
-const formatNumber = (value: number | string | undefined | null): string => {
-  const num = Math.round(Number(value) || 0);
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(2)}M`;
-  } else if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
-  }
-  return num.toLocaleString();
-};
 
 const getCategoryBadgeStyle = (category: string): string => {
   switch (category) {

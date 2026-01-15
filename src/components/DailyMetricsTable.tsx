@@ -10,7 +10,7 @@ import {
 import { format } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
-import { cn } from "../lib/utils";
+import { cn, formatCurrency, formatNumber, formatPercentage } from "../lib/utils";
 import domtoimage from "dom-to-image";
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
@@ -39,22 +39,7 @@ interface MetricDefinition {
   skipGradient?: boolean;
 }
 
-const formatCurrency = (value: number): string => {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`;
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`;
-  }
-  return `$${value.toFixed(2)}`;
-};
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString();
-};
-
-const formatPercentage = (value: number): string => {
-  return `${(value * 100).toFixed(2)}%`;
-};
+// formatCurrency, formatNumber, formatPercentage imported from utils.ts
 
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   // Use the custom hook for data fetching

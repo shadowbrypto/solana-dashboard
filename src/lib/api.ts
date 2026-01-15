@@ -386,15 +386,19 @@ export const dataSyncApi = {
     });
   },
 
-  // Sync rolling refresh data for configured protocols (optionally filtered by chain)
-  async syncRollingRefreshData(chain?: 'solana' | 'evm' | 'monad'): Promise<{
+  // Sync rolling refresh data for configured protocols (optionally filtered by chain and dataType)
+  async syncRollingRefreshData(chain?: 'solana' | 'evm' | 'monad', dataType?: 'public' | 'private'): Promise<{
     protocolsSynced: number;
     totalProtocols: number;
     totalRowsImported: number;
     results: Array<{ protocol: string; success: boolean; rowsImported?: number; error?: string }>;
     timestamp: string
   }> {
-    const endpoint = chain ? `/data-update/sync-rolling?chain=${chain}` : '/data-update/sync-rolling';
+    const params = new URLSearchParams();
+    if (chain) params.append('chain', chain);
+    if (dataType) params.append('dataType', dataType);
+    const queryString = params.toString();
+    const endpoint = queryString ? `/data-update/sync-rolling?${queryString}` : '/data-update/sync-rolling';
     return apiRequest<{
       protocolsSynced: number;
       totalProtocols: number;

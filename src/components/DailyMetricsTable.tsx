@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { format } from "date-fns";
+import { format, eachDayOfInterval, subDays } from "date-fns";
 import { ChevronRight, Eye, EyeOff, Download, Copy } from "lucide-react";
 import { ProtocolLogo } from "./ui/logo-with-fallback";
 import { cn, formatCurrency, formatNumber, formatPercentage } from "../lib/utils";
@@ -750,22 +750,17 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   }, []);
 
 
-  // Persist settings changes
+  // Persist settings changes with debounce to avoid excessive writes
   useEffect(() => {
-    Settings.setDailyTableCollapsedCategories(collapsedCategories);
-  }, [collapsedCategories]);
+    const timeoutId = setTimeout(() => {
+      Settings.setDailyTableCollapsedCategories(collapsedCategories);
+      Settings.setDailyTableColumnOrder(columnOrder);
+      Settings.setDailyTableHiddenProtocols(Array.from(hiddenProtocols));
+      Settings.setDailyTableHiddenColumns(Array.from(hiddenColumns));
+    }, 300);
 
-  useEffect(() => {
-    Settings.setDailyTableColumnOrder(columnOrder);
-  }, [columnOrder]);
-
-  useEffect(() => {
-    Settings.setDailyTableHiddenProtocols(Array.from(hiddenProtocols));
-  }, [hiddenProtocols]);
-
-  useEffect(() => {
-    Settings.setDailyTableHiddenColumns(Array.from(hiddenColumns));
-  }, [hiddenColumns]);
+    return () => clearTimeout(timeoutId);
+  }, [collapsedCategories, columnOrder, hiddenProtocols, hiddenColumns]);
 
   const handleDateChange = useCallback((newDate: Date | undefined) => {
     if (newDate) {
@@ -971,8 +966,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 onClick={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? showAllProtocols : hideAllProtocols}
                 className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 title={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
+                aria-label={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
               >
-                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? <Eye className="h-3 w-3" aria-hidden="true" /> : <EyeOff className="h-3 w-3" aria-hidden="true" />}
                 {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show All" : "Hide All"}
               </button>
             </div>
@@ -1004,8 +1000,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
                         title={`Hide ${metric.label} column`}
+                        aria-label={`Hide ${metric.label} column`}
                       >
-                        <EyeOff className="h-3 w-3" />
+                        <EyeOff className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </div>
                   </TableHead>
@@ -1142,8 +1139,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                 }}
                                 className="opacity-0 group-hover/row:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
                                 title={`Hide ${getProtocolName(protocol)}`}
+                                aria-label={`Hide ${getProtocolName(protocol)} from table`}
                               >
-                                <EyeOff className="h-3 w-3 text-muted-foreground" />
+                                <EyeOff className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                               </button>
                               <ProtocolLogo
                                 src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
@@ -1519,15 +1517,17 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           <button
             onClick={downloadReport}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+            aria-label="Download daily report as image"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-4 w-4" aria-hidden="true" />
             Download
           </button>
           <button
             onClick={copyToClipboard}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+            aria-label="Copy daily report to clipboard"
           >
-            <Copy className="h-4 w-4" />
+            <Copy className="h-4 w-4" aria-hidden="true" />
             Copy
           </button>
         </div>

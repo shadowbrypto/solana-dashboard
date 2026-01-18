@@ -21,6 +21,41 @@ const sizeClasses: Record<LogoSize, { container: string; icon: string }> = {
   lg: { container: "w-6 h-6", icon: "h-3 w-3" },
 };
 
+// Header-sized logo with custom icon fallback support
+interface HeaderLogoProps {
+  src: string;
+  alt: string;
+  fallbackIcon?: React.ComponentType<{ className?: string }>;
+  className?: string;
+}
+
+export function HeaderLogo({ src, alt, fallbackIcon: FallbackIconComponent, className }: HeaderLogoProps) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div className={cn("w-8 h-8 sm:w-10 sm:h-10 bg-muted/10 rounded-lg flex items-center justify-center ring-1 ring-border", className)}>
+        {FallbackIconComponent ? (
+          <FallbackIconComponent className="w-4 h-4 sm:w-5 sm:h-5 opacity-50" />
+        ) : (
+          <MonitorSmartphone className="w-4 h-4 sm:w-5 sm:h-5 opacity-50" />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-muted/10 ring-1 ring-border", className)}>
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
+
 function FallbackIcon({ variant, className }: { variant: LogoVariant; className?: string }) {
   if (variant === "launchpad") {
     return <Rocket className={cn("opacity-50", className)} />;

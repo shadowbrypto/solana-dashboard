@@ -578,7 +578,12 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         link.click();
         document.body.removeChild(link);
       } catch (error) {
-        // Handle error silently
+        toast({
+          variant: "destructive",
+          title: "Download Failed",
+          description: error instanceof Error ? error.message : "Failed to generate report image",
+          duration: 3000,
+        });
       }
     }
   };
@@ -636,12 +641,22 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               description: "Weekly report image copied successfully",
               duration: 2000,
             });
-          } catch (error) {
-            // Handle error silently
+          } catch (clipboardError) {
+            toast({
+              variant: "destructive",
+              title: "Copy Failed",
+              description: "Could not write to clipboard. Try using HTTPS.",
+              duration: 3000,
+            });
           }
         }
       } catch (error) {
-        // Handle error silently
+        toast({
+          variant: "destructive",
+          title: "Copy Failed",
+          description: error instanceof Error ? error.message : "Failed to generate report image",
+          duration: 3000,
+        });
       }
     }
   };
@@ -688,12 +703,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 }
               }}
               title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+              aria-label={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
               className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               {hiddenProtocols.size > 0 ? (
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
               ) : (
-                <EyeOff className="h-4 w-4 mr-2" />
+                <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
               )}
               {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
             </Button>
@@ -706,8 +722,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               onClick={() => handleDateChange('prev')}
               disabled={!canNavigatePrev()}
               title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous 7 days'}
+              aria-label="Go to previous 7 days"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             
             <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30">
@@ -723,8 +740,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
               onClick={() => handleDateChange('next')}
               disabled={!canNavigateNext()}
               title={!canNavigateNext() ? 'Cannot go beyond yesterday (today excluded due to incomplete data)' : 'Next 7 days'}
+              aria-label="Go to next 7 days"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -925,8 +943,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                     toggleProtocolVisibility(protocol.id);
                                   }}
                                   className="p-1 hover:bg-muted rounded transition-all opacity-0 group-hover:opacity-100"
+                                  aria-label={`Hide ${protocol.name} from table`}
                                 >
-                                  <Eye className="h-3 w-3 text-muted-foreground" />
+                                  <Eye className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                                 </button>
                                 <div className="flex items-center gap-2">
                                   <ProtocolLogo
@@ -1140,8 +1159,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             size="sm"
             onClick={downloadReport}
             className="shadow-sm"
+            aria-label="Download weekly report as image"
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2" aria-hidden="true" />
             Download
           </Button>
           <Button
@@ -1149,8 +1169,9 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             size="sm"
             onClick={copyToClipboard}
             className="shadow-sm"
+            aria-label="Copy weekly report to clipboard"
           >
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="h-4 w-4 mr-2" aria-hidden="true" />
             Copy
           </Button>
         </div>

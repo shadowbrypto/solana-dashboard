@@ -28,10 +28,14 @@ import {
   GMGNAIMonadIcon, BloomMonadIcon, NadFunMonadIcon, BasedBotMonadIcon
 } from '../components/icons/index';
 
+export interface IconProps {
+  className?: string;
+}
+
 export interface ProtocolConfig {
   id: string;
   name: string;
-  icon: LucideIcon | React.ComponentType<any>;
+  icon: LucideIcon | React.ComponentType<IconProps>;
   category: 'Telegram Bot' | 'Trading Terminal' | 'Mobile App' | 'EVM' | 'Monad';
   chain?: 'solana' | 'ethereum' | 'evm' | 'monad'; // Optional for backward compatibility
 }
@@ -39,7 +43,7 @@ export interface ProtocolConfig {
 export interface ProtocolConfigMutable {
   id: string;
   name: string;
-  icon: LucideIcon | React.ComponentType<any>;
+  icon: LucideIcon | React.ComponentType<IconProps>;
   category: string;
   chain?: 'solana' | 'ethereum' | 'evm' | 'monad'; // Optional for backward compatibility
 }

@@ -72,7 +72,7 @@ export const protocolConfigs: ProtocolConfig[] = [
   { id: 'vyper', name: 'Vyper', icon: VyperIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'opensea', name: 'OpenSea', icon: OpenSeaIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'phantom', name: 'Phantom', icon: PhantomIcon, category: 'Trading Terminal', chain: 'solana' },
-  { id: 'okx', name: 'OKX', icon: OKXIcon, category: 'Trading Terminal', chain: 'solana' },
+  { id: 'okx', name: 'OKX', icon: OKXIcon, category: 'Mobile App', chain: 'solana' },
   { id: 'trojan', name: 'Trojan', icon: TrojanTerminalIcon, category: 'Trading Terminal', chain: 'solana' },
   { id: 'trojanterminal', name: 'Trojan Terminal', icon: TrojanTerminalAppIcon, category: 'Trading Terminal', chain: 'solana' },
 

@@ -65,7 +65,7 @@ export const PUBLIC_PROTOCOL_SOURCES: Record<string, ProtocolSource> = {
   // ==========================================
 
   // Telegram Bots
-  "sigma_evm": { queryIds: [5430634], chain: 'evm' },
+  "sigma_evm": { queryIds: [6561939], chain: 'evm' },
   "maestro_evm": { queryIds: [6512185], chain: 'evm' },
   "bloom_evm": { queryIds: [6511725], chain: 'evm' },
   "banana_evm": { queryIds: [4750709], chain: 'evm' },

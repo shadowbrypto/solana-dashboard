@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { WeeklyMetricsTable } from '../components/WeeklyMetricsTable';
 import { EVMWeeklyMetricsTable } from '../components/EVMWeeklyMetricsTable';
 import { WeeklyChainVolumeChart } from '../components/WeeklyChainVolumeChart';
+import { TrojanWeeklyReport } from '../components/TrojanWeeklyReport';
 import { getMutableAllCategories, getMutableProtocolsByCategory, getProtocolsByChain } from '../lib/protocol-config';
 import { Protocol } from '../types/protocol';
 import { Skeleton } from '../components/ui/skeleton';
@@ -188,6 +189,11 @@ export default function WeeklyReport() {
       <div className="space-y-4 lg:space-y-6">
         {/* Chain Volume Distribution - Combined view for all chains */}
         <WeeklyChainVolumeChart endDate={endDate} />
+
+        {/* Trojan Weekly Report - Only for Solana */}
+        {chainType === 'solana' && (
+          <TrojanWeeklyReport endDate={endDate} />
+        )}
 
         {/* Chain-specific tables */}
         {isLoading ? (

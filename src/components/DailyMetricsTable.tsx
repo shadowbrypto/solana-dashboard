@@ -785,6 +785,16 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     }
   };
 
+  // Growth background coloring based on positive/negative value
+  const getGrowthBackground = (growth: number): string => {
+    if (growth > 0) {
+      return 'bg-green-50 dark:bg-green-900/20';
+    } else if (growth < 0) {
+      return 'bg-red-50 dark:bg-red-900/20';
+    }
+    return '';
+  };
+
 
   useEffect(() => {
     // Debug: Add global click listener to detect if events are being captured

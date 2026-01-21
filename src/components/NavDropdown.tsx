@@ -94,7 +94,7 @@ export function NavDropdown({ trigger, sections, isActive }: NavDropdownProps) {
                     }}
                   >
                     {item.icon && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                      <div className="flex-shrink-0">
                         {item.icon}
                       </div>
                     )}

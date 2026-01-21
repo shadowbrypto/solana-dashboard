@@ -60,7 +60,8 @@ export function TopNavigation() {
             <ProtocolLogo
               src={`/assets/logos/${getProtocolLogoFilename(protocol.id)}`}
               alt={protocol.name}
-              size="sm"
+              size="xl"
+              clean
             />
           ),
           onClick: () => navigate(`/?protocol=${protocol.id}`),
@@ -92,7 +93,8 @@ export function TopNavigation() {
           <LaunchpadLogo
             src={`/assets/logos/${getLaunchpadLogoFilename(launchpad.id)}`}
             alt={launchpad.name}
-            size="sm"
+            size="xl"
+            clean
           />
         ),
         onClick: () => navigate(`/launchpad?launchpad=${launchpad.id}`),

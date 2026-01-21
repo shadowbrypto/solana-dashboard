@@ -3,7 +3,7 @@ import { MonitorSmartphone, Rocket } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 type LogoVariant = "protocol" | "launchpad" | "chain";
-type LogoSize = "xs" | "sm" | "md" | "lg";
+type LogoSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 interface LogoWithFallbackProps {
   src: string;
@@ -12,6 +12,7 @@ interface LogoWithFallbackProps {
   size?: LogoSize;
   className?: string;
   containerClassName?: string;
+  clean?: boolean; // No background, just the logo
 }
 
 const sizeClasses: Record<LogoSize, { container: string; icon: string }> = {
@@ -19,6 +20,7 @@ const sizeClasses: Record<LogoSize, { container: string; icon: string }> = {
   sm: { container: "w-4 h-4", icon: "h-2 w-2" },
   md: { container: "w-5 h-5", icon: "h-2.5 w-2.5" },
   lg: { container: "w-6 h-6", icon: "h-3 w-3" },
+  xl: { container: "w-8 h-8", icon: "h-4 w-4" },
 };
 
 // Header-sized logo with custom icon fallback support
@@ -70,6 +72,7 @@ export function LogoWithFallback({
   size = "sm",
   className,
   containerClassName,
+  clean = false,
 }: LogoWithFallbackProps) {
   const [hasError, setHasError] = useState(false);
   const sizeClass = sizeClasses[size];
@@ -79,7 +82,8 @@ export function LogoWithFallback({
       <div
         className={cn(
           sizeClass.container,
-          "bg-muted/20 rounded flex items-center justify-center",
+          !clean && "bg-muted/20",
+          "rounded-full flex items-center justify-center",
           containerClassName
         )}
       >
@@ -92,7 +96,8 @@ export function LogoWithFallback({
     <div
       className={cn(
         sizeClass.container,
-        "bg-muted/10 rounded overflow-hidden ring-1 ring-border/20",
+        "rounded-full overflow-hidden",
+        !clean && "bg-muted/10 ring-1 ring-border/20",
         containerClassName
       )}
     >
@@ -107,10 +112,10 @@ export function LogoWithFallback({
 }
 
 // For backward compatibility with existing code
-export function ProtocolLogo({ src, alt, size = "sm" }: { src: string; alt: string; size?: LogoSize }) {
-  return <LogoWithFallback src={src} alt={alt} variant="protocol" size={size} />;
+export function ProtocolLogo({ src, alt, size = "sm", clean = false }: { src: string; alt: string; size?: LogoSize; clean?: boolean }) {
+  return <LogoWithFallback src={src} alt={alt} variant="protocol" size={size} clean={clean} />;
 }
 
-export function LaunchpadLogo({ src, alt, size = "sm" }: { src: string; alt: string; size?: LogoSize }) {
-  return <LogoWithFallback src={src} alt={alt} variant="launchpad" size={size} />;
+export function LaunchpadLogo({ src, alt, size = "sm", clean = false }: { src: string; alt: string; size?: LogoSize; clean?: boolean }) {
+  return <LogoWithFallback src={src} alt={alt} variant="launchpad" size={size} clean={clean} />;
 }

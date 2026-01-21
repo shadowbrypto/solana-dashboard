@@ -100,89 +100,58 @@ export default function WeeklyReport() {
   const endDate = selectedEndDate;
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
-      {/* Header with Title and Toggle */}
-      <div className="mb-6 lg:mb-8">
-        <div className="flex items-center justify-between mb-4">
-          {/* Empty space for balance */}
-          <div className="flex-1"></div>
-          
-          {/* Title Section - Centered */}
-          <div className="flex flex-col text-center flex-1">
-            <h1 className="text-3xl sm:text-4xl font-semibold bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 bg-clip-text text-transparent">
-              Weekly Report
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              7-day trending analysis and growth metrics
-            </p>
-          </div>
-          
-          {/* Toggle Section */}
-          <div className="flex justify-end flex-1">
-              
-              {/* Chain Type Toggle */}
-              <div className="relative flex items-center bg-gradient-to-r from-muted/30 to-muted/50 p-1 rounded-xl border border-border/50 shadow-sm">
-                {/* Sliding background indicator with glow effect */}
-                <div 
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-background to-background/95 rounded-lg shadow-md transition-all duration-500 ease-out ${
-                    chainType === 'solana' 
-                      ? 'left-1 shadow-purple-500/20' 
-                      : 'left-[calc(50%+2px)] shadow-blue-500/20'
-                  }`}
-                />
-                
-                {/* Animated glow background */}
-                <div 
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg opacity-20 transition-all duration-500 ease-out ${
-                    chainType === 'solana' 
-                      ? 'left-1 bg-gradient-to-r from-purple-500 to-violet-500' 
-                      : 'left-[calc(50%+2px)] bg-gradient-to-r from-blue-500 to-cyan-500'
-                  }`}
-                />
-                
-                {/* Solana Button */}
-                <button
-                  onClick={() => handleChainTypeChange('solana')}
-                  className={`relative z-10 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 min-w-[100px] justify-center ${
-                    chainType === 'solana'
-                      ? 'text-foreground scale-105'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded-full overflow-hidden ring-1 ring-border/20 bg-background transition-all duration-300 ${
-                    chainType === 'solana' ? 'ring-purple-500/30 scale-110' : ''
-                  }`}>
-                    <img 
-                      src="/assets/logos/solana.jpg" 
-                      alt="Solana" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span>SOL</span>
-                </button>
-                
-                {/* EVM Button */}
-                <button
-                  onClick={() => handleChainTypeChange('evm')}
-                  className={`relative z-10 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 min-w-[100px] justify-center ${
-                    chainType === 'evm'
-                      ? 'text-foreground scale-105'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded-full overflow-hidden ring-1 ring-border/20 bg-background transition-all duration-300 ${
-                    chainType === 'evm' ? 'ring-blue-500/30 scale-110' : ''
-                  }`}>
-                    <img 
-                      src="/assets/logos/ethereum.jpg" 
-                      alt="Ethereum" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span>EVM</span>
-                </button>
-              </div>
-          </div>
+    <div className="space-y-6">
+      {/* Page Title */}
+      <div className="text-center">
+        <h1 className="text-title-1 font-semibold text-foreground">Weekly Report</h1>
+        <p className="text-subhead text-muted-foreground mt-1">7-day trends and growth analysis across protocols</p>
+      </div>
+
+      {/* Chain Toggle - Apple Segmented Control Style - Centered */}
+      <div className="flex justify-center">
+        <div className="relative flex items-center bg-secondary p-1 rounded-lg">
+          {/* Sliding indicator */}
+          <div
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-background rounded-md shadow-sm transition-all duration-200 ease-out ${
+              chainType === 'solana' ? 'left-1' : 'left-[calc(50%+2px)]'
+            }`}
+          />
+
+          {/* Solana Button */}
+          <button
+            onClick={() => handleChainTypeChange('solana')}
+            className={`relative z-10 flex items-center gap-2 px-4 py-1.5 text-callout font-medium rounded-md transition-colors duration-150 min-w-[90px] justify-center ${
+              chainType === 'solana' ? 'text-foreground' : 'text-muted-foreground'
+            }`}
+          >
+            <div className="w-4 h-4 rounded-full overflow-hidden bg-muted">
+              <img
+                src="/assets/logos/solana.jpg"
+                alt="Solana"
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+            <span>Solana</span>
+          </button>
+
+          {/* EVM Button */}
+          <button
+            onClick={() => handleChainTypeChange('evm')}
+            className={`relative z-10 flex items-center gap-2 px-4 py-1.5 text-callout font-medium rounded-md transition-colors duration-150 min-w-[90px] justify-center ${
+              chainType === 'evm' ? 'text-foreground' : 'text-muted-foreground'
+            }`}
+          >
+            <div className="w-4 h-4 rounded-full overflow-hidden bg-muted">
+              <img
+                src="/assets/logos/ethereum.jpg"
+                alt="Ethereum"
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+            <span>EVM</span>
+          </button>
         </div>
       </div>
 

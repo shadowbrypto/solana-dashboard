@@ -352,43 +352,27 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
   }
 
   return (
-    <div className="relative space-y-3" data-table="evm-weekly-metrics">
+    <>
+    <div className="relative space-y-4" data-table="evm-weekly-metrics">
       <div data-screenshot-content="true">
-        <div className="flex items-center justify-between">
+        {/* Header with title, date navigator and visibility toggle */}
+        <div className="flex items-center justify-between group/header">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-foreground">Weekly Report</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-md">
-              EVM
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-2 group">
-            <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)} className="w-[300px]">
-              <TabsList className="grid w-full grid-cols-3">
-                {metricOptions.map((option) => (
-                  <TabsTrigger key={option.key} value={option.key} className="text-sm">
-                    {option.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
+            <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Weekly Report</h2>
             <button
               onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+              className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
               title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
             >
-              {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
+              {hiddenProtocols.size > 0 ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span>{hiddenProtocols.size > 0 ? "Show All" : "Hide All"}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Date Navigator */}
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => {
                 const prev7Days = subDays(endDate, 7);
                 const MIN_DATE = new Date('2024-01-01');
@@ -401,36 +385,29 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 const MIN_DATE = new Date('2024-01-01');
                 return isBefore(prev7Days, MIN_DATE);
               })()}
-              className="h-8 w-8 p-0"
+              className={cn(
+                "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+                (() => {
+                  const prev7Days = subDays(endDate, 7);
+                  const MIN_DATE = new Date('2024-01-01');
+                  return isBefore(prev7Days, MIN_DATE);
+                })()
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+              )}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {format(subDays(endDate, 6), 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
-                <div className="p-3">
-                  <p className="text-sm text-muted-foreground mb-2">Select week ending date</p>
-                  <input
-                    type="date"
-                    value={format(endDate, 'yyyy-MM-dd')}
-                    onChange={(e) => onDateChange(new Date(e.target.value))}
-                    min={format(new Date('2024-01-01'), 'yyyy-MM-dd')}
-                    max={format(subDays(new Date(), 1), 'yyyy-MM-dd')}
-                    className="w-full px-3 py-2 border border-border rounded-md text-sm"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-            
+
+            <div className="flex items-center gap-2 px-4 h-10 border border-border rounded-sm bg-background">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="font-normal text-sm">
+                {format(subDays(endDate, 6), 'MMMM d')} - {format(endDate, 'd, yyyy')}
+              </span>
+            </div>
+
             <Button
               variant="outline"
-              size="sm"
               onClick={() => {
                 const next7Days = addDays(endDate, 7);
                 const MAX_DATE = subDays(new Date(), 1);
@@ -443,14 +420,36 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
                 const MAX_DATE = subDays(new Date(), 1);
                 return isAfter(next7Days, MAX_DATE);
               })()}
-              className="h-8 w-8 p-0"
+              className={cn(
+                "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+                (() => {
+                  const next7Days = addDays(endDate, 7);
+                  const MAX_DATE = subDays(new Date(), 1);
+                  return isAfter(next7Days, MAX_DATE);
+                })()
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+              )}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto mt-4">
+        {/* Metric Tabs */}
+        <div className="flex items-center mt-4">
+          <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)} className="w-[300px]">
+            <TabsList className="grid w-full grid-cols-3">
+              {metricOptions.map((option) => (
+                <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="rounded-lg border border-border overflow-x-auto mt-4">
           <Table className="w-full [&_th]:px-2 [&_td]:px-2">
           <TableHeader>
             <TableRow className="h-16">
@@ -644,10 +643,10 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
               </TableRow>
             )}
             
-            {/* Total Row */}
+            {/* All Trading Apps Total Row */}
             {protocolData.length > 0 && (
-              <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
-                <TableCell className="font-bold text-sm" style={{ paddingLeft: '2rem' }}>Total</TableCell>
+              <TableRow className="font-bold bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700">
+                <TableCell className="font-semibold text-sm px-4">All Trading Apps</TableCell>
                 
                 {last7Days.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
@@ -769,27 +768,27 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
         </div>
       </div>
       
-      {/* Action buttons below the table */}
-      <div className="flex justify-end gap-2 mt-4 no-screenshot">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={downloadReport}
-          className="shadow-sm"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={copyToClipboard}
-          className="shadow-sm"
-        >
-          <Copy className="h-4 w-4 mr-2" />
-          Copy
-        </Button>
-      </div>
     </div>
+
+    {/* Download/Copy buttons - outside data-table so they don't appear in screenshots */}
+    <div className="flex justify-end gap-2 pt-4">
+      <button
+        onClick={downloadReport}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Download weekly report as image"
+      >
+        <Download className="h-4 w-4" aria-hidden="true" />
+        Download
+      </button>
+      <button
+        onClick={copyToClipboard}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Copy weekly report to clipboard"
+      >
+        <Copy className="h-4 w-4" aria-hidden="true" />
+        Copy
+      </button>
+    </div>
+    </>
   );
 }

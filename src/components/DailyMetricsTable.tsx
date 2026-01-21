@@ -51,14 +51,14 @@ const getTrojanDisplayName = (protocol: string): string => {
 
 const getTrojanRowStyle = (protocol: string): string => {
   if (!isTrojanProtocol(protocol)) return '';
-  // Strong gradient from left to right across entire row
-  return 'bg-gradient-to-r from-purple-200 via-purple-100/50 to-transparent dark:from-purple-700/60 dark:via-purple-800/30 dark:to-transparent';
+  // Strong gradient from purple on left, fading to transparent on right
+  return 'bg-gradient-to-r from-purple-200 via-purple-100 to-transparent dark:from-purple-800/50 dark:via-purple-900/30 dark:to-transparent';
 };
 
 const getTrojanFirstCellStyle = (protocol: string): string => {
   if (!isTrojanProtocol(protocol)) return '';
-  // Left border only - gradient comes from row
-  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400 !bg-transparent';
+  // Bold left border accent
+  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400';
 };
 
 const isTrojanProtocol = (protocol: string): boolean => {
@@ -260,7 +260,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         return 0;
       }
     },
-    { key: "total_volume_usd", label: "Volume", format: formatCurrency },
+    { key: "total_volume_usd", label: "Volume", format: (value: number) => formatCurrency(value) },
     {
       key: "public_daily_users" as MetricKey,
       label: "DAUs*",
@@ -366,7 +366,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         return publicUserData[protocol]?.dailyUsers || 0;
       }
     },
-    { key: "daily_users", label: "DAUs", format: formatNumber },
+    { key: "daily_users", label: "DAUs", format: (value: number) => formatNumber(value) },
     {
       key: "public_new_users" as MetricKey,
       label: "New Users*",
@@ -472,8 +472,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         return publicUserData[protocol]?.newUsers || 0;
       }
     },
-    { key: "numberOfNewUsers", label: "New Users", format: formatNumber },
-    { key: "daily_trades", label: "Trades", format: formatNumber },
+    { key: "numberOfNewUsers", label: "New Users", format: (value: number) => formatNumber(value) },
+    { key: "daily_trades", label: "Trades", format: (value: number) => formatNumber(value) },
     {
       key: "market_share",
       label: "Market Share",
@@ -785,17 +785,6 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     }
   };
 
-  // Growth background coloring based on positive/negative value
-  const getGrowthBackground = (growth: number): string => {
-    if (growth > 0) {
-      return 'bg-green-50 dark:bg-green-900/20';
-    } else if (growth < 0) {
-      return 'bg-red-50 dark:bg-red-900/20';
-    }
-    return '';
-  };
-
-
   useEffect(() => {
     // Debug: Add global click listener to detect if events are being captured
     const globalClickHandler = (e: MouseEvent) => {
@@ -1024,36 +1013,27 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
   const hasTrojanData = trojanOnSolanaData || trojanTerminalData || trojanTotalData;
 
   return (
-    <div className="space-y-4">
-      <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-1 sm:gap-2">
-              <h3 className="text-sm sm:text-lg font-semibold text-foreground">Daily Report</h3>
-              <span className="px-1 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
-                SOL
-              </span>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <button
-                onClick={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? showAllProtocols : hideAllProtocols}
-                className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                title={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
-                aria-label={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
-              >
-                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? <Eye className="h-3 w-3" aria-hidden="true" /> : <EyeOff className="h-3 w-3" aria-hidden="true" />}
-                {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show All" : "Hide All"}
-              </button>
-            </div>
-          </div>
-          <div className="w-full sm:w-auto flex sm:justify-end">
-            <DateNavigator date={date} onDateChange={handleDateChange} />
-          </div>
+    <>
+    <div data-table="daily-metrics" className="space-y-4">
+      {/* Header with title, date navigator and visibility toggle */}
+      <div className="flex items-center justify-between group/header">
+        <div className="flex items-center gap-2">
+          <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Daily Report</h2>
+          <button
+            onClick={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? showAllProtocols : hideAllProtocols}
+            className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
+            title={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show all protocols and columns" : "Hide all protocols"}
+          >
+            {(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            <span>{(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? "Show All" : "Hide All"}</span>
+          </button>
         </div>
+        <DateNavigator date={date} onDateChange={handleDateChange} />
+      </div>
 
-        {/* Trojan Ecosystem Table */}
-        {hasTrojanData && (
-          <div className="rounded-xl border border-gray-400 dark:border-gray-500 bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+      {/* Trojan Ecosystem Table */}
+      {hasTrojanData && (
+        <div className="rounded-lg border border-border overflow-x-auto">
             <Table className="min-w-[600px] sm:min-w-[800px]">
               <TableHeader>
                 {/* Row 1: Group Headers */}
@@ -1095,7 +1075,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     </TableHead>
                   )}
                   {orderedMetrics.some(m => m.key === 'market_share') && (
-                    <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 w-[100px] sm:w-[130px]">
+                    <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 w-[100px] sm:w-[130px] whitespace-nowrap">
                       Market Share
                     </TableHead>
                   )}
@@ -1229,11 +1209,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 </TableRow>
               </TableBody>
             </Table>
-          </div>
-        )}
+        </div>
+      )}
 
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
-          <Table className="min-w-[600px] sm:min-w-[800px]">
+      {/* Main Protocol Table */}
+      <div className="rounded-lg border border-border overflow-x-auto">
+        <Table className="min-w-[600px] sm:min-w-[800px]">
             <TableHeader>
               {/* Row 1: Group Headers */}
               <TableRow className="hover:bg-transparent border-b-0">
@@ -1283,7 +1264,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   </TableHead>
                 )}
                 {orderedMetrics.some(m => m.key === 'market_share') && (
-                  <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 group w-[100px] sm:w-[130px]">
+                  <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 group w-[100px] sm:w-[130px] whitespace-nowrap">
                     <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                       <span>Market Share</span>
                       <button
@@ -1525,7 +1506,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           <TableCell
                             key={metric.key}
                             className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth'
-                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[70px] sm:min-w-[90px]' : ' min-w-[100px] sm:min-w-[130px]')
+                              ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]')
                               : ''
                             }`}
                           >
@@ -1544,13 +1525,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               })}
 
               {/* All Trading Apps Total Row */}
-              <TableRow className="font-bold bg-gray-200 dark:bg-gray-700 border-t-2 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
-                <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-[9px] sm:text-sm">
-                  <div className="flex items-center gap-0.5 sm:gap-2">
-                    <div className="w-3 h-3 flex-shrink-0" /> {/* Placeholder for eye button */}
-                    <div className="w-4 h-4 flex-shrink-0" /> {/* Placeholder for logo */}
-                    <span className="font-medium">All Trading Apps</span>
-                  </div>
+              <TableRow className="font-bold bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700">
+                <TableCell className="pl-3 sm:pl-4 pr-1 sm:pr-4 text-[9px] sm:text-sm">
+                  <span className="font-semibold">All Trading Apps</span>
                 </TableCell>
                 {orderedMetrics.map((metric) => {
                   let total: number;
@@ -1653,9 +1630,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}
                       >
                         <div className="flex items-center justify-end sm:justify-between w-full">
-                          <div className="hidden sm:block w-[40px] sm:w-[50px] h-[24px] sm:h-[28px] -my-2">
+                          <div className="hidden sm:block w-[60px] h-[30px] -my-1">
                             <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={aggregatedWeeklyData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+                              <AreaChart data={aggregatedWeeklyData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                                 <Area 
                                   type="monotone" 
                                   dataKey="value" 
@@ -1670,8 +1647,8 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                           </div>
                           {!isNeutral && (
                             <div className={cn(
-                              "flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium -ml-4 sm:-ml-8",
-                              isPositive 
+                              "flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-xs font-medium ml-0.5 sm:ml-1",
+                              isPositive
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             )}>
@@ -1684,11 +1661,11 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
                                 </svg>
                               )}
-                              {absPercentage.toFixed(2)}%
+                              {absPercentage.toFixed(1)}%
                             </div>
                           )}
                           {isNeutral && (
-                            <span className="text-muted-foreground text-[9px] sm:text-xs -ml-4 sm:-ml-8">—</span>
+                            <span className="text-muted-foreground text-[9px] sm:text-xs ml-0.5 sm:ml-1">—</span>
                           )}
                         </div>
                       </TableCell>
@@ -1870,28 +1847,29 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 })}
               </TableRow>
             </TableBody>
-          </Table>
-        </div>
+        </Table>
       </div>
-      
-      <div className="flex justify-end gap-2 pt-4">
-          <button
-            onClick={downloadReport}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-            aria-label="Download daily report as image"
-          >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            Download
-          </button>
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-            aria-label="Copy daily report to clipboard"
-          >
-            <Copy className="h-4 w-4" aria-hidden="true" />
-            Copy
-          </button>
-        </div>
     </div>
+
+    {/* Download/Copy buttons - outside data-table so they don't appear in screenshots */}
+    <div className="flex justify-end gap-2 pt-4">
+      <button
+        onClick={downloadReport}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Download daily report as image"
+      >
+        <Download className="h-4 w-4" aria-hidden="true" />
+        Download
+      </button>
+      <button
+        onClick={copyToClipboard}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Copy daily report to clipboard"
+      >
+        <Copy className="h-4 w-4" aria-hidden="true" />
+        Copy
+      </button>
+    </div>
+  </>
   );
 }

@@ -50,13 +50,12 @@ export function DateNavigator({
       {/* Previous Day Button */}
       <Button
         variant="outline"
-        size="sm"
         onClick={handlePreviousDay}
         disabled={isPreviousDisabled}
         className={cn(
-          "h-9 w-9 p-0 flex items-center justify-center transition-all duration-200",
-          isPreviousDisabled 
-            ? "opacity-40 cursor-not-allowed" 
+          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+          isPreviousDisabled
+            ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
         )}
         title={isPreviousDisabled ? `Cannot go before ${format(minDate, 'MMM dd, yyyy')}` : "Previous day"}
@@ -75,13 +74,12 @@ export function DateNavigator({
       {/* Next Day Button */}
       <Button
         variant="outline"
-        size="sm"
         onClick={handleNextDay}
         disabled={isNextDisabled}
         className={cn(
-          "h-9 w-9 p-0 flex items-center justify-center transition-all duration-200",
-          isNextDisabled 
-            ? "opacity-40 cursor-not-allowed" 
+          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+          isNextDisabled
+            ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
         )}
         title={isNextDisabled ? `Cannot go beyond ${format(maxDate, 'MMM dd, yyyy')}` : "Next day"}

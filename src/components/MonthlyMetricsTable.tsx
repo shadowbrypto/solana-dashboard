@@ -141,6 +141,23 @@ function getGrowthBackground(value: number): string {
   return '';
 }
 
+// Trojan protocol styling helpers
+const TROJAN_PROTOCOLS = ['trojanonsolana', 'trojan', 'trojanterminal'] as const;
+
+const isTrojanProtocol = (protocol: string): boolean => {
+  return TROJAN_PROTOCOLS.includes(protocol as typeof TROJAN_PROTOCOLS[number]);
+};
+
+const getTrojanRowStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  return 'bg-gradient-to-r from-purple-200 via-purple-100 to-transparent dark:from-purple-800/50 dark:via-purple-900/30 dark:to-transparent';
+};
+
+const getTrojanFirstCellStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400';
+};
+
 export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = false }: MonthlyMetricsTableProps) {
   const [topProtocols, setTopProtocols] = useState<Protocol[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
@@ -653,7 +670,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
   const hideAllProtocols = () => {
     const allProtocols = new Set<string>();
-    const categories = getMutableAllCategories();
+    const categories = getMutableAllCategories().filter(cat => cat !== 'Monad');
     categories.forEach(categoryName => {
       const categoryProtocols = getMutableProtocolsByCategory(categoryName);
       categoryProtocols.forEach(protocol => {
@@ -753,33 +770,25 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
   };
 
   return (
-    <div className="space-y-4">
-      <div data-table="monthly-metrics" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
-              <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
-                SOL
-              </span>
-            </div>
-            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <button
-                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-              >
-                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-              </button>
-            </div>
+    <>
+    <div className="space-y-4" data-table="monthly-metrics">
+        {/* Header with title, date navigator and visibility toggle */}
+        <div className="flex items-center justify-between group/header">
+          <div className="flex items-center gap-2">
+            <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Monthly Report</h2>
+            <button
+              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+              className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
+              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+            >
+              {hiddenProtocols.size > 0 ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span>{hiddenProtocols.size > 0 ? "Show All" : "Hide All"}</span>
+            </button>
           </div>
-          <div className="w-full sm:w-auto flex sm:justify-end">
-            <MonthNavigator date={date} onDateChange={handleDateChange} />
-          </div>
+          <MonthNavigator date={date} onDateChange={handleDateChange} />
         </div>
 
-          <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+          <div className="rounded-lg border border-border overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -796,7 +805,7 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
 
             </TableHeader>
             <TableBody>
-              {getMutableAllCategories().map((categoryName) => {
+              {getMutableAllCategories().filter(cat => cat !== 'Monad').map((categoryName) => {
                 const categoryProtocols = getMutableProtocolsByCategory(categoryName);
                 const availableProtocols = categoryProtocols.map(p => p.id).filter(p => protocols.includes(p as Protocol));
                 
@@ -897,11 +906,19 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
                     {orderedProtocols.map((protocol) => {
                       const isHidden = hiddenProtocols.has(protocol);
                       return (
-                        <TableRow 
-                          key={protocol} 
-                          className={`${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                        <TableRow
+                          key={protocol}
+                          className={cn(
+                            isCollapsed || isHidden ? 'hidden' : '',
+                            'transition-colors hover:bg-muted/30',
+                            getTrojanRowStyle(protocol)
+                          )}
                         >
-                          <TableCell className="pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm">
+                          <TableCell className={cn(
+                            "pl-3 sm:pl-6 text-muted-foreground text-xs sm:text-sm",
+                            getTrojanFirstCellStyle(protocol),
+                            isTrojanProtocol(protocol) && "bg-transparent"
+                          )}>
                             <div className="flex items-center gap-1 sm:gap-2">
                               <button
                                 onClick={(e) => {
@@ -973,9 +990,9 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
               })}
 
               {/* All Trading Apps Total Row */}
-              <TableRow className="font-bold bg-gray-200 dark:bg-gray-700 border-t-2 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-b-xl">
-                <TableCell className="font-medium text-xs sm:text-sm" style={{ paddingLeft: '2rem' }}>
-                  All Trading Apps
+              <TableRow className="font-bold bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700">
+                <TableCell className="pl-4 pr-4 py-3 text-sm">
+                  <span className="font-semibold">All Trading Apps</span>
                 </TableCell>
                 {orderedMetrics.map((metric) => {
                   let total: number;
@@ -1169,23 +1186,24 @@ export function MonthlyMetricsTable({ protocols, date, onDateChange, loading = f
           </Table>
         </div>
       </div>
-      
-      <div className="flex justify-end gap-2 pt-4">
-          <button
-            onClick={downloadReport}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            Download
-          </button>
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
-          >
-            <Copy className="h-4 w-4" />
-            Copy
-          </button>
-        </div>
+
+    {/* Download/Copy buttons - outside data-table so they don't appear in screenshots */}
+    <div className="flex justify-end gap-2 pt-4">
+      <button
+        onClick={downloadReport}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+      >
+        <Download className="h-4 w-4" />
+        Download
+      </button>
+      <button
+        onClick={copyToClipboard}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+      >
+        <Copy className="h-4 w-4" />
+        Copy
+      </button>
     </div>
+    </>
   );
 }

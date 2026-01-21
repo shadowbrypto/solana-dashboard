@@ -447,33 +447,25 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
   };
 
   return (
-    <div className="space-y-4">
-      <div data-table="evm-monthly-metrics" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">Monthly Report</h3>
-              <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                EVM
-              </span>
-            </div>
-            <div className="flex items-center gap-2 opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <button
-                onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-              >
-                {hiddenProtocols.size > 0 ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-              </button>
-            </div>
+    <>
+    <div className="space-y-4" data-table="evm-monthly-metrics">
+        {/* Header with title, date navigator and visibility toggle */}
+        <div className="flex items-center justify-between group/header">
+          <div className="flex items-center gap-2">
+            <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Monthly Report</h2>
+            <button
+              onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
+              className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
+              title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
+            >
+              {hiddenProtocols.size > 0 ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span>{hiddenProtocols.size > 0 ? "Show All" : "Hide All"}</span>
+            </button>
           </div>
-          <div className="w-full sm:w-auto flex sm:justify-end">
-            <MonthNavigator date={endDate} onDateChange={handleDateChange} />
-          </div>
+          <MonthNavigator date={endDate} onDateChange={handleDateChange} />
         </div>
 
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        <div className="rounded-lg border border-border overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
@@ -629,10 +621,12 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
                 );
                   })}
                   {/* Total Row */}
-                  <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold rounded-b-xl">
-                <TableCell style={{ paddingLeft: '2rem' }} className="rounded-bl-xl">
-                  <span className="font-semibold">Total</span>
-                </TableCell>
+                  <TableRow className="border-t-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-bold">
+                    <TableCell>
+                      <div className="flex items-center gap-3 pl-6">
+                        <span className="font-semibold">All Trading Apps</span>
+                      </div>
+                    </TableCell>
                 {chains.map(chain => (
                   <TableCell key={chain} className="text-right">
                     <Badge 
@@ -686,7 +680,7 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
                     </Badge>
                   </div>
                 </TableCell>
-                    <TableCell className="text-center rounded-br-xl">
+                    <TableCell className="text-center">
                       <SixMonthTrendChart data={totals.totalSixMonthTrend} growth={totals.overallGrowth} />
                     </TableCell>
                   </TableRow>
@@ -713,6 +707,6 @@ export function EVMMonthlyMetricsTable({ protocols, endDate, onDateChange }: EVM
           Copy
         </button>
       </div>
-    </div>
+    </>
   );
 }

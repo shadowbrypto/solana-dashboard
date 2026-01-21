@@ -53,6 +53,25 @@ const getGrowthBadgeClasses = (growth: number): string => {
   return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"; // Negative
 };
 
+// Trojan protocol styling helpers
+const TROJAN_PROTOCOLS = ['trojanonsolana', 'trojan', 'trojanterminal'] as const;
+
+const isTrojanProtocol = (protocol: string): boolean => {
+  return TROJAN_PROTOCOLS.includes(protocol as typeof TROJAN_PROTOCOLS[number]);
+};
+
+const getTrojanRowStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Strong gradient from purple on left, fading to transparent on right
+  return 'bg-gradient-to-r from-purple-200 via-purple-100 to-transparent dark:from-purple-800/50 dark:via-purple-900/30 dark:to-transparent';
+};
+
+const getTrojanFirstCellStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Bold left border accent
+  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400';
+};
+
 export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyMetricsTableProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [dailyData, setDailyData] = useState<DailyData>({});
@@ -664,33 +683,13 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const startDate = subDays(endDate, 6);
 
   return (
-    <div className="relative space-y-3" data-table="weekly-metrics-full">
-        <div className="flex items-center justify-between">
+    <>
+    <div className="relative space-y-4" data-table="weekly-metrics-full">
+        {/* Header with title, date navigator and visibility toggle */}
+        <div className="flex items-center justify-between group/header">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">Weekly Report</h2>
-            <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-md">
-              SOL
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 group">
-            <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
-              <TabsList className="grid w-full grid-cols-4">
-                {metricOptions.map((option) => (
-                  <TabsTrigger key={option.key} value={option.key} className="text-sm">
-                    {option.key === 'total_volume_usd' ? 'Volume' :
-                     option.key === 'daily_users' ? 'DAUs' :
-                     option.key === 'numberOfNewUsers' ? 'New Users' :
-                     'Trades'}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-            
-            <Button
-              variant="outline"
-              size="sm"
+            <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Weekly Report</h2>
+            <button
               onClick={() => {
                 if (hiddenProtocols.size > 0) {
                   setHiddenProtocols(new Set());
@@ -702,43 +701,49 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   setHiddenProtocols(allProtocols);
                 }
               }}
+              className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
               title={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-              aria-label={hiddenProtocols.size > 0 ? "Show all protocols" : "Hide all protocols"}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              {hiddenProtocols.size > 0 ? (
-                <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
-              ) : (
-                <EyeOff className="h-4 w-4 mr-2" aria-hidden="true" />
-              )}
-              {hiddenProtocols.size > 0 ? "Show All" : "Hide All"}
-            </Button>
+              {hiddenProtocols.size > 0 ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span>{hiddenProtocols.size > 0 ? "Show All" : "Hide All"}</span>
+            </button>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          {/* Date Navigator */}
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
-              size="icon"
               onClick={() => handleDateChange('prev')}
               disabled={!canNavigatePrev()}
+              className={cn(
+                "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+                !canNavigatePrev()
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+              )}
               title={!canNavigatePrev() ? `Cannot go before ${format(MIN_DATE, 'MMM d, yyyy')}` : 'Previous 7 days'}
               aria-label="Go to previous 7 days"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
-            
-            <div className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-muted/30">
+
+            <div className="flex items-center gap-2 px-4 h-10 border border-border rounded-sm bg-background">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">
-                {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
+              <span className="font-normal text-sm">
+                {format(startDate, 'MMMM d')} - {format(endDate, 'd, yyyy')}
               </span>
             </div>
-            
+
             <Button
               variant="outline"
-              size="icon"
               onClick={() => handleDateChange('next')}
               disabled={!canNavigateNext()}
+              className={cn(
+                "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+                !canNavigateNext()
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+              )}
               title={!canNavigateNext() ? 'Cannot go beyond yesterday (today excluded due to incomplete data)' : 'Next 7 days'}
               aria-label="Go to next 7 days"
             >
@@ -746,8 +751,24 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             </Button>
           </div>
         </div>
+
+        {/* Metric Tabs */}
+        <div className="flex items-center">
+          <Tabs value={selectedMetric} onValueChange={(value: MetricKey) => setSelectedMetric(value)} className="w-auto">
+            <TabsList className="grid w-full grid-cols-4">
+              {metricOptions.map((option) => (
+                <TabsTrigger key={option.key} value={option.key} className="text-sm">
+                  {option.key === 'total_volume_usd' ? 'Volume' :
+                   option.key === 'daily_users' ? 'DAUs' :
+                   option.key === 'numberOfNewUsers' ? 'New Users' :
+                   'Trades'}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
         
-        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto" data-table="weekly-metrics">
+        <div className="rounded-lg border border-border overflow-x-auto" data-table="weekly-metrics">
           <Table>
             <TableHeader>
               <TableRow className="h-16">
@@ -777,7 +798,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 {selectedMetric !== 'daily_users' && (
                   <TableHead className="text-center min-w-[90px] px-1 py-2 sm:py-3 text-xs sm:text-sm">Weekly Total</TableHead>
                 )}
-                <TableHead className="text-center min-w-[130px] px-1 py-2 sm:py-3 text-xs sm:text-sm">
+                <TableHead className="text-center min-w-[180px] px-1 py-2 sm:py-3 text-xs sm:text-sm">
                   {selectedMetric === 'daily_users' ? 'Weekly Trend' : 'Trend & Growth'}
                 </TableHead>
               </TableRow>
@@ -869,8 +890,8 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                             </Badge>
                           </TableCell>
                         )}
-                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
-                          <div className="flex items-center justify-between w-full">
+                        <TableCell className={cn("text-center py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[180px]", getCategoryRowColor(categoryName), getCategoryHoverColor(categoryName))}>
+                          <div className="flex items-center justify-end gap-3 px-2">
                             <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                               <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart 
@@ -926,16 +947,23 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       {!isCollapsed && sortedCategoryProtocols.map(protocol => {
                         const isHidden = hiddenProtocols.has(protocol.id);
                         const protocolData = dailyData[protocol.id] || {};
-                        
+
                         // Don't render hidden protocols at all
                         if (isHidden) return null;
-                        
+
                         return (
-                          <TableRow 
+                          <TableRow
                             key={protocol.id}
-                            className="hover:bg-muted/50 transition-colors group"
+                            className={cn(
+                              "hover:bg-muted/50 transition-colors group",
+                              getTrojanRowStyle(protocol.id)
+                            )}
                           >
-                            <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                            <TableCell className={cn(
+                              "sticky left-0 z-10 bg-background group-hover:bg-muted/50 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors",
+                              getTrojanFirstCellStyle(protocol.id),
+                              isTrojanProtocol(protocol.id) && "bg-transparent"
+                            )}>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={(e) => {
@@ -995,8 +1023,8 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                                 </Badge>
                               </TableCell>
                             )}
-                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[150px]">
-                              <div className="flex items-center justify-between w-full">
+                            <TableCell className="text-center py-1 sm:py-2 px-1 transition-all relative font-medium text-xs sm:text-sm w-[180px]">
+                              <div className="flex items-center justify-end gap-3 px-2">
                                 <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                                   <ResponsiveContainer width="100%" height="100%">
                                     <ComposedChart 
@@ -1055,11 +1083,11 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                 })
               )}
               
-              {/* Total Row */}
+              {/* All Trading Apps Total Row */}
               {!loading && (
-                <TableRow className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold group transition-colors rounded-b-xl">
-                  <TableCell className="sticky left-0 z-10 bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors rounded-bl-xl">
-                    <span>Total</span>
+                <TableRow className="font-bold bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <TableCell className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 py-3 sm:py-4 px-2 sm:px-4 text-xs sm:text-sm transition-colors">
+                    <span className="font-semibold">All Trading Apps</span>
                   </TableCell>
                   {last7Days.map(day => {
                     const dateKey = format(day, 'yyyy-MM-dd');
@@ -1070,32 +1098,30 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                       }
                       return sum;
                     }, 0);
-                    
+
                     return (
-                      <TableCell key={dateKey} className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-3 sm:py-4 px-1 text-xs sm:text-sm transition-colors">
+                      <TableCell key={dateKey} className="text-center font-bold py-3 sm:py-4 px-1 text-xs sm:text-sm">
                         {formatValue(dailyTotal)}
                       </TableCell>
                     );
                   })}
                   {selectedMetric !== 'daily_users' && (
-                    <TableCell className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-2 sm:py-3 px-1 text-xs sm:text-sm transition-colors">
-                      <Badge variant="outline" className="font-bold bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm py-0 -my-1">
-                        {formatValue(last7Days.reduce((sum, day) => {
-                          const dateKey = format(day, 'yyyy-MM-dd');
-                          const dailyTotal = protocols.reduce((sum, protocol) => {
-                            const protocolData = dailyData[protocol];
-                            if (protocolData && protocolData[dateKey] !== undefined) {
-                              return sum + protocolData[dateKey];
-                            }
-                            return sum;
-                          }, 0);
-                          return sum + dailyTotal;
-                        }, 0))}
-                      </Badge>
+                    <TableCell className="text-center font-bold py-2 sm:py-3 px-1 text-xs sm:text-sm">
+                      {formatValue(last7Days.reduce((sum, day) => {
+                        const dateKey = format(day, 'yyyy-MM-dd');
+                        const dailyTotal = protocols.reduce((sum, protocol) => {
+                          const protocolData = dailyData[protocol];
+                          if (protocolData && protocolData[dateKey] !== undefined) {
+                            return sum + protocolData[dateKey];
+                          }
+                          return sum;
+                        }, 0);
+                        return sum + dailyTotal;
+                      }, 0))}
                     </TableCell>
                   )}
-                  <TableCell className="text-center font-bold bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 py-1 sm:py-2 px-1 text-xs sm:text-sm transition-colors w-[150px] rounded-br-xl">
-                    <div className="flex items-center justify-between w-full">
+                  <TableCell className="text-center font-bold py-1 sm:py-2 px-1 text-xs sm:text-sm w-[180px]">
+                    <div className="flex items-center justify-end gap-3 px-2">
                       <div className="w-[50px] h-[36px] flex-shrink-0 -my-1">
                         <ResponsiveContainer width="100%" height="100%">
                           <ComposedChart 
@@ -1152,29 +1178,27 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
           </Table>
         </div>
         
-        {/* Action buttons below the table */}
-        <div className="flex justify-end gap-2 mt-4 no-screenshot">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadReport}
-            className="shadow-sm"
-            aria-label="Download weekly report as image"
-          >
-            <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-            Download
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copyToClipboard}
-            className="shadow-sm"
-            aria-label="Copy weekly report to clipboard"
-          >
-            <Copy className="h-4 w-4 mr-2" aria-hidden="true" />
-            Copy
-          </Button>
-        </div>
-      </div>
+    </div>
+
+    {/* Download/Copy buttons - outside data-table so they don't appear in screenshots */}
+    <div className="flex justify-end gap-2 pt-4">
+      <button
+        onClick={downloadReport}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Download weekly report as image"
+      >
+        <Download className="h-4 w-4" aria-hidden="true" />
+        Download
+      </button>
+      <button
+        onClick={copyToClipboard}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        aria-label="Copy weekly report to clipboard"
+      >
+        <Copy className="h-4 w-4" aria-hidden="true" />
+        Copy
+      </button>
+    </div>
+    </>
   );
 }

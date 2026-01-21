@@ -8,10 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format a number with K/M/B suffixes
  * @param value - The number to format
- * @param decimals - Number of decimal places (default: 1)
+ * @param decimals - Number of decimal places (default: 2)
  * Numbers less than 100k show full number with commas
  */
-export function formatNumber(value: number, decimals: number = 1): string {
+export function formatNumber(value: number, decimals: number = 2): string {
   const absValue = Math.abs(value);
   if (absValue >= 1e9) return `${(value / 1e9).toFixed(decimals)}B`;
   if (absValue >= 1e6) return `${(value / 1e6).toFixed(decimals)}M`;

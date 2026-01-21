@@ -41,6 +41,30 @@ interface MetricDefinition {
 
 // formatCurrency, formatNumber, formatPercentage imported from utils.ts
 
+// Trojan protocol family - special display names and badges
+const TROJAN_PROTOCOLS = ['trojanonsolana', 'trojan', 'trojanterminal'] as const;
+
+const getTrojanDisplayName = (protocol: string): string => {
+  if (protocol === 'trojan') return 'Trojan Total';
+  return getProtocolName(protocol);
+};
+
+const getTrojanRowStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Strong gradient from left to right across entire row
+  return 'bg-gradient-to-r from-purple-200 via-purple-100/50 to-transparent dark:from-purple-700/60 dark:via-purple-800/30 dark:to-transparent';
+};
+
+const getTrojanFirstCellStyle = (protocol: string): string => {
+  if (!isTrojanProtocol(protocol)) return '';
+  // Left border only - gradient comes from row
+  return 'border-l-4 border-l-purple-500 dark:border-l-purple-400 !bg-transparent';
+};
+
+const isTrojanProtocol = (protocol: string): boolean => {
+  return TROJAN_PROTOCOLS.includes(protocol as typeof TROJAN_PROTOCOLS[number]);
+};
+
 export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetricsTableProps) {
   // Use the custom hook for data fetching
   const {
@@ -747,6 +771,38 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       default:
         return 'hover:bg-muted/30';
     }
+  };
+
+  // Column group border styling for visual grouping (right border on last column of each group)
+  const getColumnGroupBackground = (metricKey: string): string => {
+    switch (metricKey) {
+      case 'total_volume_usd':
+      case 'daily_users':
+      case 'numberOfNewUsers':
+        return 'border-r-2 border-r-border/50';
+      default:
+        return '';
+    }
+  };
+
+
+  useEffect(() => {
+    // Debug: Add global click listener to detect if events are being captured
+    const globalClickHandler = (e: MouseEvent) => {
+      console.log('Global click detected on Daily Report page:', e.target);
+    };
+
+    const globalWheelHandler = (e: WheelEvent) => {
+      console.log('Global wheel event detected on Daily Report page');
+    };
+
+    document.addEventListener('click', globalClickHandler, true);
+    document.addEventListener('wheel', globalWheelHandler, true);
+
+    return () => {
+      document.removeEventListener('click', globalClickHandler, true);
+      document.removeEventListener('wheel', globalWheelHandler, true);
+    };
   }, []);
 
 
@@ -950,6 +1006,13 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     }
   }, [toast]);
 
+  // Get Trojan protocol stats for the highlight section
+  const trojanOnSolanaData = dailyData['trojanonsolana' as Protocol];
+  const trojanTerminalData = dailyData['trojanterminal' as Protocol];
+  const trojanTotalData = dailyData['trojan' as Protocol];
+
+  const hasTrojanData = trojanOnSolanaData || trojanTerminalData || trojanTotalData;
+
   return (
     <div className="space-y-4">
       <div data-table="daily-metrics" className="space-y-2 sm:space-y-4">
@@ -978,37 +1041,302 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           </div>
         </div>
 
-          <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+        {/* Trojan Ecosystem Table */}
+        {hasTrojanData && (
+          <div className="rounded-xl border border-gray-400 dark:border-gray-500 bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
+            <Table className="min-w-[600px] sm:min-w-[800px]">
+              <TableHeader>
+                {/* Row 1: Group Headers */}
+                <TableRow className="hover:bg-transparent border-b-0">
+                  <TableHead rowSpan={2} className="w-[120px] sm:w-[200px] py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30">
+                    Trojan Ecosystem
+                  </TableHead>
+                  {/* Volume Group */}
+                  {(orderedMetrics.some(m => m.key === 'projected_volume') || orderedMetrics.some(m => m.key === 'total_volume_usd')) && (
+                    <TableHead
+                      colSpan={[orderedMetrics.some(m => m.key === 'projected_volume'), orderedMetrics.some(m => m.key === 'total_volume_usd')].filter(Boolean).length}
+                      className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
+                    >
+                      Volume
+                    </TableHead>
+                  )}
+                  {/* Active Users Group */}
+                  {(orderedMetrics.some(m => m.key === 'public_daily_users') || orderedMetrics.some(m => m.key === 'daily_users')) && (
+                    <TableHead
+                      colSpan={[orderedMetrics.some(m => m.key === 'public_daily_users'), orderedMetrics.some(m => m.key === 'daily_users')].filter(Boolean).length}
+                      className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
+                    >
+                      Active Users
+                    </TableHead>
+                  )}
+                  {/* New Users Group */}
+                  {(orderedMetrics.some(m => m.key === 'public_new_users') || orderedMetrics.some(m => m.key === 'numberOfNewUsers')) && (
+                    <TableHead
+                      colSpan={[orderedMetrics.some(m => m.key === 'public_new_users'), orderedMetrics.some(m => m.key === 'numberOfNewUsers')].filter(Boolean).length}
+                      className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
+                    >
+                      New Users
+                    </TableHead>
+                  )}
+                  {/* Individual columns with rowSpan */}
+                  {orderedMetrics.some(m => m.key === 'daily_trades') && (
+                    <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 w-[70px] sm:w-[90px]">
+                      Trades
+                    </TableHead>
+                  )}
+                  {orderedMetrics.some(m => m.key === 'market_share') && (
+                    <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 w-[100px] sm:w-[130px]">
+                      Market Share
+                    </TableHead>
+                  )}
+                  {orderedMetrics.some(m => m.key === 'daily_growth') && (
+                    <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom w-[120px] sm:w-[160px]">
+                      Daily Growth
+                    </TableHead>
+                  )}
+                </TableRow>
+                {/* Row 2: Sub-column Headers */}
+                <TableRow className="hover:bg-transparent h-3">
+                  {/* Volume sub-columns */}
+                  {orderedMetrics.some(m => m.key === 'projected_volume') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                      Public
+                    </TableHead>
+                  )}
+                  {orderedMetrics.some(m => m.key === 'total_volume_usd') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                      Filtered
+                    </TableHead>
+                  )}
+                  {/* Active Users sub-columns */}
+                  {orderedMetrics.some(m => m.key === 'public_daily_users') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                      Public
+                    </TableHead>
+                  )}
+                  {orderedMetrics.some(m => m.key === 'daily_users') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                      Filtered
+                    </TableHead>
+                  )}
+                  {/* New Users sub-columns */}
+                  {orderedMetrics.some(m => m.key === 'public_new_users') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                      Public
+                    </TableHead>
+                  )}
+                  {orderedMetrics.some(m => m.key === 'numberOfNewUsers') && (
+                    <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                      Filtered
+                    </TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Trojan On Solana */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojanonsolana')}`}
+                          alt="Trojan On Solana"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate">{getProtocolName('trojanonsolana')}</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanOnSolanaData || {} as ProtocolMetrics, 'trojanonsolana' as Protocol), false, 'trojanonsolana' as Protocol)
+                          : metric.format(trojanOnSolanaData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojanonsolana' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Trojan Terminal */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojanterminal')}`}
+                          alt="Trojan Terminal"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate">{getProtocolName('trojanterminal')}</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanTerminalData || {} as ProtocolMetrics, 'trojanterminal' as Protocol), false, 'trojanterminal' as Protocol)
+                          : metric.format(trojanTerminalData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojanterminal' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* Trojan Total */}
+                <TableRow className="group/row transition-colors hover:bg-muted/30 font-semibold">
+                  <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-[9px] sm:text-sm">
+                    <div className="flex items-center gap-0.5 sm:gap-2">
+                      <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                        <img
+                          src={`/assets/logos/${getProtocolLogoFilename('trojan')}`}
+                          alt="Trojan Total"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className="truncate font-bold">Trojan Total</span>
+                    </div>
+                  </TableCell>
+                  {orderedMetrics.map((metric) => (
+                    <TableCell
+                      key={metric.key}
+                      className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 font-bold ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    >
+                      <span>
+                        {metric.getValue
+                          ? metric.format(metric.getValue(trojanTotalData || {} as ProtocolMetrics, 'trojan' as Protocol), false, 'trojan' as Protocol)
+                          : metric.format(trojanTotalData?.[metric.key as keyof ProtocolMetrics] || 0, false, 'trojan' as Protocol)}
+                      </span>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <div className="rounded-xl border bg-gradient-to-b from-background to-muted/10 overflow-x-auto">
           <Table className="min-w-[600px] sm:min-w-[800px]">
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[120px] sm:w-[200px] py-0.5 text-[9px] sm:text-sm px-1 sm:px-4">Protocol</TableHead>
-                {orderedMetrics.map((metric, index) => (
+              {/* Row 1: Group Headers */}
+              <TableRow className="hover:bg-transparent border-b-0">
+                <TableHead rowSpan={2} className="w-[120px] sm:w-[200px] py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30">
+                  Protocol
+                </TableHead>
+                {/* Volume Group */}
+                {(orderedMetrics.some(m => m.key === 'projected_volume') || orderedMetrics.some(m => m.key === 'total_volume_usd')) && (
                   <TableHead
-                    key={metric.key}
-                    className={`text-right py-0.5 transition-colors hover:bg-muted/50 text-[9px] sm:text-sm px-1 sm:px-4 group ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                    colSpan={[orderedMetrics.some(m => m.key === 'projected_volume'), orderedMetrics.some(m => m.key === 'total_volume_usd')].filter(Boolean).length}
+                    className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
                   >
+                    Volume
+                  </TableHead>
+                )}
+                {/* Active Users Group */}
+                {(orderedMetrics.some(m => m.key === 'public_daily_users') || orderedMetrics.some(m => m.key === 'daily_users')) && (
+                  <TableHead
+                    colSpan={[orderedMetrics.some(m => m.key === 'public_daily_users'), orderedMetrics.some(m => m.key === 'daily_users')].filter(Boolean).length}
+                    className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
+                  >
+                    Active Users
+                  </TableHead>
+                )}
+                {/* New Users Group */}
+                {(orderedMetrics.some(m => m.key === 'public_new_users') || orderedMetrics.some(m => m.key === 'numberOfNewUsers')) && (
+                  <TableHead
+                    colSpan={[orderedMetrics.some(m => m.key === 'public_new_users'), orderedMetrics.some(m => m.key === 'numberOfNewUsers')].filter(Boolean).length}
+                    className="text-center py-2 text-[9px] sm:text-sm font-semibold border-b border-border/30 border-r-2 border-r-border/50"
+                  >
+                    New Users
+                  </TableHead>
+                )}
+                {/* Individual columns with rowSpan */}
+                {orderedMetrics.some(m => m.key === 'daily_trades') && (
+                  <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 group w-[70px] sm:w-[90px]">
                     <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-                      <span className="truncate">{metric.label}</span>
+                      <span>Trades</span>
                       <button
-                        onClick={() => {
-                          if (metric.key === 'projected_volume') {
-                            toggleProjectedVolumeVisibility();
-                          } else {
-                            toggleColumnVisibility(metric.key);
-                          }
-                        }}
+                        onClick={() => toggleColumnVisibility('daily_trades')}
                         className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
-                        title={`Hide ${metric.label} column`}
-                        aria-label={`Hide ${metric.label} column`}
+                        title="Hide Trades column"
                       >
                         <EyeOff className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </div>
                   </TableHead>
-                ))}
+                )}
+                {orderedMetrics.some(m => m.key === 'market_share') && (
+                  <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom border-r border-border/30 group w-[100px] sm:w-[130px]">
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+                      <span>Market Share</span>
+                      <button
+                        onClick={() => toggleColumnVisibility('market_share')}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
+                        title="Hide Market Share column"
+                      >
+                        <EyeOff className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </TableHead>
+                )}
+                {orderedMetrics.some(m => m.key === 'daily_growth') && (
+                  <TableHead rowSpan={2} className="text-right py-2 text-[9px] sm:text-sm px-2 sm:px-4 font-semibold align-bottom group w-[120px] sm:w-[160px]">
+                    <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+                      <span>Daily Growth</span>
+                      <button
+                        onClick={() => toggleColumnVisibility('daily_growth')}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-accent rounded"
+                        title="Hide Daily Growth column"
+                      >
+                        <EyeOff className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </TableHead>
+                )}
               </TableRow>
-
+              {/* Row 2: Sub-column Headers */}
+              <TableRow className="hover:bg-transparent h-3">
+                {/* Volume sub-columns */}
+                {orderedMetrics.some(m => m.key === 'projected_volume') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                    Public
+                  </TableHead>
+                )}
+                {orderedMetrics.some(m => m.key === 'total_volume_usd') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                    Filtered
+                  </TableHead>
+                )}
+                {/* Active Users sub-columns */}
+                {orderedMetrics.some(m => m.key === 'public_daily_users') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                    Public
+                  </TableHead>
+                )}
+                {orderedMetrics.some(m => m.key === 'daily_users') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                    Filtered
+                  </TableHead>
+                )}
+                {/* New Users sub-columns */}
+                {orderedMetrics.some(m => m.key === 'public_new_users') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
+                    Public
+                  </TableHead>
+                )}
+                {orderedMetrics.some(m => m.key === 'numberOfNewUsers') && (
+                  <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
+                    Filtered
+                  </TableHead>
+                )}
+              </TableRow>
             </TableHeader>
             <TableBody>
               {getMutableAllCategories().map((categoryName) => {
@@ -1099,9 +1427,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         </div>
                       </TableCell>
                       {orderedMetrics.map((metric) => (
-                        <TableCell 
-                          key={metric.key} 
-                          className={`text-right font-medium py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
+                        <TableCell
+                          key={metric.key}
+                          className={`text-right font-medium py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth' ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]') : ''}`}
                         >
                           {metric.key === 'market_share'
                             ? metric.format(categoryTotals[metric.key] || 0, true, undefined, categoryName)
@@ -1128,9 +1456,16 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                       return (
                         <TableRow
                           key={protocol}
-                          className={`group/row ${isCollapsed || isHidden ? 'hidden' : ''} transition-colors hover:bg-muted/30`}
+                          className={cn(
+                            "group/row transition-colors hover:bg-muted/30",
+                            isCollapsed || isHidden ? 'hidden' : '',
+                            getTrojanRowStyle(protocol)
+                          )}
                         >
-                          <TableCell className="pl-1 sm:pl-6 text-muted-foreground text-[9px] sm:text-sm px-1 sm:px-4">
+                          <TableCell className={cn(
+                              "pl-1 sm:pl-2 pr-1 sm:pr-4 text-muted-foreground text-[9px] sm:text-sm",
+                              getTrojanFirstCellStyle(protocol)
+                            )}>
                             <div className="flex items-center gap-0.5 sm:gap-2">
                               <button
                                 onClick={(e) => {
@@ -1138,16 +1473,29 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                                   toggleProtocolVisibility(protocol);
                                 }}
                                 className="opacity-0 group-hover/row:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
-                                title={`Hide ${getProtocolName(protocol)}`}
-                                aria-label={`Hide ${getProtocolName(protocol)} from table`}
+                                title={`Hide ${isTrojanProtocol(protocol) ? getTrojanDisplayName(protocol) : getProtocolName(protocol)}`}
                               >
                                 <EyeOff className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                               </button>
-                              <ProtocolLogo
-                                src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
-                                alt={protocol}
-                              />
-                              <span className="truncate">{getProtocolName(protocol)}</span>
+                              <div className="w-4 h-4 bg-muted/10 rounded overflow-hidden ring-1 ring-border/20">
+                                <img
+                                  src={`/assets/logos/${getProtocolLogoFilename(protocol)}`}
+                                  alt={protocol}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const container = target.parentElement;
+                                    if (container) {
+                                      container.innerHTML = '';
+                                      container.className = 'w-4 h-4 bg-muted/20 rounded flex items-center justify-center';
+                                      const iconEl = document.createElement('div');
+                                      iconEl.innerHTML = '<svg class="h-2 w-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="4" y="8" rx="2"/></svg>';
+                                      container.appendChild(iconEl);
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <span className="truncate">{isTrojanProtocol(protocol) ? getTrojanDisplayName(protocol) : getProtocolName(protocol)}</span>
                               {topProtocols.includes(protocol) && (
                                 <Badge 
                                   variant="secondary"
@@ -1166,10 +1514,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                         {orderedMetrics.map((metric) => (
                           <TableCell
                             key={metric.key}
-                            className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${
-                              metric.key === 'daily_growth'
-                                ? (isProjectedVolumeHidden ? 'min-w-[70px] sm:min-w-[90px]' : 'min-w-[100px] sm:min-w-[130px]')
-                                : ''
+                            className={`text-right py-0.5 text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)} ${metric.key === 'daily_growth'
+                              ? getGrowthBackground(dailyData[protocol]?.daily_growth || 0) + (isProjectedVolumeHidden ? ' min-w-[70px] sm:min-w-[90px]' : ' min-w-[100px] sm:min-w-[130px]')
+                              : ''
                             }`}
                           >
                             <span>
@@ -1187,9 +1534,13 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
               })}
 
               {/* All Trading Apps Total Row */}
-              <TableRow className="font-bold bg-gray-200 dark:bg-gray-700 border-t-2 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-b-xl">
-                <TableCell className="font-medium text-[9px] sm:text-sm px-1 sm:px-4" style={{ paddingLeft: '2rem' }}>
-                  All Trading Apps
+              <TableRow className="font-bold bg-gray-200 dark:bg-gray-700 border-t-2 border-gray-200 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
+                <TableCell className="pl-1 sm:pl-2 pr-1 sm:pr-4 text-[9px] sm:text-sm">
+                  <div className="flex items-center gap-0.5 sm:gap-2">
+                    <div className="w-3 h-3 flex-shrink-0" /> {/* Placeholder for eye button */}
+                    <div className="w-4 h-4 flex-shrink-0" /> {/* Placeholder for logo */}
+                    <span className="font-medium">All Trading Apps</span>
+                  </div>
                 </TableCell>
                 {orderedMetrics.map((metric) => {
                   let total: number;
@@ -1287,9 +1638,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const isNeutral = Math.abs(total) < 0.001;
                     
                     return (
-                      <TableCell 
-                        key={metric.key} 
-                        className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
+                      <TableCell
+                        key={metric.key}
+                        className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}
                       >
                         <div className="flex items-center justify-end sm:justify-between w-full">
                           <div className="hidden sm:block w-[40px] sm:w-[50px] h-[24px] sm:h-[28px] -my-2">
@@ -1342,7 +1693,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     
                     if (totalActualVolume === 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                           <div className="flex items-center gap-1 sm:gap-2 justify-end">
                             <span>{formatCurrency(total)}</span>
                           </div>
@@ -1373,7 +1724,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
                     
                     return (
-                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                      <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                         <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatCurrency(total)}</span>
                           <span className="text-[9px] font-medium text-muted-foreground">
@@ -1393,7 +1744,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     if (total === 0 && totalPrivateUsers === 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                           <span className="text-muted-foreground">-</span>
                         </TableCell>
                       );
@@ -1401,7 +1752,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     if (totalPrivateUsers === 0 && total > 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                           <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                             <span>{formatNumber(total)}</span>
                           </div>
@@ -1432,7 +1783,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
                     return (
-                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                      <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                         <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatNumber(total)}</span>
                           {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
@@ -1450,7 +1801,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     if (total === 0 && totalPrivateNewUsers === 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                           <span className="text-muted-foreground">-</span>
                         </TableCell>
                       );
@@ -1458,7 +1809,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     if (totalPrivateNewUsers === 0 && total > 0) {
                       return (
-                        <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                        <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                           <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                             <span>{formatNumber(total)}</span>
                           </div>
@@ -1489,7 +1840,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
                     return (
-                      <TableCell key={metric.key} className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4">
+                      <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
                         <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatNumber(total)}</span>
                           {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
@@ -1501,7 +1852,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   return (
                     <TableCell
                       key={metric.key}
-                      className="text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4"
+                      className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}
                     >
                       {metric.key === 'daily_trades' ? formatNumber(total) : metric.format(total, true)}
                     </TableCell>

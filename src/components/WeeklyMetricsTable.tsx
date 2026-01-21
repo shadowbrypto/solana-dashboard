@@ -793,7 +793,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
                   </TableCell>
                 </TableRow>
               ) : (
-                getMutableAllCategories().map(categoryName => {
+                getMutableAllCategories().filter(cat => cat !== 'Monad').map(categoryName => {
                   const categoryProtocols = getMutableProtocolsByCategory(categoryName);
                   const isCollapsed = collapsedCategories.includes(categoryName);
                   

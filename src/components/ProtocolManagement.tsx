@@ -529,7 +529,9 @@ export function ProtocolManagement() {
     if (isRefreshingPublicRolling) return;
     setIsRefreshingPublicRolling(true);
     try {
-      await dataSyncApi.syncRollingRefreshData('solana', 'public');
+      // Pass undefined for chain to sync all public protocols
+      await dataSyncApi.syncRollingRefreshData(undefined, 'public');
+      clearAllFrontendCaches();
       setForceRender(p => p + 1);
       toast({ variant: "success", title: "Done", description: "Public stats refreshed" });
     } catch (e) {

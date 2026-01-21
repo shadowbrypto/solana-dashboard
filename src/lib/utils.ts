@@ -9,26 +9,28 @@ export function cn(...inputs: ClassValue[]) {
  * Format a number with K/M/B suffixes
  * @param value - The number to format
  * @param decimals - Number of decimal places (default: 1)
+ * Numbers less than 100k show full number with commas
  */
 export function formatNumber(value: number, decimals: number = 1): string {
   const absValue = Math.abs(value);
   if (absValue >= 1e9) return `${(value / 1e9).toFixed(decimals)}B`;
   if (absValue >= 1e6) return `${(value / 1e6).toFixed(decimals)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(decimals)}K`;
-  return value.toFixed(0);
+  if (absValue >= 1e5) return `${(value / 1e3).toFixed(decimals)}K`;
+  return Math.round(value).toLocaleString();
 }
 
 /**
  * Format a currency value with $ prefix and K/M/B suffixes
  * @param value - The number to format
  * @param decimals - Number of decimal places (default: 2)
+ * Numbers less than 100k show full number with commas
  */
 export function formatCurrency(value: number, decimals: number = 2): string {
   const absValue = Math.abs(value);
   if (absValue >= 1e9) return `$${(value / 1e9).toFixed(decimals)}B`;
   if (absValue >= 1e6) return `$${(value / 1e6).toFixed(decimals)}M`;
-  if (absValue >= 1e3) return `$${(value / 1e3).toFixed(decimals)}K`;
-  return `$${value.toFixed(decimals)}`;
+  if (absValue >= 1e5) return `$${(value / 1e3).toFixed(decimals)}K`;
+  return `$${Math.round(value).toLocaleString()}`;
 }
 
 /**
@@ -48,13 +50,14 @@ export const formatVolume = formatCurrency;
 /**
  * Format a compact number for display (no decimals for small values)
  * @param value - The number to format
+ * Numbers less than 100k show full number with commas
  */
 export function formatCompactNumber(value: number): string {
   const absValue = Math.abs(value);
   if (absValue >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
   if (absValue >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-  if (absValue >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-  return value.toLocaleString();
+  if (absValue >= 1e5) return `${(value / 1e3).toFixed(1)}K`;
+  return Math.round(value).toLocaleString();
 }
 
 /**

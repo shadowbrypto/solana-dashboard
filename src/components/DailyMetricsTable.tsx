@@ -771,7 +771,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
       default:
         return 'hover:bg-muted/30';
     }
-  };
+  }, []);
 
   // Column group border styling for visual grouping (right border on last column of each group)
   const getColumnGroupBackground = (metricKey: string): string => {

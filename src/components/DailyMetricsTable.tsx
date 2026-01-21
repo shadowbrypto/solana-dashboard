@@ -204,7 +204,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
           
           return (
-            <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
               <span>{formatCurrency(value)}</span>
               <span className="text-[9px] font-medium text-muted-foreground">
                 {diffText}
@@ -219,7 +219,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         // When actual volume is 0 but projected volume exists, show with green styling
         if (actualVolume === 0 && value > 0) {
           return (
-            <div className="flex items-center gap-0.5 justify-between px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
               <span>{formatCurrency(value)}</span>
             </div>
           );
@@ -253,7 +253,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         const diffText = `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
         
         return (
-          <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
             <span>{formatCurrency(value)}</span>
             <span className="text-[9px] font-medium text-muted-foreground">
               {diffText}
@@ -302,7 +302,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
           if (totalPrivateDAUs === 0 && value > 0) {
             return (
-              <div className="flex items-center gap-0.5 justify-between px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+              <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                 <span>{formatNumber(value)}</span>
               </div>
             );
@@ -329,7 +329,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
           return (
-            <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
               <span>{formatNumber(value)}</span>
               {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
             </div>
@@ -346,7 +346,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         // If only value exists (no comparison needed)
         if (privateValue === 0 && value > 0) {
           return (
-            <div className="flex items-center gap-0.5 justify-between px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
               <span>{formatNumber(value)}</span>
             </div>
           );
@@ -375,7 +375,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
         return (
-          <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
             <span>{formatNumber(value)}</span>
             {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
           </div>
@@ -408,7 +408,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
           if (totalPrivateNewUsers === 0 && value > 0) {
             return (
-              <div className="flex items-center gap-0.5 justify-between px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+              <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                 <span>{formatNumber(value)}</span>
               </div>
             );
@@ -435,7 +435,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
           const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
           return (
-            <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+            <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
               <span>{formatNumber(value)}</span>
               {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
             </div>
@@ -452,7 +452,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         // If only value exists (no comparison needed)
         if (privateValue === 0 && value > 0) {
           return (
-            <div className="flex items-center gap-0.5 justify-between px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+            <div className="flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
               <span>{formatNumber(value)}</span>
             </div>
           );
@@ -481,7 +481,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
         const diffText = isNeutral ? '' : `${isPositive ? '+' : ''}${percentageDiff.toFixed(1)}%`;
 
         return (
-          <div className={`flex items-center gap-0.5 justify-between px-2 border-l-2 ${bgColor} ${borderColor}`}>
+          <div className={`flex items-center gap-0.5 justify-between px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
             <span>{formatNumber(value)}</span>
             {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
           </div>
@@ -1862,7 +1862,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     
                     return (
                       <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
-                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 border-l-2 ${bgColor} ${borderColor}`}>
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatCurrency(total)}</span>
                           <span className="text-[9px] font-medium text-muted-foreground">
                             {diffText}
@@ -1890,7 +1890,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     if (totalPrivateUsers === 0 && total > 0) {
                       return (
                         <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
-                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                             <span>{formatNumber(total)}</span>
                           </div>
                         </TableCell>
@@ -1921,7 +1921,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     return (
                       <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
-                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 border-l-2 ${bgColor} ${borderColor}`}>
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatNumber(total)}</span>
                           {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
                         </div>
@@ -1947,7 +1947,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                     if (totalPrivateNewUsers === 0 && total > 0) {
                       return (
                         <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
-                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
+                          <div className="flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 bg-green-100/80 dark:bg-green-950/40 border-l-green-400">
                             <span>{formatNumber(total)}</span>
                           </div>
                         </TableCell>
@@ -1978,7 +1978,7 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
 
                     return (
                       <TableCell key={metric.key} className={`text-right font-bold text-[9px] sm:text-sm px-1 sm:px-4 ${getColumnGroupBackground(metric.key)}`}>
-                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 border-l-2 ${bgColor} ${borderColor}`}>
+                        <div className={`flex items-center gap-0.5 justify-between px-1 sm:px-2 py-1 rounded-md border-l-2 ${bgColor} ${borderColor}`}>
                           <span>{formatNumber(total)}</span>
                           {diffText && <span className="text-[9px] font-medium text-muted-foreground">{diffText}</span>}
                         </div>

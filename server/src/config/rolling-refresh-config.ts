@@ -62,7 +62,7 @@ export const ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource> = {
   'sigma_evm': { queryIds: [6169799], chain: 'evm' },
   // 'maestro_evm': { queryIds: [], chain: 'evm' },
   'bloom_evm': { queryIds: [6169647], chain: 'evm' },
-  'banana_evm': { queryIds: [6169564], chain: 'evm' },
+  'banana_evm': { queryIds: [6582221], chain: 'evm' },
 
   // EVM Protocols - Trading Terminals
   // 'terminal_evm': { queryIds: [], chain: 'evm' },

@@ -1090,12 +1090,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                   {/* Volume sub-columns */}
                   {orderedMetrics.some(m => m.key === 'projected_volume') && (
                     <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
-                      Public
+                      Realtime
                     </TableHead>
                   )}
                   {orderedMetrics.some(m => m.key === 'total_volume_usd') && (
                     <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
-                      Filtered
+                      Dune
                     </TableHead>
                   )}
                   {/* Active Users sub-columns */}
@@ -1297,12 +1297,12 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
                 {/* Volume sub-columns */}
                 {orderedMetrics.some(m => m.key === 'projected_volume') && (
                   <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground w-[55px] sm:w-[70px]">
-                    Public
+                    Realtime
                   </TableHead>
                 )}
                 {orderedMetrics.some(m => m.key === 'total_volume_usd') && (
                   <TableHead className="text-center !h-auto !p-0 !py-0.5 text-[8px] sm:text-[10px] font-medium text-muted-foreground border-r-2 border-r-border/50 w-[55px] sm:w-[70px]">
-                    Filtered
+                    Dune
                   </TableHead>
                 )}
                 {/* Active Users sub-columns */}

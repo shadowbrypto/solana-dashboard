@@ -59,17 +59,17 @@ export const PUBLIC_ROLLING_REFRESH_SOURCES: Record<string, RollingRefreshSource
   'fomo': { queryIds: [6171132], chain: 'solana' },
 
   // EVM Protocols - Telegram Bots
-  'sigma_evm': { queryIds: [], chain: 'evm' },
+  'sigma_evm': { queryIds: [6169799], chain: 'evm' },
   // 'maestro_evm': { queryIds: [], chain: 'evm' },
-  'bloom_evm': { queryIds: [], chain: 'evm' },
-  'banana_evm': { queryIds: [], chain: 'evm' },
+  'bloom_evm': { queryIds: [6169647], chain: 'evm' },
+  'banana_evm': { queryIds: [6582221], chain: 'evm' },
 
   // EVM Protocols - Trading Terminals
   // 'terminal_evm': { queryIds: [], chain: 'evm' },
   // 'gmgnai_evm': { queryIds: [], chain: 'evm' },
   // 'photon_evm': { queryIds: [], chain: 'evm' },
   // 'mevx_evm': { queryIds: [], chain: 'evm' },
-  'axiom_evm': { queryIds: [], chain: 'evm' },
+  'axiom_evm': { queryIds: [6170063], chain: 'evm' },
 
   // Monad Protocols
   'gmgnai_monad': { queryIds: [], chain: 'monad' },

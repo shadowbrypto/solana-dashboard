@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import { syncData, getSyncStatus } from '../services/dataUpdateService.js';
 import { dataManagementService } from '../services/dataManagementService.js';
 import { launchpadDataService } from '../services/launchpadDataService.js';
-import { getProtocolsWithRollingRefresh, getProtocolsWithRollingRefreshByChain } from '../config/rolling-refresh-config.js';
-import { getProtocolsWithPublicRollingRefresh } from '../config/rolling-refresh-config-public.js';
+import { getProtocolsWithRollingRefresh, getProtocolsWithRollingRefreshByChain, getRollingRefreshSource } from '../config/rolling-refresh-config.js';
+import { getProtocolsWithPublicRollingRefresh, getPublicRollingRefreshSource } from '../config/rolling-refresh-config-public.js';
 import { protocolSyncStatusService } from '../services/protocolSyncStatusService.js';
 
 const router = Router();
@@ -187,7 +187,12 @@ router.post('/sync-rolling', async (req: Request, res: Response) => {
 
     for (const protocol of rollingProtocols) {
       try {
-        console.log(`Syncing ${dataTypeFilter} rolling refresh data for ${protocol}...`);
+        // Get the Dune query IDs for logging
+        const source = dataTypeFilter === 'public'
+          ? getPublicRollingRefreshSource(protocol)
+          : getRollingRefreshSource(protocol);
+        const queryIds = source?.queryIds?.join(', ') || 'N/A';
+        console.log(`Syncing ${dataTypeFilter} rolling refresh data for ${protocol} (Dune ID: ${queryIds})...`);
         const result = await dataManagementService.syncProtocolData(protocol, dataTypeFilter);
 
         if (result.success) {
@@ -270,7 +275,10 @@ router.post('/sync-public-rolling', async (req: Request, res: Response) => {
 
     for (const protocol of rollingProtocols) {
       try {
-        console.log(`Syncing public rolling refresh data for ${protocol}...`);
+        // Get the Dune query IDs for logging
+        const source = getPublicRollingRefreshSource(protocol);
+        const queryIds = source?.queryIds?.join(', ') || 'N/A';
+        console.log(`Syncing public rolling refresh data for ${protocol} (Dune ID: ${queryIds})...`);
         const result = await dataManagementService.syncProtocolData(protocol, 'public');
 
         if (result.success) {
@@ -339,7 +347,12 @@ router.post('/sync/:protocol', async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`Starting data sync for protocol: ${protocol} with ${dataTypeFilter} data...`);
+    // Get the Dune query IDs for logging
+    const source = dataTypeFilter === 'public'
+      ? getPublicRollingRefreshSource(protocol)
+      : getRollingRefreshSource(protocol);
+    const queryIds = source?.queryIds?.join(', ') || 'N/A';
+    console.log(`Starting data sync for protocol: ${protocol} with ${dataTypeFilter} data (Dune ID: ${queryIds})...`);
 
     const result = await dataManagementService.syncProtocolData(protocol, dataTypeFilter);
 

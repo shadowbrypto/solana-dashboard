@@ -129,7 +129,7 @@ export class DataManagementService {
       }
 
       // Step 2: Import CSV file to database (upsert will update existing or insert new)
-      const importResult = await this.importProtocolData(protocolName, effectiveDataType);
+      const importResult = await this.importProtocolData(protocolName, effectiveDataType, protocolConfig.queryIds);
 
       if (!importResult.success) {
         throw new Error(`Failed to import data for ${protocolName}: ${importResult.error}`);
@@ -382,7 +382,7 @@ export class DataManagementService {
   /**
    * Import CSV data for a specific protocol into the database
    */
-  private async importProtocolData(protocolName: string, dataType: string = 'private'): Promise<ImportResult> {
+  private async importProtocolData(protocolName: string, dataType: string = 'private', queryIds?: number[]): Promise<ImportResult> {
     try {
       const csvFilePath = path.join(DATA_DIR, `${protocolName}.csv`);
 
@@ -547,7 +547,8 @@ export class DataManagementService {
       // MySQL: Batch upsert with INSERT...ON DUPLICATE KEY UPDATE
       const result = await db.batchUpsert(TABLE_NAME, sanitizedData, ['protocol_name', 'date', 'chain', 'data_type']);
 
-      console.log(`${protocolName}: ${result.affectedRows} rows synced`);
+      const queryIdStr = queryIds?.join(', ') || 'N/A';
+      console.log(`${protocolName} (Dune ID: ${queryIdStr}): ${result.affectedRows} rows synced`);
 
       return {
         success: true,
@@ -577,9 +578,11 @@ export class DataManagementService {
       const csvFiles = files.filter(file => file.endsWith('.csv'));
 
       // Import each CSV file (upsert will update existing or insert new)
+      const protocolSources = getProtocolSources(dataType);
       const importPromises = csvFiles.map(file => {
         const protocolName = path.basename(file, '.csv');
-        return this.importProtocolData(protocolName, dataType);
+        const queryIds = protocolSources[protocolName]?.queryIds;
+        return this.importProtocolData(protocolName, dataType, queryIds);
       });
 
       return Promise.all(importPromises);

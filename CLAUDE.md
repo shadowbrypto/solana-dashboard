@@ -172,13 +172,30 @@ Only update the backend config (`server/src/config/projected-stats-config.ts`):
 3. `src/lib/protocol-config.ts` - Add to protocolConfigs array
 4. `public/assets/logos/{protocol}.jpg` - Add logo image (optional)
 
-### Required Backend Config Files (6 files)
-1. `server/src/services/dataManagementService.ts` - Add to PUBLIC_PROTOCOL_SOURCES
-2. `server/src/services/dataManagementService.ts` - Add to PRIVATE_PROTOCOL_SOURCES
-3. `server/src/config/rolling-refresh-config.ts` - **CRITICAL** for data refresh
+### Required Backend Config Files (7 files)
+1. `server/src/config/protocol-sources-config.ts` - Add to PUBLIC_PROTOCOL_SOURCES and PRIVATE_PROTOCOL_SOURCES
+2. `server/src/config/rolling-refresh-config.ts` - **CRITICAL** for Solana/private data refresh (7-day rolling)
+3. `server/src/config/rolling-refresh-config-public.ts` - **CRITICAL** for EVM/public data refresh (7-day rolling)
 4. `server/src/config/chainProtocols.ts` - **CRITICAL** for chain routing
 5. `server/src/config/fee-config.ts` - For fee calculations (recommended)
 6. `server/src/config/projected-stats-config.ts` - For projected volume (optional)
+
+### Rolling Refresh Configuration (IMPORTANT)
+
+There are TWO separate rolling refresh config files:
+
+1. **Private Rolling Refresh** (`rolling-refresh-config.ts`):
+   - Used for Solana protocols with `dataType='private'`
+   - Triggered by "Solana" button in Data Refresh section
+
+2. **Public Rolling Refresh** (`rolling-refresh-config-public.ts`):
+   - Used for EVM protocols with `dataType='public'`
+   - Triggered by "EVM" button in Data Refresh section
+   - **Must have query IDs populated** for EVM protocols to refresh correctly
+
+**When adding EVM protocols**: Ensure query IDs are added to BOTH:
+- `rolling-refresh-config.ts` (for consistency)
+- `rolling-refresh-config-public.ts` (required for EVM refresh button to work)
 
 ### Optional: Projected Stats (3 files required if using)
 1. `server/src/config/projected-stats-config.ts` - Backend Dune query ID

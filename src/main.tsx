@@ -15,6 +15,7 @@ import TradingAppsComparison from "./pages/TradingAppsComparison";
 import AllLaunchpads from "./pages/AllLaunchpads";
 import { LaunchpadPage } from "./pages/LaunchpadPage";
 import CustomReports from "./pages/CustomReports";
+import ProtocolComparison from "./pages/ProtocolComparison";
 import TraderStats from "./pages/TraderStats";
 import FeeComparison from "./pages/FeeComparison";
 import UserMilestones from "./pages/UserMilestones";
@@ -189,6 +190,20 @@ const router = createBrowserRouter([
                 }
               >
                 <UserMilestones />
+              </React.Suspense>
+            ),
+          },
+          {
+            path: "protocol-comparison",
+            element: (
+              <React.Suspense
+                fallback={
+                  <div className="flex items-center justify-center min-h-screen">
+                    Loading...
+                  </div>
+                }
+              >
+                <ProtocolComparison />
               </React.Suspense>
             ),
           },

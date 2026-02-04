@@ -140,6 +140,12 @@ export function TopNavigation() {
           onClick: () => navigate('/reports/custom'),
         },
         {
+          id: 'protocol-comparison',
+          label: 'Protocol Comparison',
+          icon: <GitCompare className="h-4 w-4 text-muted-foreground" />,
+          onClick: () => navigate('/reports/protocol-comparison'),
+        },
+        {
           id: 'user-milestones',
           label: 'User Milestones',
           icon: <Trophy className="h-4 w-4 text-muted-foreground" />,

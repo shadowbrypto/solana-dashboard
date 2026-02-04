@@ -86,7 +86,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
   const { toast } = useToast();
 
   const metricOptions = [
-    { key: 'total_volume_usd' as MetricKey, label: 'Volume (USD)', format: formatCurrency },
+    { key: 'total_volume_usd' as MetricKey, label: 'Adj. Volume (USD)', format: formatCurrency },
     { key: 'daily_users' as MetricKey, label: 'Daily Active Users', format: formatNumber },
     { key: 'numberOfNewUsers' as MetricKey, label: 'New Users', format: formatNumber },
     { key: 'daily_trades' as MetricKey, label: 'Daily Trades', format: formatNumber },
@@ -152,9 +152,10 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         const dataType = Settings.getDataTypePreference();
         
         // Map frontend metric keys to backend metric keys for ranking
+        // Volume uses adjustedVolume for ranking (projected volume when available)
         const rankingMetricMapping = {
-          'total_volume_usd': 'volume',
-          'daily_users': 'users', 
+          'total_volume_usd': 'adjustedVolume',
+          'daily_users': 'users',
           'numberOfNewUsers': 'newUsers',
           'daily_trades': 'trades'
         };
@@ -172,9 +173,10 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         const prevWeekData: DailyData = {};
         
         // Map of metric keys between frontend and backend
+        // Volume tab uses adjustedVolume (projected volume when available, falls back to actual volume)
         const metricMapping = {
-          'total_volume_usd': 'volume',
-          'daily_users': 'users', 
+          'total_volume_usd': 'adjustedVolume',
+          'daily_users': 'users',
           'numberOfNewUsers': 'newUsers',
           'daily_trades': 'trades'
         };
@@ -274,31 +276,31 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   const calculateWeekOnWeekGrowth = (protocolId: string): number => {
     if (!optimizedWeeklyData || !optimizedWeeklyData.weeklyData[protocolId]) return 0;
-    
+
     const protocolData = optimizedWeeklyData.weeklyData[protocolId];
     const metricMapping = {
-      'total_volume_usd': 'volume',
-      'daily_users': 'users', 
+      'total_volume_usd': 'adjustedVolume',
+      'daily_users': 'users',
       'numberOfNewUsers': 'newUsers',
       'daily_trades': 'trades'
     };
-    
-    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+
+    const backendMetricKey = metricMapping[selectedMetric] || 'adjustedVolume';
     return protocolData.growth[backendMetricKey] || 0;
   };
 
   const calculateCategoryWeekOnWeekGrowth = (categoryName: string): number => {
     if (!optimizedWeeklyData) return 0;
-    
+
     const categoryProtocols = getMutableProtocolsByCategory(categoryName);
     const metricMapping = {
-      'total_volume_usd': 'volume',
-      'daily_users': 'users', 
+      'total_volume_usd': 'adjustedVolume',
+      'daily_users': 'users',
       'numberOfNewUsers': 'newUsers',
       'daily_trades': 'trades'
     };
-    
-    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+
+    const backendMetricKey = metricMapping[selectedMetric] || 'adjustedVolume';
     
     // Calculate category totals from optimized backend data
     let categoryCurrentTotal = 0;
@@ -506,15 +508,15 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
 
   const calculateTotalWeekOnWeekGrowth = (): number => {
     if (!optimizedWeeklyData) return 0;
-    
+
     const metricMapping = {
-      'total_volume_usd': 'volume',
-      'daily_users': 'users', 
+      'total_volume_usd': 'adjustedVolume',
+      'daily_users': 'users',
       'numberOfNewUsers': 'newUsers',
       'daily_trades': 'trades'
     };
-    
-    const backendMetricKey = metricMapping[selectedMetric] || 'volume';
+
+    const backendMetricKey = metricMapping[selectedMetric] || 'adjustedVolume';
     
     // Calculate totals from optimized backend data
     let totalCurrentWeek = 0;
@@ -591,7 +593,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
         ]) as string;
         
         const link = document.createElement('a');
-        link.download = `Weekly Report - ${selectedMetricOption.label.replace(' (USD)', '')} - ${format(endDate, 'dd.MM')}.png`;
+        link.download = `Weekly Report - ${selectedMetricOption.label.replace(' (USD)', '').replace('Adj. ', 'Adjusted ')} - ${format(endDate, 'dd.MM')}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -758,7 +760,7 @@ export function WeeklyMetricsTable({ protocols, endDate, onDateChange }: WeeklyM
             <TabsList className="grid w-full grid-cols-4">
               {metricOptions.map((option) => (
                 <TabsTrigger key={option.key} value={option.key} className="text-sm">
-                  {option.key === 'total_volume_usd' ? 'Volume' :
+                  {option.key === 'total_volume_usd' ? 'Adj. Volume' :
                    option.key === 'daily_users' ? 'DAUs' :
                    option.key === 'numberOfNewUsers' ? 'New Users' :
                    'Trades'}

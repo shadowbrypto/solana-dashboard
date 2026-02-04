@@ -2345,27 +2345,49 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
 
     console.log(`Fetching Solana weekly metrics: ${startDateStr} to ${endDateStr}`);
 
-    const data = await db.query<any>(
-      `SELECT protocol_name, date, volume_usd, daily_users, new_users, trades, fees_usd
-       FROM protocol_stats
-       WHERE chain = 'solana' AND data_type = ?
-         AND date >= ? AND date <= ?
-       ORDER BY protocol_name, date`,
-      [dataType, prevStartStr, endDateStr]
-    );
+    // Fetch both protocol_stats and projected_stats data in parallel
+    const [data, projectedData] = await Promise.all([
+      db.query<any>(
+        `SELECT protocol_name, date, volume_usd, daily_users, new_users, trades, fees_usd
+         FROM protocol_stats
+         WHERE chain = 'solana' AND data_type = ?
+           AND date >= ? AND date <= ?
+         ORDER BY protocol_name, date`,
+        [dataType, prevStartStr, endDateStr]
+      ),
+      db.query<any>(
+        `SELECT protocol_name, formatted_day, volume_usd
+         FROM projected_stats
+         WHERE formatted_day >= ? AND formatted_day <= ?`,
+        [prevStartStr, endDateStr]
+      )
+    ]);
 
     if (!data || data.length === 0) {
       return { weeklyData: {}, topProtocols: [], dateRange: { startDate: startDateStr, endDate: endDateStr } };
     }
+
+    // Build projected volume lookup map: protocol -> date -> volume
+    const projectedVolumeMap: Record<string, Record<string, number>> = {};
+    projectedData.forEach((record: any) => {
+      const protocol = record.protocol_name;
+      const dateStr = typeof record.formatted_day === 'string'
+        ? record.formatted_day
+        : format(new Date(record.formatted_day), 'yyyy-MM-dd');
+      if (!projectedVolumeMap[protocol]) {
+        projectedVolumeMap[protocol] = {};
+      }
+      projectedVolumeMap[protocol][dateStr] = Number(record.volume_usd) || 0;
+    });
 
     const solanaProtocols = getSolanaProtocols();
     const protocolData: Record<string, any> = {};
 
     solanaProtocols.forEach(protocol => {
       protocolData[protocol] = {
-        dailyMetrics: { volume: {}, users: {}, newUsers: {}, trades: {} },
-        currentWeekTotal: { volume: 0, users: 0, newUsers: 0, trades: 0 },
-        previousWeekTotal: { volume: 0, users: 0, newUsers: 0, trades: 0 }
+        dailyMetrics: { volume: {}, adjustedVolume: {}, users: {}, newUsers: {}, trades: {} },
+        currentWeekTotal: { volume: 0, adjustedVolume: 0, users: 0, newUsers: 0, trades: 0 },
+        previousWeekTotal: { volume: 0, adjustedVolume: 0, users: 0, newUsers: 0, trades: 0 }
       };
     });
 
@@ -2383,17 +2405,24 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
       const newUsers = Number(record.new_users) || 0;
       const trades = Number(record.trades) || 0;
 
+      // Get projected volume if available, otherwise use actual volume
+      const projectedVolume = projectedVolumeMap[protocol]?.[dateStr] || 0;
+      const adjustedVolume = projectedVolume > 0 ? projectedVolume : volume;
+
       if (isCurrentWeek) {
         protocolData[protocol].dailyMetrics.volume[dateStr] = volume;
+        protocolData[protocol].dailyMetrics.adjustedVolume[dateStr] = adjustedVolume;
         protocolData[protocol].dailyMetrics.users[dateStr] = users;
         protocolData[protocol].dailyMetrics.newUsers[dateStr] = newUsers;
         protocolData[protocol].dailyMetrics.trades[dateStr] = trades;
         protocolData[protocol].currentWeekTotal.volume += volume;
+        protocolData[protocol].currentWeekTotal.adjustedVolume += adjustedVolume;
         protocolData[protocol].currentWeekTotal.users += users;
         protocolData[protocol].currentWeekTotal.newUsers += newUsers;
         protocolData[protocol].currentWeekTotal.trades += trades;
       } else if (isPreviousWeek) {
         protocolData[protocol].previousWeekTotal.volume += volume;
+        protocolData[protocol].previousWeekTotal.adjustedVolume += adjustedVolume;
         protocolData[protocol].previousWeekTotal.users += users;
         protocolData[protocol].previousWeekTotal.newUsers += newUsers;
         protocolData[protocol].previousWeekTotal.trades += trades;
@@ -2401,12 +2430,15 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
     });
 
     const weeklyData: Record<string, any> = {};
-    const protocolTotals: Array<{ protocol: string; volume: number; users: number; newUsers: number; trades: number }> = [];
+    const protocolTotals: Array<{ protocol: string; volume: number; adjustedVolume: number; users: number; newUsers: number; trades: number }> = [];
 
     Object.entries(protocolData).forEach(([protocol, data]) => {
       const volumeGrowth = data.previousWeekTotal.volume > 0
         ? (data.currentWeekTotal.volume - data.previousWeekTotal.volume) / data.previousWeekTotal.volume
         : (data.currentWeekTotal.volume > 0 ? 1 : 0);
+      const adjustedVolumeGrowth = data.previousWeekTotal.adjustedVolume > 0
+        ? (data.currentWeekTotal.adjustedVolume - data.previousWeekTotal.adjustedVolume) / data.previousWeekTotal.adjustedVolume
+        : (data.currentWeekTotal.adjustedVolume > 0 ? 1 : 0);
       const userGrowth = data.previousWeekTotal.users > 0
         ? (data.currentWeekTotal.users - data.previousWeekTotal.users) / data.previousWeekTotal.users
         : (data.currentWeekTotal.users > 0 ? 1 : 0);
@@ -2421,13 +2453,14 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
         dailyMetrics: data.dailyMetrics,
         weeklyTotals: data.currentWeekTotal,
         previousWeekTotals: data.previousWeekTotal,
-        growth: { volume: volumeGrowth, users: userGrowth, newUsers: newUserGrowth, trades: tradeGrowth }
+        growth: { volume: volumeGrowth, adjustedVolume: adjustedVolumeGrowth, users: userGrowth, newUsers: newUserGrowth, trades: tradeGrowth }
       };
 
       if (data.currentWeekTotal.volume > 0 || data.currentWeekTotal.users > 0) {
         protocolTotals.push({
           protocol,
           volume: data.currentWeekTotal.volume,
+          adjustedVolume: data.currentWeekTotal.adjustedVolume,
           users: data.currentWeekTotal.users,
           newUsers: data.currentWeekTotal.newUsers,
           trades: data.currentWeekTotal.trades
@@ -2441,7 +2474,8 @@ export async function getSolanaWeeklyMetrics(endDate: Date, dataType: string = '
           case 'users': return b.users - a.users;
           case 'newUsers': return b.newUsers - a.newUsers;
           case 'trades': return b.trades - a.trades;
-          default: return b.volume - a.volume;
+          case 'adjustedVolume': return b.adjustedVolume - a.adjustedVolume;
+          default: return b.adjustedVolume - a.adjustedVolume; // Default to adjustedVolume for ranking
         }
       })
       .slice(0, 3)

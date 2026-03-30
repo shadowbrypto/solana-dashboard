@@ -305,7 +305,7 @@ export function DominanceChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isDesktop ? 12 : 9 }}
-                tickFormatter={(value) => `${value < 1 ? value.toFixed(2) : value.toFixed(0)}%`}
+                tickFormatter={(value) => `${value > 0 && value < 1 ? value.toFixed(2) : value.toFixed(0)}%`}
                 domain={[0, 100]}
                 width={isDesktop ? 55 : 45}
               />

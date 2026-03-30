@@ -41,8 +41,10 @@ export function DateRangeSelector({
   const [isSelectingEnd, setIsSelectingEnd] = useState(false);
   const [isCalendarDragging, setIsCalendarDragging] = useState(false);
   const [dragStartDate, setDragStartDate] = useState<Date | null>(null);
+  const [calendarPos, setCalendarPos] = useState<{ top: number; left: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   // Calculate the date range in days
   const totalDays = minDate 
@@ -443,13 +445,22 @@ export function DateRangeSelector({
         </span>
         
         <div className="flex items-center gap-4">
-          <div 
+          <div
+            ref={triggerRef}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
-              tempRange 
-                ? 'border-primary/50 bg-primary/5 text-primary' 
+              tempRange
+                ? 'border-primary/50 bg-primary/5 text-primary'
                 : 'border-border/50 bg-background/50 text-foreground hover:border-primary/30 hover:bg-primary/5'
             }`}
             onClick={() => {
+              if (triggerRef.current) {
+                const rect = triggerRef.current.getBoundingClientRect();
+                const calendarWidth = 320; // w-80
+                let left = rect.left + rect.width / 2 - calendarWidth / 2;
+                // Clamp to viewport
+                left = Math.max(8, Math.min(left, window.innerWidth - calendarWidth - 8));
+                setCalendarPos({ top: rect.bottom + 8, left });
+              }
               setCalendarStartDate(startDate);
               setCalendarEndDate(endDate);
               setCalendarMonth(startDate);
@@ -494,12 +505,13 @@ export function DateRangeSelector({
       </div>
 
       {/* Calendar Popup */}
-      {showCalendar && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
-          <div className="fixed inset-0 bg-black/20" onClick={handleCalendarCancel} />
+      {showCalendar && calendarPos && (
+        <div className="fixed inset-0 z-50">
+          <div className="fixed inset-0" onClick={handleCalendarCancel} />
           <div
             ref={calendarRef}
-            className="relative bg-card border border-border rounded-lg shadow-lg p-4 w-80"
+            className="fixed bg-card border border-border rounded-lg shadow-lg p-4 w-80"
+            style={{ top: calendarPos.top, left: calendarPos.left }}
           >
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-3">

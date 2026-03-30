@@ -344,7 +344,7 @@ export function StackedAreaChart({
                   fontSize: isMobile ? 9 : (isDesktop ? 12 : 10)
                 }}
                 width={isMobile ? 38 : (isDesktop ? 50 : 40)}
-                tickFormatter={(value) => isPercentageData ? `${value.toFixed(0)}%` : `${(value * 100).toFixed(0)}%`}
+                tickFormatter={(value) => isPercentageData ? `${value < 1 ? value.toFixed(2) : value.toFixed(0)}%` : `${(value * 100) < 1 ? (value * 100).toFixed(2) : (value * 100).toFixed(0)}%`}
                 domain={isPercentageData ? [0, 100] : [0, 1]}
               />
               <Tooltip

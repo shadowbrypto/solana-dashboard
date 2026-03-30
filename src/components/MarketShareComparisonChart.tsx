@@ -270,7 +270,7 @@ export function MarketShareComparisonChart({
                 tick={{ fontSize: isMobile ? 9 : 11, className: "fill-muted-foreground" }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value) => `${value}%`}
+                tickFormatter={(value) => `${value < 1 ? Number(value).toFixed(2) : Number(value).toFixed(0)}%`}
                 domain={[0, 'auto']}
                 width={isMobile ? 35 : 45}
               />

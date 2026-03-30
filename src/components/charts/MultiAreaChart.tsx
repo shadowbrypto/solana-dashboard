@@ -275,7 +275,7 @@ export function MultiAreaChart({
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: isMobile ? 9 : (isDesktop ? 12 : 10) }}
-              tickFormatter={(value) => `${value.toFixed(0)}%`}
+              tickFormatter={(value) => `${value < 1 ? value.toFixed(2) : value.toFixed(0)}%`}
               domain={[0, 'dataMax']}
               width={isMobile ? 38 : (isDesktop ? 50 : 40)}
             />

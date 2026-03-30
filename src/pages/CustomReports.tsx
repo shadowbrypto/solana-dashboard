@@ -979,7 +979,7 @@ export default function CustomReports() {
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                   tickFormatter={(value) =>
                     activeChartMetric === 'marketshare'
-                      ? `${value.toFixed(0)}%`
+                      ? `${value < 1 ? value.toFixed(2) : value.toFixed(0)}%`
                       : formatNumberWithSuffix(value)
                   }
                   domain={activeChartMetric === 'marketshare' ? [0, 'auto'] : undefined}

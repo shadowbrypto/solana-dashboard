@@ -495,10 +495,11 @@ export function DateRangeSelector({
 
       {/* Calendar Popup */}
       {showCalendar && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50">
-          <div 
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+          <div className="fixed inset-0 bg-black/20" onClick={handleCalendarCancel} />
+          <div
             ref={calendarRef}
-            className="bg-card border border-border rounded-lg shadow-lg p-4 w-80"
+            className="relative bg-card border border-border rounded-lg shadow-lg p-4 w-80"
           >
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-3">

@@ -229,8 +229,8 @@ export default function DailyReport() {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="text-center">
-        <h1 className="text-title-1 font-semibold text-foreground">Daily Report</h1>
-        <p className="text-subhead text-muted-foreground mt-1">Real-time trading metrics and protocol performance</p>
+        <h1 className="text-lg sm:text-title-1 font-semibold text-foreground">Daily Report</h1>
+        <p className="text-xs sm:text-subhead text-muted-foreground mt-1">Real-time trading metrics and protocol performance</p>
       </div>
 
       {/* Chain Toggle - Apple Segmented Control Style - Centered */}

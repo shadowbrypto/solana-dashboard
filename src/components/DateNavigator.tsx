@@ -53,7 +53,7 @@ export function DateNavigator({
         onClick={handlePreviousDay}
         disabled={isPreviousDisabled}
         className={cn(
-          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+          "h-8 w-8 sm:h-10 sm:w-10 p-0 flex items-center justify-center transition-all duration-200",
           isPreviousDisabled
             ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
@@ -64,9 +64,9 @@ export function DateNavigator({
       </Button>
 
       {/* Date Picker */}
-      <div className="min-w-[200px]">
-        <DatePicker 
-          date={date} 
+      <div className="min-w-[140px] sm:min-w-[200px]">
+        <DatePicker
+          date={date}
           onDateChange={handleDatePickerChange}
         />
       </div>
@@ -77,7 +77,7 @@ export function DateNavigator({
         onClick={handleNextDay}
         disabled={isNextDisabled}
         className={cn(
-          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
+          "h-8 w-8 sm:h-10 sm:w-10 p-0 flex items-center justify-center transition-all duration-200",
           isNextDisabled
             ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"

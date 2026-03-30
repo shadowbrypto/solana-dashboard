@@ -103,8 +103,8 @@ export default function WeeklyReport() {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="text-center">
-        <h1 className="text-title-1 font-semibold text-foreground">Weekly Report</h1>
-        <p className="text-subhead text-muted-foreground mt-1">7-day trends and growth analysis across protocols</p>
+        <h1 className="text-lg sm:text-title-1 font-semibold text-foreground">Weekly Report</h1>
+        <p className="text-xs sm:text-subhead text-muted-foreground mt-1">7-day trends and growth analysis across protocols</p>
       </div>
 
       {/* Chain Toggle - Apple Segmented Control Style - Centered */}

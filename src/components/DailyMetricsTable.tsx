@@ -1016,9 +1016,9 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     <>
     <div data-table="daily-metrics" className="space-y-4">
       {/* Header with title, date navigator and visibility toggle */}
-      <div className="flex items-center justify-between group/header">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 group/header">
         <div className="flex items-center gap-2">
-          <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Daily Report</h2>
+          <h2 className="text-base sm:text-title-2 font-semibold text-foreground whitespace-nowrap">Daily Report</h2>
           <button
             onClick={(hiddenProtocols.size > 0 || hiddenColumns.size > 0) ? showAllProtocols : hideAllProtocols}
             className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
@@ -1855,19 +1855,19 @@ export function DailyMetricsTable({ protocols, date, onDateChange }: DailyMetric
     <div className="flex justify-end gap-2 pt-4">
       <button
         onClick={downloadReport}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         aria-label="Download daily report as image"
       >
-        <Download className="h-4 w-4" aria-hidden="true" />
-        Download
+        <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+        <span className="hidden sm:inline">Download</span>
       </button>
       <button
         onClick={copyToClipboard}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         aria-label="Copy daily report to clipboard"
       >
-        <Copy className="h-4 w-4" aria-hidden="true" />
-        Copy
+        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+        <span className="hidden sm:inline">Copy</span>
       </button>
     </div>
   </>

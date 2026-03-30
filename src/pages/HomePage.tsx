@@ -42,12 +42,12 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 space-y-4">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
+    <div className="container mx-auto p-2 sm:p-4 lg:p-6 space-y-4">
+      <div className="text-center space-y-2 sm:space-y-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
           Welcome to Solana Analytics
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-sm sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
           Professional analytics dashboard for Solana and EVM trading protocols
         </p>
       </div>

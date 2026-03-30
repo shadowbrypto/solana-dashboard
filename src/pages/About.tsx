@@ -3,9 +3,9 @@ import React from 'react';
 export default function About() {
   return (
     <div className="text-white">
-      <h1 className="text-3xl font-bold mb-8 text-white/90 text-center">About Trading Apps on Solana</h1>
-      
-      <div className="bg-[#1E1E2A] rounded-lg p-6 shadow-lg">
+      <h1 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-8 text-white/90 text-center">About Trading Apps on Solana</h1>
+
+      <div className="bg-[#1E1E2A] rounded-lg p-4 sm:p-6 shadow-lg">
         <p className="mb-4">
           Trading Apps is a dashboard application that visualizes performance metrics for various Solana protocols.
         </p>

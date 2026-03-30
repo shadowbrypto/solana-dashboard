@@ -105,7 +105,7 @@ export function MonthPicker({ date, onDateChange }: MonthPickerProps) {
         <Button
           variant={"outline"}
           className={cn(
-            "w-full sm:w-[180px] justify-between text-left font-normal h-9",
+            "w-full sm:w-[180px] justify-between text-left font-normal h-8 sm:h-9 text-xs sm:text-sm",
             !date && "text-muted-foreground"
           )}
         >

@@ -171,12 +171,12 @@ export function TopNavigation() {
     <>
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border h-[var(--nav-height)]">
-        <div className="max-w-content mx-auto h-full px-6 flex items-center justify-between">
+        <div className="max-w-content mx-auto h-full px-3 sm:px-6 flex items-center justify-between">
           {/* Left: Logo */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
             <button
               onClick={() => navigate('/home')}
-              className="font-semibold text-lg text-foreground hover:text-primary transition-colors"
+              className="font-semibold text-base sm:text-lg text-foreground hover:text-primary transition-colors"
             >
               Trading Apps
             </button>

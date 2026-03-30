@@ -617,21 +617,21 @@ export default function TraderStats() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Trader Statistics</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Trader Statistics</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Analyze trader rankings, percentiles, and volume distribution across protocols
           </p>
         </div>
       </div>
 
       {/* Protocol Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
         {protocols.map((protocol) => (
           <button
             key={protocol.id}
             onClick={() => handleProtocolChange(protocol.id)}
             className={cn(
-              "relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors duration-150",
+              "relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg transition-colors duration-150 flex-shrink-0",
               "bg-background focus:outline-none border",
               selectedProtocol === protocol.id
                 ? "border-foreground text-foreground shadow-md dark:border-white dark:shadow-white/10"
@@ -649,7 +649,7 @@ export default function TraderStats() {
                 }}
               />
             </div>
-            <span className="text-sm font-medium">{protocol.name}</span>
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{protocol.name}</span>
           </button>
         ))}
       </div>
@@ -658,7 +658,7 @@ export default function TraderStats() {
       {/* Complete Trader Stats Report - Metrics + Table */}
       <div data-table="trader-stats-complete" className="space-y-6">
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {loading ? (
             <>
               <MetricCardSkeleton
@@ -728,9 +728,9 @@ export default function TraderStats() {
         {/* Trader Stats Table */}
         <Card className="w-full">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
-              <CardTitle className="text-xl font-semibold">
+              <CardTitle className="text-base sm:text-xl font-semibold">
                 Trader Statistics
               </CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -750,10 +750,10 @@ export default function TraderStats() {
             </div>
 
             {/* View Type Tabs */}
-            <div className="flex bg-muted p-1 rounded-lg">
+            <div className="flex bg-muted p-1 rounded-lg overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setViewType('rank')}
-                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   viewType === 'rank'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -763,7 +763,7 @@ export default function TraderStats() {
               </button>
               <button
                 onClick={() => setViewType('percentile')}
-                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   viewType === 'percentile'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -773,7 +773,7 @@ export default function TraderStats() {
               </button>
               <button
                 onClick={() => setViewType('volume-range')}
-                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   viewType === 'volume-range'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'

@@ -67,14 +67,14 @@ export default function UserMilestones() {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="text-center">
-        <h1 className="text-title-1 font-semibold text-foreground">User Milestones</h1>
-        <p className="text-subhead text-muted-foreground mt-1">Track user acquisition milestones across protocols</p>
+        <h1 className="text-lg sm:text-title-1 font-semibold text-foreground">User Milestones</h1>
+        <p className="text-xs sm:text-subhead text-muted-foreground mt-1">Track user acquisition milestones across protocols</p>
       </div>
 
       {/* Protocol Selector - Centered */}
       <div className="flex justify-center">
         <Select value={selectedProtocol} onValueChange={setSelectedProtocol}>
-          <SelectTrigger className="w-[280px] h-11 bg-secondary/50 border-0 rounded-xl">
+          <SelectTrigger className="w-full max-w-[280px] h-11 bg-secondary/50 border-0 rounded-xl">
             <SelectValue placeholder="Select a protocol">
               {selectedProtocol && (
                 <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export default function UserMilestones() {
       {/* Main Content Card */}
       <div className="rounded-xl border border-border bg-background">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 sm:px-6 border-b border-border">
           <div className="flex items-center gap-3">
             <ProtocolLogo
               src={`/assets/logos/${getProtocolLogoFilename(selectedProtocol)}`}
@@ -138,7 +138,7 @@ export default function UserMilestones() {
               clean
             />
             <div>
-              <h3 className="text-base font-semibold text-foreground">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">
                 {selectedProtocolConfig?.name || selectedProtocol}
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -150,14 +150,14 @@ export default function UserMilestones() {
           {/* Summary Stats in Header */}
           {milestoneData && !loading && (
             <div className="flex items-center divide-x divide-border">
-              <div className="px-4 text-center">
+              <div className="px-3 sm:px-4 text-center">
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Users</div>
-                <div className="font-semibold font-mono text-sm">{formatNumber(milestoneData.totalUsers)}</div>
+                <div className="font-semibold font-mono text-xs sm:text-sm">{formatNumber(milestoneData.totalUsers)}</div>
               </div>
               {milestoneData.firstDataDate && (
-                <div className="px-4 text-center">
+                <div className="px-3 sm:px-4 text-center">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Since</div>
-                  <div className="font-semibold text-sm">{format(new Date(milestoneData.firstDataDate), 'MMM yyyy')}</div>
+                  <div className="font-semibold text-xs sm:text-sm">{format(new Date(milestoneData.firstDataDate), 'MMM yyyy')}</div>
                 </div>
               )}
             </div>

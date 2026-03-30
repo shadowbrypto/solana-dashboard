@@ -322,18 +322,18 @@ const WeeklyInsights: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Weekly Insights</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">Weekly Insights</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
           AI-powered analysis of protocol performance over the last 7 days with actionable insights and trends.
         </p>
       </div>
 
       {/* Key Insights */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground mb-4">🤖 AI-Generated Insights</h2>
+        <h2 className="text-base sm:text-xl font-semibold text-foreground mb-4">🤖 AI-Generated Insights</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {insights.map(insight => (
             <Card key={insight.id} className="shadow-sm">
@@ -341,7 +341,7 @@ const WeeklyInsights: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {getInsightIcon(insight.type)}
-                    <CardTitle className="text-lg text-foreground">{insight.title}</CardTitle>
+                    <CardTitle className="text-sm sm:text-lg text-foreground">{insight.title}</CardTitle>
                   </div>
                   <Badge variant="secondary" className={getImpactBadgeColor(insight.impact)}>
                     {insight.impact}
@@ -396,8 +396,8 @@ const WeeklyInsights: React.FC = () => {
 
       {/* Protocol Performance Table */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">📊 7-Day Protocol Performance</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-base sm:text-xl font-semibold text-foreground">📊 7-Day Protocol Performance</h2>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <GripVertical className="w-3 h-3" />
             Drag columns to reorder

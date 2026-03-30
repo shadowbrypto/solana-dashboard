@@ -589,15 +589,15 @@ export default function ProtocolComparison() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Protocol Comparison</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold tracking-tight">Protocol Comparison</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Compare multiple protocols side-by-side with overlaid charts and merged tables
           </p>
         </div>
       </div>
 
       {/* Protocol Selection Card */}
-      <Card className="p-6 ">
+      <Card className="p-3 sm:p-6">
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <Select value="" onValueChange={addProtocol}>
@@ -744,17 +744,17 @@ export default function ProtocolComparison() {
 
       {/* Controls Section */}
       {selectedProtocols.length > 0 && (
-        <Card className="p-6 ">
-          <div className="space-y-6">
+        <Card className="p-3 sm:p-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Report Type and Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Report Type Toggle */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Report Type</label>
-                <div className="flex bg-muted p-1 rounded-lg h-10">
+                <label className="text-xs sm:text-sm font-medium text-foreground">Report Type</label>
+                <div className="flex bg-muted p-1 rounded-lg h-9 sm:h-10">
                   <button
                     onClick={() => setReportType('daily')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                       reportType === 'daily'
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -764,7 +764,7 @@ export default function ProtocolComparison() {
                   </button>
                   <button
                     onClick={() => setReportType('weekly')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                       reportType === 'weekly'
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -774,7 +774,7 @@ export default function ProtocolComparison() {
                   </button>
                   <button
                     onClick={() => setReportType('monthly')}
-                    className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                       reportType === 'monthly'
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -787,8 +787,8 @@ export default function ProtocolComparison() {
 
               {/* Metrics Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Metrics</label>
-                <div className="flex flex-row gap-4 items-center h-10">
+                <label className="text-xs sm:text-sm font-medium text-foreground">Metrics</label>
+                <div className="flex flex-row gap-3 sm:gap-4 items-center h-9 sm:h-10 overflow-x-auto scrollbar-hide">
                   {['volume', 'daus', 'users', 'trades'].map((metric) => (
                     <button
                       key={metric}

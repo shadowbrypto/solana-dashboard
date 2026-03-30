@@ -173,10 +173,10 @@ export default function FeeComparison() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Fee Comparison</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto p-2 sm:p-4 lg:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">Fee Comparison</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Compare trading fees across all protocols
         </p>
       </div>

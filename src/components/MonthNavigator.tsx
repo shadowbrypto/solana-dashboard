@@ -53,9 +53,9 @@ export function MonthNavigator({
         onClick={handlePreviousMonth}
         disabled={isPreviousDisabled}
         className={cn(
-          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
-          isPreviousDisabled 
-            ? "opacity-40 cursor-not-allowed" 
+          "h-8 w-8 sm:h-10 sm:w-10 p-0 flex items-center justify-center transition-all duration-200",
+          isPreviousDisabled
+            ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
         )}
         title={isPreviousDisabled ? `Cannot go before ${format(minDate, 'MMM yyyy')}` : "Previous month"}
@@ -64,9 +64,9 @@ export function MonthNavigator({
       </Button>
 
       {/* Month Picker */}
-      <div className="min-w-[180px]">
-        <MonthPicker 
-          date={date} 
+      <div className="min-w-[140px] sm:min-w-[180px]">
+        <MonthPicker
+          date={date}
           onDateChange={handleMonthPickerChange}
         />
       </div>
@@ -77,9 +77,9 @@ export function MonthNavigator({
         onClick={handleNextMonth}
         disabled={isNextDisabled}
         className={cn(
-          "h-10 w-10 p-0 flex items-center justify-center transition-all duration-200",
-          isNextDisabled 
-            ? "opacity-40 cursor-not-allowed" 
+          "h-8 w-8 sm:h-10 sm:w-10 p-0 flex items-center justify-center transition-all duration-200",
+          isNextDisabled
+            ? "opacity-40 cursor-not-allowed"
             : "hover:bg-primary/10 hover:text-primary hover:border-primary/30"
         )}
         title={isNextDisabled ? `Cannot go beyond ${format(maxDate, 'MMM yyyy')}` : "Next month"}

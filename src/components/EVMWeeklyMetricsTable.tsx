@@ -356,9 +356,9 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     <div className="relative space-y-4" data-table="evm-weekly-metrics">
       <div data-screenshot-content="true">
         {/* Header with title, date navigator and visibility toggle */}
-        <div className="flex items-center justify-between group/header">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 group/header">
           <div className="flex items-center gap-2">
-            <h2 className="text-title-2 font-semibold text-foreground whitespace-nowrap">Weekly Report</h2>
+            <h2 className="text-base sm:text-title-2 font-semibold text-foreground whitespace-nowrap">Weekly Report</h2>
             <button
               onClick={hiddenProtocols.size > 0 ? showAllProtocols : hideAllProtocols}
               className="opacity-0 group-hover/header:opacity-100 flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all duration-200"
@@ -399,10 +399,10 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            <div className="flex items-center gap-2 px-4 h-10 border border-border rounded-sm bg-background">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-normal text-sm">
-                {format(subDays(endDate, 6), 'MMMM d')} - {format(endDate, 'd, yyyy')}
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 h-9 sm:h-10 border border-border rounded-sm bg-background">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+              <span className="font-normal text-xs sm:text-sm">
+                {format(subDays(endDate, 6), 'MMM d')} - {format(endDate, 'd, yyyy')}
               </span>
             </div>
 
@@ -774,19 +774,19 @@ export function EVMWeeklyMetricsTable({ protocols, endDate, onDateChange }: EVMW
     <div className="flex justify-end gap-2 pt-4">
       <button
         onClick={downloadReport}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         aria-label="Download weekly report as image"
       >
-        <Download className="h-4 w-4" aria-hidden="true" />
-        Download
+        <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+        <span className="hidden sm:inline">Download</span>
       </button>
       <button
         onClick={copyToClipboard}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
+        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted/50 border border-border rounded-lg transition-colors"
         aria-label="Copy weekly report to clipboard"
       >
-        <Copy className="h-4 w-4" aria-hidden="true" />
-        Copy
+        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+        <span className="hidden sm:inline">Copy</span>
       </button>
     </div>
     </>

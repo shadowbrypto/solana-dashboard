@@ -292,21 +292,29 @@ export default function CustomReports() {
           let totalFees = 0;
           let totalMarketVolume = 0;
 
-          periodDailyData.forEach(dayData => {
-            const protocolData = dayData[selectedProtocol];
+          periodDailyData.forEach((dayData: any) => {
+            // The API returns { protocols: { protocolName: {...} }, totals: {...} }
+            // or a flat Record<Protocol, ProtocolMetrics> depending on the endpoint
+            const protocols = dayData.protocols || dayData;
+            const protocolData = protocols[selectedProtocol];
             if (protocolData) {
-              totalVolume += protocolData.total_volume_usd || 0;
-              totalDAUs += protocolData.daily_users || 0;
-              totalNewUsers += protocolData.numberOfNewUsers || 0;
-              totalTrades += protocolData.daily_trades || 0;
-              totalFees += protocolData.total_fees_usd || 0;
+              totalVolume += protocolData.total_volume_usd || protocolData.totalVolume || 0;
+              totalDAUs += protocolData.daily_users || protocolData.dailyUsers || 0;
+              totalNewUsers += protocolData.numberOfNewUsers || protocolData.newUsers || 0;
+              totalTrades += protocolData.daily_trades || protocolData.trades || 0;
+              totalFees += protocolData.total_fees_usd || protocolData.fees || 0;
             }
             // Sum all protocols for market share calculation
-            Object.entries(dayData).forEach(([key, metrics]) => {
-              if (key !== 'all' && metrics) {
-                totalMarketVolume += metrics.total_volume_usd || 0;
-              }
-            });
+            // Use backend totals if available, otherwise sum manually
+            if (dayData.totals?.totalVolume) {
+              totalMarketVolume += dayData.totals.totalVolume;
+            } else {
+              Object.entries(protocols).forEach(([key, metrics]: [string, any]) => {
+                if (key !== 'all' && metrics && typeof metrics === 'object') {
+                  totalMarketVolume += metrics.total_volume_usd || metrics.totalVolume || 0;
+                }
+              });
+            }
           });
 
           const marketShare = totalMarketVolume > 0 ? (totalVolume / totalMarketVolume) * 100 : 0;

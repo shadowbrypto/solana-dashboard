@@ -62,6 +62,8 @@ interface ReportData {
   totalDAUs: number;
   newUsers: number;
   totalTrades: number;
+  totalFees: number;
+  marketShare: number; // percentage 0-100
   cumulativeVolume: number;
 }
 
@@ -198,6 +200,8 @@ export default function CustomReports() {
       daus: data.totalDAUs,
       users: data.newUsers,
       trades: data.totalTrades,
+      revenue: data.totalFees,
+      marketshare: data.marketShare,
       formattedVolume: formatCurrency(data.totalVolume)
     }));
 
@@ -279,13 +283,15 @@ export default function CustomReports() {
           const periodDays = eachDayOfInterval({ start: periodStart, end: periodEnd });
           const dailyMetricsPromises = periodDays.map(day => getDailyMetrics(day));
           const periodDailyData = await Promise.all(dailyMetricsPromises);
-          
-          // Aggregate data for the selected protocol
+
+          // Aggregate data for the selected protocol AND total market
           let totalVolume = 0;
           let totalDAUs = 0;
           let totalNewUsers = 0;
           let totalTrades = 0;
-          
+          let totalFees = 0;
+          let totalMarketVolume = 0;
+
           periodDailyData.forEach(dayData => {
             const protocolData = dayData[selectedProtocol];
             if (protocolData) {
@@ -293,10 +299,19 @@ export default function CustomReports() {
               totalDAUs += protocolData.daily_users || 0;
               totalNewUsers += protocolData.numberOfNewUsers || 0;
               totalTrades += protocolData.daily_trades || 0;
+              totalFees += protocolData.total_fees_usd || 0;
             }
+            // Sum all protocols for market share calculation
+            Object.entries(dayData).forEach(([key, metrics]) => {
+              if (key !== 'all' && metrics) {
+                totalMarketVolume += metrics.total_volume_usd || 0;
+              }
+            });
           });
-          
-          console.log(`${periodLabel} - Volume: $${totalVolume}, DAUs: ${totalDAUs}, New Users: ${totalNewUsers}, Trades: ${totalTrades}`);
+
+          const marketShare = totalMarketVolume > 0 ? (totalVolume / totalMarketVolume) * 100 : 0;
+
+          console.log(`${periodLabel} - Volume: $${totalVolume}, DAUs: ${totalDAUs}, New Users: ${totalNewUsers}, Trades: ${totalTrades}, Fees: $${totalFees}, Market Share: ${marketShare.toFixed(1)}%`);
           
           return {
             period: periodLabel,
@@ -305,6 +320,8 @@ export default function CustomReports() {
             totalDAUs,
             newUsers: totalNewUsers,
             totalTrades,
+            totalFees,
+            marketShare,
             cumulativeVolume: 0 // Will be calculated after all data is fetched
           };
         } catch (error) {
@@ -323,7 +340,7 @@ export default function CustomReports() {
             const year = format(weekEnd, 'yyyy');
             periodLabel = `${startMonth} ${startDay}-${endDay}, ${year}`;
           }
-          
+
           return {
             period: periodLabel,
             date: period,
@@ -331,6 +348,8 @@ export default function CustomReports() {
             totalDAUs: 0,
             newUsers: 0,
             totalTrades: 0,
+            totalFees: 0,
+            marketShare: 0,
             cumulativeVolume: 0
           };
         }
@@ -776,6 +795,48 @@ export default function CustomReports() {
                   </div>
                   <span>Trades</span>
                 </button>
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('revenue')) {
+                        newSet.delete('revenue');
+                      } else {
+                        newSet.add('revenue');
+                      }
+                      return newSet;
+                    });
+                  }}
+                >
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('revenue') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('revenue') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>Revenue</span>
+                </button>
+                <button
+                  className="flex items-center gap-2 text-sm hover:text-foreground transition-colors"
+                  onClick={() => {
+                    setSelectedMetrics(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has('marketshare')) {
+                        newSet.delete('marketshare');
+                      } else {
+                        newSet.add('marketshare');
+                      }
+                      return newSet;
+                    });
+                  }}
+                >
+                  <div className={`w-4 h-4 border rounded-sm flex items-center justify-center transition-colors ${
+                    selectedMetrics.has('marketshare') ? 'bg-primary border-primary' : 'border-border'
+                  }`}>
+                    {selectedMetrics.has('marketshare') && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <span>Market Share</span>
+                </button>
               </div>
             </div>
           </div>
@@ -803,7 +864,7 @@ export default function CustomReports() {
               <CardTitle className="text-sm sm:text-base font-medium text-card-foreground">
                 {reportType === 'daily' ? 'Daily' : reportType === 'weekly' ? 'Weekly' : 'Monthly'} {
                   selectedMetrics.size === 0 ? 'Chart' :
-                  `${activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : 'Trades'} Chart`
+                  `${activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : activeChartMetric === 'trades' ? 'Trades' : activeChartMetric === 'revenue' ? 'Revenue' : 'Market Share'} Chart`
                 }
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -859,18 +920,18 @@ export default function CustomReports() {
         <CardContent className="pt-2 pb-1 px-2 sm:pt-6 sm:pb-6 sm:px-6">
           {/* Chart Metric Tabs */}
           {selectedMetrics.size > 1 && !loading && !error && chartData.length > 0 && (
-            <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
-              {['volume', 'daus', 'users', 'trades'].filter(metric => selectedMetrics.has(metric)).map((metric) => (
+            <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit overflow-x-auto scrollbar-hide">
+              {['volume', 'daus', 'users', 'trades', 'revenue', 'marketshare'].filter(metric => selectedMetrics.has(metric)).map((metric) => (
                 <button
                   key={metric}
                   onClick={() => setActiveChartMetric(metric)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                     activeChartMetric === metric
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {metric === 'volume' ? 'Volume' : metric === 'daus' ? 'DAUs' : metric === 'users' ? 'New Users' : 'Trades'}
+                  {metric === 'volume' ? 'Volume' : metric === 'daus' ? 'DAUs' : metric === 'users' ? 'New Users' : metric === 'trades' ? 'Trades' : metric === 'revenue' ? 'Revenue' : 'Market Share'}
                 </button>
               ))}
             </div>
@@ -908,7 +969,12 @@ export default function CustomReports() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  tickFormatter={formatNumberWithSuffix}
+                  tickFormatter={(value) =>
+                    activeChartMetric === 'marketshare'
+                      ? `${value.toFixed(0)}%`
+                      : formatNumberWithSuffix(value)
+                  }
+                  domain={activeChartMetric === 'marketshare' ? [0, 'auto'] : undefined}
                 />
                 <Tooltip
                   contentStyle={{
@@ -919,10 +985,12 @@ export default function CustomReports() {
                   }}
                   cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
                   formatter={(value: any) => [
-                    activeChartMetric === 'volume' 
-                      ? formatCurrency(value) 
-                      : formatNumberWithSuffix(value), 
-                    activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : 'Trades'
+                    activeChartMetric === 'volume' || activeChartMetric === 'revenue'
+                      ? formatCurrency(value)
+                      : activeChartMetric === 'marketshare'
+                      ? `${Number(value).toFixed(1)}%`
+                      : formatNumberWithSuffix(value),
+                    activeChartMetric === 'volume' ? 'Volume' : activeChartMetric === 'daus' ? 'DAUs' : activeChartMetric === 'users' ? 'New Users' : activeChartMetric === 'trades' ? 'Trades' : activeChartMetric === 'revenue' ? 'Revenue' : 'Market Share'
                   ]}
                   labelFormatter={(label: any) => label}
                 />
@@ -937,7 +1005,7 @@ export default function CustomReports() {
                     <LabelList
                       dataKey={activeChartMetric}
                       position="top"
-                      formatter={(value: number) => activeChartMetric === 'volume' ? formatCurrency(value) : formatNumberWithSuffix(value)}
+                      formatter={(value: number) => activeChartMetric === 'volume' || activeChartMetric === 'revenue' ? formatCurrency(value) : activeChartMetric === 'marketshare' ? `${value.toFixed(1)}%` : formatNumberWithSuffix(value)}
                       style={{
                         fill: 'hsl(var(--foreground))',
                         fontSize: '12px',
@@ -957,10 +1025,10 @@ export default function CustomReports() {
       </Card>
 
       <Card data-table="custom-report" className={`${
-        selectedMetrics.size === 1 && selectedMetrics.has('volume') ? 'max-w-2xl' : 
-        selectedMetrics.size === 1 ? 'max-w-md' : 
-        selectedMetrics.size === 2 ? 'max-w-4xl' : 
-        'max-w-5xl'
+        selectedMetrics.size <= 1 ? 'max-w-2xl' :
+        selectedMetrics.size <= 2 ? 'max-w-4xl' :
+        selectedMetrics.size <= 4 ? 'max-w-5xl' :
+        'max-w-7xl'
       } mx-auto p-0`}>
         <CardHeader className="pb-4 px-6 pt-6">
           <div className="flex items-center justify-between">
@@ -1076,6 +1144,12 @@ export default function CustomReports() {
                       {selectedMetrics.has('trades') && (
                         <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Trades</TableHead>
                       )}
+                      {selectedMetrics.has('revenue') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Revenue</TableHead>
+                      )}
+                      {selectedMetrics.has('marketshare') && (
+                        <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Market Share</TableHead>
+                      )}
                       {selectedMetrics.has('volume') && (
                         <TableHead className="h-12 px-2 text-right align-middle font-medium text-muted-foreground">Cum. Volume</TableHead>
                       )}
@@ -1136,6 +1210,20 @@ export default function CustomReports() {
                                   </Badge>
                                 </TableCell>
                               )}
+                              {selectedMetrics.has('revenue') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                                    {formatCurrency(data.totalFees)}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {selectedMetrics.has('marketshare') && (
+                                <TableCell className="text-right py-2 px-2">
+                                  <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+                                    {data.marketShare.toFixed(1)}%
+                                  </Badge>
+                                </TableCell>
+                              )}
                               {selectedMetrics.has('volume') && (
                                 <TableCell className="text-right py-2 px-2">
                                   <Badge variant="outline" className="font-semibold text-sm px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
@@ -1149,7 +1237,7 @@ export default function CustomReports() {
                       })()
                     ) : (
                       <TableRow className="h-16">
-                        <TableCell colSpan={2 + selectedMetrics.size + (selectedMetrics.has('volume') ? 1 : 0)} className="text-center py-6 text-muted-foreground text-sm px-2">
+                        <TableCell colSpan={2 + selectedMetrics.size + (selectedMetrics.has('volume') ? 1 : 0)} className="text-center py-6 text-muted-foreground text-sm px-2 whitespace-nowrap">
                           {selectedMetrics.size === 0 
                             ? 'Please select at least one metric to display' 
                             : `No data available for ${getProtocolById(selectedProtocol)?.name || selectedProtocol}`}

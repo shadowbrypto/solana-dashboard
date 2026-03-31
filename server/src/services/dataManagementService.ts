@@ -204,12 +204,13 @@ export class DataManagementService {
         throw new Error('Downloaded data is empty');
       }
 
-      // Omit the last row — it's typically incomplete/partial data for the current day
+      // Omit the last row (oldest) — rolling window boundary causes incomplete data (DAUs == new users)
       const rows = jsonData.result.rows.slice(0, -1);
       if (rows.length === 0) {
         throw new Error('Downloaded data has only 1 row (omitted as incomplete)');
       }
-      console.log(`${protocolName}: omitted last row, using ${rows.length} of ${jsonData.result.rows.length} rows`);
+      const omittedRow = jsonData.result.rows[jsonData.result.rows.length - 1];
+      console.log(`${protocolName}: omitted last row (${omittedRow?.formattedDay || 'unknown date'} - rolling window boundary), using ${rows.length} of ${jsonData.result.rows.length} rows`);
 
       // Convert JSON rows to the expected format (same as CSV parsing would produce)
       const data = rows.map((row) => {

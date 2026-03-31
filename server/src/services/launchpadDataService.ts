@@ -187,12 +187,21 @@ export class LaunchpadDataService {
         return { success: true, data: [] };
       }
 
-      console.log(`Successfully fetched ${parsed.data.length} rows for ${launchpadName} query ${queryIndex + 1}`);
-      console.log(`Sample row:`, parsed.data[0]);
+      // Omit the last row — it's typically incomplete/partial data for the current day
+      const rows = parsed.data.slice(0, -1);
+      console.log(`${launchpadName}: omitted last row, using ${rows.length} of ${parsed.data.length} rows`);
+
+      if (rows.length === 0) {
+        console.warn(`${launchpadName}: only 1 row found (omitted as incomplete)`);
+        return { success: true, data: [] };
+      }
+
+      console.log(`Successfully fetched ${rows.length} rows for ${launchpadName} query ${queryIndex + 1}`);
+      console.log(`Sample row:`, rows[0]);
 
       return {
         success: true,
-        data: parsed.data
+        data: rows
       };
 
     } catch (error) {

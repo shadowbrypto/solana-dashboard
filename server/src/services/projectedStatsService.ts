@@ -78,7 +78,12 @@ export async function fetchProjectedDataFromDune(duneQueryId: string): Promise<D
     }
 
     const data = parseResult.data;
-    return data.result.rows.map((row: DuneRow) => {
+
+    // Omit the last row — it's typically incomplete/partial data for the current day
+    const rows = data.result.rows.slice(0, -1);
+    console.log(`Dune query ${duneQueryId}: omitted last row, using ${rows.length} of ${data.result.rows.length} rows`);
+
+    return rows.map((row: DuneRow) => {
       let formattedDate = row.formattedDay;
 
       // Convert DD-MM-YYYY to YYYY-MM-DD format
